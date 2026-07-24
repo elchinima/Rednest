@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import './styles/variables.scss';
 
 * {
@@ -7,12 +7,47 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: $font-family-base;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: $color-bg;
+  background-image: radial-gradient(circle at top right, $color-primary-hover 0%, transparent 40%),
+                    radial-gradient(circle at bottom left, $color-bg-dark 0%, $color-bg 100%);
+  background-attachment: fixed;
   color: $color-text;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-heading;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: $color-bg-dark;
+}
+::-webkit-scrollbar-thumb {
+  background: $color-primary;
+  border-radius: $border-radius-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: $color-primary-hover;
+}
+
+/* Selection */
+::selection {
+  background-color: $color-text;
+  color: $color-bg-dark;
 }
 
 .app-container {

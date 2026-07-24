@@ -1,16 +1,24 @@
-$color-bg: #0f111a;
-$color-text: #f3f4f6;
-$color-primary: #8b5cf6;
-$color-primary-hover: #7c3aed;
-$color-secondary: #1f2937;
+$color-bg: #7f1d1d;
+$color-bg-dark: #450a0a;
+$color-text: #ffffff;
+$color-text-muted: rgba(255, 255, 255, 0.8);
+$color-primary: #ef4444;
+$color-primary-hover: #f87171;
+$color-secondary: #b91c1c;
+$color-glass: rgba(255, 255, 255, 0.1);
+$color-glass-border: rgba(255, 255, 255, 0.2);
 
 $font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+$font-family-heading: 'Inter', system-ui, sans-serif;
 
-$border-radius-sm: 4px;
-$border-radius-md: 8px;
-$border-radius-lg: 16px;
+$border-radius-sm: 6px;
+$border-radius-md: 12px;
+$border-radius-lg: 24px;
+$border-radius-full: 9999px;
 
 $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
+$spacing-xxl: 64px;
+$spacing-xxxl: 128px;
