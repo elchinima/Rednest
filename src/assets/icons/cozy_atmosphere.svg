@@ -1,0 +1,16 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Пар / Пар от кофе -->
+  <path d="M18 10C18 8.5 19 7.5 19 6M24 12C24 10 25 9 25 7M30 10C30 8.5 31 7.5 31 6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Чашка -->
+  <path d="M12 16H36V26C36 31.5228 31.5228 36 26 36H22C16.4772 36 12 31.5228 12 26V16Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Ручка чашки -->
+  <path d="M36 20H38C40.2091 20 42 21.7909 42 24C42 26.2091 40.2091 28 38 28H36" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Блюдце -->
+  <path d="M8 40H40" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Иконка уютного сердца в центре -->
+  <path d="M24 27.5L22.5 26.1C20 23.8 18.5 22.4 18.5 20.7C18.5 19.3 19.6 18.2 21 18.2C21.8 18.2 22.6 18.6 23 19.2C23.4 18.6 24.2 18.2 25 18.2C26.4 18.2 27.5 19.3 27.5 20.7C27.5 22.4 26 23.8 23.5 26.1L24 27.5Z" fill="#ffffff"/>
+</svg>

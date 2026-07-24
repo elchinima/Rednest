@@ -1,13 +1,51 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
+import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
+import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
+import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
 import bgVideo from '../../../assets/video/media_1.mp4';
+import aboutImage from '../../../assets/images/about_image.png';
 import './Home.scss';
 
 const Home = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (videoRef.current) {
+            if (entry.isIntersecting) {
+              videoRef.current.play().catch(error => {
+                // Ignore auto-play restriction errors if any
+                console.log("Auto-play prevented", error);
+              });
+            } else {
+              videoRef.current.pause();
+            }
+          }
+        });
+      },
+      { 
+        rootMargin: '600px 0px 600px 0px', // Start playing 600px before it comes into view
+        threshold: 0 
+      }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="home-page">
-      {/* Header */}
       <header className="home-header">
         <div className="logo-container">
           <img src={logo} alt="Rednest Logo" className="logo" />
@@ -21,9 +59,8 @@ const Home = () => {
         <Link to="/catalog" className="cta-btn sm">Order Now</Link>
       </header>
 
-      {/* Hero Section */}
       <section className="hero-section">
-        <video autoPlay loop muted playsInline className="hero-video-bg">
+        <video ref={videoRef} autoPlay loop muted playsInline className="hero-video-bg">
           <source src={bgVideo} type="video/mp4" />
         </video>
         <div className="hero-overlay"></div>
@@ -42,26 +79,104 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="features-section">
         <div className="feature-card">
-          <div className="feature-icon">☕</div>
+          <div className="feature-icon">
+            <img src={premiumRoastIcon} alt="Premium Roast" className="feature-svg" />
+          </div>
           <h3>Premium Roast</h3>
           <p>Sourced from the finest farms around the globe for an unforgettable taste.</p>
         </div>
         <div className="feature-card">
-          <div className="feature-icon">✨</div>
+          <div className="feature-icon">
+            <img src={cozyAtmosphereIcon} alt="Cozy Atmosphere" className="feature-svg" />
+          </div>
           <h3>Cozy Atmosphere</h3>
           <p>A perfect environment to relax, work, or catch up with friends.</p>
         </div>
         <div className="feature-card">
-          <div className="feature-icon">🌱</div>
+          <div className="feature-icon">
+            <img src={ecoFriendlyIcon} alt="Eco-Friendly" className="feature-svg" />
+          </div>
           <h3>Eco-Friendly</h3>
           <p>Committed to sustainable practices and 100% recyclable packaging.</p>
         </div>
       </section>
 
-      {/* Footer */}
+      <section className="popular-menu-section">
+        <div className="section-header">
+          <h2>Our Favorites</h2>
+          <p>Discover the drinks our customers love the most.</p>
+        </div>
+        <div className="menu-grid">
+          <div className="menu-item-card">
+            <div className="menu-img-placeholder signature-espresso"></div>
+            <div className="menu-info">
+              <h4>Signature Espresso</h4>
+              <p>Rich, full-bodied with notes of dark chocolate.</p>
+              <span className="price">3.50 ₼</span>
+            </div>
+          </div>
+          <div className="menu-item-card">
+            <div className="menu-img-placeholder caramel-macchiato"></div>
+            <div className="menu-info">
+              <h4>Caramel Macchiato</h4>
+              <p>Velvety steamed milk with vanilla and caramel drizzle.</p>
+              <span className="price">4.75 ₼</span>
+            </div>
+          </div>
+          <div className="menu-item-card">
+            <div className="menu-img-placeholder cold-brew"></div>
+            <div className="menu-info">
+              <h4>Nitro Cold Brew</h4>
+              <p>Slow-steeped, cold-pressed, and infused with nitrogen.</p>
+              <span className="price">4.25 ₼</span>
+            </div>
+          </div>
+          <div className="menu-item-card">
+            <div className="menu-img-placeholder matcha-latte"></div>
+            <div className="menu-info">
+              <h4>Matcha Latte</h4>
+              <p>Premium green tea powder lightly sweetened and steamed with milk.</p>
+              <span className="price">4.50 ₼</span>
+            </div>
+          </div>
+        </div>
+        <div className="section-actions">
+          <Link to="/catalog" className="cta-btn secondary">View Full Menu</Link>
+        </div>
+      </section>
+
+      <section className="about-us-section">
+        <div className="about-content">
+          <h2>The Rednest Experience</h2>
+          <p>
+            At Rednest, we believe that coffee is more than just a drink—it's a ritual. 
+            We meticulously source our beans from sustainable farms across the globe, 
+            ensuring every cup you enjoy is crafted with passion and respect for the environment.
+          </p>
+          <p>
+            Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew. 
+            Step into our cozy atmosphere and let us awaken your senses.
+          </p>
+          <Link to="/products" className="cta-btn">Read Our Story</Link>
+        </div>
+        <div className="about-visual">
+          <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
+        </div>
+      </section>
+
+      <section className="newsletter-section">
+        <div className="newsletter-container">
+          <h2>Join the Rednest Club</h2>
+          <p>Subscribe to receive exclusive offers, new roast announcements, and brewing tips directly to your inbox.</p>
+          <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+            <input type="email" placeholder="Enter your email address" required />
+            <button type="submit" className="cta-btn">Subscribe</button>
+          </form>
+        </div>
+      </section>
+
       <footer className="home-footer">
         <div className="footer-content">
           <div className="footer-brand">

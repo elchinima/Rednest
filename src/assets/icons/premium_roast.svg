@@ -1,0 +1,9 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Внешнее сияние / Премиальность -->
+  <path d="M24 4V8M24 40V44M4 24H8M40 24H44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <path d="M9.858 9.858L12.686 12.714M35.286 35.314L38.142 38.142M9.858 38.142L12.686 35.314M35.286 12.714L38.142 9.858" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Кофейное зерно -->
+  <path d="M15 15C15 15 12 24 24 33C33 33 36 24 36 15C36 15 27 12 15 15Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 17C21 21 21 27 31 31" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+</svg>
