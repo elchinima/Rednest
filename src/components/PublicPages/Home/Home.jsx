@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
@@ -10,6 +10,7 @@ import './Home.scss';
 
 const Home = () => {
   const videoRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -18,7 +19,6 @@ const Home = () => {
           if (videoRef.current) {
             if (entry.isIntersecting) {
               videoRef.current.play().catch(error => {
-                // Ignore auto-play restriction errors if any
                 console.log("Auto-play prevented", error);
               });
             } else {
@@ -28,7 +28,7 @@ const Home = () => {
         });
       },
       { 
-        rootMargin: '600px 0px 600px 0px', // Start playing 600px before it comes into view
+        rootMargin: '600px 0px 600px 0px', 
         threshold: 0 
       }
     );
@@ -51,12 +51,24 @@ const Home = () => {
           <img src={logo} alt="Rednest Logo" className="logo" />
           <span className="brand-name">Rednest</span>
         </div>
-        <nav className="nav-links">
-          <Link to="/" className="nav-link active">Home</Link>
-          <Link to="/catalog" className="nav-link">Menu</Link>
-          <Link to="/products" className="nav-link">Products</Link>
-        </nav>
-        <Link to="/catalog" className="cta-btn sm">Order Now</Link>
+        
+        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
+          <nav className="nav-links">
+            <Link to="/" className="nav-link active">Home</Link>
+            <Link to="/catalog" className="nav-link">Menu</Link>
+            <Link to="/products" className="nav-link">Products</Link>
+          </nav>
+          <Link to="/catalog" className="cta-btn sm">Order Now</Link>
+        </div>
+        
+        <div 
+          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} 
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? '✕' : '☰'}
+        </button>
       </header>
 
       <section className="hero-section">
@@ -80,26 +92,28 @@ const Home = () => {
       </section>
 
       <section className="features-section">
-        <div className="feature-card">
-          <div className="feature-icon">
-            <img src={premiumRoastIcon} alt="Premium Roast" className="feature-svg" />
+        <div className="features-grid">
+          <div className="feature-card">
+            <div className="feature-icon">
+              <img src={premiumRoastIcon} alt="Premium Roast" className="feature-svg" />
+            </div>
+            <h3>Premium Roast</h3>
+            <p>Sourced from the finest farms around the globe for an unforgettable taste.</p>
           </div>
-          <h3>Premium Roast</h3>
-          <p>Sourced from the finest farms around the globe for an unforgettable taste.</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon">
-            <img src={cozyAtmosphereIcon} alt="Cozy Atmosphere" className="feature-svg" />
+          <div className="feature-card">
+            <div className="feature-icon">
+              <img src={cozyAtmosphereIcon} alt="Cozy Atmosphere" className="feature-svg" />
+            </div>
+            <h3>Cozy Atmosphere</h3>
+            <p>A perfect environment to relax, work, or catch up with friends.</p>
           </div>
-          <h3>Cozy Atmosphere</h3>
-          <p>A perfect environment to relax, work, or catch up with friends.</p>
-        </div>
-        <div className="feature-card">
-          <div className="feature-icon">
-            <img src={ecoFriendlyIcon} alt="Eco-Friendly" className="feature-svg" />
+          <div className="feature-card">
+            <div className="feature-icon">
+              <img src={ecoFriendlyIcon} alt="Eco-Friendly" className="feature-svg" />
+            </div>
+            <h3>Eco-Friendly</h3>
+            <p>Committed to sustainable practices and 100% recyclable packaging.</p>
           </div>
-          <h3>Eco-Friendly</h3>
-          <p>Committed to sustainable practices and 100% recyclable packaging.</p>
         </div>
       </section>
 
@@ -148,21 +162,23 @@ const Home = () => {
       </section>
 
       <section className="about-us-section">
-        <div className="about-content">
-          <h2>The Rednest Experience</h2>
-          <p>
-            At Rednest, we believe that coffee is more than just a drink—it's a ritual. 
-            We meticulously source our beans from sustainable farms across the globe, 
-            ensuring every cup you enjoy is crafted with passion and respect for the environment.
-          </p>
-          <p>
-            Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew. 
-            Step into our cozy atmosphere and let us awaken your senses.
-          </p>
-          <Link to="/products" className="cta-btn">Read Our Story</Link>
-        </div>
-        <div className="about-visual">
-          <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
+        <div className="about-grid">
+          <div className="about-content">
+            <h2>The Rednest Experience</h2>
+            <p>
+              At Rednest, we believe that coffee is more than just a drink—it's a ritual. 
+              We meticulously source our beans from sustainable farms across the globe, 
+              ensuring every cup you enjoy is crafted with passion and respect for the environment.
+            </p>
+            <p>
+              Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew. 
+              Step into our cozy atmosphere and let us awaken your senses.
+            </p>
+            <Link to="/products" className="cta-btn">Read Our Story</Link>
+          </div>
+          <div className="about-visual">
+            <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
+          </div>
         </div>
       </section>
 
@@ -181,7 +197,7 @@ const Home = () => {
         <div className="footer-content">
           <div className="footer-brand">
             <img src={logo} alt="Rednest Logo" className="footer-logo" />
-            <span>Rednest Coffee Shop</span>
+            <span>Rednest Coffee</span>
           </div>
           <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
         </div>
