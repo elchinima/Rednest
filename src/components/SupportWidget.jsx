@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import smileyAnimated from '../../../assets/icons/smiley-animated.svg';
+import smileyAnimated from '../assets/icons/smiley-animated.svg';
 import './SupportWidget.scss';
 
 const SupportWidget = () => {

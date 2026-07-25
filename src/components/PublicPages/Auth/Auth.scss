@@ -78,7 +78,7 @@
   }
   
   .auth-brand-logo {
-    height: 140px;
+    height: 70px;
     margin-bottom: $spacing-xl;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     transition: transform 0.3s ease;
@@ -129,7 +129,7 @@
   
   .auth-logo {
     display: none; // Hidden on desktop since it's on the left panel
-    height: 70px;
+    height: 34px; /* Reduced by 10% */
     margin-bottom: 24px;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
     
