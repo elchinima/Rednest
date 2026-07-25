@@ -60,7 +60,6 @@ const Home = () => {
           <nav className="nav-links">
             <Link to="/" className="nav-link active">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
-            <Link to="/products" className="nav-link">Products</Link>
           </nav>
           <Link to="/catalog" className="cta-btn sm">Order Now</Link>
         </div>
@@ -90,7 +89,6 @@ const Home = () => {
           </p>
           <div className="hero-actions">
             <Link to="/catalog" className="cta-btn lg">Explore Menu</Link>
-            <Link to="/products" className="cta-btn secondary lg">Our Story</Link>
           </div>
         </div>
       </section>
@@ -128,6 +126,7 @@ const Home = () => {
         </div>
         <div className="menu-grid">
           <div className="menu-item-card">
+            <div className="favorite-badge">Favorite</div>
             <img src={cappuccinoImg} alt="Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
               <h4>Cappuccino</h4>
@@ -136,6 +135,7 @@ const Home = () => {
             </div>
           </div>
           <div className="menu-item-card">
+            <div className="favorite-badge">Favorite</div>
             <img src={redLatteImg} alt="Red Latte" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
               <h4>Red Latte</h4>
@@ -144,6 +144,7 @@ const Home = () => {
             </div>
           </div>
           <div className="menu-item-card">
+            <div className="favorite-badge">Favorite</div>
             <img src={nestCappuccinoImg} alt="Nest Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
               <h4>Nest Cappuccino</h4>
@@ -152,6 +153,7 @@ const Home = () => {
             </div>
           </div>
           <div className="menu-item-card">
+            <div className="favorite-badge">Favorite</div>
             <img src={hotChocolateImg} alt="Hot Chocolate" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
               <h4>Hot Chocolate</h4>
@@ -178,7 +180,6 @@ const Home = () => {
               Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew. 
               Step into our cozy atmosphere and let us awaken your senses.
             </p>
-            <Link to="/products" className="cta-btn">Read Our Story</Link>
           </div>
           <div className="about-visual">
             <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
