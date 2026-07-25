@@ -6,6 +6,10 @@ import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
 import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
 import bgVideo from '../../../assets/video/media_1.mp4';
 import aboutImage from '../../../assets/images/about_image.png';
+import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
+import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
+import nestCappuccinoImg from '../../../assets/images/product/Nest_Cappuccino.jpg';
+import hotChocolateImg from '../../../assets/images/product/Hot_Chocolate.jpg';
 import './Home.scss';
 
 const Home = () => {
@@ -124,35 +128,35 @@ const Home = () => {
         </div>
         <div className="menu-grid">
           <div className="menu-item-card">
-            <div className="menu-img-placeholder signature-espresso"></div>
+            <img src={cappuccinoImg} alt="Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
-              <h4>Signature Espresso</h4>
-              <p>Rich, full-bodied with notes of dark chocolate.</p>
-              <span className="price">3.50 ₼</span>
+              <h4>Cappuccino</h4>
+              <p>The perfect balance of coffee and milk foam. The soft foam on top brings happiness with every sip.</p>
+              <span className="price">3.49 ₼</span>
             </div>
           </div>
           <div className="menu-item-card">
-            <div className="menu-img-placeholder caramel-macchiato"></div>
+            <img src={redLatteImg} alt="Red Latte" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
-              <h4>Caramel Macchiato</h4>
-              <p>Velvety steamed milk with vanilla and caramel drizzle.</p>
-              <span className="price">4.75 ₼</span>
+              <h4>Red Latte</h4>
+              <p>Special Rednest recipe: The harmony of latte and strawberry syrup. A sweet and romantic taste.</p>
+              <span className="price">3.75 ₼</span>
             </div>
           </div>
           <div className="menu-item-card">
-            <div className="menu-img-placeholder cold-brew"></div>
+            <img src={nestCappuccinoImg} alt="Nest Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
-              <h4>Nitro Cold Brew</h4>
-              <p>Slow-steeped, cold-pressed, and infused with nitrogen.</p>
+              <h4>Nest Cappuccino</h4>
+              <p>Cappuccino enriched with the sweetness of caramel and the aroma of hazelnut. Like a warm hug. </p>
               <span className="price">4.25 ₼</span>
             </div>
           </div>
           <div className="menu-item-card">
-            <div className="menu-img-placeholder matcha-latte"></div>
+            <img src={hotChocolateImg} alt="Hot Chocolate" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
             <div className="menu-info">
-              <h4>Matcha Latte</h4>
-              <p>Premium green tea powder lightly sweetened and steamed with milk.</p>
-              <span className="price">4.50 ₼</span>
+              <h4>Hot Chocolate</h4>
+              <p>A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.</p>
+              <span className="price">2.99 ₼</span>
             </div>
           </div>
         </div>
