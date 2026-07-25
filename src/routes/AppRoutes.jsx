@@ -4,6 +4,7 @@ import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
 import ScrollToTop from '../components/ScrollToTop';
+import SupportWidget from '../components/Shared/SupportWidget/SupportWidget';
 
 const AppRoutes = () => {
   return (
@@ -15,6 +16,7 @@ const AppRoutes = () => {
         <Route path="/login" element={<Auth />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <SupportWidget />
     </Router>
   );
 };

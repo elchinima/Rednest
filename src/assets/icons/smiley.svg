@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Base circle -->
+  <circle cx="50" cy="50" r="45" stroke="#ffffff" stroke-width="5"/>
+  
+  <!-- Happy curved eyes (cute) -->
+  <path d="M 28 42 Q 35 32 42 42" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M 58 42 Q 65 32 72 42" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+  
+  <!-- Cute little smile -->
+  <path d="M 42 60 Q 50 72 58 60" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+  
+  <!-- Blush (in brand red/coral color) -->
+  <circle cx="22" cy="55" r="6" fill="#e74c3c" opacity="0.8" />
+  <circle cx="78" cy="55" r="6" fill="#e74c3c" opacity="0.8" />
+</svg>

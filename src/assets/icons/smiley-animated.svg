@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <!-- Плавное парение (Floating animation) -->
+    <animateTransform attributeName="transform" type="translate" values="0 3; 0 -2; 0 3" dur="4s" repeatCount="indefinite" />
+    
+    <!-- Основа (лицо) -->
+    <circle cx="50" cy="50" r="45" stroke="#ffffff" stroke-width="5"/>
+    
+    <!-- Левый глаз -->
+    <path d="M 28 42 Q 35 32 42 42" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none"/>
+    
+    <!-- Правый глаз (анимация подмигивания) -->
+    <path d="M 58 42 Q 65 32 72 42" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none">
+      <animate attributeName="d" 
+               values="M 58 42 Q 65 32 72 42; 
+                       M 58 42 Q 65 42 72 42; 
+                       M 58 42 Q 65 32 72 42; 
+                       M 58 42 Q 65 32 72 42" 
+               keyTimes="0; 0.05; 0.1; 1" 
+               dur="3.5s" 
+               repeatCount="indefinite" />
+    </path>
+    
+    <!-- Улыбка (анимация легкого изменения ширины улыбки) -->
+    <path d="M 42 60 Q 50 72 58 60" stroke="#ffffff" stroke-width="5" stroke-linecap="round" fill="none">
+      <animate attributeName="d"
+               values="M 42 60 Q 50 72 58 60;
+                       M 38 58 Q 50 76 62 58;
+                       M 42 60 Q 50 72 58 60"
+               keyTimes="0; 0.5; 1"
+               dur="3s"
+               repeatCount="indefinite" />
+    </path>
+    
+    <!-- Румянец -->
+    <circle cx="22" cy="55" r="6" fill="#e74c3c" opacity="0.8">
+      <animate attributeName="opacity" values="0.8; 0.5; 0.8" dur="3s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="78" cy="55" r="6" fill="#e74c3c" opacity="0.8">
+      <animate attributeName="opacity" values="0.8; 0.5; 0.8" dur="3s" repeatCount="indefinite" />
+    </circle>
+  </g>
+</svg>
