@@ -31,9 +31,9 @@ const Home = () => {
           }
         });
       },
-      { 
-        rootMargin: '600px 0px 600px 0px', 
-        threshold: 0 
+      {
+        rootMargin: '600px 0px 600px 0px',
+        threshold: 0
       }
     );
 
@@ -55,17 +55,17 @@ const Home = () => {
           <img src={logo} alt="Rednest Logo" className="logo" />
           <span className="brand-name">Rednest</span>
         </div>
-        
+
         <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
           <nav className="nav-links">
             <Link to="/" className="nav-link active">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          <Link to="/catalog" className="cta-btn sm">Order Now</Link>
+          <Link to="/login" className="cta-btn sm">Log In</Link>
         </div>
-        
-        <div 
-          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} 
+
+        <div
+          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
           onClick={() => setIsMenuOpen(false)}
         />
 
@@ -79,7 +79,7 @@ const Home = () => {
           <source src={bgVideo} type="video/mp4" />
         </video>
         <div className="hero-overlay"></div>
-        
+
         <div className="hero-content">
           <h1 className="hero-title">
             Awaken Your <span className="highlight">Senses</span>
@@ -172,12 +172,12 @@ const Home = () => {
           <div className="about-content">
             <h2>The Rednest Experience</h2>
             <p>
-              At Rednest, we believe that coffee is more than just a drink—it's a ritual. 
-              We meticulously source our beans from sustainable farms across the globe, 
+              At Rednest, we believe that coffee is more than just a drink—it's a ritual.
+              We meticulously source our beans from sustainable farms across the globe,
               ensuring every cup you enjoy is crafted with passion and respect for the environment.
             </p>
             <p>
-              Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew. 
+              Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew.
               Step into our cozy atmosphere and let us awaken your senses.
             </p>
           </div>
@@ -193,7 +193,7 @@ const Home = () => {
           <p>Subscribe to receive exclusive offers, new roast announcements, and brewing tips directly to your inbox.</p>
           <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
             <input type="email" placeholder="Enter your email address" required />
-            <button type="submit" className="cta-btn">Subscribe</button>
+            <button type="submit" className="cta-btn" id='subscribe-btn'>Subscribe</button>
           </form>
         </div>
       </section>

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
 
-
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
 import nestCappuccinoImg from '../../../assets/images/product/Nest_Cappuccino.jpg';
@@ -123,17 +122,17 @@ const Catalog = () => {
             <span className="brand-name">Rednest</span>
           </Link>
         </div>
-        
+
         <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
           <nav className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link active">Menu</Link>
           </nav>
-          <Link to="/catalog" className="cta-btn sm">Order Now</Link>
+          <Link to="/login" className="cta-btn sm">Log In</Link>
         </div>
-        
-        <div 
-          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} 
+
+        <div
+          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
           onClick={() => setIsMenuOpen(false)}
         />
 
