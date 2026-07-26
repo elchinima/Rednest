@@ -5,19 +5,12 @@ import './SupportWidget.scss';
 
 const SupportWidget = () => {
   const location = useLocation();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      
-      const isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 150;
-
-      if (scrollY >= 10 && !isAtBottom) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      setIsScrolled(window.scrollY >= 10);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -26,9 +19,37 @@ const SupportWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const footer = document.querySelector('footer');
+      if (!footer) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsFooterVisible(entry.isIntersecting);
+        },
+        {
+          root: null,
+          threshold: 0,
+          rootMargin: '50px 0px 0px 0px' 
+        }
+      );
+
+      observer.observe(footer);
+
+      return () => {
+        observer.disconnect();
+      };
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [location.pathname]);
+
   if (location.pathname === '/login') {
     return null;
   }
+
+  const isVisible = isScrolled && !isFooterVisible;
 
   return (
     <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
@@ -38,7 +59,6 @@ const SupportWidget = () => {
       <button 
         className="support-widget" 
         aria-label="Support chat" 
-        onClick={() => console.log('Open support chat')}
       >
         <img src={smileyAnimated} alt="Support" />
       </button>

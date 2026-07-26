@@ -69,7 +69,17 @@ const Footer = () => {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
+          <div className="language-switcher">
+            <select aria-label="Select language" defaultValue="ru">
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="az">Azərbaycan</option>
+            </select>
+          </div>
+          <p className="copyright">&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
+          <div className="terms-link">
+            <Link to="/terms">Terms of Use</Link>
+          </div>
         </div>
       </div>
     </footer>
