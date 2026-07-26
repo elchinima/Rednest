@@ -1,11 +1,18 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import './Footer.scss';
 import logo from '../../assets/icons/rednest_logo.png';
 
 const Footer = () => {
   return (
-    <footer className="footer">
+    <motion.footer 
+      className="footer"
+      initial={{ opacity: 0, y: 50 }} 
+      whileInView={{ opacity: 1, y: 0 }} 
+      viewport={{ once: true, amount: 0.1 }} 
+      transition={{ duration: 0.6 }}
+    >
       <div className="footer-content">
         <div className="footer-top">
           <div className="footer-col brand-col">
@@ -82,7 +89,7 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 };
 

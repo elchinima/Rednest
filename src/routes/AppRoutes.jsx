@@ -1,21 +1,32 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
 import ScrollToTop from '../components/ScrollToTop';
 import SupportWidget from '../components/SupportWidget';
 
-const AppRoutes = () => {
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
   return (
-    <Router>
-      <ScrollToTop />
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/login" element={<Auth />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </AnimatePresence>
+  );
+};
+
+const AppRoutes = () => {
+  return (
+    <Router>
+      <ScrollToTop />
+      <AnimatedRoutes />
       <SupportWidget />
     </Router>
   );

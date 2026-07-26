@@ -10,39 +10,28 @@ const SupportWidget = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY >= 10);
+      const scrollY = window.scrollY;
+      
+      let isAtBottom = false;
+      const footer = document.querySelector('footer');
+      
+      if (footer) {
+        const footerRect = footer.getBoundingClientRect();
+        if (footerRect.top <= window.innerHeight + 50) {
+          isAtBottom = true;
+        }
+      } else {
+        isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 400;
+      }
+
+      setIsScrolled(scrollY >= 10);
+      setIsFooterVisible(isAtBottom);
     };
 
     window.addEventListener('scroll', handleScroll);
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const footer = document.querySelector('footer');
-      if (!footer) return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          setIsFooterVisible(entry.isIntersecting);
-        },
-        {
-          root: null,
-          threshold: 0,
-          rootMargin: '50px 0px 0px 0px' 
-        }
-      );
-
-      observer.observe(footer);
-
-      return () => {
-        observer.disconnect();
-      };
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
   }, [location.pathname]);
 
   if (location.pathname === '/login') {

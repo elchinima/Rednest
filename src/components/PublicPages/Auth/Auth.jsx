@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Auth.scss';
@@ -14,7 +15,13 @@ const Auth = () => {
   };
 
   return (
-    <div className="auth-page">
+    <motion.div 
+      className="auth-page"
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      transition={{ duration: 0.3 }}
+    >
       <div className="auth-overlay"></div>
       
       <div className="auth-container">
@@ -83,7 +90,7 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

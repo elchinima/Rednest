@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
@@ -115,7 +116,13 @@ const Catalog = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="catalog-page">
+    <motion.div 
+      className="catalog-page"
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      transition={{ duration: 0.3 }}
+    >
       <header className="home-header">
         <div className="logo-container">
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -150,7 +157,14 @@ const Catalog = () => {
 
         <div className="menu-categories">
           {menuData.map((categoryObj, index) => (
-            <section key={index} className="menu-category-section">
+            <motion.section 
+              key={index} 
+              className="menu-category-section"
+              initial={{ opacity: 0, y: 50 }} 
+              whileInView={{ opacity: 1, y: 0 }} 
+              viewport={{ once: true, amount: 0.1 }} 
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
               <h2 className="category-title">{categoryObj.category}</h2>
               <div className="catalog-grid">
                 {categoryObj.items.map((item) => (
@@ -174,13 +188,13 @@ const Catalog = () => {
                   </div>
                 ))}
               </div>
-            </section>
+            </motion.section>
           ))}
         </div>
       </main>
 
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 

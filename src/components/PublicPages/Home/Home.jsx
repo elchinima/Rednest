@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
@@ -50,7 +51,13 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="home-page">
+    <motion.div 
+      className="home-page"
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      transition={{ duration: 0.3 }}
+    >
       <header className="home-header">
         <div className="logo-container">
           <img src={logo} alt="Rednest Logo" className="logo" />
@@ -94,7 +101,13 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="features-section">
+      <motion.section 
+        className="features-section"
+        initial={{ opacity: 0, y: 50 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, amount: 0.2 }} 
+        transition={{ duration: 0.6 }}
+      >
         <div className="features-grid">
           <div className="feature-card">
             <div className="feature-icon">
@@ -118,9 +131,15 @@ const Home = () => {
             <p>Committed to sustainable practices and 100% recyclable packaging.</p>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="popular-menu-section">
+      <motion.section 
+        className="popular-menu-section"
+        initial={{ opacity: 0, y: 50 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, amount: 0.2 }} 
+        transition={{ duration: 0.6 }}
+      >
         <div className="section-header">
           <h2>Our Favorites</h2>
           <p>Discover the drinks our customers love the most.</p>
@@ -166,9 +185,15 @@ const Home = () => {
         <div className="section-actions">
           <Link to="/catalog" className="cta-btn secondary">View Full Menu</Link>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="about-us-section">
+      <motion.section 
+        className="about-us-section"
+        initial={{ opacity: 0, y: 50 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, amount: 0.2 }} 
+        transition={{ duration: 0.6 }}
+      >
         <div className="about-grid">
           <div className="about-content">
             <h2>The Rednest Experience</h2>
@@ -186,9 +211,15 @@ const Home = () => {
             <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="newsletter-section">
+      <motion.section 
+        className="newsletter-section"
+        initial={{ opacity: 0, y: 50 }} 
+        whileInView={{ opacity: 1, y: 0 }} 
+        viewport={{ once: true, amount: 0.2 }} 
+        transition={{ duration: 0.6 }}
+      >
         <div className="newsletter-container">
           <h2>Join the Rednest Club</h2>
           <p>Subscribe to receive exclusive offers, new roast announcements, and brewing tips directly to your inbox.</p>
@@ -197,10 +228,10 @@ const Home = () => {
             <button type="submit" className="cta-btn" id='subscribe-btn'>Subscribe</button>
           </form>
         </div>
-      </section>
+      </motion.section>
 
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 
