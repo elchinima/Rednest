@@ -10,6 +10,7 @@ import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
 import nestCappuccinoImg from '../../../assets/images/product/Nest_Cappuccino.jpg';
 import hotChocolateImg from '../../../assets/images/product/Hot_Chocolate.jpg';
+import Footer from '../../Footer/Footer';
 import './Home.scss';
 
 const Home = () => {
@@ -198,15 +199,7 @@ const Home = () => {
         </div>
       </section>
 
-      <footer className="home-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <img src={logo} alt="Rednest Logo" className="footer-logo" />
-            <span>Rednest Coffee</span>
-          </div>
-          <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

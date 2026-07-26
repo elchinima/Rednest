@@ -231,7 +231,6 @@
     transition: all 0.4s ease;
 
     &:hover {
-      transform: translateY(-8px);
       border-color: rgba(255, 255, 255, 0.5);
       background: rgba(255, 255, 255, 0.03);
     }
@@ -281,11 +280,19 @@
   }
 
   .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
     gap: $spacing-xl;
     max-width: 1300px;
     margin: 0 auto $spacing-xxxl auto;
+    padding-bottom: $spacing-md;
+
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .menu-item-card {
@@ -293,11 +300,12 @@
     border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: $border-radius-lg;
     overflow: hidden;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    transition: border-color 0.3s ease, background 0.3s ease;
     display: flex;
     flex-direction: column;
     height: 500px;
-    width: 100%;
+    flex: 0 0 clamp(260px, 80vw, 300px);
+    scroll-snap-align: start;
     position: relative;
 
     .favorite-badge {
@@ -318,7 +326,6 @@
     }
 
     &:hover {
-      transform: translateY(-5px);
       border-color: rgba(255, 255, 255, 0.2);
     }
 
@@ -449,13 +456,17 @@
 
     p {
       color: $color-text-muted;
-      margin-bottom: $spacing-xl;
-      font-size: 1.05rem;
+      margin: 0 auto $spacing-xl;
+      max-width: 70%;
+      font-size: 1rem;
     }
 
     .newsletter-form {
       display: flex;
       gap: $spacing-sm;
+      max-width: 70%;
+      margin: 0 auto;
+      justify-content: center;
 
       input {
         flex: 1;
@@ -488,38 +499,7 @@
   }
 }
 
-.home-footer {
-  padding: $spacing-xl;
-  text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: $color-bg-dark;
 
-  .footer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: $spacing-md;
-  }
-
-  .footer-brand {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    font-weight: 700;
-    font-size: 1.2rem;
-
-    .footer-logo {
-      height: 22px; /* Reduced by 10% */
-      filter: grayscale(100%) brightness(200%);
-      opacity: 0.8;
-    }
-  }
-
-  p {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
-  }
-}
 
 @keyframes slideUp {
   from {
@@ -727,14 +707,28 @@
   .newsletter-section {
     padding: $spacing-xxxl $spacing-md;
 
+    .newsletter-container h2 {
+      font-size: 1.8rem;
+      white-space: nowrap;
+    }
+
+    .newsletter-container p {
+      max-width: 85%;
+    }
+
     .newsletter-form {
       flex-direction: row;
+      width: 90%;
+      max-width: 80%;
+      margin: 0 auto;
 
       input {
         flex: 1;
-        width: auto;
+        width: 100%;
+        min-width: 240px;
         min-height: 48px;
         padding: 0 $spacing-md;
+        font-size: 0.9rem;
       }
 
       button {

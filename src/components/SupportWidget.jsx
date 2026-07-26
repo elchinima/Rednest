@@ -21,7 +21,7 @@ const SupportWidget = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check initial state
+    handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -33,7 +33,7 @@ const SupportWidget = () => {
   return (
     <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
       <span className="support-tooltip">
-        Ready to help you with your choice.
+        Ready to help you with your choice
       </span>
       <button 
         className="support-widget" 

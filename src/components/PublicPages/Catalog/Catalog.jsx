@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
+import Footer from '../../Footer/Footer';
 
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
@@ -178,15 +179,7 @@ const Catalog = () => {
         </div>
       </main>
 
-      <footer className="catalog-footer">
-        <div className="footer-content">
-          <div className="footer-brand">
-            <img src={logo} alt="Rednest Logo" className="footer-logo" />
-            <span>Rednest Coffee</span>
-          </div>
-          <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -144,40 +144,7 @@
   }
 }
 
-.catalog-footer {
-  padding: $spacing-xl;
-  text-align: center;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: $color-bg-dark;
-  margin-top: auto;
-  
-  .footer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: $spacing-md;
-  }
-  
-  .footer-brand {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    font-weight: 700;
-    font-size: 1.2rem;
-    
-    .footer-logo {
-      height: 22px;
-      filter: grayscale(100%) brightness(200%);
-      opacity: 0.8;
-    }
-  }
-  
-  p {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
-    margin: 0;
-  }
-}
+
 
 @media (max-width: 768px) {
   .catalog-hero {
