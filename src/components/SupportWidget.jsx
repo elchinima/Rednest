@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import smileyAnimated from '../assets/icons/smiley-animated.svg';
+import AuthModal from './PublicPages/Auth/AuthModal';
 import './SupportWidget.scss';
 
 const SupportWidget = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -41,17 +43,25 @@ const SupportWidget = () => {
   const isVisible = isScrolled && !isFooterVisible;
 
   return (
-    <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
-      <span className="support-tooltip">
-        Ready to help you with your choice
-      </span>
-      <button 
-        className="support-widget" 
-        aria-label="Support chat" 
-      >
-        <img src={smileyAnimated} alt="Support" />
-      </button>
-    </div>
+    <>
+      <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
+        <span className="support-tooltip">
+          Ready to help you with your choice
+        </span>
+        <button 
+          className="support-widget" 
+          aria-label="Support chat" 
+          onClick={() => setIsAuthModalOpen(true)}
+        >
+          <img src={smileyAnimated} alt="Support" />
+        </button>
+      </div>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+    </>
   );
 };
 
