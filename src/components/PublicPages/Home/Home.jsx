@@ -178,7 +178,7 @@ const Home = () => {
             <div className="menu-info">
               <h4>Hot Chocolate</h4>
               <p>A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.</p>
-              <span className="price">2.99 ₼</span>
+              <span className="price">3.99 ₼</span>
             </div>
           </div>
         </div>

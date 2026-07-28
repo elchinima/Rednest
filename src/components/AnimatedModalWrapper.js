@@ -20,6 +20,8 @@ const modalStyles = `
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
 }
 .animated-modal-content {
   display: inline-flex;

@@ -32,21 +32,21 @@ const menuData = [
         id: "espresso",
         name: "Espresso",
         description: "A perfect choice to start the day energetically with its thick and strong taste. A favorite of true coffee lovers.",
-        price: "2.29",
+        price: "2.89",
         image: espressoImg
       },
       {
         id: "americano",
         name: "Americano",
         description: "A light and delicate flavor. Prepared by adding water to espresso, its taste is simple yet classic.",
-        price: "2.79",
+        price: "2.89",
         image: americanoImg
       },
       {
         id: "latte",
         name: "Latte",
         description: "Soft espresso mixed with fine milk foam. For those who love a warm and delicate taste.",
-        price: "2.99",
+        price: "3.49",
         image: latteImg
       },
       {
@@ -79,7 +79,7 @@ const menuData = [
         id: "hot-chocolate",
         name: "Hot Chocolate",
         description: "A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.",
-        price: "2.99",
+        price: "3.99",
         image: hotChocolateImg
       }
     ]
@@ -98,14 +98,14 @@ const menuData = [
         id: "croissant",
         name: "Croissant",
         description: "An unforgettable French classic with butter and taste in a light, flaky pastry.",
-        price: "1.89",
+        price: "1.99",
         image: croissantImg
       },
       {
         id: "muffin",
         name: "Muffin",
         description: "Soft, sweet, and satisfying. The best companion to every cup of coffee.",
-        price: "1.49",
+        price: "1.59",
         image: muffinImg
       }
     ]
