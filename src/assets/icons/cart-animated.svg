@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 5 90 90" fill="none">
+  <g>
+    <!-- Легкое парение вверх-вниз -->
+    <animateTransform attributeName="transform" type="translate" values="0 2; 0 -2; 0 2" dur="2.5s" repeatCount="indefinite" />
+    <!-- Небольшой наклон вперед-назад для живости -->
+    <animateTransform attributeName="transform" type="rotate" values="-3 50 85; 3 50 85; -3 50 85" dur="3.5s" repeatCount="indefinite" additive="sum" />
+    
+    <!-- Простая и четкая корзина, толстые линии -->
+    <path d="M 12 20 L 25 20 L 38 65 L 78 65 L 88 32 L 28 32" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    
+    <!-- Колеса -->
+    <circle cx="45" cy="85" r="7" fill="#ffffff" />
+    <circle cx="72" cy="85" r="7" fill="#ffffff" />
+  </g>
+</svg>

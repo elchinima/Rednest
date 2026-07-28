@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import smileyAnimated from '../assets/icons/smiley-animated.svg';
+import fortuneWheel from '../assets/icons/fortune-wheel.svg';
 import AuthModal from './PublicPages/Auth/AuthModal';
 
-const supportStyles = `
-.support-widget-container {
+const fortuneStyles = `
+.fortune-widget-container {
   position: fixed;
   bottom: 30px;
-  right: 30px;
+  left: 30px;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -16,55 +16,55 @@ const supportStyles = `
   pointer-events: none;
   transform: translateY(20px) scale(0.8);
 }
-body.mobile-menu-open .support-widget-container {
+body.mobile-menu-open .fortune-widget-container {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-.support-widget-container.visible {
+.fortune-widget-container.visible {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0) scale(1);
 }
 @media (max-width: 768px) {
-  .support-widget-container {
+  .fortune-widget-container {
     bottom: 20px;
-    right: 20px;
+    left: 20px;
   }
 }
-.support-tooltip {
+.fortune-tooltip {
   position: absolute;
-  right: calc(100% + 15px);
+  left: calc(100% + 15px);
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   padding: 12px 18px;
-  border-radius: 12px 12px 0 12px;
+  border-radius: 12px 12px 12px 0;
   color: #fff;
   font-size: 0.9rem;
   font-weight: 500;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transform: translate(15px, -50px) scale(0.9);
+  transform: translate(-15px, -50px) scale(0.9);
   pointer-events: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
-.support-widget-container:hover .support-tooltip {
+.fortune-widget-container:hover .fortune-tooltip {
   visibility: visible;
-  animation: tooltipPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: fortuneTooltipPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-@keyframes tooltipPop {
+@keyframes fortuneTooltipPop {
   0% {
     opacity: 0;
-    transform: translate(15px, -50px) scale(0.9);
+    transform: translate(-15px, -50px) scale(0.9);
   }
   100% {
     opacity: 1;
     transform: translate(0, -50px) scale(1);
   }
 }
-.support-widget {
+.fortune-widget {
   width: 65px;
   height: 65px;
   border-radius: 50%;
@@ -78,29 +78,29 @@ body.mobile-menu-open .support-widget-container {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-.support-widget img {
+.fortune-widget img {
   width: 40px;
   height: 40px;
 }
-.support-widget:hover {
+.fortune-widget:hover {
   transform: scale(1.15) translateY(-5px);
 }
-.support-widget:active {
+.fortune-widget:active {
   transform: scale(0.95);
 }
 @media (max-width: 768px) {
-  .support-widget {
+  .fortune-widget {
     width: 55px;
     height: 55px;
   }
-  .support-widget img {
+  .fortune-widget img {
     width: 34px;
     height: 34px;
   }
 }
 `;
 
-const SupportWidget = () => {
+const FortuneWidget = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
@@ -138,20 +138,24 @@ const SupportWidget = () => {
 
   const isVisible = isScrolled && !isFooterVisible;
 
+  const handleFortuneClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
   return (
     <>
-      <style>{supportStyles}</style>
-      <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
-        <span className="support-tooltip">
-          Ready to help you with your choice
-        </span>
+      <style>{fortuneStyles}</style>
+      <div className={`fortune-widget-container ${isVisible ? 'visible' : ''}`}>
         <button 
-          className="support-widget" 
-          aria-label="Support chat" 
-          onClick={() => setIsAuthModalOpen(true)}
+          className="fortune-widget" 
+          aria-label="Wheel of Fortune" 
+          onClick={handleFortuneClick}
         >
-          <img src={smileyAnimated} alt="Support" />
+          <img src={fortuneWheel} alt="Fortune" />
         </button>
+        <span className="fortune-tooltip">
+          Spin the wheel for a gift!
+        </span>
       </div>
 
       <AuthModal 
@@ -162,4 +166,4 @@ const SupportWidget = () => {
   );
 };
 
-export default SupportWidget;
+export default FortuneWidget;
