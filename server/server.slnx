@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Rednest.Api/Rednest.Api.csproj" />
+    <Project Path="Rednest.Application/Rednest.Application.csproj" />
+    <Project Path="Rednest.Core/Rednest.Core.csproj" />
+    <Project Path="Rednest.Infrastructure/Rednest.Infrastructure.csproj" />
+  </Folder>
+</Solution>
