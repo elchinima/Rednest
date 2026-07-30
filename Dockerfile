@@ -6,14 +6,14 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Build backend (.NET 10)
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-builder
+# Stage 2: Build backend (.NET 10 preview)
+FROM mcr.microsoft.com/dotnet/nightly/sdk:10.0 AS backend-builder
 WORKDIR /src
 COPY server/ .
 RUN dotnet publish Rednest.Api/Rednest.Api.csproj -c Release -o /app/publish
 
 # Stage 3: Final image — Nginx + .NET runtime + supervisord
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0 AS final
 
 # Install Nginx and Supervisord
 RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*

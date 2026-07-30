@@ -115,7 +115,9 @@ const Auth = () => {
                 </label>
               </div>
               
-              {error && <div className="auth-error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+              <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
+                {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
+              </div>
 
               <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                 {loading ? 'Processing...' : 'Continue'}
