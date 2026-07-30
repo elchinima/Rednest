@@ -1,24 +1,34 @@
-# Stage 1: Build the project (Vite)
-FROM node:20-alpine AS builder
+# Stage 1: Build frontend (Vite)
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app
-
-# Copy dependency files and install them
 COPY package*.json ./
 RUN npm install
-
-# Copy the rest of the code and build the project
 COPY . .
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-# Stage 2: Serve static files using Nginx
-FROM nginx:alpine
-# Copy the built files from the first stage to the Nginx folder
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Stage 2: Build backend (.NET 10)
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-builder
+WORKDIR /src
+COPY server/ .
+RUN dotnet publish Rednest.Api/Rednest.Api.csproj -c Release -o /app/publish
 
-# Copy custom Nginx config (optional, but useful for React Router)
+# Stage 3: Final image — Nginx + .NET runtime + supervisord
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+# Install Nginx and Supervisord
+RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
+
+# Copy frontend static files
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html
+
+# Copy backend binaries
+COPY --from=backend-builder /app/publish /app/api
+
+# Copy Nginx config (with /api proxy)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Copy Supervisord config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
