@@ -12,23 +12,16 @@ WORKDIR /src
 COPY server/ .
 RUN dotnet publish Rednest.Api/Rednest.Api.csproj -c Release -o /app/publish
 
-# Stage 3: Final image — Nginx + .NET runtime + supervisord
+# Stage 3: Final image — .NET serves everything
 FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0 AS final
-
-# Install Nginx and Supervisord
-RUN apt-get update && apt-get install -y nginx supervisor && rm -rf /var/lib/apt/lists/*
-
-# Copy frontend static files
-COPY --from=frontend-builder /app/dist /usr/share/nginx/html
+WORKDIR /app
 
 # Copy backend binaries
-COPY --from=backend-builder /app/publish /app/api
+COPY --from=backend-builder /app/publish .
 
-# Copy Nginx config (with /api proxy)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy frontend static files into wwwroot
+COPY --from=frontend-builder /app/dist ./wwwroot
 
-# Copy Supervisord config
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-EXPOSE 80
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+CMD ["dotnet", "Rednest.Api.dll"]
