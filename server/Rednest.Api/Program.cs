@@ -49,6 +49,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtIssuer,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.HttpContext.Items.TryGetValue("newAccessToken", out var newToken))
+                {
+                    context.Token = newToken as string;
+                }
+                else
+                {
+                    context.Token = context.Request.Cookies["accessToken"];
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -62,6 +77,60 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+
+app.Use(async (context, next) =>
+{
+    var accessToken = context.Request.Cookies["accessToken"];
+    var refreshToken = context.Request.Cookies["refreshToken"];
+
+    if (!string.IsNullOrEmpty(refreshToken))
+    {
+        bool needsRefresh = false;
+
+        if (string.IsNullOrEmpty(accessToken))
+        {
+            needsRefresh = true;
+        }
+        else
+        {
+            var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            if (handler.CanReadToken(accessToken))
+            {
+                var jwt = handler.ReadJwtToken(accessToken);
+                if (jwt.ValidTo < DateTime.UtcNow.AddMinutes(1))
+                {
+                    needsRefresh = true;
+                }
+            }
+        }
+
+        if (needsRefresh)
+        {
+            var authService = context.RequestServices.GetRequiredService<IAuthService>();
+            try
+            {
+                var result = await authService.RefreshTokenAsync(refreshToken);
+                
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(30)
+                };
+
+                context.Response.Cookies.Append("accessToken", result.AccessToken, cookieOptions);
+                context.Response.Cookies.Append("refreshToken", result.RefreshToken, cookieOptions);
+
+                context.Items["newAccessToken"] = result.AccessToken;
+            }
+            catch { }
+        }
+    }
+
+    await next(context);
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -70,3 +139,13 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+
+
+#region download packages  
+
+// Google Auth
+// Stripe
+// ImageSharp
+
+#endregion

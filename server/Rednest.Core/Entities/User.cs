@@ -8,5 +8,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? RegistrationIp { get; set; }
     public string? LastLoginIp { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiryTime { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

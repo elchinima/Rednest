@@ -24,7 +24,35 @@ public class AuthController : ControllerBase
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress);
-            return Ok(new { Token = result.Token, HasName = result.HasName });
+            SetTokenCookies(result.AccessToken, result.RefreshToken);
+            return Ok(new 
+            { 
+                HasName = result.HasName 
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh()
+    {
+        var refreshToken = Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(refreshToken))
+        {
+            return Unauthorized(new { Message = "No refresh token provided." });
+        }
+        try
+        {
+            var result = await _authService.RefreshTokenAsync(refreshToken);
+            SetTokenCookies(result.AccessToken, result.RefreshToken);
+            return Ok();
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -65,5 +93,27 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { Message = ex.Message });
         }
+    }
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("accessToken");
+        Response.Cookies.Delete("refreshToken");
+        return Ok();
+    }
+
+    private void SetTokenCookies(string accessToken, string refreshToken)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true, // Must be true for HTTPS (Render provides HTTPS)
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(30)
+        };
+
+        Response.Cookies.Append("accessToken", accessToken, cookieOptions);
+        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
     }
 }

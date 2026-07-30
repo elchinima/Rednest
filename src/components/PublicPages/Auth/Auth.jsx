@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Auth.scss';
 
@@ -12,7 +13,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState('login'); // 'login' or 'name'
+  const [step, setStep] = useState('login');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +25,7 @@ const Auth = () => {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
@@ -33,8 +35,6 @@ const Auth = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Authorization / Registration Error');
       }
-
-      localStorage.setItem('token', data.token);
       
       if (!data.hasName) {
         setStep('name');
@@ -56,13 +56,12 @@ const Auth = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/auth/name`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ name })
       });
