@@ -4,5 +4,5 @@ namespace Rednest.Application.Interfaces;
 
 public interface IAuthService
 {
-    Task<string> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress);
+    Task<(string Token, bool HasName)> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress);
 }

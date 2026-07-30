@@ -20,7 +20,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<string> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress)
+    public async Task<(string Token, bool HasName)> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
         
@@ -46,7 +46,8 @@ public class AuthService : IAuthService
             await _userRepository.UpdateAsync(user);
         }
 
-        return GenerateJwtToken(user);
+        bool hasName = !string.IsNullOrEmpty(user.Name);
+        return (GenerateJwtToken(user), hasName);
     }
 
     private string GenerateJwtToken(User user)

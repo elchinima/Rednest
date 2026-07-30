@@ -7,10 +7,12 @@ import './Auth.scss';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState('login'); // 'login' or 'name'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,11 +35,47 @@ const Auth = () => {
       }
 
       localStorage.setItem('token', data.token);
-      setSuccess(true);
-
-      window.location.href = '/';
+      
+      if (!data.hasName) {
+        setStep('name');
+      } else {
+        setSuccess(true);
+        window.location.href = '/';
+      }
     } catch (err) {
       console.error("Auth Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNameSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/auth/name`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update name');
+      }
+
+      setSuccess(true);
+      window.location.href = '/';
+    } catch (err) {
+      console.error("Name Update Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -77,52 +115,77 @@ const Auth = () => {
               <p>Enter your email and password to log in or create a new account.</p>
             </div>
             
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <div className="input-group">
-                <label htmlFor="email">Email</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  placeholder="Enter your email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                />
-              </div>
-              
-              <div className="input-group">
-                <label htmlFor="password">Password</label>
-                <input 
-                  type="password" 
-                  id="password" 
-                  placeholder="Enter your password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
-              </div>
-              
-              <div className="checkbox-group">
-                <input 
-                  type="checkbox" 
-                  id="agree" 
-                  checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
-                  required 
-                />
-                <label htmlFor="agree">
-                  I agree to the <Link to="/terms" className="terms-link">Terms of Use</Link>
-                </label>
-              </div>
-              
-              <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
-                {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
-              </div>
+            {step === 'login' ? (
+              <form className="auth-form" onSubmit={handleSubmit}>
+                <div className="input-group">
+                  <label htmlFor="email">Email</label>
+                  <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="Enter your email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required 
+                  />
+                </div>
+                
+                <div className="input-group">
+                  <label htmlFor="password">Password</label>
+                  <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Enter your password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
+                </div>
+                
+                <div className="checkbox-group">
+                  <input 
+                    type="checkbox" 
+                    id="agree" 
+                    checked={agree}
+                    onChange={(e) => setAgree(e.target.checked)}
+                    required 
+                  />
+                  <label htmlFor="agree">
+                    I agree to the <Link to="/terms" className="terms-link">Terms of Use</Link>
+                  </label>
+                </div>
+                
+                <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
+                  {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
+                </div>
 
-              <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
-                {loading ? 'Processing...' : 'Continue'}
-              </button>
-            </form>
+                <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
+                  {loading ? 'Processing...' : 'Continue'}
+                </button>
+              </form>
+            ) : (
+              <form className="auth-form" onSubmit={handleNameSubmit}>
+                <div className="input-group">
+                  <label htmlFor="name">Your Name</label>
+                  <input 
+                    type="text" 
+                    id="name" 
+                    placeholder="Enter your name" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required 
+                    autoFocus
+                  />
+                </div>
+                
+                <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
+                  {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
+                </div>
+
+                <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
+                  {loading ? 'Saving...' : 'Complete Registration'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>
