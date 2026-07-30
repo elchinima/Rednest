@@ -1,21 +1,23 @@
-# Этап 1: Сборка проекта (Vite)
+# Stage 1: Build the project (Vite)
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Копируем файлы зависимостей и устанавливаем их
+# Copy dependency files and install them
 COPY package*.json ./
 RUN npm install
 
-# Копируем весь остальной код и собираем проект
+# Copy the rest of the code and build the project
 COPY . .
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-# Этап 2: Раздача статики через Nginx
+# Stage 2: Serve static files using Nginx
 FROM nginx:alpine
-# Копируем собранные файлы из первого этапа в папку Nginx
+# Copy the built files from the first stage to the Nginx folder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Копируем кастомный конфиг Nginx (опционально, но полезно для React Router)
+# Copy custom Nginx config (optional, but useful for React Router)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

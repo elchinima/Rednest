@@ -5,7 +5,7 @@ const modalStyles = `
 .animated-modal-wrapper {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99999;
 }
 .animated-modal-backdrop {
   position: absolute;

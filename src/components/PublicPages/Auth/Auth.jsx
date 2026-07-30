@@ -8,10 +8,40 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submit Auth:", { email, password, agree });
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5045';
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authorization / Registration Error');
+      }
+
+      localStorage.setItem('token', data.token);
+      setSuccess(true);
+
+      window.location.href = '/';
+    } catch (err) {
+      console.error("Auth Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,7 +115,11 @@ const Auth = () => {
                 </label>
               </div>
               
-              <button type="submit" className="cta-btn auth-submit-btn">Continue</button>
+              {error && <div className="auth-error" style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+
+              <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
+                {loading ? 'Processing...' : 'Continue'}
+              </button>
             </form>
           </div>
         </div>

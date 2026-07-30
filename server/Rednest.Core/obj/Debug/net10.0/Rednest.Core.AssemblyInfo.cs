@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Rednest.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+acfea3f1a21d347d641008043aff1b61be32d6c0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+46c6458e9e75854aae29378d4c15d26607e34861")]
 [assembly: System.Reflection.AssemblyProductAttribute("Rednest.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Rednest.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
