@@ -28,3 +28,13 @@ Secret
 .env
 env
 env.txt
+
+# .NET Server Ignore Rules
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+server/**/*.db
+server/**/*.db-journal
