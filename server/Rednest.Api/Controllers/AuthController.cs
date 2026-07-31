@@ -65,6 +65,32 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe([FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            return Ok(new { Name = user.Name });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [HttpPut("name")]
     public async Task<IActionResult> UpdateName(
         [FromBody] UpdateNameRequest nameRequest, 

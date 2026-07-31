@@ -17,6 +17,23 @@ import './Home.scss';
 const Home = () => {
   const videoRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/auth/me`, { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -78,7 +95,11 @@ const Home = () => {
             <Link to="/" className="nav-link active">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          <Link to="/login" className="cta-btn sm">Log In</Link>
+          {user ? (
+            <span className="cta-btn sm" style={{ cursor: 'default' }}>Hello, {user.name}</span>
+          ) : (
+            <Link to="/login" className="cta-btn sm">Log In</Link>
+          )}
         </div>
 
         <div
