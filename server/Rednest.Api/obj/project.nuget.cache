@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "oz57q8JKWKc=",
+  "dgSpecHash": "TxHJ/0qjrAc=",
   "success": true,
-  "projectFilePath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+  "projectFilePath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dmatc\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\dotnetenv\\3.2.0\\dotnetenv.3.2.0.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\microsoft.aspnetcore.authentication.google\\10.0.10\\microsoft.aspnetcore.authentication.google.10.0.10.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\10.0.10\\microsoft.aspnetcore.authentication.jwtbearer.10.0.10.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\microsoft.bcl.cryptography\\10.0.2\\microsoft.bcl.cryptography.10.0.2.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\microsoft.build.framework\\18.0.2\\microsoft.build.framework.18.0.2.nupkg.sha512",

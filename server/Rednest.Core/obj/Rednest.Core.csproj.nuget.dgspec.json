@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {}
+    "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {}
   },
   "projects": {
-    "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {
+    "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj",
+        "projectUniqueName": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj",
         "projectName": "Rednest.Core",
-        "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj",
+        "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj",
         "packagesPath": "C:\\Users\\dmatc\\.nuget\\packages\\",
-        "outputPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\obj\\",
+        "outputPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
