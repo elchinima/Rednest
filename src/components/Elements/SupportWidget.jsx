@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import smileyAnimated from '../assets/icons/smiley-animated.svg';
-import AuthModal from './PublicPages/Auth/AuthModal';
+import smileyAnimated from '../../assets/icons/smiley-animated.svg';
+import AuthModal from '../PublicPages/Auth/AuthModal';
 
 const supportStyles = `
 .support-widget-container {

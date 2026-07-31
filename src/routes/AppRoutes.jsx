@@ -4,10 +4,10 @@ import { AnimatePresence } from 'framer-motion';
 import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
-import ScrollToTop from '../components/ScrollToTop';
-import SupportWidget from '../components/SupportWidget';
-import BuyNowWidget from '../components/BuyNowWidget';
-import FortuneWidget from '../components/FortuneWidget';
+import ScrollToTop from '../components/Elements/ScrollToTop';
+import SupportWidget from '../components/Elements/SupportWidget';
+import BuyNowWidget from '../components/Elements/BuyNowWidget';
+import FortuneWidget from '../components/Elements/FortuneWidget';
 
 const AnimatedRoutes = () => {
   const location = useLocation();

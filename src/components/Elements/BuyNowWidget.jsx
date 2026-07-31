@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import cartAnimated from '../assets/icons/cart-animated.svg';
+import cartAnimated from '../../assets/icons/cart-animated.svg';
 
 const buyNowStyles = `
 .buynow-widget-container {

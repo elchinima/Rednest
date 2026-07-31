@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import fortuneWheel from '../assets/icons/fortune-wheel.svg';
-import AuthModal from './PublicPages/Auth/AuthModal';
+import fortuneWheel from '../../assets/icons/fortune-wheel.svg';
+import AuthModal from '../PublicPages/Auth/AuthModal';
 
 const fortuneStyles = `
 .fortune-widget-container {

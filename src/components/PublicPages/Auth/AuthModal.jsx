@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
-import AnimatedModalWrapper from '../../AnimatedModalWrapper';
+import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import './AuthModal.scss';
 
 const AuthModal = ({ isOpen, onClose }) => {
