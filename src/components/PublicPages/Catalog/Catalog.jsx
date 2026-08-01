@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
@@ -120,6 +120,7 @@ const Catalog = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -185,10 +186,55 @@ const Catalog = () => {
           </nav>
           {isAuthLoading ? (
             <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px' }} />
+              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
             </span>
           ) : user ? (
-            <button className="cta-btn sm" onClick={() => setIsLogoutModalOpen(true)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
+            <div style={{ position: 'relative' }}>
+              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
+              {isUserMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '8px',
+                    background: 'rgba(20, 20, 20, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    padding: '6px 0',
+                    minWidth: '140px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(10px)',
+                    zIndex: 100
+                  }}
+                >
+                  <button 
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsLogoutModalOpen(true);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#ff4d4f',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      fontWeight: 500,
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                  >
+                    Log Out
+                  </button>
+                </motion.div>
+              )}
+            </div>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>
           )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../PublicPages/Auth/Auth.scss';
+import loaderIcon from '../../assets/icons/loader-animated.svg';
 
 const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
   return (
@@ -8,13 +9,13 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
       {isOpen && (
         <motion.div 
           className="auth-page" 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, background: 'none' }}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, background: 'none' }}
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }} 
           transition={{ duration: 0.3 }}
         >
-          <div className="auth-overlay" onClick={onClose}></div>
+          <div className="auth-overlay" onClick={onClose} style={{ backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}></div>
           
           <div className="auth-container" style={{ display: 'flex', justifyContent: 'center' }}>
             <motion.div 
@@ -32,8 +33,16 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                 
                 <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
                   <button 
-                    className="cta-btn" 
+                    className="cta-btn auth-submit-btn" 
                     onClick={onClose} 
+                    disabled={loading}
+                    style={{ flex: 1, margin: 0, padding: '14px' }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="cta-btn" 
+                    onClick={onConfirm} 
                     disabled={loading}
                     style={{ 
                       flex: 1, 
@@ -43,15 +52,14 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                       borderRadius: '8px'
                     }}
                   >
-                    Cancel
-                  </button>
-                  <button 
-                    className="cta-btn auth-submit-btn" 
-                    onClick={onConfirm} 
-                    disabled={loading}
-                    style={{ flex: 1, margin: 0, padding: '14px' }}
-                  >
-                    {loading ? 'Processing...' : 'Log Out'}
+                    {loading ? (
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                        <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                          <img src={loaderIcon} alt="Loading" style={{ width: '22px', height: '22px' }} />
+                        </span>
+                        Processing...
+                      </span>
+                    ) : 'Log Out'}
                   </button>
                 </div>
               </div>
