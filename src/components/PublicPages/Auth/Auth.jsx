@@ -3,8 +3,17 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 import logo from '../../../assets/icons/rednest_logo.png';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Auth.scss';
+
+const LoaderIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
+      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+      <path d="M24 8 A16 16 0 0 1 40 24" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    </g>
+  </svg>
+);
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -160,9 +169,11 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                      <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                        <LoaderIcon />
+                      </span>
                       Processing...
-                      <img src={loaderIcon} alt="" style={{ width: '18px', height: '18px' }} />
                     </span>
                   ) : 'Continue'}
                 </button>
@@ -188,9 +199,11 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                      <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                        <LoaderIcon />
+                      </span>
                       Saving...
-                      <img src={loaderIcon} alt="" style={{ width: '18px', height: '18px' }} />
                     </span>
                   ) : 'Complete Registration'}
                 </button>

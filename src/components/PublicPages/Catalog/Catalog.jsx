@@ -5,6 +5,7 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
+import LogoutModal from '../../Elements/LogoutModal';
 
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
@@ -117,6 +118,22 @@ const Catalog = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      setUser(null);
+      setIsLogoutModalOpen(false);
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -171,7 +188,7 @@ const Catalog = () => {
               <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px' }} />
             </span>
           ) : user ? (
-            <span className="cta-btn sm no-hover" style={{ cursor: 'default' }}>Hello, {user.name}</span>
+            <button className="cta-btn sm" onClick={() => setIsLogoutModalOpen(true)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>
           )}
@@ -231,6 +248,12 @@ const Catalog = () => {
         </div>
       </main>
 
+      <LogoutModal 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        loading={isLoggingOut}
+      />
       <Footer />
     </motion.div>
   );

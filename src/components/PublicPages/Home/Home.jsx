@@ -13,6 +13,7 @@ import nestCappuccinoImg from '../../../assets/images/product/Nest_Cappuccino.jp
 import hotChocolateImg from '../../../assets/images/product/Hot_Chocolate.jpg';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
+import LogoutModal from '../../Elements/LogoutModal';
 import './Home.scss';
 
 const Home = () => {
@@ -20,6 +21,22 @@ const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      setUser(null);
+      setIsLogoutModalOpen(false);
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -104,7 +121,7 @@ const Home = () => {
               <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px' }} />
             </span>
           ) : user ? (
-            <span className="cta-btn sm no-hover" style={{ cursor: 'default' }}>Hello, {user.name}</span>
+            <button className="cta-btn sm" onClick={() => setIsLogoutModalOpen(true)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>
           )}
@@ -268,6 +285,12 @@ const Home = () => {
         </div>
       </motion.section>
 
+      <LogoutModal 
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        loading={isLoggingOut}
+      />
       <Footer />
     </motion.div>
   );
