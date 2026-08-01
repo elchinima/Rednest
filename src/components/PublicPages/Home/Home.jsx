@@ -11,6 +11,7 @@ import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
 import nestCappuccinoImg from '../../../assets/images/product/Nest_Cappuccino.jpg';
 import hotChocolateImg from '../../../assets/images/product/Hot_Chocolate.jpg';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
 import './Home.scss';
 
@@ -18,6 +19,7 @@ const Home = () => {
   const videoRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -30,6 +32,8 @@ const Home = () => {
         }
       } catch (err) {
         console.error("Failed to fetch user:", err);
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     fetchUser();
@@ -95,7 +99,11 @@ const Home = () => {
             <Link to="/" className="nav-link active">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          {user ? (
+          {isAuthLoading ? (
+            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
+              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px' }} />
+            </span>
+          ) : user ? (
             <span className="cta-btn sm no-hover" style={{ cursor: 'default' }}>Hello, {user.name}</span>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>

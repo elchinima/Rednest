@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
 
@@ -115,6 +116,7 @@ const menuData = [
 const Catalog = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -127,6 +129,8 @@ const Catalog = () => {
         }
       } catch (err) {
         console.error("Failed to fetch user:", err);
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     fetchUser();
@@ -162,7 +166,11 @@ const Catalog = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link active">Menu</Link>
           </nav>
-          {user ? (
+          {isAuthLoading ? (
+            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
+              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px' }} />
+            </span>
+          ) : user ? (
             <span className="cta-btn sm no-hover" style={{ cursor: 'default' }}>Hello, {user.name}</span>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>

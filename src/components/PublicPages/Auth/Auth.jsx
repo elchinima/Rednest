@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 import logo from '../../../assets/icons/rednest_logo.png';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Auth.scss';
 
 const Auth = () => {
@@ -158,7 +159,12 @@ const Auth = () => {
                 </div>
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
-                  {loading ? 'Processing...' : 'Continue'}
+                  {loading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      Processing...
+                      <img src={loaderIcon} alt="" style={{ width: '18px', height: '18px' }} />
+                    </span>
+                  ) : 'Continue'}
                 </button>
               </form>
             ) : (
@@ -181,7 +187,12 @@ const Auth = () => {
                 </div>
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
-                  {loading ? 'Saving...' : 'Complete Registration'}
+                  {loading ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      Saving...
+                      <img src={loaderIcon} alt="" style={{ width: '18px', height: '18px' }} />
+                    </span>
+                  ) : 'Complete Registration'}
                 </button>
               </form>
             )}
