@@ -658,7 +658,7 @@
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
-          "lib/net6.0/_._": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
             "related": ".xml"
           }
         },
@@ -695,6 +695,36 @@
         },
         "runtime": {
           "lib/net10.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "SixLabors.ImageSharp/2.1.9": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp3.1/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/SixLabors.ImageSharp.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Stripe.net/52.2.0": {
+        "type": "package",
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3",
+          "System.Configuration.ConfigurationManager": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Stripe.net.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Stripe.net.dll": {
             "related": ".xml"
           }
         }
@@ -904,6 +934,25 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
+      "System.Configuration.ConfigurationManager/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Security.Cryptography.ProtectedData": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/System.Configuration.ConfigurationManager.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/System.Configuration.ConfigurationManager.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
       "System.IdentityModel.Tokens.Jwt/8.22.0": {
         "type": "package",
         "dependencies": {
@@ -919,6 +968,22 @@
           "lib/net10.0/System.IdentityModel.Tokens.Jwt.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "System.Security.Cryptography.ProtectedData/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/System.Security.Cryptography.ProtectedData.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/System.Security.Cryptography.ProtectedData.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
         }
       },
       "Rednest.Application/1.0.0": {
@@ -953,6 +1018,8 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
           "Rednest.Application": "1.0.0",
           "Rednest.Core": "1.0.0",
+          "SixLabors.ImageSharp": "2.1.9",
+          "Stripe.net": "52.2.0",
           "System.IdentityModel.Tokens.Jwt": "8.22.0"
         },
         "compile": {
@@ -2804,6 +2871,52 @@
         "postgresql.png"
       ]
     },
+    "SixLabors.ImageSharp/2.1.9": {
+      "sha512": "VcjfKbOExie3RgZGrQL1jJMI4iZ3J9B6ifDo2QpDVJUYhTZKVcKnBhpNOHqbvNjHgadAks1jzhRjB7OZet1PJA==",
+      "type": "package",
+      "path": "sixlabors.imagesharp/2.1.9",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net472/SixLabors.ImageSharp.dll",
+        "lib/net472/SixLabors.ImageSharp.xml",
+        "lib/netcoreapp2.1/SixLabors.ImageSharp.dll",
+        "lib/netcoreapp2.1/SixLabors.ImageSharp.xml",
+        "lib/netcoreapp3.1/SixLabors.ImageSharp.dll",
+        "lib/netcoreapp3.1/SixLabors.ImageSharp.xml",
+        "lib/netstandard2.0/SixLabors.ImageSharp.dll",
+        "lib/netstandard2.0/SixLabors.ImageSharp.xml",
+        "lib/netstandard2.1/SixLabors.ImageSharp.dll",
+        "lib/netstandard2.1/SixLabors.ImageSharp.xml",
+        "sixlabors.imagesharp.128.png",
+        "sixlabors.imagesharp.2.1.9.nupkg.sha512",
+        "sixlabors.imagesharp.nuspec"
+      ]
+    },
+    "Stripe.net/52.2.0": {
+      "sha512": "kStsQTsxalKPyLXVP5ep+t5NL49NNOKmKh+X+I6Fexb2LJUQ2ZUvtj52bkJFJJDaCJJrbeM47y0qvOXqKFwExA==",
+      "type": "package",
+      "path": "stripe.net/52.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "icon.png",
+        "lib/net462/Stripe.net.dll",
+        "lib/net462/Stripe.net.xml",
+        "lib/net6.0/Stripe.net.dll",
+        "lib/net6.0/Stripe.net.xml",
+        "lib/net8.0/Stripe.net.dll",
+        "lib/net8.0/Stripe.net.xml",
+        "lib/net9.0/Stripe.net.dll",
+        "lib/net9.0/Stripe.net.xml",
+        "lib/netstandard2.0/Stripe.net.dll",
+        "lib/netstandard2.0/Stripe.net.xml",
+        "stripe.net.52.2.0.nupkg.sha512",
+        "stripe.net.nuspec"
+      ]
+    },
     "Superpower/3.0.0": {
       "sha512": "bjKbAYWePooCAvPxQq+3KnmcLfRggMyRoXmtBMlmCG71bdwBHrO6rmRJ2DRIodg5aztNcxeZXBUVWT+H+MZUhw==",
       "type": "package",
@@ -3083,6 +3196,34 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "System.Configuration.ConfigurationManager/9.0.0": {
+      "sha512": "PdkuMrwDhXoKFo/JxISIi9E8L+QGn9Iquj2OKDWHB6Y/HnUOuBouF7uS3R4Hw3FoNmwwMo6hWgazQdyHIIs27A==",
+      "type": "package",
+      "path": "system.configuration.configurationmanager/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Configuration.ConfigurationManager.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Configuration.ConfigurationManager.targets",
+        "lib/net462/System.Configuration.ConfigurationManager.dll",
+        "lib/net462/System.Configuration.ConfigurationManager.xml",
+        "lib/net8.0/System.Configuration.ConfigurationManager.dll",
+        "lib/net8.0/System.Configuration.ConfigurationManager.xml",
+        "lib/net9.0/System.Configuration.ConfigurationManager.dll",
+        "lib/net9.0/System.Configuration.ConfigurationManager.xml",
+        "lib/netstandard2.0/System.Configuration.ConfigurationManager.dll",
+        "lib/netstandard2.0/System.Configuration.ConfigurationManager.xml",
+        "system.configuration.configurationmanager.9.0.0.nupkg.sha512",
+        "system.configuration.configurationmanager.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.IdentityModel.Tokens.Jwt/8.22.0": {
       "sha512": "CpXGfNhLl6EgYaOC9XYsc1p7Ci9HtAy0soHJDSBNGse647al4tTq9RDr+LQsrF4Ls79Dx7VfzN34km0W4DWPow==",
       "type": "package",
@@ -3107,6 +3248,40 @@
         "lib/netstandard2.0/System.IdentityModel.Tokens.Jwt.xml",
         "system.identitymodel.tokens.jwt.8.22.0.nupkg.sha512",
         "system.identitymodel.tokens.jwt.nuspec"
+      ]
+    },
+    "System.Security.Cryptography.ProtectedData/9.0.0": {
+      "sha512": "CJW+x/F6fmRQ7N6K8paasTw9PDZp4t7G76UjGNlSDgoHPF0h08vTzLYbLZpOLEJSg35d5wy2jCXGo84EN05DpQ==",
+      "type": "package",
+      "path": "system.security.cryptography.protecteddata/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Security.Cryptography.ProtectedData.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Security.Cryptography.ProtectedData.targets",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net462/System.Security.Cryptography.ProtectedData.dll",
+        "lib/net462/System.Security.Cryptography.ProtectedData.xml",
+        "lib/net8.0/System.Security.Cryptography.ProtectedData.dll",
+        "lib/net8.0/System.Security.Cryptography.ProtectedData.xml",
+        "lib/net9.0/System.Security.Cryptography.ProtectedData.dll",
+        "lib/net9.0/System.Security.Cryptography.ProtectedData.xml",
+        "lib/netstandard2.0/System.Security.Cryptography.ProtectedData.dll",
+        "lib/netstandard2.0/System.Security.Cryptography.ProtectedData.xml",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "system.security.cryptography.protecteddata.9.0.0.nupkg.sha512",
+        "system.security.cryptography.protecteddata.nuspec",
+        "useSharedDesignerContext.txt"
       ]
     },
     "Rednest.Application/1.0.0": {
@@ -3143,11 +3318,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "projectUniqueName": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "projectName": "Rednest.Api",
-      "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "packagesPath": "C:\\Users\\dmatc\\.nuget\\packages\\",
-      "outputPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\obj\\",
+      "outputPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3169,8 +3344,8 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
-              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
+            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
+              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
             },
             "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj": {
               "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj"
@@ -3654,5 +3829,27 @@
         }
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1903",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'SixLabors.ImageSharp' 2.1.9 has a known high severity vulnerability, https://github.com/advisories/GHSA-2cmq-823j-5qj8",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1902",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'SixLabors.ImageSharp' 2.1.9 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rxmq-m78w-7wmc",
+      "libraryId": "SixLabors.ImageSharp",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }

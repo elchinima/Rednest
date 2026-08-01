@@ -1310,11 +1310,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj",
+      "projectUniqueName": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj",
       "projectName": "Rednest.Infrastructure",
-      "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj",
+      "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\dmatc\\.nuget\\packages\\",
-      "outputPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\obj\\",
+      "outputPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1336,11 +1336,11 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
-              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
+            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
+              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
             },
-            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {
-              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj"
+            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {
+              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj"
             }
           }
         }
@@ -1682,7 +1682,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "У пакета \"SixLabors.ImageSharp\" 2.1.9 есть известная уязвимость https://github.com/advisories/GHSA-2cmq-823j-5qj8 (уровень серьезности: высокий уровень)",
+      "message": "Package 'SixLabors.ImageSharp' 2.1.9 has a known high severity vulnerability, https://github.com/advisories/GHSA-2cmq-823j-5qj8",
       "libraryId": "SixLabors.ImageSharp",
       "targetGraphs": [
         "net10.0"
@@ -1692,7 +1692,7 @@
       "code": "NU1902",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "У пакета \"SixLabors.ImageSharp\" 2.1.9 есть известная уязвимость https://github.com/advisories/GHSA-rxmq-m78w-7wmc (уровень серьезности: средний уровень)",
+      "message": "Package 'SixLabors.ImageSharp' 2.1.9 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-rxmq-m78w-7wmc",
       "libraryId": "SixLabors.ImageSharp",
       "targetGraphs": [
         "net10.0"

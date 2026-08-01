@@ -96,7 +96,7 @@ const Home = () => {
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
           {user ? (
-            <span className="cta-btn sm" style={{ cursor: 'default' }}>Hello, {user.name}</span>
+            <span className="cta-btn sm no-hover" style={{ cursor: 'default' }}>Hello, {user.name}</span>
           ) : (
             <Link to="/login" className="cta-btn sm">Log In</Link>
           )}
