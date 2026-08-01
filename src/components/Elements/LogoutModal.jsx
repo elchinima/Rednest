@@ -26,9 +26,9 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
               exit={{ scale: 0.9, opacity: 0 }}
             >
               <div className="auth-card-right" style={{ width: '100%', padding: '40px' }}>
-                <div className="auth-header" style={{ marginBottom: '24px' }}>
+                <div className="auth-header" style={{ marginBottom: '24px', textAlign: 'center' }}>
                   <h2 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Log Out</h2>
-                  <p>Are you sure you want to log out of your account?</p>
+                  <p style={{ width: '80%', margin: '0 auto' }}>Are you sure you want to log out of your account?</p>
                 </div>
                 
                 <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>

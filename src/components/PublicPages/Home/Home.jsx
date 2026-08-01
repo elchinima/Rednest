@@ -132,14 +132,12 @@ const Home = () => {
                     position: 'absolute',
                     top: '100%',
                     right: 0,
-                    marginTop: '8px',
-                    background: 'rgba(20, 20, 20, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '8px',
-                    padding: '6px 0',
+                    marginTop: '12px',
+                    background: '#ffffff',
+                    borderRadius: '16px',
+                    padding: '8px',
                     minWidth: '140px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                     zIndex: 100
                   }}
                 >
@@ -153,15 +151,16 @@ const Home = () => {
                       padding: '10px 16px',
                       background: 'transparent',
                       border: 'none',
-                      color: '#ff4d4f',
-                      textAlign: 'left',
+                      color: '#333333',
+                      textAlign: 'center',
                       cursor: 'pointer',
                       fontSize: '0.95rem',
-                      fontWeight: 500,
-                      transition: 'background 0.2s'
+                      fontWeight: 600,
+                      borderRadius: '10px',
+                      transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
-                    onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                    onMouseEnter={(e) => { e.target.style.background = '#f5f5f5'; e.target.style.color = '#d32f2f'; }}
+                    onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#333333'; }}
                   >
                     Log Out
                   </button>
