@@ -208,7 +208,8 @@ const Home = () => {
             Awaken Your <span className="highlight">Senses</span>
           </h1>
           <p className="hero-subtitle">
-            Experience the rich, bold flavors of our premium coffee blends. Crafted with passion, served with perfection.
+            Experience the rich, bold flavors of our premium coffee blends.<br />
+            Crafted with passion, served with perfection.
           </p>
           <div className="hero-actions">
             <Link to="/catalog" className="cta-btn lg">Explore Menu</Link>
