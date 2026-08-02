@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../PublicPages/Auth/Auth.scss';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 
 const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -32,14 +43,16 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                 </div>
                 
                 <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-                  <button 
-                    className="cta-btn auth-submit-btn" 
-                    onClick={onClose} 
-                    disabled={loading}
-                    style={{ flex: 1, margin: 0, padding: '14px' }}
-                  >
-                    Cancel
-                  </button>
+                  {!loading && (
+                    <button 
+                      className="cta-btn auth-submit-btn" 
+                      onClick={onClose} 
+                      disabled={loading}
+                      style={{ flex: 1, margin: 0, padding: '14px' }}
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <button 
                     className="cta-btn" 
                     onClick={onConfirm} 
@@ -49,7 +62,8 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                       background: 'rgba(255, 255, 255, 0.1)', 
                       color: '#fff', 
                       padding: '14px',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     {loading ? (

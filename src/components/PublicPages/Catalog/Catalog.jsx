@@ -121,6 +121,21 @@ const Catalog = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    if (isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -189,7 +204,7 @@ const Catalog = () => {
               <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
             </span>
           ) : user ? (
-            <div style={{ position: 'relative' }}>
+            <div ref={userMenuRef} style={{ position: 'relative' }}>
               <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
               {isUserMenuOpen && (
                 <motion.div 
@@ -198,12 +213,12 @@ const Catalog = () => {
                   style={{
                     position: 'absolute',
                     top: '100%',
-                    right: 0,
-                    marginTop: '12px',
-                    background: '#ffffff',
-                    borderRadius: '16px',
-                    padding: '8px',
-                    minWidth: '140px',
+                    left: 0,
+                    width: '100%',
+                    marginTop: '8px',
+                    background: '#b3b3b3',
+                    borderRadius: '20px',
+                    padding: '4px',
                     boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                     zIndex: 100
                   }}
@@ -215,19 +230,19 @@ const Catalog = () => {
                     }}
                     style={{
                       width: '100%',
-                      padding: '10px 16px',
+                      padding: '8px 0',
                       background: 'transparent',
                       border: 'none',
-                      color: '#333333',
+                      color: '#222222',
                       textAlign: 'center',
                       cursor: 'pointer',
                       fontSize: '0.95rem',
-                      fontWeight: 600,
-                      borderRadius: '10px',
+                      fontWeight: 700,
+                      borderRadius: '16px',
                       transition: 'all 0.2s'
                     }}
-                    onMouseEnter={(e) => { e.target.style.background = '#f5f5f5'; e.target.style.color = '#d32f2f'; }}
-                    onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#333333'; }}
+                    onMouseEnter={(e) => { e.target.style.background = 'rgba(0,0,0,0.1)'; e.target.style.color = '#d32f2f'; }}
+                    onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#222222'; }}
                   >
                     Log Out
                   </button>
