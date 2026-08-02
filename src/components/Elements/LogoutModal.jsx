@@ -67,8 +67,8 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                     }}
                   >
                     {loading ? (
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                        <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <span style={{ display: 'flex' }}>
                           <img src={loaderIcon} alt="Loading" style={{ width: '22px', height: '22px' }} />
                         </span>
                         Processing...

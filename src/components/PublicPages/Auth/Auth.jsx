@@ -169,8 +169,8 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                      <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <span style={{ display: 'flex' }}>
                         <LoaderIcon />
                       </span>
                       Processing...
@@ -199,8 +199,8 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                      <span style={{ position: 'absolute', right: '100%', marginRight: '8px', display: 'flex' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <span style={{ display: 'flex' }}>
                         <LoaderIcon />
                       </span>
                       Saving...
