@@ -11,7 +11,10 @@ using DotNetEnv;
 var builder = WebApplication.CreateBuilder(args);
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "secret", ".env");
-Env.Load(envPath);
+if (File.Exists(envPath))
+{
+    Env.Load(envPath);
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
