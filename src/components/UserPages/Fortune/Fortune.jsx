@@ -222,66 +222,68 @@ const Fortune = () => {
       </header>
 
       <main className="fortune-main">
-        <motion.div
-          className="fortune-hero-text"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <h1>🎡 Wheel of Fortune</h1>
-          <p>
-            {user?.name ? `Hey, ${user.name}! ` : ''}
-            Spin the wheel and win an exclusive Rednest reward!
-          </p>
-        </motion.div>
+        <div className="fortune-content-wrapper">
+          <motion.div
+            className="fortune-hero-text"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <h1>🎡 Wheel of Fortune</h1>
+            <p>
+              {user?.name ? `Hey, ${user.name}! ` : ''}
+              Spin the wheel and win an exclusive Rednest reward!
+            </p>
+          </motion.div>
 
-        <motion.div
-          className="fortune-wheel-area"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.25, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="fortune-wheel-wrap">
-            <div className="fortune-pointer" aria-hidden="true">
-              <svg viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="18,42 1,5 35,5" fill="#ffffff" stroke="rgba(255,255,255,0.25)" strokeWidth="1"/>
-                <circle cx="18" cy="8" r="4.5" fill="rgba(255,255,255,0.9)"/>
-              </svg>
+          <motion.div
+            className="fortune-wheel-area"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="fortune-wheel-wrap">
+              <div className="fortune-pointer" aria-hidden="true">
+                <svg viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="18,42 1,5 35,5" fill="#ffffff" stroke="rgba(255,255,255,0.25)" strokeWidth="1"/>
+                  <circle cx="18" cy="8" r="4.5" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+              </div>
+
+              <canvas ref={canvasRef} className="fortune-canvas" />
             </div>
 
-            <canvas ref={canvasRef} className="fortune-canvas" />
-          </div>
-
-          <motion.button
-            className={`cta-btn fortune-spin-btn lg${spinning ? ' fortune-spin-btn--spinning' : ''}${!canSpin && !spinning ? ' fortune-spin-btn--used' : ''}`}
-            onClick={spin}
-            disabled={spinning || !canSpin}
-            whileHover={canSpin && !spinning ? { scale: 1.04, y: -2 } : {}}
-            whileTap={canSpin && !spinning ? { scale: 0.97 } : {}}
-          >
-            {spinning ? (
-              <span className="fortune-spin-btn__inner">
-                <span className="fortune-spin-dot" />
-                Spinning...
-              </span>
-            ) : !canSpin ? (
-              'Already spun today!'
-            ) : (
-              '🎰 Spin the Wheel!'
-            )}
-          </motion.button>
-
-          {!canSpin && !spinning && (
-            <motion.p
-              className="fortune-note"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+            <motion.button
+              className={`cta-btn fortune-spin-btn lg${spinning ? ' fortune-spin-btn--spinning' : ''}${!canSpin && !spinning ? ' fortune-spin-btn--used' : ''}`}
+              onClick={spin}
+              disabled={spinning || !canSpin}
+              whileHover={canSpin && !spinning ? { scale: 1.04, y: -2 } : {}}
+              whileTap={canSpin && !spinning ? { scale: 0.97 } : {}}
             >
-              Come back tomorrow for another spin ✨
-            </motion.p>
-          )}
-        </motion.div>
+              {spinning ? (
+                <span className="fortune-spin-btn__inner">
+                  <span className="fortune-spin-dot" />
+                  Spinning...
+                </span>
+              ) : !canSpin ? (
+                'Already spun today!'
+              ) : (
+                '🎰 Spin the Wheel!'
+              )}
+            </motion.button>
+
+            {!canSpin && !spinning && (
+              <motion.p
+                className="fortune-note"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                Come back tomorrow for another spin ✨
+              </motion.p>
+            )}
+          </motion.div>
+        </div>
       </main>
 
       <Footer />
