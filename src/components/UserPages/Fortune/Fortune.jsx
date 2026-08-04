@@ -1,19 +1,20 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import logo from '../../../assets/icons/rednest_logo.png';
+import Footer from '../../Footer/Footer';
 import './Fortune.scss';
 
 const SEGMENTS = [
-  { label: '10% OFF',    color: '#b91c1c', textColor: '#fff', prize: '10% discount on your next order' },
-  { label: 'Free Ship', color: '#7f1d1d', textColor: '#fff', prize: 'Free shipping on your next order' },
-  { label: '5% OFF',    color: '#dc2626', textColor: '#fff', prize: '5% discount on your next order' },
-  { label: '1 Coffee',  color: '#991b1b', textColor: '#fff', prize: 'One free coffee of your choice!' },
-  { label: '15% OFF',   color: '#c0392b', textColor: '#fff', prize: '15% discount on your next order' },
-  { label: 'Try Again', color: '#6b1a1a', textColor: 'rgba(255,255,255,0.6)', prize: null },
-  { label: '20% OFF',   color: '#b91c1c', textColor: '#fff', prize: '20% discount on your next order' },
-  { label: 'Free Bag',  color: '#7f1d1d', textColor: '#fff', prize: 'Free coffee bag with next order!' },
+  { label: '10% OFF',    color: '#7f1d1d', textColor: '#fff', prize: '10% discount on your next order' },
+  { label: 'Free Ship', color: '#450a0a', textColor: 'rgba(255,255,255,0.85)', prize: 'Free shipping on your next order' },
+  { label: '5% OFF',    color: '#991b1b', textColor: '#fff', prize: '5% discount on your next order' },
+  { label: '1 Coffee',  color: '#7f1d1d', textColor: '#fff', prize: 'One free coffee of your choice!' },
+  { label: '15% OFF',   color: '#450a0a', textColor: '#fff', prize: '15% discount on your next order' },
+  { label: 'Try Again', color: '#3b0a0a', textColor: 'rgba(255,255,255,0.45)', prize: null },
+  { label: '20% OFF',   color: '#7f1d1d', textColor: '#fff', prize: '20% discount on your next order' },
+  { label: 'Free Bag',  color: '#450a0a', textColor: 'rgba(255,255,255,0.85)', prize: 'Free coffee bag with next order!' },
 ];
 
 const NUM_SEGMENTS = SEGMENTS.length;
@@ -25,17 +26,9 @@ function drawWheel(canvas, rotation) {
   const H = canvas.height;
   const cx = W / 2;
   const cy = H / 2;
-  const R = Math.min(cx, cy) - 10;
+  const R = Math.min(cx, cy) - 6;
 
   ctx.clearRect(0, 0, W, H);
-
-  const glowGrad = ctx.createRadialGradient(cx, cy, R - 8, cx, cy, R + 12);
-  glowGrad.addColorStop(0, 'rgba(239,68,68,0.6)');
-  glowGrad.addColorStop(1, 'rgba(239,68,68,0)');
-  ctx.beginPath();
-  ctx.arc(cx, cy, R + 12, 0, 2 * Math.PI);
-  ctx.fillStyle = glowGrad;
-  ctx.fill();
 
   for (let i = 0; i < NUM_SEGMENTS; i++) {
     const startAngle = rotation + i * ARC;
@@ -49,9 +42,9 @@ function drawWheel(canvas, rotation) {
     ctx.fillStyle = seg.color;
     ctx.fill();
 
-    const grad = ctx.createRadialGradient(cx, cy, R * 0.1, cx, cy, R);
-    grad.addColorStop(0, 'rgba(255,255,255,0.12)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.08)');
+    const grad = ctx.createRadialGradient(cx, cy, R * 0.05, cx, cy, R);
+    grad.addColorStop(0, 'rgba(255,255,255,0.08)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.05)');
     ctx.fillStyle = grad;
     ctx.fill();
 
@@ -59,8 +52,8 @@ function drawWheel(canvas, rotation) {
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, R, startAngle, endAngle);
     ctx.closePath();
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.save();
@@ -68,41 +61,61 @@ function drawWheel(canvas, rotation) {
     ctx.rotate(startAngle + ARC / 2);
     ctx.textAlign = 'right';
     ctx.fillStyle = seg.textColor;
-    ctx.font = `bold ${Math.round(R * 0.095)}px Inter, sans-serif`;
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 4;
-    ctx.fillText(seg.label, R - 16, 5);
+    ctx.font = `600 ${Math.round(R * 0.088)}px Inter, system-ui, sans-serif`;
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 3;
+    ctx.fillText(seg.label, R - 14, 5);
     ctx.restore();
   }
 
-  const centerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.12);
-  centerGrad.addColorStop(0, '#fff');
-  centerGrad.addColorStop(1, '#f5c6c6');
   ctx.beginPath();
-  ctx.arc(cx, cy, R * 0.12, 0, 2 * Math.PI);
-  ctx.fillStyle = centerGrad;
-  ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowBlur = 10;
+  ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const hubGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.11);
+  hubGrad.addColorStop(0, '#ffffff');
+  hubGrad.addColorStop(1, '#e5e5e5');
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.11, 0, 2 * Math.PI);
+  ctx.fillStyle = hubGrad;
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 8;
   ctx.fill();
   ctx.shadowBlur = 0;
-
   ctx.beginPath();
-  ctx.arc(cx, cy, R * 0.12, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(185,28,28,0.8)';
-  ctx.lineWidth = 2;
+  ctx.arc(cx, cy, R * 0.11, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 }
 
 const Fortune = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const rotationRef = useRef(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(true);
   const [prize, setPrize] = useState(null);
   const [showPrize, setShowPrize] = useState(false);
+
+  const [promoCode] = useState(() =>
+    'REDNEST-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+  );
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+    return () => document.body.classList.remove('mobile-menu-open');
+  }, [isMenuOpen]);
 
   const drawFrame = useCallback(() => {
     if (canvasRef.current) {
@@ -114,7 +127,7 @@ const Fortune = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const resize = () => {
-      const size = Math.min(canvas.parentElement.clientWidth, 480);
+      const size = Math.min(canvas.parentElement?.clientWidth ?? 460, 460);
       canvas.width = size;
       canvas.height = size;
       drawFrame();
@@ -138,7 +151,7 @@ const Fortune = () => {
     const finalRotation = totalSpins + normalizedTarget;
 
     const startRotation = rotationRef.current;
-    const duration = 5000 + Math.random() * 1500; 
+    const duration = 5000 + Math.random() * 1500;
     const startTime = performance.now();
 
     const easeOut = (t) => 1 - Math.pow(1 - t, 4);
@@ -153,8 +166,7 @@ const Fortune = () => {
         rafRef.current = requestAnimationFrame(animate);
       } else {
         setSpinning(false);
-        const seg = SEGMENTS[winIdx];
-        setPrize(seg);
+        setPrize(SEGMENTS[winIdx]);
         setShowPrize(true);
       }
     };
@@ -168,65 +180,88 @@ const Fortune = () => {
     };
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <motion.div
       className="fortune-page"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="fortune-bg-overlay" />
+      <header className="home-header">
+        <div className="logo-container">
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logo} alt="Rednest Logo" className="logo" />
+            <span className="brand-name">Rednest</span>
+          </Link>
+        </div>
 
-      <header className="fortune-header">
-        <Link to="/" className="fortune-back-link">← Back to Home</Link>
-        <Link to="/"><img src={logo} alt="Rednest" className="fortune-logo" /></Link>
-        <button className="fortune-logout-btn" onClick={logout}>Log out</button>
+        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
+          <nav className="nav-links">
+            <Link to="/" className="nav-link">Home</Link>
+            <Link to="/catalog" className="nav-link">Menu</Link>
+          </nav>
+          <button className="cta-btn sm" onClick={handleLogout} style={{ cursor: 'pointer' }}>
+            Log Out
+          </button>
+        </div>
+
+        <div
+          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+
+        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? '✕' : '☰'}
+        </button>
       </header>
 
       <main className="fortune-main">
-        <div className="fortune-hero">
-          <motion.div
-            className="fortune-title-wrap"
-            initial={{ y: -30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <h1 className="fortune-title">🎡 Wheel of Fortune</h1>
-            <p className="fortune-subtitle">
-              {user?.name ? `Hey, ${user.name}! ` : ''}Spin the wheel and win an exclusive Rednest reward!
-            </p>
-          </motion.div>
+        <motion.div
+          className="fortune-hero-text"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <h1>🎡 Wheel of Fortune</h1>
+          <p>
+            {user?.name ? `Hey, ${user.name}! ` : ''}
+            Spin the wheel and win an exclusive Rednest reward!
+          </p>
+        </motion.div>
 
-          <motion.div
-            className="fortune-wheel-wrap"
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="fortune-pointer">
-              <svg viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
-                <polygon points="20,48 0,4 40,4" fill="#fff" stroke="rgba(185,28,28,0.9)" strokeWidth="2"/>
-                <circle cx="20" cy="8" r="5" fill="#ef4444"/>
+        <motion.div
+          className="fortune-wheel-area"
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="fortune-wheel-wrap">
+            <div className="fortune-pointer" aria-hidden="true">
+              <svg viewBox="0 0 36 44" xmlns="http://www.w3.org/2000/svg">
+                <polygon points="18,42 1,5 35,5" fill="#ffffff" stroke="rgba(255,255,255,0.25)" strokeWidth="1"/>
+                <circle cx="18" cy="8" r="4.5" fill="rgba(255,255,255,0.9)"/>
               </svg>
             </div>
 
             <canvas ref={canvasRef} className="fortune-canvas" />
-          </motion.div>
+          </div>
 
           <motion.button
-            className={`fortune-spin-btn ${spinning ? 'spinning' : ''} ${!canSpin && !spinning ? 'used' : ''}`}
+            className={`cta-btn fortune-spin-btn lg${spinning ? ' fortune-spin-btn--spinning' : ''}${!canSpin && !spinning ? ' fortune-spin-btn--used' : ''}`}
             onClick={spin}
             disabled={spinning || !canSpin}
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.45, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            whileHover={canSpin && !spinning ? { scale: 1.05, y: -3 } : {}}
+            whileHover={canSpin && !spinning ? { scale: 1.04, y: -2 } : {}}
             whileTap={canSpin && !spinning ? { scale: 0.97 } : {}}
           >
             {spinning ? (
-              <span className="fortune-spin-btn-inner">
-                <span className="fortune-spinner-dot" />
+              <span className="fortune-spin-btn__inner">
+                <span className="fortune-spin-dot" />
                 Spinning...
               </span>
             ) : !canSpin ? (
@@ -246,8 +281,10 @@ const Fortune = () => {
               Come back tomorrow for another spin ✨
             </motion.p>
           )}
-        </div>
+        </motion.div>
       </main>
+
+      <Footer />
 
       <AnimatePresence>
         {showPrize && prize && (
@@ -260,10 +297,10 @@ const Fortune = () => {
           >
             <motion.div
               className="fortune-prize-modal"
-              initial={{ scale: 0.5, opacity: 0, y: 40 }}
+              initial={{ scale: 0.6, opacity: 0, y: 40 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 20 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ scale: 0.88, opacity: 0, y: 20 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
               onClick={(e) => e.stopPropagation()}
             >
               {prize.prize ? (
@@ -272,10 +309,8 @@ const Fortune = () => {
                   <h2 className="prize-heading">Congratulations!</h2>
                   <p className="prize-label">{prize.label}</p>
                   <p className="prize-desc">{prize.prize}</p>
-                  <p className="prize-code-label">Your promo code:</p>
-                  <div className="prize-code">
-                    REDNEST-{Math.random().toString(36).substring(2, 8).toUpperCase()}
-                  </div>
+                  <p className="prize-code-label">Your promo code</p>
+                  <div className="prize-code">{promoCode}</div>
                 </>
               ) : (
                 <>
@@ -284,7 +319,7 @@ const Fortune = () => {
                   <p className="prize-desc">Don't worry — there's always tomorrow's spin!</p>
                 </>
               )}
-              <button className="prize-close-btn" onClick={() => setShowPrize(false)}>
+              <button className="cta-btn secondary prize-close-btn" onClick={() => setShowPrize(false)}>
                 Close
               </button>
             </motion.div>
