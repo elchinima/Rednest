@@ -4,10 +4,12 @@ import { AnimatePresence } from 'framer-motion';
 import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
+import Fortune from '../components/UserPages/Fortune/Fortune';
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
 import FortuneWidget from '../components/Elements/FortuneWidget';
+import { AuthProvider } from '../context/AuthContext';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -18,6 +20,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/login" element={<Auth />} />
+        <Route path="/fortune" element={<Fortune />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
@@ -27,11 +30,13 @@ const AnimatedRoutes = () => {
 const AppRoutes = () => {
   return (
     <Router>
-      <ScrollToTop />
-      <AnimatedRoutes />
-      <SupportWidget />
-      <BuyNowWidget />
-      <FortuneWidget />
+      <AuthProvider>
+        <ScrollToTop />
+        <AnimatedRoutes />
+        <SupportWidget />
+        <BuyNowWidget />
+        <FortuneWidget />
+      </AuthProvider>
     </Router>
   );
 };

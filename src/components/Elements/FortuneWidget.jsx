@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import fortuneWheel from '../../assets/icons/fortune-wheel.svg';
 import AuthModal from '../PublicPages/Auth/AuthModal';
+import { useAuth } from '../../context/AuthContext';
 
 const fortuneStyles = `
 .fortune-widget-container {
@@ -102,6 +103,8 @@ body.mobile-menu-open .fortune-widget-container {
 
 const FortuneWidget = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -132,14 +135,18 @@ const FortuneWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  if (location.pathname === '/login') {
+  if (location.pathname === '/login' || location.pathname === '/fortune') {
     return null;
   }
 
   const isVisible = isScrolled && !isFooterVisible;
 
   const handleFortuneClick = () => {
-    setIsAuthModalOpen(true);
+    if (isAuthenticated) {
+      navigate('/fortune');
+    } else {
+      setIsAuthModalOpen(true);
+    }
   };
 
   return (

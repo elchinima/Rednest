@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import { useAuth } from '../../../context/AuthContext';
 import './AuthModal.scss';
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agree, setAgree] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submit Auth Modal:", { email, password, agree });
+    // Simulation: login with provided email, no real backend
+    login({ email, name: email.split('@')[0] });
     onClose();
+    navigate('/fortune');
   };
 
   return (
