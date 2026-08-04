@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import smileyAnimated from '../../assets/icons/smiley-animated.svg';
 import AuthModal from '../PublicPages/Auth/AuthModal';
 
@@ -102,6 +103,7 @@ body.mobile-menu-open .support-widget-container {
 
 const SupportWidget = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -148,7 +150,13 @@ const SupportWidget = () => {
         <button 
           className="support-widget" 
           aria-label="Support chat" 
-          onClick={() => setIsAuthModalOpen(true)}
+          onClick={() => {
+            if (isAuthenticated) {
+              alert("Support chat will be available soon!");
+            } else {
+              setIsAuthModalOpen(true);
+            }
+          }}
         >
           <img src={smileyAnimated} alt="Support" />
         </button>

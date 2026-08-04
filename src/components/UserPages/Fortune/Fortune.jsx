@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
+import LogoutModal from '../../Elements/LogoutModal';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Fortune.scss';
 
 const SEGMENTS = [
@@ -92,12 +94,28 @@ function drawWheel(canvas, rotation) {
 }
 
 const Fortune = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const rotationRef = useRef(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const { user, logout, isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(true);
@@ -206,9 +224,59 @@ const Fortune = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          <button className="cta-btn sm" onClick={handleLogout} style={{ cursor: 'pointer' }}>
-            Log Out
-          </button>
+          {isAuthLoading ? (
+            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
+              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
+            </span>
+          ) : user ? (
+            <div ref={userMenuRef} style={{ position: 'relative' }}>
+              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
+              {isUserMenuOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    width: '100%',
+                    marginTop: '8px',
+                    background: '#b3b3b3',
+                    borderRadius: '20px',
+                    padding: '4px',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                    zIndex: 100
+                  }}
+                >
+                  <button 
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      setIsLogoutModalOpen(true);
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 0',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#222222',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      borderRadius: '16px',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => { e.target.style.background = 'rgba(0,0,0,0.1)'; e.target.style.color = '#d32f2f'; }}
+                    onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#222222'; }}
+                  >
+                    Log Out
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="cta-btn sm" style={{ textDecoration: 'none' }}>Log In</Link>
+          )}
         </div>
 
         <div
