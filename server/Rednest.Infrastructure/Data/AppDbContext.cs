@@ -8,15 +8,32 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
+
+            entity.Property(e => e.ProfilePictureUrl)
+                  .HasColumnType("text");
+
+            entity.HasOne(e => e.Session)
+                  .WithOne(s => s.User)
+                  .HasForeignKey<UserSession>(s => s.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserSession>(entity =>
+        {
+            entity.HasKey(e => e.UserId);
+
+            entity.Property(e => e.Sessions)
+                  .HasColumnType("jsonb");
         });
     }
 }

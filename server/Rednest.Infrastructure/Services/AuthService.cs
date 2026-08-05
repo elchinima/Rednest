@@ -24,17 +24,24 @@ public class AuthService : IAuthService
     public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
-        
+
         if (user == null)
         {
             user = new User
             {
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                RegistrationIp = ipAddress,
-                LastLoginIp = ipAddress
             };
             await _userRepository.AddAsync(user);
+
+            var newSession = new UserSession
+            {
+                UserId = user.Id,
+                RegistrationIp = ipAddress,
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(newSession);
+            user = await _userRepository.GetByEmailAsync(request.Email);
         }
         else
         {
@@ -42,15 +49,33 @@ public class AuthService : IAuthService
             {
                 throw new UnauthorizedAccessException("Invalid credentials");
             }
-            
-            user.LastLoginIp = ipAddress;
-            await _userRepository.UpdateAsync(user);
+        }
+
+        var userSession = user!.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession == null)
+        {
+            userSession = new UserSession
+            {
+                UserId = user.Id,
+                RegistrationIp = ipAddress,
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(userSession);
         }
 
         var refreshToken = GenerateRefreshToken();
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
-        await _userRepository.UpdateAsync(user);
+        var sessionEntry = new SessionEntry
+        {
+            RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30),
+            LastLoginIp = ipAddress,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        userSession.Sessions.Add(sessionEntry);
+        userSession.Sessions.RemoveAll(s => s.RefreshTokenExpiryTime <= DateTime.UtcNow && s.RefreshToken != refreshToken);
+
+        await _userRepository.UpdateSessionAsync(userSession);
 
         bool hasName = !string.IsNullOrEmpty(user.Name);
         return (GenerateJwtToken(user), refreshToken, hasName);
@@ -58,30 +83,39 @@ public class AuthService : IAuthService
 
     public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(string refreshToken)
     {
-        var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
-        if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+        if (result == null || result.Value.Entry.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
             throw new UnauthorizedAccessException("Invalid or expired refresh token");
         }
 
+        var (user, session, oldEntry) = result.Value;
+
         var newAccessToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        user.RefreshToken = newRefreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30);
-        await _userRepository.UpdateAsync(user);
+        session.Sessions.Remove(oldEntry);
+        session.Sessions.Add(new SessionEntry
+        {
+            RefreshToken = newRefreshToken,
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30),
+            LastLoginIp = oldEntry.LastLoginIp,
+            CreatedAt = oldEntry.CreatedAt
+        });
+
+        await _userRepository.UpdateSessionAsync(session);
 
         return (newAccessToken, newRefreshToken);
     }
 
     private string GenerateJwtToken(User user)
     {
-        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") 
-                        ?? _configuration["JWT_SECRET"] 
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
+                        ?? _configuration["JWT_SECRET"]
                         ?? throw new InvalidOperationException("JWT_SECRET is missing");
-                        
-        var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") 
-                        ?? _configuration["JWT_ISSUER"] 
+
+        var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+                        ?? _configuration["JWT_ISSUER"]
                         ?? "RednestApp";
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));

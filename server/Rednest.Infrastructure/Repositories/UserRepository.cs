@@ -16,17 +16,41 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Users
+            .Include(u => u.Session)
+            .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .Include(u => u.Session)
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 
-    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    public async Task<(User User, UserSession Session, SessionEntry Entry)?> GetByRefreshTokenAsync(string refreshToken)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        var sessions = await _context.UserSessions
+            .Include(s => s.User)
+            .Where(s => s.Sessions != null && s.Sessions.Count > 0)
+            .ToListAsync();
+
+        foreach (var session in sessions)
+        {
+            var entry = session.Sessions.FirstOrDefault(e => e.RefreshToken == refreshToken);
+            if (entry != null)
+            {
+                return (session.User, session, entry);
+            }
+        }
+
+        return null;
+    }
+
+    public async Task<UserSession?> GetSessionByUserIdAsync(Guid userId)
+    {
+        return await _context.UserSessions
+            .FirstOrDefaultAsync(s => s.UserId == userId);
     }
 
     public async Task AddAsync(User user)
@@ -38,6 +62,18 @@ public class UserRepository : IUserRepository
     public async Task UpdateAsync(User user)
     {
         _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task AddSessionAsync(UserSession session)
+    {
+        await _context.UserSessions.AddAsync(session);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateSessionAsync(UserSession session)
+    {
+        _context.UserSessions.Update(session);
         await _context.SaveChangesAsync();
     }
 }
