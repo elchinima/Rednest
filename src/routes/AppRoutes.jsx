@@ -5,6 +5,7 @@ import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
 import Fortune from '../components/UserPages/Fortune/Fortune';
+import ProtectedRoute from './ProtectedRoute';
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
@@ -20,7 +21,11 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/login" element={<Auth />} />
-        <Route path="/fortune" element={<Fortune />} />
+        <Route path="/fortune" element={
+          <ProtectedRoute>
+            <Fortune />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>

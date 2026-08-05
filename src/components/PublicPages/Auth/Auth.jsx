@@ -50,6 +50,7 @@ const Auth = () => {
         setStep('name');
       } else {
         setSuccess(true);
+        localStorage.setItem('rednest_auth', 'true');
         window.location.href = '/';
       }
     } catch (err) {
@@ -82,6 +83,7 @@ const Auth = () => {
       }
 
       setSuccess(true);
+      localStorage.setItem('rednest_auth', 'true');
       window.location.href = '/';
     } catch (err) {
       console.error("Name Update Error:", err);

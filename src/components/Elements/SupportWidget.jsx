@@ -151,9 +151,7 @@ const SupportWidget = () => {
           className="support-widget" 
           aria-label="Support chat" 
           onClick={() => {
-            if (isAuthenticated) {
-              alert("Support chat will be available soon!");
-            } else {
+            if (!isAuthenticated) {
               setIsAuthModalOpen(true);
             }
           }}

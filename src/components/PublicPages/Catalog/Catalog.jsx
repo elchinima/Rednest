@@ -6,6 +6,7 @@ import './Catalog.scss';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import { useAuth } from '../../../context/AuthContext';
 
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
@@ -122,6 +123,7 @@ const Catalog = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const { login, logout } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -143,6 +145,7 @@ const Catalog = () => {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
       setUser(null);
+      logout();
       setIsLogoutModalOpen(false);
     } catch (err) {
       console.error("Logout failed:", err);
@@ -159,6 +162,9 @@ const Catalog = () => {
         if (response.ok) {
           const data = await response.json();
           setUser(data);
+          login(data);
+        } else {
+          logout();
         }
       } catch (err) {
         console.error("Failed to fetch user:", err);
