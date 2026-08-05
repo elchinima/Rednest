@@ -6,6 +6,8 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import partyPopperIcon from '../../../assets/icons/party-popper-animated.svg';
+import smileyIcon from '../../../assets/icons/smiley-animated.svg';
 import './Fortune.scss';
 
 const SEGMENTS = [
@@ -122,9 +124,12 @@ const Fortune = () => {
   const [prize, setPrize] = useState(null);
   const [showPrize, setShowPrize] = useState(false);
 
-  const [promoCode] = useState(() =>
-    'REDNEST-' + Math.random().toString(36).substring(2, 8).toUpperCase()
-  );
+  const promoCode = React.useMemo(() => {
+    if (user && user.id) {
+      return String(user.id).slice(-12).toUpperCase();
+    }
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }, [user?.id]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -321,7 +326,7 @@ const Fortune = () => {
               ) : !canSpin ? (
                 'Already spun today!'
               ) : (
-                '🎰 Spin the Wheel!'
+                'Spin the Wheel!'
               )}
             </motion.button>
 
@@ -360,7 +365,9 @@ const Fortune = () => {
             >
               {prize.prize ? (
                 <>
-                  <div className="prize-emoji">🎉</div>
+                  <div className="prize-emoji">
+                    <img src={partyPopperIcon} alt="Party Popper" style={{ width: '70px', height: '70px' }} />
+                  </div>
                   <h2 className="prize-heading">Congratulations!</h2>
                   <p className="prize-label">{prize.label}</p>
                   <p className="prize-desc">{prize.prize}</p>
@@ -369,7 +376,9 @@ const Fortune = () => {
                 </>
               ) : (
                 <>
-                  <div className="prize-emoji">😊</div>
+                  <div className="prize-emoji">
+                    <img src={smileyIcon} alt="Smiley" style={{ width: '70px', height: '70px' }} />
+                  </div>
                   <h2 className="prize-heading">Better luck next time!</h2>
                   <p className="prize-desc">Don't worry — there's always tomorrow's spin!</p>
                 </>

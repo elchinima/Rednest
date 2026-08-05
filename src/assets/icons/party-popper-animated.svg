@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Confetti particles that shoot out -->
+  <g stroke-linecap="round">
+    <!-- Streamer Left -->
+    <path d="M 35 45 Q 15 25 10 35" stroke="#ffffff" stroke-width="4" stroke-dasharray="40" stroke-dashoffset="40">
+      <animate attributeName="stroke-dashoffset" values="40;0;0" keyTimes="0;0.5;1" dur="1.2s" fill="freeze" />
+    </path>
+    <!-- Streamer Right -->
+    <path d="M 65 45 Q 85 25 90 35" stroke="#e74c3c" stroke-width="4" stroke-dasharray="40" stroke-dashoffset="40">
+      <animate attributeName="stroke-dashoffset" values="40;0;0" keyTimes="0;0.5;1" dur="1.2s" fill="freeze" />
+    </path>
+    <!-- Streamer Center -->
+    <path d="M 50 40 Q 40 10 50 5" stroke="#ffffff" stroke-width="4" stroke-dasharray="40" stroke-dashoffset="40">
+      <animate attributeName="stroke-dashoffset" values="40;0;0" keyTimes="0;0.5;1" dur="1.2s" fill="freeze" />
+    </path>
+
+    <!-- Circles -->
+    <circle cx="25" cy="15" r="4" fill="#e74c3c" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.3;1" dur="1s" fill="freeze" />
+      <animateTransform attributeName="transform" type="translate" values="15 25; 0 0" dur="0.4s" fill="freeze" />
+    </circle>
+    <circle cx="75" cy="15" r="3" fill="#ffffff" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.3;1" dur="1s" fill="freeze" />
+      <animateTransform attributeName="transform" type="translate" values="-15 25; 0 0" dur="0.4s" fill="freeze" />
+    </circle>
+    <circle cx="60" cy="25" r="5" fill="#e74c3c" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.3;1" dur="1s" fill="freeze" />
+      <animateTransform attributeName="transform" type="translate" values="-5 15; 0 0" dur="0.4s" fill="freeze" />
+    </circle>
+    <circle cx="40" cy="20" r="3.5" fill="#ffffff" opacity="0">
+      <animate attributeName="opacity" values="0;1;1" keyTimes="0;0.3;1" dur="1s" fill="freeze" />
+      <animateTransform attributeName="transform" type="translate" values="5 20; 0 0" dur="0.4s" fill="freeze" />
+    </circle>
+  </g>
+
+  <!-- Popper Cone Base -->
+  <g>
+    <!-- Pop animation (recoil) -->
+    <animateTransform attributeName="transform" type="translate" values="0 10; 0 -3; 0 0" keyTimes="0;0.4;1" dur="0.5s" fill="freeze" />
+    <path d="M 30 90 L 70 90 L 60 50 L 40 50 Z" fill="none" stroke="#ffffff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M 38 90 L 45 50" stroke="#e74c3c" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 62 90 L 55 50" stroke="#e74c3c" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 33 50 L 67 50" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

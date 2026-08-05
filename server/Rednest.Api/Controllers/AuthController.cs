@@ -82,7 +82,7 @@ public class AuthController : ControllerBase
                 return NotFound("User not found.");
             }
 
-            return Ok(new { Name = user.Name });
+            return Ok(new { Id = user.Id, Name = user.Name });
         }
         catch (Exception ex)
         {
@@ -131,15 +131,23 @@ public class AuthController : ControllerBase
 
     private void SetTokenCookies(string accessToken, string refreshToken)
     {
-        var cookieOptions = new CookieOptions
+        var accessCookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true, // Must be true for HTTPS (Render provides HTTPS)
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(30)
+        };
+
+        var refreshCookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(30)
         };
 
-        Response.Cookies.Append("accessToken", accessToken, cookieOptions);
-        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+        Response.Cookies.Append("accessToken", accessToken, accessCookieOptions);
+        Response.Cookies.Append("refreshToken", refreshToken, refreshCookieOptions);
     }
 }

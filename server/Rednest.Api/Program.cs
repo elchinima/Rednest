@@ -114,7 +114,15 @@ app.Use(async (context, next) =>
             {
                 var result = await authService.RefreshTokenAsync(refreshToken);
                 
-                var cookieOptions = new CookieOptions
+                var accessCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(30)
+                };
+
+                var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
@@ -122,8 +130,8 @@ app.Use(async (context, next) =>
                     Expires = DateTime.UtcNow.AddDays(30)
                 };
 
-                context.Response.Cookies.Append("accessToken", result.AccessToken, cookieOptions);
-                context.Response.Cookies.Append("refreshToken", result.RefreshToken, cookieOptions);
+                context.Response.Cookies.Append("accessToken", result.AccessToken, accessCookieOptions);
+                context.Response.Cookies.Append("refreshToken", result.RefreshToken, refreshCookieOptions);
 
                 context.Items["newAccessToken"] = result.AccessToken;
             }
