@@ -222,33 +222,19 @@ const Catalog = () => {
                     left: 0,
                     width: '100%',
                     marginTop: '8px',
-                    background: '#b3b3b3',
-                    borderRadius: '20px',
-                    padding: '4px',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
                     zIndex: 100
                   }}
                 >
                   <button 
+                    className="cta-btn sm"
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       setIsLogoutModalOpen(true);
                     }}
                     style={{
                       width: '100%',
-                      padding: '8px 0',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#222222',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      fontSize: '0.95rem',
-                      fontWeight: 700,
-                      borderRadius: '16px',
-                      transition: 'all 0.2s'
+                      cursor: 'pointer'
                     }}
-                    onMouseEnter={(e) => { e.target.style.background = 'rgba(0,0,0,0.1)'; e.target.style.color = '#d32f2f'; }}
-                    onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#222222'; }}
                   >
                     Log Out
                   </button>
