@@ -203,4 +203,15 @@
       font-size: 1.4rem;
     }
   }
+
+  .auth-modal-error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    padding: 10px 14px;
+    background: rgba(255, 80, 80, 0.1);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+    border-radius: 8px;
+    text-align: center;
+  }
 }
