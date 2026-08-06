@@ -80,14 +80,18 @@ public class UserRepository : IUserRepository
     public async Task<UserPromo?> GetUserPromoAsync(Guid userId)
     {
         return await _context.UserPromos
-            .Where(p => p.UserId == userId)
-            .OrderByDescending(p => p.ActivatedAt)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(p => p.UserId == userId);
     }
 
     public async Task AddUserPromoAsync(UserPromo promo)
     {
         await _context.UserPromos.AddAsync(promo);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateUserPromoAsync(UserPromo promo)
+    {
+        _context.UserPromos.Update(promo);
         await _context.SaveChangesAsync();
     }
 }

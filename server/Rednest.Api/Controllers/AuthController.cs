@@ -178,25 +178,39 @@ public class AuthController : ControllerBase
             var promoCode = Guid.NewGuid().ToString("N")[..8].ToUpper();
 
             var now = DateTime.UtcNow;
-            var promo = new Rednest.Core.Entities.UserPromo
-            {
-                UserId = userId,
-                PromoCode = promoCode,
-                PrizeName = request.PrizeName,
-                PrizeDescription = request.PrizeDescription,
-                BarCode = barCode,
-                IsActive = true,
-                ActivatedAt = now,
-                ExpiresAt = now.AddDays(7)
-            };
 
-            await userRepository.AddUserPromoAsync(promo);
+            if (existing != null)
+            {
+                existing.PromoCode = promoCode;
+                existing.PrizeName = request.PrizeName;
+                existing.PrizeDescription = request.PrizeDescription;
+                existing.BarCode = barCode;
+                existing.IsActive = true;
+                existing.ActivatedAt = now;
+                existing.ExpiresAt = now.AddDays(7);
+                await userRepository.UpdateUserPromoAsync(existing);
+            }
+            else
+            {
+                var promo = new Rednest.Core.Entities.UserPromo
+                {
+                    UserId = userId,
+                    PromoCode = promoCode,
+                    PrizeName = request.PrizeName,
+                    PrizeDescription = request.PrizeDescription,
+                    BarCode = barCode,
+                    IsActive = true,
+                    ActivatedAt = now,
+                    ExpiresAt = now.AddDays(7)
+                };
+                await userRepository.AddUserPromoAsync(promo);
+            }
 
             return Ok(new
             {
-                promoCode = promo.PromoCode,
-                barCode = promo.BarCode,
-                expiresAt = promo.ExpiresAt
+                promoCode = promoCode,
+                barCode = barCode,
+                expiresAt = now.AddDays(7)
             });
         }
         catch (Exception ex)

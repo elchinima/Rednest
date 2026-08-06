@@ -2,7 +2,6 @@ namespace Rednest.Core.Entities;
 
 public class UserPromo
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
     public string PromoCode { get; set; } = string.Empty;
     public string PrizeName { get; set; } = string.Empty;

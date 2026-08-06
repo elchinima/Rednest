@@ -39,7 +39,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<UserPromo>(entity =>
         {
-            entity.HasKey(e => e.Id);
+            entity.HasKey(e => e.UserId);
 
             entity.Property(e => e.PromoCode).HasColumnType("text");
             entity.Property(e => e.PrizeName).HasColumnType("text");
@@ -47,8 +47,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.BarCode).HasColumnType("text");
 
             entity.HasOne(e => e.User)
-                  .WithMany(u => u.Promos)
-                  .HasForeignKey(e => e.UserId)
+                  .WithOne(u => u.Promo)
+                  .HasForeignKey<UserPromo>(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

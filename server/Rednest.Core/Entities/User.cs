@@ -9,5 +9,5 @@ public class User
     public string? ProfilePictureUrl { get; set; }
 
     public UserSession? Session { get; set; }
-    public ICollection<UserPromo> Promos { get; set; } = new List<UserPromo>();
+    public UserPromo? Promo { get; set; }
 }
