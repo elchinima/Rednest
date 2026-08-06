@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<UserPromo> UserPromos => Set<UserPromo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +35,21 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.Sessions)
                   .HasColumnType("jsonb");
+        });
+
+        modelBuilder.Entity<UserPromo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.PromoCode).HasColumnType("text");
+            entity.Property(e => e.PrizeName).HasColumnType("text");
+            entity.Property(e => e.PrizeDescription).HasColumnType("text");
+            entity.Property(e => e.BarCode).HasColumnType("text");
+
+            entity.HasOne(e => e.User)
+                  .WithMany(u => u.Promos)
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

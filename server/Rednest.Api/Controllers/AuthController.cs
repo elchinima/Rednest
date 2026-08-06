@@ -121,6 +121,90 @@ public class AuthController : ControllerBase
         }
     }
 
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("promo")]
+    public async Task<IActionResult> GetPromo([FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                return Unauthorized();
+
+            var promo = await userRepository.GetUserPromoAsync(userId);
+            if (promo == null)
+                return Ok(new { hasPromo = false });
+
+            return Ok(new
+            {
+                hasPromo = true,
+                promoCode = promo.PromoCode,
+                prizeName = promo.PrizeName,
+                prizeDescription = promo.PrizeDescription,
+                barCode = promo.BarCode,
+                isActive = promo.IsActive,
+                activatedAt = promo.ActivatedAt,
+                expiresAt = promo.ExpiresAt,
+                isExpired = promo.ExpiresAt < DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("promo")]
+    public async Task<IActionResult> SavePromo(
+        [FromBody] SpinResultRequest request,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                return Unauthorized();
+
+            // Check if user already has an active (non-expired) promo from today
+            var existing = await userRepository.GetUserPromoAsync(userId);
+            if (existing != null && existing.ExpiresAt > DateTime.UtcNow)
+                return Conflict(new { Message = "User already has an active promo." });
+
+            // BarCode = digits only from userId
+            var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());
+
+            // PromoCode = random 8-char alphanumeric (uppercase)
+            var promoCode = Guid.NewGuid().ToString("N")[..8].ToUpper();
+
+            var now = DateTime.UtcNow;
+            var promo = new Rednest.Core.Entities.UserPromo
+            {
+                UserId = userId,
+                PromoCode = promoCode,
+                PrizeName = request.PrizeName,
+                PrizeDescription = request.PrizeDescription,
+                BarCode = barCode,
+                IsActive = true,
+                ActivatedAt = now,
+                ExpiresAt = now.AddDays(7)
+            };
+
+            await userRepository.AddUserPromoAsync(promo);
+
+            return Ok(new
+            {
+                promoCode = promo.PromoCode,
+                barCode = promo.BarCode,
+                expiresAt = promo.ExpiresAt
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
     [HttpPost("logout")]
     public IActionResult Logout()
     {

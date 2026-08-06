@@ -124,13 +124,22 @@ const Fortune = () => {
   const [canSpin, setCanSpin] = useState(true);
   const [prize, setPrize] = useState(null);
   const [showPrize, setShowPrize] = useState(false);
+  const [serverPromo, setServerPromo] = useState(null);
+  const [promoLoading, setPromoLoading] = useState(false);
 
-  const promoCode = React.useMemo(() => {
-    if (user && user.id) {
-      return String(user.id).slice(-12).toUpperCase();
-    }
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  }, [user?.id]);
+  useEffect(() => {
+    if (!user) return;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    fetch(`${apiUrl}/api/auth/promo`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.hasPromo && !data.isExpired) {
+          setServerPromo(data);
+          setCanSpin(false);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -190,8 +199,33 @@ const Fortune = () => {
         rafRef.current = requestAnimationFrame(animate);
       } else {
         setSpinning(false);
-        setPrize(SEGMENTS[winIdx]);
-        setShowPrize(true);
+        const seg = SEGMENTS[winIdx];
+        setPrize(seg);
+
+        if (seg.prize) {
+          setPromoLoading(true);
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          fetch(`${apiUrl}/api/auth/promo`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prizeName: seg.label,
+              prizeDescription: seg.prize
+            })
+          })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+              if (data) {
+                setServerPromo({ promoCode: data.promoCode, barCode: data.barCode, expiresAt: data.expiresAt });
+              }
+              setPromoLoading(false);
+              setShowPrize(true);
+            })
+            .catch(() => { setPromoLoading(false); setShowPrize(true); });
+        } else {
+          setShowPrize(true);
+        }
       }
     };
 
@@ -389,8 +423,21 @@ const Fortune = () => {
                   <h2 className="prize-heading">Congratulations!</h2>
                   <p className="prize-label">{prize.label}</p>
                   <p className="prize-desc">{prize.prize}</p>
-                  <p className="prize-code-label">Your promo code</p>
-                  <div className="prize-code">{promoCode}</div>
+                  {promoLoading ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '12px 0' }}>
+                      <img src={loaderIcon} alt="Loading..." style={{ width: '32px', height: '32px' }} />
+                    </div>
+                  ) : serverPromo?.promoCode ? (
+                    <>
+                      <p className="prize-code-label">Your promo code</p>
+                      <div className="prize-code">{serverPromo.promoCode}</div>
+                      {serverPromo.expiresAt && (
+                        <p className="prize-code-label" style={{ marginTop: '6px', fontSize: '0.75rem', opacity: 0.6 }}>
+                          Valid until {new Date(serverPromo.expiresAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </>
+                  ) : null}
                 </>
               ) : (
                 <>

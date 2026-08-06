@@ -76,4 +76,18 @@ public class UserRepository : IUserRepository
         _context.UserSessions.Update(session);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<UserPromo?> GetUserPromoAsync(Guid userId)
+    {
+        return await _context.UserPromos
+            .Where(p => p.UserId == userId)
+            .OrderByDescending(p => p.ActivatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task AddUserPromoAsync(UserPromo promo)
+    {
+        await _context.UserPromos.AddAsync(promo);
+        await _context.SaveChangesAsync();
+    }
 }

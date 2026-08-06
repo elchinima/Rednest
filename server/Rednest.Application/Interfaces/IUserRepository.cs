@@ -12,4 +12,6 @@ public interface IUserRepository
     Task UpdateAsync(User user);
     Task AddSessionAsync(UserSession session);
     Task UpdateSessionAsync(UserSession session);
+    Task<UserPromo?> GetUserPromoAsync(Guid userId);
+    Task AddUserPromoAsync(UserPromo promo);
 }
