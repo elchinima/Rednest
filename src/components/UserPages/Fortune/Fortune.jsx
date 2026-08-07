@@ -218,13 +218,16 @@ const Fortune = () => {
             .then(data => {
               if (data) {
                 setServerPromo({ promoCode: data.promoCode, barCode: data.barCode, expiresAt: data.expiresAt });
+              } else {
+                setCanSpin(true);
               }
               setPromoLoading(false);
               setShowPrize(true);
             })
-            .catch(() => { setPromoLoading(false); setShowPrize(true); });
+            .catch(() => { setPromoLoading(false); setShowPrize(true); setCanSpin(true); });
         } else {
           setShowPrize(true);
+          setCanSpin(true);
         }
       }
     };
@@ -369,7 +372,7 @@ const Fortune = () => {
                   Spinning...
                 </span>
               ) : !canSpin ? (
-                'Already spun today!'
+                'Promo already active!'
               ) : (
                 'Spin the Wheel!'
               )}
@@ -382,7 +385,7 @@ const Fortune = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
               >
-                Come back tomorrow for another spin ✨
+                You already have an active promo code ✨
               </motion.p>
             )}
           </motion.div>
