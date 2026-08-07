@@ -122,7 +122,8 @@ const Fortune = () => {
   }, []);
 
   const [spinning, setSpinning] = useState(false);
-  const [canSpin, setCanSpin] = useState(true);
+  const [canSpin, setCanSpin] = useState(false);
+  const [promoChecked, setPromoChecked] = useState(false);
   const [prize, setPrize] = useState(null);
   const [showPrize, setShowPrize] = useState(false);
   const [serverPromo, setServerPromo] = useState(null);
@@ -137,9 +138,12 @@ const Fortune = () => {
         if (data.hasPromo && data.isActive) {
           setServerPromo(data);
           setCanSpin(false);
+        } else {
+          setCanSpin(true);
         }
       })
-      .catch(() => {});
+      .catch(() => { setCanSpin(true); })
+      .finally(() => { setPromoChecked(true); });
   }, [user]);
 
   useEffect(() => {
@@ -404,16 +408,21 @@ const Fortune = () => {
             </div>
 
             <motion.button
-              className={`cta-btn fortune-spin-btn lg${spinning ? ' fortune-spin-btn--spinning' : ''}${!canSpin && !spinning ? ' fortune-spin-btn--used' : ''}`}
+              className={`cta-btn fortune-spin-btn lg${spinning ? ' fortune-spin-btn--spinning' : ''}${!canSpin && !spinning && promoChecked ? ' fortune-spin-btn--used' : ''}`}
               onClick={spin}
-              disabled={spinning || !canSpin}
-              whileHover={canSpin && !spinning ? { scale: 1.04, y: -2 } : {}}
-              whileTap={canSpin && !spinning ? { scale: 0.97 } : {}}
+              disabled={spinning || !canSpin || !promoChecked}
+              whileHover={canSpin && !spinning && promoChecked ? { scale: 1.04, y: -2 } : {}}
+              whileTap={canSpin && !spinning && promoChecked ? { scale: 0.97 } : {}}
             >
               {spinning ? (
                 <span className="fortune-spin-btn__inner">
                   <span className="fortune-spin-dot" />
                   Spinning...
+                </span>
+              ) : !promoChecked ? (
+                <span className="fortune-spin-btn__inner">
+                  <span className="fortune-spin-dot" />
+                  Loading...
                 </span>
               ) : !canSpin ? (
                 'Promo already active!'
