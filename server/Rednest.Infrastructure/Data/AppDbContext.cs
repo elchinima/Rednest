@@ -41,10 +41,9 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.UserId);
 
-            entity.Property(e => e.PromoCode).HasColumnType("text");
-            entity.Property(e => e.PrizeName).HasColumnType("text");
-            entity.Property(e => e.PrizeDescription).HasColumnType("text");
-            entity.Property(e => e.BarCode).HasColumnType("text");
+            entity.Property(e => e.Codes).HasColumnType("jsonb");
+            entity.Property(e => e.PrizeInfo).HasColumnType("jsonb");
+            entity.Property(e => e.Dates).HasColumnType("jsonb");
 
             entity.HasOne(e => e.User)
                   .WithOne(u => u.Promo)

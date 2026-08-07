@@ -138,14 +138,14 @@ public class AuthController : ControllerBase
             return Ok(new
             {
                 hasPromo = true,
-                promoCode = promo.PromoCode,
-                prizeName = promo.PrizeName,
-                prizeDescription = promo.PrizeDescription,
-                barCode = promo.BarCode,
+                promoCode = promo.Codes.PromoCode,
+                prizeName = promo.PrizeInfo.PrizeName,
+                prizeDescription = promo.PrizeInfo.PrizeDescription,
+                barCode = promo.Codes.BarCode,
                 isActive = promo.IsActive,
-                activatedAt = promo.ActivatedAt,
-                expiresAt = promo.ExpiresAt,
-                isExpired = promo.ExpiresAt < DateTime.UtcNow
+                activatedAt = promo.Dates.ActivatedAt,
+                expiresAt = promo.Dates.ExpiresAt,
+                isExpired = promo.Dates.ExpiresAt < DateTime.UtcNow
             });
         }
         catch (Exception ex)
@@ -166,28 +166,23 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
                 return Unauthorized();
 
-            // Check if user already has an active (non-expired) promo from today
             var existing = await userRepository.GetUserPromoAsync(userId);
-            if (existing != null && existing.ExpiresAt > DateTime.UtcNow)
+            if (existing != null && existing.Dates.ExpiresAt > DateTime.UtcNow)
                 return Conflict(new { Message = "User already has an active promo." });
 
-            // BarCode = digits only from userId
             var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());
-
-            // PromoCode = random 8-char alphanumeric (uppercase)
             var promoCode = Guid.NewGuid().ToString("N")[..8].ToUpper();
-
             var now = DateTime.UtcNow;
 
             if (existing != null)
             {
-                existing.PromoCode = promoCode;
-                existing.PrizeName = request.PrizeName;
-                existing.PrizeDescription = request.PrizeDescription;
-                existing.BarCode = barCode;
+                existing.Codes.PromoCode = promoCode;
+                existing.Codes.BarCode = barCode;
+                existing.PrizeInfo.PrizeName = request.PrizeName;
+                existing.PrizeInfo.PrizeDescription = request.PrizeDescription;
                 existing.IsActive = true;
-                existing.ActivatedAt = now;
-                existing.ExpiresAt = now.AddDays(7);
+                existing.Dates.ActivatedAt = now;
+                existing.Dates.ExpiresAt = now.AddDays(7);
                 await userRepository.UpdateUserPromoAsync(existing);
             }
             else
@@ -195,13 +190,10 @@ public class AuthController : ControllerBase
                 var promo = new Rednest.Core.Entities.UserPromo
                 {
                     UserId = userId,
-                    PromoCode = promoCode,
-                    PrizeName = request.PrizeName,
-                    PrizeDescription = request.PrizeDescription,
-                    BarCode = barCode,
-                    IsActive = true,
-                    ActivatedAt = now,
-                    ExpiresAt = now.AddDays(7)
+                    Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode },
+                    PrizeInfo = new Rednest.Core.Entities.PrizeInfo { PrizeName = request.PrizeName, PrizeDescription = request.PrizeDescription },
+                    Dates = new Rednest.Core.Entities.PromoDates { ActivatedAt = now, ExpiresAt = now.AddDays(7) },
+                    IsActive = true
                 };
                 await userRepository.AddUserPromoAsync(promo);
             }

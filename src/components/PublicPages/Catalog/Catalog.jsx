@@ -7,6 +7,7 @@ import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 
 import cappuccinoImg from '../../../assets/images/product/Cappuccino.jpg';
 import redLatteImg from '../../../assets/images/product/Red_Latte.jpg';
@@ -158,7 +159,7 @@ const Catalog = () => {
     const fetchUser = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/auth/me`, { credentials: 'include' });
+        const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
         if (response.ok) {
           const data = await response.json();
           setUser(data);

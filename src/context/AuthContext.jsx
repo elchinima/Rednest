@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
 const AuthContext = createContext(null);
 
@@ -10,6 +11,7 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('rednest_user');
     return saved ? JSON.parse(saved) : null;
   });
+  const [authLoading, setAuthLoading] = useState(true);
 
   const login = useCallback((userData) => {
     const profile = userData || { name: 'Guest', email: '' };
@@ -19,15 +21,53 @@ export const AuthProvider = ({ children }) => {
     setUser(profile);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      await fetch(`${apiUrl}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch { }
     localStorage.removeItem('rednest_auth');
     localStorage.removeItem('rednest_user');
     setIsAuthenticated(false);
     setUser(null);
   }, []);
 
+  useEffect(() => {
+    const validateSession = async () => {
+      const hasAuth = localStorage.getItem('rednest_auth') === 'true';
+      if (!hasAuth) {
+        setAuthLoading(false);
+        return;
+      }
+
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
+
+        if (response.ok) {
+          const data = await response.json();
+          login(data);
+        } else {
+          localStorage.removeItem('rednest_auth');
+          localStorage.removeItem('rednest_user');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Session validation failed:', err);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    validateSession();
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, authLoading }}>
       {children}
     </AuthContext.Provider>
   );

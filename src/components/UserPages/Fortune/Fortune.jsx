@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
@@ -130,7 +131,7 @@ const Fortune = () => {
   useEffect(() => {
     if (!user) return;
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    fetch(`${apiUrl}/api/auth/promo`, { credentials: 'include' })
+    fetchWithRefresh(`${apiUrl}/api/auth/promo`)
       .then(r => r.json())
       .then(data => {
         if (data.hasPromo && !data.isExpired) {
@@ -205,9 +206,8 @@ const Fortune = () => {
         if (seg.prize) {
           setPromoLoading(true);
           const apiUrl = import.meta.env.VITE_API_URL || '';
-          fetch(`${apiUrl}/api/auth/promo`, {
+          fetchWithRefresh(`${apiUrl}/api/auth/promo`, {
             method: 'POST',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               prizeName: seg.label,

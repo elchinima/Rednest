@@ -15,6 +15,7 @@ import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import './Home.scss';
 
 const Home = () => {
@@ -61,7 +62,7 @@ const Home = () => {
     const fetchUser = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/auth/me`, { credentials: 'include' });
+        const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
         if (response.ok) {
           const data = await response.json();
           setUser(data);
