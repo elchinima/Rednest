@@ -177,59 +177,103 @@ const Fortune = () => {
     setSpinning(true);
     setCanSpin(false);
     setPrize(null);
+    setShowPrize(false);
 
     const winIdx = Math.floor(Math.random() * NUM_SEGMENTS);
-    const totalSpins = (5 + Math.random() * 3) * 2 * Math.PI;
+    const seg = SEGMENTS[winIdx];
     const targetAngle = -Math.PI / 2 - (winIdx * ARC + ARC / 2);
     const normalizedTarget = ((targetAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-    const finalRotation = totalSpins + normalizedTarget;
 
-    const startRotation = rotationRef.current;
-    const duration = 5000 + Math.random() * 1500;
-    const startTime = performance.now();
+    let fetchDone = !seg.prize;
+    let minSpinTimeDone = false;
+    setTimeout(() => { minSpinTimeDone = true; }, 3000 + Math.random() * 1000);
 
-    const easeOut = (t) => 1 - Math.pow(1 - t, 4);
+    let apiData = null;
+
+    if (seg.prize) {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      fetchWithRefresh(`${apiUrl}/api/auth/promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prizeName: seg.label,
+          prizeDescription: seg.prize
+        })
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { apiData = data; })
+        .catch(() => { apiData = null; })
+        .finally(() => { fetchDone = true; });
+    }
+
+    let phase = 'accelerating';
+    let currentSpeed = 0;
+    const maxSpeed = 0.015;
+    const accel = 0.00002;
+
+    let decelStartTime = 0;
+    let decelStartRotation = 0;
+    let decelTotalDistance = 0;
+    let decelDuration = 0;
+
+    let lastTime = performance.now();
 
     const animate = (now) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      rotationRef.current = startRotation + finalRotation * easeOut(progress);
-      drawFrame();
+      const dt = Math.min(now - lastTime, 50);
+      lastTime = now;
 
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animate);
-      } else {
-        setSpinning(false);
-        const seg = SEGMENTS[winIdx];
-        setPrize(seg);
+      if (phase === 'accelerating') {
+        currentSpeed += accel * dt;
+        if (currentSpeed >= maxSpeed) {
+          currentSpeed = maxSpeed;
+          phase = 'spinning';
+        }
+        rotationRef.current += currentSpeed * dt;
+      } else if (phase === 'spinning') {
+        rotationRef.current += currentSpeed * dt;
+        
+        if (fetchDone && minSpinTimeDone) {
+          phase = 'decelerating';
+          decelStartTime = now;
+          decelStartRotation = rotationRef.current;
+          
+          const baseDistance = (currentSpeed * 3000) / 3;
+          const targetRot = decelStartRotation + baseDistance;
+          const remainder = targetRot % (2 * Math.PI);
+          let extraRot = normalizedTarget - remainder;
+          if (extraRot < 0) extraRot += 2 * Math.PI;
+          
+          decelTotalDistance = baseDistance + extraRot;
+          decelDuration = (3 * decelTotalDistance) / currentSpeed;
+        }
+      } else if (phase === 'decelerating') {
+        const elapsed = now - decelStartTime;
+        const t = Math.min(elapsed / decelDuration, 1);
+        
+        const easeOut = 1 - Math.pow(1 - t, 3);
+        rotationRef.current = decelStartRotation + decelTotalDistance * easeOut;
 
-        if (seg.prize) {
-          setPromoLoading(true);
-          const apiUrl = import.meta.env.VITE_API_URL || '';
-          fetchWithRefresh(`${apiUrl}/api/auth/promo`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              prizeName: seg.label,
-              prizeDescription: seg.prize
-            })
-          })
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-              if (data) {
-                setServerPromo({ promoCode: data.promoCode, barCode: data.barCode, expiresAt: data.expiresAt });
-              } else {
-                setCanSpin(true);
-              }
-              setPromoLoading(false);
-              setShowPrize(true);
-            })
-            .catch(() => { setPromoLoading(false); setShowPrize(true); setCanSpin(true); });
-        } else {
+        if (t >= 1) {
+          setSpinning(false);
+          setPrize(seg);
+          if (seg.prize) {
+            if (apiData) {
+              setServerPromo({ promoCode: apiData.promoCode, barCode: apiData.barCode, expiresAt: apiData.expiresAt });
+            } else {
+              setCanSpin(true);
+            }
+          } else {
+            setCanSpin(true);
+          }
+          setPromoLoading(false);
           setShowPrize(true);
-          setCanSpin(true);
+          drawFrame();
+          return;
         }
       }
+
+      drawFrame();
+      rafRef.current = requestAnimationFrame(animate);
     };
 
     rafRef.current = requestAnimationFrame(animate);
