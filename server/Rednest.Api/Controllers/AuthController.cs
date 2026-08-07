@@ -135,6 +135,12 @@ public class AuthController : ControllerBase
             if (promo == null)
                 return Ok(new { hasPromo = false });
 
+            if (promo.IsActive && promo.Dates.ExpiresAt < DateTime.UtcNow)
+            {
+                promo.IsActive = false;
+                await userRepository.UpdateUserPromoAsync(promo);
+            }
+
             return Ok(new
             {
                 hasPromo = true,
@@ -144,8 +150,7 @@ public class AuthController : ControllerBase
                 barCode = promo.Codes.BarCode,
                 isActive = promo.IsActive,
                 activatedAt = promo.Dates.ActivatedAt,
-                expiresAt = promo.Dates.ExpiresAt,
-                isExpired = promo.Dates.ExpiresAt < DateTime.UtcNow
+                expiresAt = promo.Dates.ExpiresAt
             });
         }
         catch (Exception ex)
@@ -167,7 +172,14 @@ public class AuthController : ControllerBase
                 return Unauthorized();
 
             var existing = await userRepository.GetUserPromoAsync(userId);
-            if (existing != null && existing.Dates.ExpiresAt > DateTime.UtcNow)
+            
+            if (existing != null && existing.IsActive && existing.Dates.ExpiresAt < DateTime.UtcNow)
+            {
+                existing.IsActive = false;
+                await userRepository.UpdateUserPromoAsync(existing);
+            }
+
+            if (existing != null && existing.IsActive)
                 return Conflict(new { Message = "User already has an active promo." });
 
             var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());

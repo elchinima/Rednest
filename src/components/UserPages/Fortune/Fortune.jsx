@@ -134,7 +134,7 @@ const Fortune = () => {
     fetchWithRefresh(`${apiUrl}/api/auth/promo`)
       .then(r => r.json())
       .then(data => {
-        if (data.hasPromo && !data.isExpired) {
+        if (data.hasPromo && data.isActive) {
           setServerPromo(data);
           setCanSpin(false);
         }
