@@ -20,6 +20,7 @@ public class PromoDates
 
 public class UserPromo
 {
+    public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
     
     public PromoCodes Codes { get; set; } = new PromoCodes();

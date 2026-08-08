@@ -39,15 +39,15 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<UserPromo>(entity =>
         {
-            entity.HasKey(e => e.UserId);
+            entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Codes).HasColumnType("jsonb");
             entity.Property(e => e.PrizeInfo).HasColumnType("jsonb");
             entity.Property(e => e.Dates).HasColumnType("jsonb");
 
             entity.HasOne(e => e.User)
-                  .WithOne(u => u.Promo)
-                  .HasForeignKey<UserPromo>(e => e.UserId)
+                  .WithMany(u => u.Promos)
+                  .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

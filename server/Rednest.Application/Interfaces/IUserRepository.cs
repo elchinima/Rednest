@@ -13,6 +13,7 @@ public interface IUserRepository
     Task AddSessionAsync(UserSession session);
     Task UpdateSessionAsync(UserSession session);
     Task<UserPromo?> GetUserPromoAsync(Guid userId);
+    Task<UserPromo?> GetActiveUserPromoAsync(Guid userId);
     Task AddUserPromoAsync(UserPromo promo);
     Task UpdateUserPromoAsync(UserPromo promo);
 }
