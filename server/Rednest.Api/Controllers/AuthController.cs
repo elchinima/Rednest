@@ -131,14 +131,15 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
                 return Unauthorized();
 
-            var promo = await userRepository.GetUserPromoAsync(userId);
+            var promo = await userRepository.GetActiveUserPromoAsync(userId);
             if (promo == null)
-                return Ok(new { hasPromo = false });
+                return Ok(new { hasPromo = false, isActive = false });
 
-            if (promo.IsActive && promo.Dates.ExpiresAt < DateTime.UtcNow)
+            if (promo.Dates.ExpiresAt < DateTime.UtcNow)
             {
                 promo.IsActive = false;
                 await userRepository.UpdateUserPromoAsync(promo);
+                return Ok(new { hasPromo = true, isActive = false });
             }
 
             return Ok(new
@@ -171,44 +172,34 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
                 return Unauthorized();
 
-            var existing = await userRepository.GetUserPromoAsync(userId);
+            var activePromo = await userRepository.GetActiveUserPromoAsync(userId);
             
-            if (existing != null && existing.IsActive && existing.Dates.ExpiresAt < DateTime.UtcNow)
+            if (activePromo != null)
             {
-                existing.IsActive = false;
-                await userRepository.UpdateUserPromoAsync(existing);
+                if (activePromo.Dates.ExpiresAt < DateTime.UtcNow)
+                {
+                    activePromo.IsActive = false;
+                    await userRepository.UpdateUserPromoAsync(activePromo);
+                }
+                else
+                {
+                    return Conflict(new { Message = "User already has an active promo." });
+                }
             }
-
-            if (existing != null && existing.IsActive)
-                return Conflict(new { Message = "User already has an active promo." });
 
             var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());
             var promoCode = Guid.NewGuid().ToString("N")[..8].ToUpper();
             var now = DateTime.UtcNow;
 
-            if (existing != null)
+            var promo = new Rednest.Core.Entities.UserPromo
             {
-                existing.Codes.PromoCode = promoCode;
-                existing.Codes.BarCode = barCode;
-                existing.PrizeInfo.PrizeName = request.PrizeName;
-                existing.PrizeInfo.PrizeDescription = request.PrizeDescription;
-                existing.IsActive = true;
-                existing.Dates.ActivatedAt = now;
-                existing.Dates.ExpiresAt = now.AddDays(7);
-                await userRepository.UpdateUserPromoAsync(existing);
-            }
-            else
-            {
-                var promo = new Rednest.Core.Entities.UserPromo
-                {
-                    UserId = userId,
-                    Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode },
-                    PrizeInfo = new Rednest.Core.Entities.PrizeInfo { PrizeName = request.PrizeName, PrizeDescription = request.PrizeDescription },
-                    Dates = new Rednest.Core.Entities.PromoDates { ActivatedAt = now, ExpiresAt = now.AddDays(7) },
-                    IsActive = true
-                };
-                await userRepository.AddUserPromoAsync(promo);
-            }
+                UserId = userId,
+                Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode },
+                PrizeInfo = new Rednest.Core.Entities.PrizeInfo { PrizeName = request.PrizeName, PrizeDescription = request.PrizeDescription },
+                Dates = new Rednest.Core.Entities.PromoDates { ActivatedAt = now, ExpiresAt = now.AddDays(7) },
+                IsActive = true
+            };
+            await userRepository.AddUserPromoAsync(promo);
 
             return Ok(new
             {
