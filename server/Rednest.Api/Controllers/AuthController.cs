@@ -187,7 +187,6 @@ public class AuthController : ControllerBase
                 }
             }
 
-            var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());
             var now = DateTime.UtcNow;
 
             var promo = new Rednest.Core.Entities.UserPromo
@@ -198,6 +197,7 @@ public class AuthController : ControllerBase
                 IsActive = true
             };
 
+            var barCode = new string(promo.Id.ToString().Where(char.IsDigit).ToArray());
             var promoCode = promo.Id.ToString("N")[..8].ToUpper();
             promo.Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode };
 
