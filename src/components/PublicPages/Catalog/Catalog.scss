@@ -79,6 +79,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    position: relative;
     
     .item-image {
       width: 100%;
@@ -101,6 +102,30 @@
       .placeholder-icon {
         font-size: 4rem;
         opacity: 0.4;
+      }
+    }
+
+    .add-to-cart-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      img {
+        width: 48px;
+        height: 48px;
       }
     }
   }

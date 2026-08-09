@@ -6,6 +6,8 @@ import './Catalog.scss';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import addIcon from '../../../assets/icons/add.svg';
+import successIcon from '../../../assets/icons/success-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 
@@ -122,6 +124,7 @@ const Catalog = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [addedItems, setAddedItems] = useState({});
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const { login, logout } = useAuth();
@@ -285,6 +288,12 @@ const Catalog = () => {
                           <span className="placeholder-icon">{item.icon}</span>
                         </div>
                       )}
+                      <button 
+                        className="add-to-cart-btn"
+                        onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      >
+                        <img src={addedItems[item.id] ? successIcon : addIcon} alt="Add to cart" />
+                      </button>
                     </div>
                     <div className="card-content">
                       <div className="card-header">
