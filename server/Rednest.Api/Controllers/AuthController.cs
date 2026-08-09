@@ -188,17 +188,19 @@ public class AuthController : ControllerBase
             }
 
             var barCode = new string(userId.ToString().Where(char.IsDigit).ToArray());
-            var promoCode = Guid.NewGuid().ToString("N")[..8].ToUpper();
             var now = DateTime.UtcNow;
 
             var promo = new Rednest.Core.Entities.UserPromo
             {
                 UserId = userId,
-                Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode },
                 PrizeInfo = new Rednest.Core.Entities.PrizeInfo { PrizeName = request.PrizeName, PrizeDescription = request.PrizeDescription },
                 Dates = new Rednest.Core.Entities.PromoDates { ActivatedAt = now, ExpiresAt = now.AddDays(7) },
                 IsActive = true
             };
+
+            var promoCode = promo.Id.ToString("N")[..8].ToUpper();
+            promo.Codes = new Rednest.Core.Entities.PromoCodes { PromoCode = promoCode, BarCode = barCode };
+
             await userRepository.AddUserPromoAsync(promo);
 
             return Ok(new
