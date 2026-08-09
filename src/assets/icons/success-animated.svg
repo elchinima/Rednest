@@ -1,6 +1,5 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g>
-    <circle cx="24" cy="24" r="18" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M 15.5 24 L 32.5 24" stroke="#e74c3c" stroke-width="3" stroke-linecap="round">
       <animate attributeName="d" 
                values="M 15.5 24 L 32.5 24; M 15.5 25 L 21.5 32.5" 
