@@ -288,12 +288,6 @@ const Catalog = () => {
                           <span className="placeholder-icon">{item.icon}</span>
                         </div>
                       )}
-                      <button 
-                        className="add-to-cart-btn"
-                        onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
-                      >
-                        <img src={addedItems[item.id] ? `${successIcon}?t=${addedItems[item.id]}` : addIcon} alt="Add to cart" />
-                      </button>
                     </div>
                     <div className="card-content">
                       <div className="card-header">
@@ -302,6 +296,12 @@ const Catalog = () => {
                       </div>
                       <p className="item-description">{item.description}</p>
                     </div>
+                    <button 
+                      className="add-to-cart-btn"
+                      onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
+                    >
+                      <img src={addedItems[item.id] ? `${successIcon}?t=${addedItems[item.id]}` : addIcon} alt="Add to cart" />
+                    </button>
                   </div>
                 ))}
               </div>
