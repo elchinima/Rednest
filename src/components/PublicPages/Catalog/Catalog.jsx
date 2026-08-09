@@ -300,11 +300,18 @@ const Catalog = () => {
                       className="add-to-cart-btn"
                       onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
                     >
-                      <img 
-                        key={addedItems[item.id] || 'add'}
-                        src={addedItems[item.id] ? successIcon : addIcon} 
-                        alt="Add" 
-                      />
+                      {addedItems[item.id] ? (
+                        <object 
+                          type="image/svg+xml" 
+                          data={successIcon} 
+                          aria-label="Added"
+                        />
+                      ) : (
+                        <img 
+                          src={addIcon} 
+                          alt="Add" 
+                        />
+                      )}
                     </button>
                   </div>
                 ))}
