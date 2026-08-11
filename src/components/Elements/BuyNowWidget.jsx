@@ -59,11 +59,41 @@ body.mobile-menu-open .buynow-widget-container {
 .buynow-widget:active {
   transform: scale(0.95);
 }
+.buynow-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .buynow-icon {
   width: 19px;
   height: 19px;
   fill: currentColor;
   transform: translateX(-2px);
+}
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  background: #ffffff;
+  color: #dc3545;
+  font-size: 0.52rem;
+  font-weight: 800;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 2px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  line-height: 1;
+}
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  80% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 @media (max-width: 768px) {
   .buynow-widget {
@@ -76,6 +106,14 @@ body.mobile-menu-open .buynow-widget-container {
     width: 16px;
     height: 16px;
   }
+  .cart-badge {
+    top: -5px;
+    right: -6px;
+    min-width: 11px;
+    height: 11px;
+    font-size: 0.48rem;
+    padding: 0 2px;
+  }
 }
 `;
 
@@ -84,6 +122,24 @@ const BuyNowWidget = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem('rednest_cart');
+    } catch {}
+
+    const handleCartUpdated = (e) => {
+      const items = e?.detail || {};
+      setCartCount(Object.keys(items).length);
+    };
+
+    window.addEventListener('cart-updated', handleCartUpdated);
+
+    return () => {
+      window.removeEventListener('cart-updated', handleCartUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -125,7 +181,12 @@ const BuyNowWidget = () => {
           className="buynow-widget" 
           onClick={() => navigate('/catalog')}
         >
-          <img src={cartAnimated} alt="Cart" className="buynow-icon" />
+          <div className="buynow-icon-wrapper">
+            <img src={cartAnimated} alt="Cart" className="buynow-icon" />
+            {cartCount > 0 && (
+              <span key={cartCount} className="cart-badge">{cartCount}</span>
+            )}
+          </div>
           Buy Now
         </button>
       </div>

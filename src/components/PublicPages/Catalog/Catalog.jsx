@@ -228,6 +228,12 @@ const Catalog = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [addedItems, setAddedItems] = useState({});
+
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('cart-updated', { detail: addedItems }));
+  }, [addedItems]);
+
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const { login, logout } = useAuth();
