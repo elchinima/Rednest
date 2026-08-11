@@ -9,6 +9,9 @@ using Rednest.Infrastructure.Repositories;
 using Rednest.Infrastructure.Services;
 using DotNetEnv;
 
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "true");
+Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
+
 var builder = WebApplication.CreateBuilder(args);
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "secret", ".env");

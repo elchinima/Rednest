@@ -51,8 +51,9 @@
 
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: $spacing-xl;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  row-gap: $spacing-xxl;
+  column-gap: $spacing-xl;
 }
 
 .catalog-card {
@@ -221,6 +222,10 @@
   }
 }
 
+.carousel-dots {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .catalog-hero {
     h1 {
@@ -229,10 +234,70 @@
   }
   
   .catalog-main {
-    padding: 100px $spacing-md $spacing-xl;
+    padding: 100px $spacing-md $spacing-xxxl;
+  }
+
+  .menu-categories {
+    gap: $spacing-xxxl;
+  }
+
+  .menu-category-section {
+    .category-title {
+      font-size: 1.6rem;
+      margin-bottom: $spacing-md;
+    }
   }
   
   .catalog-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: $spacing-md;
+    padding-bottom: 40px;
+    margin-left: -$spacing-md;
+    margin-right: -$spacing-md;
+    padding-left: $spacing-md;
+    padding-right: $spacing-md;
+    
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .catalog-card {
+    flex: 0 0 88vw;
+    max-width: 350px;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: $spacing-lg;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &.active {
+        width: 24px;
+        border-radius: 12px;
+        background: $color-primary;
+      }
+    }
   }
 }

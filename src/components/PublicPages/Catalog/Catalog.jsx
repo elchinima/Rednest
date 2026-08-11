@@ -118,6 +118,109 @@ const menuData = [
   }
 ];
 
+const CategorySection = ({ categoryObj, index, addedItems, setAddedItems }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef(null);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const card = container.querySelector('.catalog-card');
+    if (!card) return;
+
+    const style = window.getComputedStyle(container);
+    const gap = parseFloat(style.gap) || 16;
+    const cardWidth = card.offsetWidth + gap;
+
+    if (cardWidth > 0) {
+      const scrollPos = container.scrollLeft;
+      const newIndex = Math.round(scrollPos / cardWidth);
+      setActiveIndex(Math.max(0, Math.min(newIndex, categoryObj.items.length - 1)));
+    }
+  };
+
+  const scrollToIndex = (idx) => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    const card = container.querySelector('.catalog-card');
+    if (!card) return;
+
+    const style = window.getComputedStyle(container);
+    const gap = parseFloat(style.gap) || 16;
+    const cardWidth = card.offsetWidth + gap;
+
+    container.scrollTo({
+      left: idx * cardWidth,
+      behavior: 'smooth'
+    });
+  };
+
+  return (
+    <motion.section 
+      key={index} 
+      className="menu-category-section"
+      initial={{ opacity: 0, y: 50 }} 
+      whileInView={{ opacity: 1, y: 0 }} 
+      viewport={{ once: true, amount: 0.1 }} 
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+    >
+      <h2 className="category-title">{categoryObj.category}</h2>
+      <div className="catalog-grid" ref={scrollRef} onScroll={handleScroll}>
+        {categoryObj.items.map((item) => (
+          <div key={item.id} className="catalog-card">
+            <div className="card-image-container">
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="item-image" />
+              ) : (
+                <div className="item-image-placeholder">
+                  <span className="placeholder-icon">{item.icon}</span>
+                </div>
+              )}
+            </div>
+            <div className="card-content">
+              <div className="card-header">
+                <h3>{item.name}</h3>
+                <span className="item-price">{item.price} ₼</span>
+              </div>
+              <p className="item-description">{item.description}</p>
+            </div>
+            <button 
+              className="add-to-cart-btn"
+              onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
+            >
+              {addedItems[item.id] ? (
+                <object 
+                  type="image/svg+xml" 
+                  data={successIcon} 
+                  aria-label="Added"
+                />
+              ) : (
+                <img 
+                  src={addIcon} 
+                  alt="Add" 
+                />
+              )}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {categoryObj.items.length > 1 && (
+        <div className="carousel-dots">
+          {categoryObj.items.map((_, i) => (
+            <button
+              key={i}
+              className={`dot ${i === activeIndex ? 'active' : ''}`}
+              onClick={() => scrollToIndex(i)}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </motion.section>
+  );
+};
+
 const Catalog = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -268,55 +371,13 @@ const Catalog = () => {
 
         <div className="menu-categories">
           {menuData.map((categoryObj, index) => (
-            <motion.section 
-              key={index} 
-              className="menu-category-section"
-              initial={{ opacity: 0, y: 50 }} 
-              whileInView={{ opacity: 1, y: 0 }} 
-              viewport={{ once: true, amount: 0.1 }} 
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <h2 className="category-title">{categoryObj.category}</h2>
-              <div className="catalog-grid">
-                {categoryObj.items.map((item) => (
-                  <div key={item.id} className="catalog-card">
-                    <div className="card-image-container">
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="item-image" />
-                      ) : (
-                        <div className="item-image-placeholder">
-                          <span className="placeholder-icon">{item.icon}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="card-content">
-                      <div className="card-header">
-                        <h3>{item.name}</h3>
-                        <span className="item-price">{item.price} ₼</span>
-                      </div>
-                      <p className="item-description">{item.description}</p>
-                    </div>
-                    <button 
-                      className="add-to-cart-btn"
-                      onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
-                    >
-                      {addedItems[item.id] ? (
-                        <object 
-                          type="image/svg+xml" 
-                          data={successIcon} 
-                          aria-label="Added"
-                        />
-                      ) : (
-                        <img 
-                          src={addIcon} 
-                          alt="Add" 
-                        />
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
+            <CategorySection
+              key={index}
+              categoryObj={categoryObj}
+              index={index}
+              addedItems={addedItems}
+              setAddedItems={setAddedItems}
+            />
           ))}
         </div>
       </main>
@@ -333,3 +394,4 @@ const Catalog = () => {
 };
 
 export default Catalog;
+

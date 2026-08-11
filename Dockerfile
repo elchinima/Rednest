@@ -24,4 +24,7 @@ COPY --from=frontend-builder /app/dist ./wwwroot
 
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+ENV DOTNET_hostBuilder:reloadConfigOnChange=false
 CMD ["dotnet", "Rednest.Api.dll"]
+
