@@ -117,11 +117,11 @@ const SupportWidget = () => {
       
       if (footer) {
         const footerRect = footer.getBoundingClientRect();
-        if (footerRect.top <= window.innerHeight + 50) {
+        if (footerRect.top <= window.innerHeight - 60) {
           isAtBottom = true;
         }
       } else {
-        isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 400;
+        isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 100;
       }
 
       setIsScrolled(scrollY >= 10);
