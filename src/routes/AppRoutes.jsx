@@ -5,12 +5,17 @@ import Home from '../components/PublicPages/Home/Home';
 import Catalog from '../components/PublicPages/Catalog/Catalog';
 import Auth from '../components/PublicPages/Auth/Auth';
 import Fortune from '../components/UserPages/Fortune/Fortune';
+import AdminLogin from '../components/AdminPages/AdminLogin/AdminLogin';
+import Dashboard from '../components/AdminPages/Dashboard/Dashboard';
+import Database from '../components/AdminPages/Database/Database';
 import ProtectedRoute from './ProtectedRoute';
+import AdminProtectedRoute from './AdminProtectedRoute';
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
 import FortuneWidget from '../components/Elements/FortuneWidget';
 import { AuthProvider } from '../context/AuthContext';
+import { AdminAuthProvider } from '../context/AdminAuthContext';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -26,6 +31,20 @@ const AnimatedRoutes = () => {
             <Fortune />
           </ProtectedRoute>
         } />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={
+          <AdminProtectedRoute>
+            <Dashboard />
+          </AdminProtectedRoute>
+        } />
+        <Route path="/admin/database" element={
+          <AdminProtectedRoute>
+            <Database />
+          </AdminProtectedRoute>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
@@ -35,13 +54,15 @@ const AnimatedRoutes = () => {
 const AppRoutes = () => {
   return (
     <Router>
-      <AuthProvider>
-        <ScrollToTop />
-        <AnimatedRoutes />
-        <SupportWidget />
-        <BuyNowWidget />
-        <FortuneWidget />
-      </AuthProvider>
+      <AdminAuthProvider>
+        <AuthProvider>
+          <ScrollToTop />
+          <AnimatedRoutes />
+          <SupportWidget />
+          <BuyNowWidget />
+          <FortuneWidget />
+        </AuthProvider>
+      </AdminAuthProvider>
     </Router>
   );
 };
