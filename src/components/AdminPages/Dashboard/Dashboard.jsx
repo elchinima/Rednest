@@ -5,17 +5,18 @@ import AdminLayout from '../AdminLayout/AdminLayout';
 import './Dashboard.scss';
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   show: (i) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.08, duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] },
   }),
 };
 
-const StatCard = ({ icon, label, value, sub, color, index }) => (
+const StatCard = ({ icon, label, value, sub, accent, index }) => (
   <motion.div
-    className={`dashboard-stat dashboard-stat--${color}`}
+    className="dashboard-stat"
+    style={{ '--accent': accent }}
     custom={index}
     variants={fadeUp}
     initial="hidden"
@@ -51,7 +52,6 @@ const Dashboard = () => {
           });
         }
       } catch {
-        // silent
       } finally {
         setLoadingStats(false);
       }
@@ -66,17 +66,17 @@ const Dashboard = () => {
           className="dashboard__header"
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
           <div>
             <h1 className="dashboard__title">Dashboard</h1>
-            <p className="dashboard__subtitle">Добро пожаловать в панель администратора</p>
+            <p className="dashboard__subtitle">Overview of your Rednest admin panel</p>
           </div>
           <motion.button
             id="dashboard-go-database"
-            className="dashboard__cta"
+            className="cta-btn dashboard__cta"
             onClick={() => navigate('/admin/database')}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.03, translateY: -2 }}
             whileTap={{ scale: 0.97 }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -84,14 +84,14 @@ const Dashboard = () => {
               <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
               <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
             </svg>
-            Перейти в Database
+            Go to Database
           </motion.button>
         </motion.div>
 
         <div className="dashboard__stats">
           <StatCard
             index={0}
-            color="red"
+            accent="#ef4444"
             icon={
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -100,26 +100,25 @@ const Dashboard = () => {
                 <line x1="9" y1="15" x2="15" y2="15" />
               </svg>
             }
-            label="Файлов в хранилище"
+            label="Files in storage"
             value={loadingStats ? '...' : stats.fileCount}
             sub="Supabase Storage · admin-files"
           />
           <StatCard
             index={1}
-            color="orange"
+            accent="#fb923c"
             icon={
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
               </svg>
             }
-            label="Занято места"
+            label="Storage used"
             value={loadingStats ? '...' : stats.totalKb}
-            sub="Все WebP-файлы"
+            sub="All WebP files combined"
           />
           <StatCard
             index={2}
-            color="blue"
+            accent="#60a5fa"
             icon={
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -127,25 +126,25 @@ const Dashboard = () => {
                 <polyline points="21 15 16 10 5 21" />
               </svg>
             }
-            label="Формат"
+            label="Output format"
             value="WebP"
-            sub="50% качества · ½ разрешения"
+            sub="50% quality · ½ resolution"
           />
         </div>
 
         <motion.div
           className="dashboard__info"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="dashboard__info-card">
-            <h3>Как работает загрузка</h3>
+            <h3>How image upload works</h3>
             <ul>
-              <li>Принимаются форматы <strong>PNG, JPG, JPEG</strong> до <strong>10 МБ</strong></li>
-              <li>Сервер сжимает изображение: качество <strong>50%</strong>, размеры уменьшаются <strong>вдвое</strong></li>
-              <li>Результат сохраняется в Supabase Storage в формате <strong>WebP</strong></li>
-              <li>Публичный URL доступен сразу после загрузки</li>
+              <li>Accepted formats: <strong>PNG, JPG, JPEG</strong> up to <strong>10 MB</strong></li>
+              <li>Server compresses the image: <strong>50% quality</strong>, dimensions reduced <strong>by half</strong></li>
+              <li>Result is stored in Supabase Storage as a <strong>WebP</strong> file</li>
+              <li>A public URL is available immediately after upload</li>
             </ul>
           </div>
         </motion.div>

@@ -24,7 +24,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Named HttpClient for Supabase Storage
 builder.Services.AddHttpClient("supabase");
 
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");

@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import logo from '../../../assets/icons/rednest_logo.png';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import './AdminLogin.scss';
+
+const LoaderIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
+      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+      <path d="M24 8 A16 16 0 0 1 40 24" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    </g>
+  </svg>
+);
 
 const AdminLogin = () => {
   const { adminLogin } = useAdminAuth();
@@ -20,87 +31,80 @@ const AdminLogin = () => {
       if (success) {
         navigate('/admin/dashboard', { replace: true });
       } else {
-        setError('Неверный пароль. Попробуйте снова.');
+        setError('Incorrect password. Please try again.');
       }
     } catch {
-      setError('Ошибка соединения с сервером.');
+      setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="admin-login">
-      <div className="admin-login__bg">
-        <div className="admin-login__orb admin-login__orb--1" />
-        <div className="admin-login__orb admin-login__orb--2" />
-        <div className="admin-login__orb admin-login__orb--3" />
-      </div>
+    <motion.div
+      className="admin-login-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="admin-login-overlay" />
 
-      <motion.div
-        className="admin-login__card"
-        initial={{ opacity: 0, y: 32, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className="admin-login__logo">
-          <div className="admin-login__logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
+      <div className="admin-login-container">
+        <div className="admin-login-card-split">
+          <div className="admin-login-left">
+            <div className="admin-login-left__content">
+              <img src={logo} alt="Rednest" className="admin-login-left__logo" />
+              <h2>Admin Panel</h2>
+              <p>Manage your content, assets and storage from one secure place.</p>
+            </div>
           </div>
-          <span className="admin-login__logo-text">Rednest</span>
+
+          <div className="admin-login-right">
+            <div className="admin-login-header">
+              <img src={logo} alt="Rednest" className="admin-login-header__logo" />
+              <h2>Welcome back</h2>
+              <p>Enter your admin password to access the panel.</p>
+            </div>
+
+            <form className="admin-login-form" onSubmit={handleSubmit} id="admin-login-form">
+              <div className="input-group">
+                <label htmlFor="admin-password">Password</label>
+                <input
+                  id="admin-password"
+                  type="password"
+                  placeholder="Enter admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </div>
+
+              <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '0.5rem' }}>
+                {error && (
+                  <div className="admin-login-error">{error}</div>
+                )}
+              </div>
+
+              <button
+                id="admin-login-submit"
+                type="submit"
+                className="cta-btn admin-login-submit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="admin-login-submit__loader">
+                    <LoaderIcon />
+                    Signing in...
+                  </span>
+                ) : 'Sign In'}
+              </button>
+            </form>
+          </div>
         </div>
-
-        <h1 className="admin-login__title">Панель администратора</h1>
-        <p className="admin-login__subtitle">Введите пароль для входа</p>
-
-        <form className="admin-login__form" onSubmit={handleSubmit} id="admin-login-form">
-          <div className="admin-login__field">
-            <label htmlFor="admin-password" className="admin-login__label">
-              Пароль
-            </label>
-            <input
-              id="admin-password"
-              type="password"
-              className="admin-login__input"
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          {error && (
-            <motion.p
-              className="admin-login__error"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              {error}
-            </motion.p>
-          )}
-
-          <motion.button
-            id="admin-login-submit"
-            type="submit"
-            className="admin-login__btn"
-            disabled={loading}
-            whileHover={{ scale: loading ? 1 : 1.02 }}
-            whileTap={{ scale: loading ? 1 : 0.98 }}
-          >
-            {loading ? (
-              <span className="admin-login__btn-spinner" />
-            ) : (
-              'Войти'
-            )}
-          </motion.button>
-        </form>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 };
 

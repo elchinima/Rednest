@@ -17,21 +17,19 @@ public class AdminController : ControllerBase
     private static readonly HashSet<string> _validSessions = new();
 
     private static readonly string[] AllowedExtensions = [".png", ".jpg", ".jpeg"];
-    private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+    private const long MaxFileSizeBytes = 10 * 1024 * 1024;
 
     public AdminController(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
     }
 
-    // ─── Auth ───────────────────────────────────────────────────────────────
-
     [HttpPost("login")]
     public IActionResult Login([FromBody] AdminLoginRequest request)
     {
         var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
         if (string.IsNullOrEmpty(adminSecret) || request.Password != adminSecret)
-            return Unauthorized(new { message = "Неверный пароль." });
+            return Unauthorized(new { message = "Incorrect password." });
 
         var token = GenerateSessionToken();
         _validSessions.Add(token);
@@ -66,8 +64,6 @@ public class AdminController : ControllerBase
         return Ok(new { authenticated = true });
     }
 
-    // ─── Files ───────────────────────────────────────────────────────────────
-
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
@@ -75,16 +71,15 @@ public class AdminController : ControllerBase
             return Unauthorized();
 
         if (file == null || file.Length == 0)
-            return BadRequest(new { message = "Файл не выбран." });
+            return BadRequest(new { message = "File not selected." });
 
         if (file.Length > MaxFileSizeBytes)
-            return BadRequest(new { message = "Файл превышает 10 МБ." });
+            return BadRequest(new { message = "File exceeds 10 MB limit." });
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(ext))
-            return BadRequest(new { message = "Допустимые форматы: PNG, JPG, JPEG." });
+            return BadRequest(new { message = "Allowed formats: PNG, JPG, JPEG." });
 
-        // Compress with ImageSharp → WebP 50% quality, half resolution
         await using var inputStream = file.OpenReadStream();
         using var image = await Image.LoadAsync(inputStream);
 
@@ -95,7 +90,6 @@ public class AdminController : ControllerBase
         await image.SaveAsync(outputStream, encoder);
         outputStream.Position = 0;
 
-        // Upload to Supabase Storage
         var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
         var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
 
@@ -117,7 +111,7 @@ public class AdminController : ControllerBase
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
-            return StatusCode(500, new { message = $"Ошибка загрузки в Supabase: {err}" });
+            return StatusCode(500, new { message = $"Supabase upload error: {err}" });
         }
 
         var publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{uniqueName}";
@@ -164,7 +158,7 @@ public class AdminController : ControllerBase
         var json = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
-            return StatusCode(500, new { message = $"Ошибка получения файлов: {json}" });
+            return StatusCode(500, new { message = $"Error fetching files: {json}" });
 
         using var doc = JsonDocument.Parse(json);
         var files = doc.RootElement.EnumerateArray().Select(item =>
@@ -212,13 +206,11 @@ public class AdminController : ControllerBase
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
-            return StatusCode(500, new { message = $"Ошибка удаления: {err}" });
+            return StatusCode(500, new { message = $"Delete error: {err}" });
         }
 
-        return Ok(new { message = "Файл удалён." });
+        return Ok(new { message = "File deleted." });
     }
-
-    // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private bool IsAdminAuthenticated()
     {

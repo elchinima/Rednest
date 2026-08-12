@@ -33,7 +33,7 @@ const Database = () => {
         setFiles(data);
       }
     } catch {
-      setError('Не удалось загрузить список файлов.');
+      setError('Failed to load file list.');
     } finally {
       setLoading(false);
     }
@@ -41,23 +41,16 @@ const Database = () => {
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
 
-  const showSuccess = (msg) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(''), 3500);
-  };
-
-  const showError = (msg) => {
-    setError(msg);
-    setTimeout(() => setError(''), 4000);
-  };
+  const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(''), 3500); };
+  const showError   = (msg) => { setError(msg);   setTimeout(() => setError(''),   4000); };
 
   const validateFile = (file) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      showError(`Файл "${file.name}" имеет неверный формат. Допустимо: PNG, JPG, JPEG.`);
+      showError(`"${file.name}" has an invalid format. Allowed: PNG, JPG, JPEG.`);
       return false;
     }
     if (file.size > MAX_SIZE_BYTES) {
-      showError(`Файл "${file.name}" превышает ${MAX_SIZE_MB} МБ.`);
+      showError(`"${file.name}" exceeds ${MAX_SIZE_MB} MB.`);
       return false;
     }
     return true;
@@ -70,7 +63,6 @@ const Database = () => {
     setUploadProgress(0);
     setError('');
 
-    // Animate progress
     const interval = setInterval(() => {
       setUploadProgress((p) => (p < 85 ? p + Math.random() * 12 : p));
     }, 200);
@@ -90,20 +82,17 @@ const Database = () => {
 
       if (res.ok) {
         const data = await res.json();
-        showSuccess(`Загружено: ${data.fileName} (${formatSize(data.sizeKb)})`);
+        showSuccess(`Uploaded: ${data.fileName} (${formatSize(data.sizeKb)})`);
         await fetchFiles();
       } else {
         const data = await res.json().catch(() => ({}));
-        showError(data.message || 'Ошибка загрузки файла.');
+        showError(data.message || 'Upload failed.');
       }
     } catch {
       clearInterval(interval);
-      showError('Ошибка соединения с сервером.');
+      showError('Connection error. Please try again.');
     } finally {
-      setTimeout(() => {
-        setUploading(false);
-        setUploadProgress(0);
-      }, 600);
+      setTimeout(() => { setUploading(false); setUploadProgress(0); }, 600);
     }
   };
 
@@ -126,7 +115,7 @@ const Database = () => {
       setCopiedUrl(fileName);
       setTimeout(() => setCopiedUrl(''), 2000);
     } catch {
-      showError('Не удалось скопировать ссылку.');
+      showError('Failed to copy URL.');
     }
   };
 
@@ -138,13 +127,13 @@ const Database = () => {
         credentials: 'include',
       });
       if (res.ok) {
-        showSuccess(`Файл "${fileName}" удалён.`);
+        showSuccess(`"${fileName}" deleted.`);
         setFiles((prev) => prev.filter((f) => f.fileName !== fileName));
       } else {
-        showError('Не удалось удалить файл.');
+        showError('Failed to delete file.');
       }
     } catch {
-      showError('Ошибка соединения с сервером.');
+      showError('Connection error. Please try again.');
     } finally {
       setDeletingFile('');
     }
@@ -157,11 +146,11 @@ const Database = () => {
           className="database__header"
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         >
           <div>
             <h1 className="database__title">Database</h1>
-            <p className="database__subtitle">Управление изображениями в Supabase Storage</p>
+            <p className="database__subtitle">Manage images in Supabase Storage</p>
           </div>
           <span className="database__bucket-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -173,7 +162,6 @@ const Database = () => {
           </span>
         </motion.div>
 
-        {/* Notifications */}
         <AnimatePresence>
           {error && (
             <motion.div
@@ -207,7 +195,6 @@ const Database = () => {
           )}
         </AnimatePresence>
 
-        {/* Drop zone */}
         <motion.div
           id="database-dropzone"
           className={`database__dropzone${dragOver ? ' database__dropzone--over' : ''}${uploading ? ' database__dropzone--uploading' : ''}`}
@@ -217,7 +204,7 @@ const Database = () => {
           onClick={() => !uploading && inputRef.current?.click()}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
+          transition={{ delay: 0.1, duration: 0.45 }}
         >
           <input
             ref={inputRef}
@@ -237,7 +224,7 @@ const Database = () => {
                   <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
                 </svg>
               </div>
-              <p className="database__progress-label">Сжатие и загрузка...</p>
+              <p className="database__progress-label">Compressing & uploading...</p>
               <div className="database__progress-bar">
                 <motion.div
                   className="database__progress-fill"
@@ -257,9 +244,9 @@ const Database = () => {
                 </svg>
               </div>
               <p className="database__dropzone-title">
-                {dragOver ? 'Отпустите файл' : 'Перетащите изображение или нажмите'}
+                {dragOver ? 'Release to upload' : 'Drop an image here or click to browse'}
               </p>
-              <p className="database__dropzone-hint">PNG, JPG, JPEG · максимум {MAX_SIZE_MB} МБ</p>
+              <p className="database__dropzone-hint">PNG, JPG, JPEG · max {MAX_SIZE_MB} MB</p>
               <div className="database__dropzone-badges">
                 <span className="database__badge">PNG</span>
                 <span className="database__badge">JPG</span>
@@ -270,19 +257,16 @@ const Database = () => {
           )}
         </motion.div>
 
-        {/* Files grid */}
         <div className="database__files-header">
           <h2 className="database__files-title">
-            Загруженные файлы
-            {!loading && (
-              <span className="database__files-count">{files.length}</span>
-            )}
+            Uploaded files
+            {!loading && <span className="database__files-count">{files.length}</span>}
           </h2>
           <button
             id="database-refresh-btn"
             className="database__refresh-btn"
             onClick={fetchFiles}
-            title="Обновить список"
+            title="Refresh"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="23 4 23 10 17 10" />
@@ -292,28 +276,22 @@ const Database = () => {
         </div>
 
         {loading ? (
-          <div className="database__loading">
-            <div className="admin-spinner" />
-          </div>
+          <div className="database__loading"><div className="admin-spinner" /></div>
         ) : files.length === 0 ? (
-          <motion.div
-            className="database__empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
+          <motion.div className="database__empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
               <polyline points="21 15 16 10 5 21" />
             </svg>
-            <p>Нет загруженных файлов</p>
+            <p>No files uploaded yet</p>
           </motion.div>
         ) : (
           <motion.div
             className="database__grid"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.15 }}
           >
             <AnimatePresence>
               {files.map((file, i) => (
@@ -327,16 +305,10 @@ const Database = () => {
                   layout
                 >
                   <div className="database__file-img">
-                    <img
-                      src={file.publicUrl}
-                      alt={file.fileName}
-                      loading="lazy"
-                    />
+                    <img src={file.publicUrl} alt={file.fileName} loading="lazy" />
                   </div>
                   <div className="database__file-info">
-                    <p className="database__file-name" title={file.fileName}>
-                      {file.fileName}
-                    </p>
+                    <p className="database__file-name" title={file.fileName}>{file.fileName}</p>
                     <div className="database__file-meta">
                       <span className="database__file-badge">WebP</span>
                       <span className="database__file-size">{formatSize(file.sizeKb)}</span>
@@ -346,14 +318,14 @@ const Database = () => {
                         id={`database-copy-${i}`}
                         className={`database__file-btn database__file-btn--copy${copiedUrl === file.fileName ? ' database__file-btn--copied' : ''}`}
                         onClick={() => handleCopyUrl(file.publicUrl, file.fileName)}
-                        title="Скопировать URL"
+                        title="Copy URL"
                       >
                         {copiedUrl === file.fileName ? (
                           <>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
-                            Скопировано
+                            Copied
                           </>
                         ) : (
                           <>
@@ -361,7 +333,7 @@ const Database = () => {
                               <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                             </svg>
-                            URL
+                            Copy URL
                           </>
                         )}
                       </button>
@@ -370,7 +342,7 @@ const Database = () => {
                         className="database__file-btn database__file-btn--delete"
                         onClick={() => handleDelete(file.fileName)}
                         disabled={deletingFile === file.fileName}
-                        title="Удалить файл"
+                        title="Delete"
                       >
                         {deletingFile === file.fileName ? (
                           <span className="admin-spinner" style={{ width: 14, height: 14 }} />

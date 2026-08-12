@@ -1,203 +1,275 @@
 @import '../../../styles/variables.scss';
 
-.admin-login {
+.admin-login-page {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  background: $color-bg-dark;
+  background-image:
+    radial-gradient(circle at top right, rgba($color-primary, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at bottom left, $color-bg-dark 0%, $color-bg 100%);
+}
+
+.admin-login-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(30,10,10,0.55) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1;
+}
+
+.admin-login-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 860px;
+  padding: 0 $spacing-xl;
+}
+
+.admin-login-card-split {
+  display: flex;
+  background: rgba(15, 15, 15, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $border-radius-lg;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  overflow: hidden;
+  opacity: 0;
+  animation: adminPopIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.admin-login-left {
+  flex: 1;
+  background: linear-gradient(135deg, rgba($color-primary, 0.18) 0%, rgba(0,0,0,0.5) 100%);
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(255,255,255,0.05);
+
+  @media (max-width: 800px) {
+    display: none;
+  }
+
+  &__content {
+    animation: adminFadeIn 1s ease-out 0.2s both;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__logo {
+    height: 64px;
+    margin-bottom: $spacing-xl;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    transition: transform 0.3s ease;
+
+    &:hover { transform: scale(1.05); }
+  }
+
+  h2 {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: $spacing-md;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.6;
+    max-width: 90%;
+  }
+}
+
+.admin-login-right {
+  flex: 1;
+  padding: 48px 40px;
+  background: rgba(0,0,0,0.15);
+
+  @media (max-width: 800px) {
+    flex: none;
+    width: 100%;
+  }
+}
+
+.admin-login-header {
+  text-align: center;
+  margin-bottom: 36px;
+  opacity: 0;
+  animation: adminFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+
+  &__logo {
+    display: none;
+    height: 36px;
+    margin-bottom: $spacing-lg;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+
+    @media (max-width: 800px) {
+      display: inline-block;
+    }
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    color: #fff;
+    margin-bottom: 10px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    color: rgba(255,255,255,0.55);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  opacity: 0;
+  animation: adminFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.8);
+      font-weight: 600;
+      margin-left: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: $border-radius-md;
+      padding: 16px 20px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: $font-family-base;
+      transition: all 0.3s ease;
+
+      &::placeholder { color: rgba(255,255,255,0.3); }
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+        background: rgba(0,0,0,0.5);
+        box-shadow: 0 0 0 4px rgba($color-primary, 0.15);
+      }
+
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover,
+      &:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+        -webkit-text-fill-color: white !important;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+    }
+  }
+}
+
+.admin-login-error {
+  color: #ff4d4f;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.admin-login-submit {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.05rem;
+  background: $color-primary;
+  color: #fff;
+  border-radius: $border-radius-md;
+  margin-top: 4px;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba($color-primary, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &__loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
+.cta-btn {
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-base;
+}
+
+@keyframes adminPopIn {
+  from { opacity: 0; transform: translateY(40px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes adminFadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes adminFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (max-width: 480px) {
+  .admin-login-container { padding: $spacing-sm; }
+  .admin-login-right      { padding: 40px 24px; }
+  .admin-login-header h2  { font-size: 1.6rem; }
+}
+
+.admin-loading-screen {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0a0a0f;
-  position: relative;
-  overflow: hidden;
-
-  &__bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  &__orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.35;
-
-    &--1 {
-      width: 520px;
-      height: 520px;
-      background: radial-gradient(circle, #7f1d1d, transparent);
-      top: -120px;
-      right: -100px;
-      animation: orbFloat 8s ease-in-out infinite;
-    }
-
-    &--2 {
-      width: 380px;
-      height: 380px;
-      background: radial-gradient(circle, #450a0a, transparent);
-      bottom: -80px;
-      left: -80px;
-      animation: orbFloat 11s ease-in-out infinite reverse;
-    }
-
-    &--3 {
-      width: 260px;
-      height: 260px;
-      background: radial-gradient(circle, #ef4444, transparent);
-      top: 50%;
-      left: 20%;
-      opacity: 0.12;
-      animation: orbFloat 14s ease-in-out infinite;
-    }
-  }
-
-  &__card {
-    position: relative;
-    z-index: 1;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 48px 40px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(239, 68, 68, 0.06);
-  }
-
-  &__logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 32px;
-  }
-
-  &__logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, $color-primary, $color-bg);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  &__logo-text {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.02em;
-  }
-
-  &__title {
-    font-size: 26px;
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: -0.03em;
-    margin-bottom: 8px;
-  }
-
-  &__subtitle {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.45);
-    margin-bottom: 32px;
-  }
-
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__label {
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
-  }
-
-  &__input {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 14px 16px;
-    font-size: 15px;
-    color: #fff;
-    font-family: $font-family-base;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.2);
-    }
-
-    &:focus {
-      border-color: $color-primary;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-    }
-  }
-
-  &__error {
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: #fca5a5;
-  }
-
-  &__btn {
-    background: linear-gradient(135deg, $color-primary 0%, $color-secondary 100%);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: $font-family-base;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: opacity 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    &:hover:not(:disabled) {
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.45);
-    }
-  }
-
-  &__btn-spinner {
-    width: 18px;
-    height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-  }
+  background: $color-bg-dark;
+  background-image: radial-gradient(circle at top right, rgba($color-primary, 0.15) 0%, transparent 50%);
 }
 
-@keyframes orbFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-30px) scale(1.05); }
+.admin-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba($color-primary, 0.2);
+  border-top-color: $color-primary;
+  border-radius: 50%;
+  animation: adminSpin 0.7s linear infinite;
 }
 
-@keyframes spin {
+@keyframes adminSpin {
   to { transform: rotate(360deg); }
 }

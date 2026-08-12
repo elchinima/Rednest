@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import logo from '../../../assets/icons/rednest_logo.png';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import './AdminLayout.scss';
 
@@ -43,21 +44,15 @@ const AdminLayout = ({ children }) => {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-sidebar__header">
-          <div className="admin-sidebar__logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <div>
+          <img src={logo} alt="Rednest" className="admin-sidebar__logo" />
+          <div className="admin-sidebar__brand">
             <span className="admin-sidebar__title">Rednest</span>
             <span className="admin-sidebar__subtitle">Admin Panel</span>
           </div>
         </div>
 
         <nav className="admin-sidebar__nav">
-          <p className="admin-sidebar__section-label">Навигация</p>
+          <p className="admin-sidebar__section-label">Navigation</p>
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -94,7 +89,7 @@ const AdminLayout = ({ children }) => {
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Выйти
+          Sign Out
         </button>
       </aside>
 

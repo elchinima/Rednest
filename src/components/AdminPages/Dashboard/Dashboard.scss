@@ -7,40 +7,38 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 24px;
-    margin-bottom: 36px;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xxl;
     flex-wrap: wrap;
+    padding-bottom: $spacing-lg;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
 
   &__title {
-    font-size: 32px;
+    font-size: 2rem;
     font-weight: 800;
-    color: #fff;
+    color: $color-text;
     letter-spacing: -0.03em;
     margin-bottom: 6px;
   }
 
   &__subtitle {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.9rem;
+    color: $color-text-muted;
   }
 
   &__cta {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, $color-primary 0%, $color-secondary 100%);
+    background: $color-primary;
     color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: $font-family-base;
-    cursor: pointer;
+    border-radius: $border-radius-full;
+    padding: $spacing-md $spacing-lg;
+    font-size: 0.9rem;
     white-space: nowrap;
-    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
-    transition: box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba($color-primary, 0.3);
+    transition: all 0.3s ease;
 
     svg {
       width: 16px;
@@ -48,33 +46,32 @@
     }
 
     &:hover {
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.45);
+      background: $color-primary-hover;
+      box-shadow: 0 8px 24px rgba($color-primary, 0.4);
     }
   }
 
   &__stats {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
-    margin-bottom: 36px;
-  }
-
-  &__info {
-    display: grid;
-    gap: 20px;
+    gap: $spacing-lg;
+    margin-bottom: $spacing-xxl;
   }
 
   &__info-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 16px;
-    padding: 28px 32px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: $border-radius-md;
+    padding: $spacing-xl $spacing-xl;
+    backdrop-filter: blur(8px);
 
     h3 {
-      font-size: 15px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: $color-text-muted;
+      margin-bottom: $spacing-md;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     ul {
@@ -85,8 +82,8 @@
     }
 
     li {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.45);
       display: flex;
       align-items: flex-start;
       gap: 10px;
@@ -100,42 +97,44 @@
       }
 
       strong {
-        color: rgba(255, 255, 255, 0.75);
+        color: $color-text-muted;
         font-weight: 600;
       }
     }
   }
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
-
 .dashboard-stat {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 24px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  transition: border-color 0.2s, transform 0.2s;
+  gap: $spacing-md;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
   }
 
   &__icon {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: $border-radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background: color-mix(in srgb, var(--accent, #{$color-primary}) 12%, transparent);
 
     svg {
       width: 20px;
       height: 20px;
+      stroke: var(--accent, #{$color-primary});
     }
   }
 
@@ -146,40 +145,22 @@
   }
 
   &__value {
-    font-size: 28px;
+    font-size: 1.75rem;
     font-weight: 800;
-    color: #fff;
+    color: $color-text;
     letter-spacing: -0.03em;
     line-height: 1;
   }
 
   &__label {
-    font-size: 13px;
+    font-size: 0.85rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
+    color: $color-text-muted;
   }
 
   &__sub {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.3);
     margin-top: 2px;
-  }
-
-  // color variants
-  &--red &__icon {
-    background: rgba(239, 68, 68, 0.12);
-    color: $color-primary;
-  }
-
-  &--orange &__icon {
-    background: rgba(251, 146, 60, 0.12);
-    color: #fb923c;
-    svg { stroke: #fb923c; }
-  }
-
-  &--blue &__icon {
-    background: rgba(96, 165, 250, 0.12);
-    color: #60a5fa;
-    svg { stroke: #60a5fa; }
   }
 }
