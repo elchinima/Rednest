@@ -95,6 +95,7 @@ public class AdminController : ControllerBase
 
         var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
         var uniqueName = $"{fileNameWithoutExt}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}.webp";
+        var storagePath = $"database/{uniqueName}";
 
         var client = _httpClientFactory.CreateClient("supabase");
         client.DefaultRequestHeaders.Clear();
@@ -105,7 +106,7 @@ public class AdminController : ControllerBase
         content.Headers.ContentType = new MediaTypeHeaderValue("image/webp");
 
         var response = await client.PostAsync(
-            $"{supabaseUrl}/storage/v1/object/admin-files/{uniqueName}",
+            $"{supabaseUrl}/storage/v1/object/admin-files/{storagePath}",
             content);
 
         if (!response.IsSuccessStatusCode)
@@ -114,7 +115,7 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { message = $"Supabase upload error: {err}" });
         }
 
-        var publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{uniqueName}";
+        var publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{storagePath}";
         var sizeKb = Math.Round(outputStream.Length / 1024.0, 1);
 
         return Ok(new
@@ -145,6 +146,7 @@ public class AdminController : ControllerBase
         {
             limit = 200,
             offset = 0,
+            prefix = "database/",
             sortBy = new { column = "created_at", order = "desc" }
         });
 
@@ -161,22 +163,29 @@ public class AdminController : ControllerBase
             return StatusCode(500, new { message = $"Error fetching files: {json}" });
 
         using var doc = JsonDocument.Parse(json);
-        var files = doc.RootElement.EnumerateArray().Select(item =>
-        {
-            var name = item.GetProperty("name").GetString() ?? "";
-            var metadata = item.TryGetProperty("metadata", out var meta) ? meta : default;
-            long size = 0;
-            if (metadata.ValueKind == JsonValueKind.Object &&
-                metadata.TryGetProperty("size", out var sizeEl))
-                size = sizeEl.GetInt64();
-
-            return new
+        var files = doc.RootElement.EnumerateArray()
+            .Where(item =>
             {
-                fileName = name,
-                publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{name}",
-                sizeKb = Math.Round(size / 1024.0, 1)
-            };
-        }).ToList();
+                var n = item.TryGetProperty("name", out var np) ? np.GetString() ?? "" : "";
+                return !string.IsNullOrWhiteSpace(n) && n != ".emptyFolderPlaceholder";
+            })
+            .Select(item =>
+            {
+                var name = item.GetProperty("name").GetString() ?? "";
+                var metadata = item.TryGetProperty("metadata", out var meta) ? meta : default;
+                long size = 0;
+                if (metadata.ValueKind == JsonValueKind.Object &&
+                    metadata.TryGetProperty("size", out var sizeEl))
+                    size = sizeEl.GetInt64();
+
+                var storagePath = $"database/{name}";
+                return new
+                {
+                    fileName = name,
+                    publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{storagePath}",
+                    sizeKb = Math.Round(size / 1024.0, 1)
+                };
+            }).ToList();
 
         return Ok(files);
     }
@@ -195,7 +204,8 @@ public class AdminController : ControllerBase
         client.DefaultRequestHeaders.Add("apikey", serviceKey);
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {serviceKey}");
 
-        var body = JsonSerializer.Serialize(new { prefixes = new[] { fileName } });
+        var storagePath = fileName.StartsWith("database/") ? fileName : $"database/{fileName}";
+        var body = JsonSerializer.Serialize(new { prefixes = new[] { storagePath } });
         var request = new HttpRequestMessage(HttpMethod.Delete,
             $"{supabaseUrl}/storage/v1/object/admin-files")
         {
