@@ -1,7 +1,5 @@
 @import '../../../styles/variables.scss';
 
-
-
 .auth-modal-content {
   box-sizing: border-box;
   background: rgba(15, 15, 15, 0.85);
@@ -183,15 +181,42 @@
       width: 100%;
       padding: 16px;
       font-size: 1.1rem;
-      background: $color-primary;
-      color: #fff;
+      background: $color-text;
+      color: $color-bg-dark;
       border-radius: $border-radius-md;
       transition: all 0.3s ease;
       
+      svg {
+        transition: stroke 0.3s ease, color 0.3s ease;
+      }
+
       &:hover {
-        background: $color-primary-hover;
+        background: rgba(255, 255, 255, 0.95);
+        color: $color-primary;
         transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba($color-primary, 0.3);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+        svg {
+          stroke: $color-primary;
+          color: $color-primary;
+        }
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        pointer-events: auto;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.95);
+          color: $color-primary;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+          svg {
+            stroke: $color-primary;
+            color: $color-primary;
+          }
+        }
       }
     }
   }

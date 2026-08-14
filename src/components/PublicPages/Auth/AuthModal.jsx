@@ -27,6 +27,8 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
 
@@ -49,11 +51,10 @@ const AuthModal = ({ isOpen, onClose }) => {
         setStep('name');
       } else {
         localStorage.setItem('rednest_auth', 'true');
-        login({ email });
-        onClose();
         window.location.reload();
       }
     } catch (err) {
+      console.error("Auth Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -62,6 +63,8 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleNameSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
 

@@ -1,7 +1,16 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../PublicPages/Auth/Auth.scss';
-import loaderIcon from '../../assets/icons/loader-animated.svg';
+
+const LoaderIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
+      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+      <path d="M24 8 A16 16 0 0 1 40 24" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    </g>
+  </svg>
+);
 
 const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
   useEffect(() => {
@@ -54,22 +63,14 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
                     </button>
                   )}
                   <button 
-                    className="cta-btn" 
+                    className="cta-btn logout-confirm-btn" 
                     onClick={onConfirm} 
                     disabled={loading}
-                    style={{ 
-                      flex: 1, 
-                      background: 'rgba(255, 255, 255, 0.1)', 
-                      color: '#fff', 
-                      padding: '14px',
-                      borderRadius: '8px',
-                      transition: 'all 0.3s ease'
-                    }}
                   >
                     {loading ? (
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                         <span style={{ display: 'flex' }}>
-                          <img src={loaderIcon} alt="Loading" style={{ width: '22px', height: '22px' }} />
+                          <LoaderIcon />
                         </span>
                         Processing...
                       </span>

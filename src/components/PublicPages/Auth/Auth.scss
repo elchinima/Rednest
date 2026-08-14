@@ -273,14 +273,94 @@
     width: 100%;
     padding: 16px;
     font-size: 1.1rem;
-    background: $color-primary;
-    color: #fff;
+    background: $color-text;
+    color: $color-bg-dark;
     border-radius: $border-radius-md;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
     
+    svg {
+      transition: stroke 0.3s ease, color 0.3s ease;
+    }
+
     &:hover {
-      background: $color-primary-hover;
+      background: rgba(255, 255, 255, 0.95);
+      color: $color-primary;
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba($color-primary, 0.3);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+      svg {
+        stroke: $color-primary;
+        color: $color-primary;
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      pointer-events: auto;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.95);
+        color: $color-primary;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+
+        svg {
+          stroke: $color-primary;
+          color: $color-primary;
+        }
+      }
+    }
+  }
+}
+
+.logout-confirm-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  svg {
+    transition: stroke 0.3s ease, color 0.3s ease;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: $color-primary;
+    transform: translateY(-2px);
+
+    svg {
+      stroke: $color-primary;
+      color: $color-primary;
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    pointer-events: auto;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: $color-primary;
+      transform: translateY(-2px);
+
+      svg {
+        stroke: $color-primary;
+        color: $color-primary;
+      }
     }
   }
 }

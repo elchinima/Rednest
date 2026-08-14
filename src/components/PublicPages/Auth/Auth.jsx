@@ -27,6 +27,7 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     
     setLoading(true);
     setError(null);
@@ -63,6 +64,8 @@ const Auth = () => {
 
   const handleNameSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
 
