@@ -7,6 +7,114 @@
   background-image:
     radial-gradient(circle at top right, rgba($color-primary, 0.12) 0%, transparent 45%),
     radial-gradient(circle at bottom left, $color-bg-dark 0%, $color-bg 100%);
+  position: relative;
+
+  @media (max-width: 860px) {
+    flex-direction: column;
+  }
+}
+
+// Mobile topbar
+.admin-mobile-header {
+  display: none;
+
+  @media (max-width: 860px) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba($color-bg-dark, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  &__toggle {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: $border-radius-sm;
+    color: $color-text;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba($color-primary, 0.4);
+    }
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__logo {
+    height: 22px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $color-text;
+    letter-spacing: -0.01em;
+  }
+
+  &__logout {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: $border-radius-sm;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    &:hover {
+      color: $color-primary-hover;
+      border-color: rgba($color-primary, 0.3);
+      background: rgba($color-primary, 0.08);
+    }
+  }
+}
+
+// Mobile sidebar overlay
+.admin-sidebar-overlay {
+  display: none;
+
+  @media (max-width: 860px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 998;
+  }
 }
 
 .admin-sidebar {
@@ -23,14 +131,71 @@
   top: 0;
   height: 100vh;
   box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (max-width: 860px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 270px;
+    max-width: 85vw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 999;
+    background: rgba($color-bg-dark, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transform: translateX(-100%);
+    box-shadow: none;
+
+    &--open {
+      transform: translateX(0);
+      box-shadow: 12px 0 36px rgba(0, 0, 0, 0.6);
+    }
+  }
 
   &__header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     padding: 4px 10px 24px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 24px;
+  }
+
+  &__header-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__close {
+    display: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    @media (max-width: 860px) {
+      display: flex;
+    }
   }
 
   &__logo {
@@ -150,11 +315,22 @@
 
 .admin-content {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 40px 48px;
+  min-width: 0;
+  box-sizing: border-box;
 
-  @media (max-width: 768px) {
-    padding: 24px 20px;
+  @media (max-width: 1024px) {
+    padding: 32px 28px;
+  }
+
+  @media (max-width: 860px) {
+    padding: 24px 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px 12px;
   }
 }
 

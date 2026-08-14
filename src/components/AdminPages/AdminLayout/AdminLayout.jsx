@@ -1,6 +1,6 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../../assets/icons/rednest_logo.png';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import './AdminLayout.scss';
@@ -34,6 +34,25 @@ const NAV_ITEMS = [
 const AdminLayout = ({ children }) => {
   const { adminLogout } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Prevent background scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   const handleLogout = async () => {
     await adminLogout();
@@ -42,13 +61,73 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      {/* Mobile Topbar */}
+      <header className="admin-mobile-header">
+        <button
+          id="admin-mobile-menu-btn"
+          className="admin-mobile-header__toggle"
+          onClick={() => setSidebarOpen((prev) => !prev)}
+          aria-label="Toggle navigation"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
+        <div className="admin-mobile-header__brand">
+          <img src={logo} alt="Rednest" className="admin-mobile-header__logo" />
+          <span className="admin-mobile-header__title">Admin Panel</span>
+        </div>
+
+        <button
+          className="admin-mobile-header__logout"
+          onClick={handleLogout}
+          aria-label="Sign out"
+          title="Sign Out"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      </header>
+
+      {/* Backdrop for mobile */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            className="admin-sidebar-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <aside className={`admin-sidebar${sidebarOpen ? ' admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__header">
-          <img src={logo} alt="Rednest" className="admin-sidebar__logo" />
-          <div className="admin-sidebar__brand">
-            <span className="admin-sidebar__title">Rednest</span>
-            <span className="admin-sidebar__subtitle">Admin Panel</span>
+          <div className="admin-sidebar__header-info">
+            <img src={logo} alt="Rednest" className="admin-sidebar__logo" />
+            <div className="admin-sidebar__brand">
+              <span className="admin-sidebar__title">Rednest</span>
+              <span className="admin-sidebar__subtitle">Admin Panel</span>
+            </div>
           </div>
+          <button
+            className="admin-sidebar__close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         </div>
 
         <nav className="admin-sidebar__nav">
@@ -61,6 +140,7 @@ const AdminLayout = ({ children }) => {
               className={({ isActive }) =>
                 `admin-sidebar__link${isActive ? ' admin-sidebar__link--active' : ''}`
               }
+              onClick={() => setSidebarOpen(false)}
             >
               {({ isActive }) => (
                 <>

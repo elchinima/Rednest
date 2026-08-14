@@ -22,6 +22,7 @@ const Database = () => {
   const [success, setSuccess] = useState('');
   const [copiedUrl, setCopiedUrl] = useState('');
   const [deletingFile, setDeletingFile] = useState('');
+  const [previewFile, setPreviewFile] = useState(null);
   const inputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -40,6 +41,23 @@ const Database = () => {
   }, [apiUrl]);
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
+
+  // Lock scroll and handle ESC key for preview modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setPreviewFile(null);
+    };
+    if (previewFile) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [previewFile]);
 
   const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(''), 3500); };
   const showError   = (msg) => { setError(msg);   setTimeout(() => setError(''),   4000); };
@@ -304,11 +322,29 @@ const Database = () => {
                   transition={{ delay: i * 0.04, duration: 0.3 }}
                   layout
                 >
-                  <div className="database__file-img">
+                  <div
+                    className="database__file-img"
+                    onClick={() => setPreviewFile(file)}
+                    title="Click to view large preview"
+                  >
                     <img src={file.publicUrl} alt={file.fileName} loading="lazy" />
+                    <div className="database__file-img-overlay">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                      </svg>
+                    </div>
                   </div>
                   <div className="database__file-info">
-                    <p className="database__file-name" title={file.fileName}>{file.fileName}</p>
+                    <p
+                      className="database__file-name database__file-name--clickable"
+                      onClick={() => setPreviewFile(file)}
+                      title="Click to view large preview"
+                    >
+                      {file.fileName}
+                    </p>
                     <div className="database__file-meta">
                       <span className="database__file-badge">WebP</span>
                       <span className="database__file-size">{formatSize(file.sizeKb)}</span>
@@ -363,6 +399,102 @@ const Database = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Large View Preview Modal */}
+      <AnimatePresence>
+        {previewFile && (
+          <motion.div
+            className="database-preview-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setPreviewFile(null)}
+          >
+            <motion.div
+              className="database-preview-modal"
+              initial={{ scale: 0.92, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 15 }}
+              transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="database-preview-header">
+                <div className="database-preview-title-wrap">
+                  <h3 className="database-preview-filename" title={previewFile.fileName}>
+                    {previewFile.fileName}
+                  </h3>
+                  <div className="database-preview-badges">
+                    <span className="database__file-badge">WebP</span>
+                    <span className="database__file-size">{formatSize(previewFile.sizeKb)}</span>
+                  </div>
+                </div>
+                <button
+                  className="database-preview-close"
+                  onClick={() => setPreviewFile(null)}
+                  aria-label="Close preview"
+                  title="Close (Esc)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="database-preview-img-container">
+                <img
+                  src={previewFile.publicUrl}
+                  alt={previewFile.fileName}
+                  className="database-preview-img"
+                />
+              </div>
+
+              <div className="database-preview-footer">
+                <div className="database-preview-url-box">
+                  <span className="database-preview-url-text">{previewFile.publicUrl}</span>
+                </div>
+                <div className="database-preview-actions">
+                  <button
+                    className={`database-preview-btn database-preview-btn--copy${copiedUrl === previewFile.fileName ? ' database-preview-btn--copied' : ''}`}
+                    onClick={() => handleCopyUrl(previewFile.publicUrl, previewFile.fileName)}
+                  >
+                    {copiedUrl === previewFile.fileName ? (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Copied URL
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        Copy URL
+                      </>
+                    )}
+                  </button>
+                  <a
+                    href={previewFile.publicUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="database-preview-btn database-preview-btn--external"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    Open Original
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AdminLayout>
   );
 };
