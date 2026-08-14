@@ -23,6 +23,7 @@ const Database = () => {
   const [copiedUrl, setCopiedUrl] = useState('');
   const [deletingFile, setDeletingFile] = useState('');
   const [previewFile, setPreviewFile] = useState(null);
+  const [fileToDelete, setFileToDelete] = useState(null);
   const inputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -42,12 +43,17 @@ const Database = () => {
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
 
-  // Lock scroll and handle ESC key for preview modal
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setPreviewFile(null);
+      if (e.key === 'Escape') {
+        if (fileToDelete && !deletingFile) {
+          setFileToDelete(null);
+        } else if (previewFile) {
+          setPreviewFile(null);
+        }
+      }
     };
-    if (previewFile) {
+    if (previewFile || fileToDelete) {
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
     } else {
@@ -57,7 +63,7 @@ const Database = () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [previewFile]);
+  }, [previewFile, fileToDelete, deletingFile]);
 
   const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(''), 3500); };
   const showError   = (msg) => { setError(msg);   setTimeout(() => setError(''),   4000); };
@@ -137,7 +143,9 @@ const Database = () => {
     }
   };
 
-  const handleDelete = async (fileName) => {
+  const handleConfirmDelete = async () => {
+    if (!fileToDelete) return;
+    const fileName = fileToDelete.fileName;
     setDeletingFile(fileName);
     try {
       const res = await fetch(`${apiUrl}/api/admin/files/${encodeURIComponent(fileName)}`, {
@@ -147,8 +155,13 @@ const Database = () => {
       if (res.ok) {
         showSuccess(`"${fileName}" deleted.`);
         setFiles((prev) => prev.filter((f) => f.fileName !== fileName));
+        if (previewFile?.fileName === fileName) {
+          setPreviewFile(null);
+        }
+        setFileToDelete(null);
       } else {
-        showError('Failed to delete file.');
+        const data = await res.json().catch(() => ({}));
+        showError(data.message || 'Failed to delete file.');
       }
     } catch {
       showError('Connection error. Please try again.');
@@ -376,20 +389,16 @@ const Database = () => {
                       <button
                         id={`database-delete-${i}`}
                         className="database__file-btn database__file-btn--delete"
-                        onClick={() => handleDelete(file.fileName)}
+                        onClick={() => setFileToDelete(file)}
                         disabled={deletingFile === file.fileName}
-                        title="Delete"
+                        title="Delete file"
                       >
-                        {deletingFile === file.fileName ? (
-                          <span className="admin-spinner" style={{ width: 14, height: 14 }} />
-                        ) : (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6M14 11v6" />
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                          </svg>
-                        )}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -400,7 +409,6 @@ const Database = () => {
         )}
       </div>
 
-      {/* Large View Preview Modal */}
       <AnimatePresence>
         {previewFile && (
           <motion.div
@@ -489,7 +497,106 @@ const Database = () => {
                     </svg>
                     Open Original
                   </a>
+                  <button
+                    className="database-preview-btn database-preview-btn--delete"
+                    onClick={() => setFileToDelete(previewFile)}
+                    title="Delete file"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                    </svg>
+                    Delete
+                  </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {fileToDelete && (
+          <motion.div
+            className="database-delete-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => !deletingFile && setFileToDelete(null)}
+          >
+            <motion.div
+              className="database-delete-modal"
+              initial={{ scale: 0.92, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 15 }}
+              transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="database-delete-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <path d="M10 11v6M14 11v6" />
+                  <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                </svg>
+              </div>
+
+              <h3 className="database-delete-title">Delete File</h3>
+              <p className="database-delete-desc">
+                Are you sure you want to permanently delete this file from storage? This action cannot be undone.
+              </p>
+
+              <div className="database-delete-file-preview">
+                <img
+                  src={fileToDelete.publicUrl}
+                  alt={fileToDelete.fileName}
+                  className="database-delete-thumbnail"
+                />
+                <div className="database-delete-file-info">
+                  <span className="database-delete-file-name" title={fileToDelete.fileName}>
+                    {fileToDelete.fileName}
+                  </span>
+                  <span className="database-delete-file-size">
+                    {formatSize(fileToDelete.sizeKb)} · WebP
+                  </span>
+                </div>
+              </div>
+
+              <div className="database-delete-actions">
+                <button
+                  id="database-cancel-delete-btn"
+                  className="database-delete-btn database-delete-btn--cancel"
+                  onClick={() => setFileToDelete(null)}
+                  disabled={!!deletingFile}
+                >
+                  Cancel
+                </button>
+                <button
+                  id="database-confirm-delete-btn"
+                  className="database-delete-btn database-delete-btn--danger"
+                  onClick={handleConfirmDelete}
+                  disabled={!!deletingFile}
+                >
+                  {deletingFile ? (
+                    <>
+                      <span className="admin-spinner" style={{ width: 14, height: 14 }} />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                      Delete
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           </motion.div>
