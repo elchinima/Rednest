@@ -177,9 +177,3 @@ docker run -d -p 8080:8080 --name rednest-container \
 | **Admin** | `POST` | `/api/admin/login` | Verify administrative secret key |
 | **Admin** | `GET` | `/api/admin/stats` | Retrieve site telemetry, metrics, and session statistics |
 | **Admin** | `GET` | `/api/admin/database/*` | Direct database explorer and entity query endpoints |
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE) (or proprietary to Rednest). All rights reserved.
