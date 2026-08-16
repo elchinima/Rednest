@@ -11,102 +11,8 @@ import successIcon from '../../../assets/icons/success-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 
-const STORAGE_BASE_URL = 'https://tlcehlxztgewbidcvwye.supabase.co/storage/v1/object/public/admin-files/database';
 
-const menuData = [
-  {
-    category: "Main Drinks",
-    items: [
-      {
-        id: "tea",
-        name: "Tea",
-        description: "Quenches thirst, invigorates, and is an ideal choice for relaxation.",
-        price: "1.49",
-        image: `${STORAGE_BASE_URL}/tea_7654329000.webp`
-      },
-      {
-        id: "espresso",
-        name: "Espresso",
-        description: "A perfect choice to start the day energetically with its thick and strong taste. A favorite of true coffee lovers.",
-        price: "2.89",
-        image: `${STORAGE_BASE_URL}/espresso_6854930222.webp`
-      },
-      {
-        id: "americano",
-        name: "Americano",
-        description: "A light and delicate flavor. Prepared by adding water to espresso, its taste is simple yet classic.",
-        price: "2.89",
-        image: `${STORAGE_BASE_URL}/americano_1786885347.webp`
-      },
-      {
-        id: "latte",
-        name: "Latte",
-        description: "Soft espresso mixed with fine milk foam. For those who love a warm and delicate taste.",
-        price: "3.49",
-        image: `${STORAGE_BASE_URL}/latte_6543223589.webp`
-      },
-      {
-        id: "cappuccino",
-        name: "Cappuccino",
-        description: "The perfect balance of coffee and milk foam. The soft foam on top brings happiness with every sip.",
-        price: "3.49",
-        image: `${STORAGE_BASE_URL}/cappuccino_8765432354.webp`
-      }
-    ]
-  },
-  {
-    category: "Specialty Drinks",
-    items: [
-      {
-        id: "red-latte",
-        name: "Red Latte",
-        description: "Special Rednest recipe: The harmony of latte and strawberry syrup. A sweet and romantic taste.",
-        price: "3.75",
-        image: `${STORAGE_BASE_URL}/red_latte_9876543221.webp`
-      },
-      {
-        id: "nest-cappuccino",
-        name: "Nest Cappuccino",
-        description: "Cappuccino enriched with the sweetness of caramel and the aroma of hazelnut. Like a warm hug.",
-        price: "4.25",
-        image: `${STORAGE_BASE_URL}/nest_cappuccino_9876543290.webp`
-      },
-      {
-        id: "hot-chocolate",
-        name: "Hot Chocolate",
-        description: "A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.",
-        price: "3.99",
-        image: `${STORAGE_BASE_URL}/hot_chocolate_7690568000.webp`
-      }
-    ]
-  },
-  {
-    category: "Desserts",
-    items: [
-      {
-        id: "eclair",
-        name: "Eclair",
-        description: "A delicate pastry dessert filled with fragrant cream and covered with a fine layer. Every bite brings a light sweetness and pleasant taste.",
-        price: "2.25",
-        image: `${STORAGE_BASE_URL}/eclair_8439200222.webp`
-      },
-      {
-        id: "croissant",
-        name: "Croissant",
-        description: "An unforgettable French classic with butter and taste in a light, flaky pastry.",
-        price: "1.99",
-        image: `${STORAGE_BASE_URL}/croissant_7654320922.webp`
-      },
-      {
-        id: "muffin",
-        name: "Muffin",
-        description: "Soft, sweet, and satisfying. The best companion to every cup of coffee.",
-        price: "1.59",
-        image: `${STORAGE_BASE_URL}/muffin_7965430339.webp`
-      }
-    ]
-  }
-];
+
 
 const CategorySection = ({ categoryObj, index, addedItems, setAddedItems }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -159,8 +65,8 @@ const CategorySection = ({ categoryObj, index, addedItems, setAddedItems }) => {
         {categoryObj.items.map((item) => (
           <div key={item.id} className="catalog-card">
             <div className="card-image-container">
-              {item.image ? (
-                <img src={item.image} alt={item.name} className="item-image" />
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.name} className="item-image" />
               ) : (
                 <div className="item-image-placeholder">
                   <span className="placeholder-icon">{item.icon}</span>
@@ -218,6 +124,8 @@ const Catalog = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [addedItems, setAddedItems] = useState({});
+  const [menuData, setMenuData] = useState([]);
+  const [isMenuLoading, setIsMenuLoading] = useState(true);
 
 
   useEffect(() => {
@@ -276,6 +184,24 @@ const Catalog = () => {
       }
     };
     fetchUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/products`);
+        if (response.ok) {
+          const data = await response.json();
+          setMenuData(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setIsMenuLoading(false);
+      }
+    };
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -366,15 +292,21 @@ const Catalog = () => {
         </div>
 
         <div className="menu-categories">
-          {menuData.map((categoryObj, index) => (
-            <CategorySection
-              key={index}
-              categoryObj={categoryObj}
-              index={index}
-              addedItems={addedItems}
-              setAddedItems={setAddedItems}
-            />
-          ))}
+          {isMenuLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
+              <img src={loaderIcon} alt="Loading" style={{ width: '40px', height: '40px' }} />
+            </div>
+          ) : (
+            menuData.map((categoryObj, index) => (
+              <CategorySection
+                key={index}
+                categoryObj={categoryObj}
+                index={index}
+                addedItems={addedItems}
+                setAddedItems={setAddedItems}
+              />
+            ))
+          )}
         </div>
       </main>
 
