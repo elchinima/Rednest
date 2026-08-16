@@ -135,7 +135,7 @@ const FortuneWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  if (location.pathname === '/login' || location.pathname === '/fortune') {
+  if (location.pathname === '/login' || location.pathname === '/fortune' || location.pathname.startsWith('/admin')) {
     return null;
   }
 
