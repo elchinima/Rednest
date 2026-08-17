@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useBasket } from '../../context/BasketContext';
 import cartAnimated from '../../assets/icons/cart-animated.svg';
 
 const buyNowStyles = `
@@ -122,24 +123,7 @@ const BuyNowWidget = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-
-  useEffect(() => {
-    try {
-      localStorage.removeItem('rednest_cart');
-    } catch {}
-
-    const handleCartUpdated = (e) => {
-      const items = e?.detail || {};
-      setCartCount(Object.keys(items).length);
-    };
-
-    window.addEventListener('cart-updated', handleCartUpdated);
-
-    return () => {
-      window.removeEventListener('cart-updated', handleCartUpdated);
-    };
-  }, []);
+  const { totalCount } = useBasket();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -183,8 +167,8 @@ const BuyNowWidget = () => {
         >
           <div className="buynow-icon-wrapper">
             <img src={cartAnimated} alt="Cart" className="buynow-icon" />
-            {cartCount > 0 && (
-              <span key={cartCount} className="cart-badge">{cartCount}</span>
+            {totalCount > 0 && (
+              <span key={totalCount} className="cart-badge">{totalCount}</span>
             )}
           </div>
           Buy Now

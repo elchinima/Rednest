@@ -9,12 +9,13 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import addIcon from '../../../assets/icons/add.svg';
 import successIcon from '../../../assets/icons/success-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
+import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 
 
 
 
-const CategorySection = ({ categoryObj, index, addedItems, setAddedItems }) => {
+const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -82,9 +83,9 @@ const CategorySection = ({ categoryObj, index, addedItems, setAddedItems }) => {
             </div>
             <button 
               className="add-to-cart-btn"
-              onClick={() => setAddedItems(prev => ({ ...prev, [item.id]: prev[item.id] || Date.now() }))}
+              onClick={() => onAddItem(item.id)}
             >
-              {addedItems[item.id] ? (
+              {addedAnimations[item.id] ? (
                 <object 
                   type="image/svg+xml" 
                   data={successIcon} 
@@ -123,14 +124,22 @@ const Catalog = () => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [addedItems, setAddedItems] = useState({});
+  const [addedAnimations, setAddedAnimations] = useState({});
   const [menuData, setMenuData] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
+  const { addItem } = useBasket();
 
-
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('cart-updated', { detail: addedItems }));
-  }, [addedItems]);
+  const handleAddItem = (productId) => {
+    addItem(productId);
+    setAddedAnimations(prev => ({ ...prev, [productId]: true }));
+    setTimeout(() => {
+      setAddedAnimations(prev => {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
+      });
+    }, 1500);
+  };
 
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
@@ -302,8 +311,8 @@ const Catalog = () => {
                 key={index}
                 categoryObj={categoryObj}
                 index={index}
-                addedItems={addedItems}
-                setAddedItems={setAddedItems}
+                onAddItem={handleAddItem}
+                addedAnimations={addedAnimations}
               />
             ))
           )}

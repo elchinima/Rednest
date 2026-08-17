@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<UserPromo> UserPromos => Set<UserPromo>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<UserBasket> UserBaskets => Set<UserBasket>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +62,19 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Price).HasColumnType("decimal(10,2)");
             entity.Property(e => e.ImageUrl).IsRequired().HasColumnType("text");
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<UserBasket>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.Property(e => e.Items).HasColumnType("jsonb");
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

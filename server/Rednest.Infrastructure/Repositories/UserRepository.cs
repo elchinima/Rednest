@@ -103,4 +103,22 @@ public class UserRepository : IUserRepository
         _context.UserPromos.Update(promo);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<UserBasket?> GetBasketByUserIdAsync(Guid userId)
+    {
+        return await _context.UserBaskets
+            .FirstOrDefaultAsync(b => b.UserId == userId);
+    }
+
+    public async Task AddBasketAsync(UserBasket basket)
+    {
+        await _context.UserBaskets.AddAsync(basket);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateBasketAsync(UserBasket basket)
+    {
+        _context.UserBaskets.Update(basket);
+        await _context.SaveChangesAsync();
+    }
 }

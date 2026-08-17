@@ -16,4 +16,7 @@ public interface IUserRepository
     Task<UserPromo?> GetActiveUserPromoAsync(Guid userId);
     Task AddUserPromoAsync(UserPromo promo);
     Task UpdateUserPromoAsync(UserPromo promo);
+    Task<UserBasket?> GetBasketByUserIdAsync(Guid userId);
+    Task AddBasketAsync(UserBasket basket);
+    Task UpdateBasketAsync(UserBasket basket);
 }

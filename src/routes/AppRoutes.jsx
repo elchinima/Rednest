@@ -16,6 +16,7 @@ import BuyNowWidget from '../components/Elements/BuyNowWidget';
 import FortuneWidget from '../components/Elements/FortuneWidget';
 import { AuthProvider } from '../context/AuthContext';
 import { AdminAuthProvider } from '../context/AdminAuthContext';
+import { BasketProvider } from '../context/BasketContext';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -32,7 +33,6 @@ const AnimatedRoutes = () => {
           </ProtectedRoute>
         } />
 
-        {/* Admin routes */}
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={
           <AdminProtectedRoute>
@@ -56,11 +56,13 @@ const AppRoutes = () => {
     <Router>
       <AdminAuthProvider>
         <AuthProvider>
-          <ScrollToTop />
-          <AnimatedRoutes />
-          <SupportWidget />
-          <BuyNowWidget />
-          <FortuneWidget />
+          <BasketProvider>
+            <ScrollToTop />
+            <AnimatedRoutes />
+            <SupportWidget />
+            <BuyNowWidget />
+            <FortuneWidget />
+          </BasketProvider>
         </AuthProvider>
       </AdminAuthProvider>
     </Router>
@@ -68,3 +70,4 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
