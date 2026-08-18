@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import cartAnimated from '../../../assets/icons/cart-animated.svg';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
+import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import './Basket.scss';
@@ -18,6 +20,8 @@ const Basket = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
@@ -77,6 +81,17 @@ const Basket = () => {
       console.error('Logout failed:', err);
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsDeleting(true);
+    try {
+      await deleteItem(itemToDelete.productId);
+    } finally {
+      setIsDeleting(false);
+      setItemToDelete(null);
     }
   };
 
@@ -170,7 +185,9 @@ const Basket = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="empty-icon">🛒</div>
+            <div className="empty-icon">
+              <img src={cartAnimated} alt="Cart" />
+            </div>
             <h2>Your basket is empty</h2>
             <p>Looks like you haven't added anything yet. Browse our menu and find your perfect drink.</p>
             <Link to="/catalog" className="cta-btn">Explore Menu</Link>
@@ -206,7 +223,7 @@ const Basket = () => {
 
                         <button
                           className="basket-item-delete mobile-delete"
-                          onClick={() => deleteItem(item.productId)}
+                          onClick={() => setItemToDelete(item)}
                           aria-label="Remove item"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -243,7 +260,7 @@ const Basket = () => {
 
                         <button
                           className="basket-item-delete desktop-delete"
-                          onClick={() => deleteItem(item.productId)}
+                          onClick={() => setItemToDelete(item)}
                           aria-label="Remove item"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -293,6 +310,14 @@ const Basket = () => {
           </div>
         )}
       </main>
+
+      <DeleteConfirmModal
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        itemName={itemToDelete?.product?.name}
+        loading={isDeleting}
+      />
 
       <LogoutModal
         isOpen={isLogoutModalOpen}

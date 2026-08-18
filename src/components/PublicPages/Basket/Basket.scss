@@ -177,10 +177,17 @@
   gap: $spacing-lg;
 
   .empty-icon {
-    font-size: 5rem;
-    opacity: 0.4;
-    line-height: 1;
     margin-bottom: $spacing-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 64px;
+      height: 64px;
+      opacity: 0.85;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
   }
 
   h2 {
