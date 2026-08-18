@@ -7,11 +7,9 @@ import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
-
 import './Basket.scss';
 
 const Basket = () => {
-
   const { user, logout, authLoading } = useAuth();
   const { items, addItem, removeItem, deleteItem, loading: basketLoading } = useBasket();
 
@@ -185,10 +183,10 @@ const Basket = () => {
                   <motion.div
                     key={item.productId}
                     className="basket-item"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20, height: 0, marginBottom: 0, padding: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0, padding: 0 }}
+                    transition={{ duration: 0.25, delay: index * 0.03 }}
                     layout
                   >
                     <div className="basket-item-image">
@@ -199,44 +197,64 @@ const Basket = () => {
                       )}
                     </div>
 
-                    <div className="basket-item-info">
-                      <h3 className="basket-item-name">{item.product.name}</h3>
-                      <span className="basket-item-unit-price">{item.unitPrice.toFixed(2)} ₼ each</span>
-                    </div>
+                    <div className="basket-item-body">
+                      <div className="basket-item-main">
+                        <div className="basket-item-info">
+                          <h3 className="basket-item-name">{item.product.name}</h3>
+                          <span className="basket-item-unit-price">{item.unitPrice.toFixed(2)} ₼ each</span>
+                        </div>
 
-                    <div className="basket-item-quantity">
-                      <button
-                        className="qty-btn"
-                        onClick={() => removeItem(item.productId)}
-                        aria-label="Decrease quantity"
-                      >
-                        −
-                      </button>
-                      <span className="qty-value">{item.quantity}</span>
-                      <button
-                        className="qty-btn"
-                        onClick={() => addItem(item.productId)}
-                        aria-label="Increase quantity"
-                      >
-                        +
-                      </button>
-                    </div>
+                        <button
+                          className="basket-item-delete mobile-delete"
+                          onClick={() => deleteItem(item.productId)}
+                          aria-label="Remove item"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4h6v2" />
+                          </svg>
+                        </button>
+                      </div>
 
-                    <div className="basket-item-total">
-                      <span className="basket-item-total-price">{item.totalPrice} ₼</span>
+                      <div className="basket-item-controls">
+                        <div className="basket-item-quantity">
+                          <button
+                            className="qty-btn"
+                            onClick={() => removeItem(item.productId)}
+                            aria-label="Decrease quantity"
+                          >
+                            −
+                          </button>
+                          <span className="qty-value">{item.quantity}</span>
+                          <button
+                            className="qty-btn"
+                            onClick={() => addItem(item.productId)}
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <div className="basket-item-total">
+                          <span className="basket-item-total-price">{item.totalPrice} ₼</span>
+                        </div>
+
+                        <button
+                          className="basket-item-delete desktop-delete"
+                          onClick={() => deleteItem(item.productId)}
+                          aria-label="Remove item"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14H6L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4h6v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      className="basket-item-delete"
-                      onClick={() => deleteItem(item.productId)}
-                      aria-label="Remove item"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6M14 11v6" />
-                        <path d="M9 6V4h6v2" />
-                      </svg>
-                    </button>
                   </motion.div>
                 ))}
               </AnimatePresence>
