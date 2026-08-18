@@ -95,6 +95,14 @@ const Basket = () => {
     }
   };
 
+  const handleDecrease = (item) => {
+    if (item.quantity <= 1) {
+      setItemToDelete(item);
+    } else {
+      removeItem(item.productId);
+    }
+  };
+
   const isLoading = authLoading || basketLoading || productsLoading;
 
   const enrichedItems = items
@@ -239,7 +247,7 @@ const Basket = () => {
                         <div className="basket-item-quantity">
                           <button
                             className="qty-btn"
-                            onClick={() => removeItem(item.productId)}
+                            onClick={() => handleDecrease(item)}
                             aria-label="Decrease quantity"
                           >
                             −
