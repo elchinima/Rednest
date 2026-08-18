@@ -5,6 +5,7 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
+import FitText from '../../Elements/FitText';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import addIcon from '../../../assets/icons/add.svg';
 import successIcon from '../../../assets/icons/success-animated.svg';
@@ -76,7 +77,9 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations }) => 
             </div>
             <div className="card-content">
               <div className="card-header">
-                <h3>{item.name}</h3>
+                <FitText as="h3" className="item-name" maxFontSize={1.3} minFontSize={0.78}>
+                  {item.name}
+                </FitText>
                 <span className="item-price">{item.price} ₼</span>
               </div>
               <p className="item-description">{item.description}</p>

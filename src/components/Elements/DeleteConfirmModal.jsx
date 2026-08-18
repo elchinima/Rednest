@@ -47,6 +47,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) =
                 
                 <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
                   <button 
+                    type="button"
                     className="cta-btn auth-submit-btn" 
                     onClick={onClose} 
                     disabled={loading}
@@ -55,6 +56,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) =
                     Cancel
                   </button>
                   <button 
+                    type="button"
                     className="cta-btn logout-confirm-btn" 
                     onClick={onConfirm} 
                     disabled={loading}

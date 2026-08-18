@@ -192,14 +192,19 @@
     .card-header {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      align-items: center;
+      gap: 10px;
       margin-bottom: $spacing-md;
+      min-width: 0;
+      width: 100%;
       
-      h3 {
+      h3, .item-name {
         font-size: 1.3rem;
         margin: 0;
         font-weight: 700;
         color: $color-text;
+        flex: 1;
+        min-width: 0;
       }
       
       .item-price {
@@ -209,6 +214,8 @@
         background: rgba(255, 255, 255, 0.1);
         padding: $spacing-xs $spacing-sm;
         border-radius: $border-radius-full;
+        flex-shrink: 0;
+        white-space: nowrap;
       }
     }
     
@@ -274,6 +281,24 @@
     max-width: 320px;
     scroll-snap-align: center;
     scroll-snap-stop: always;
+
+    .card-content {
+      padding: $spacing-lg;
+
+      .card-header {
+        align-items: center;
+        gap: 8px;
+
+        h3, .item-name {
+          font-size: 1.15rem;
+        }
+
+        .item-price {
+          font-size: 1.05rem;
+          padding: 3px 8px;
+        }
+      }
+    }
   }
 
   .carousel-dots {

@@ -7,6 +7,7 @@ import cartAnimated from '../../../assets/icons/cart-animated.svg';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
+import FitText from '../../Elements/FitText';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import './Basket.scss';
@@ -86,12 +87,13 @@ const Basket = () => {
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
-    setIsDeleting(true);
+    const productId = itemToDelete.productId;
+    setItemToDelete(null);
+    setIsDeleting(false);
     try {
-      await deleteItem(itemToDelete.productId);
-    } finally {
-      setIsDeleting(false);
-      setItemToDelete(null);
+      await deleteItem(productId);
+    } catch (err) {
+      console.error('Failed to delete item:', err);
     }
   };
 
@@ -225,7 +227,9 @@ const Basket = () => {
                     <div className="basket-item-body">
                       <div className="basket-item-main">
                         <div className="basket-item-info">
-                          <h3 className="basket-item-name">{item.product.name}</h3>
+                          <FitText as="h3" className="basket-item-name" maxFontSize={1.15} minFontSize={0.72}>
+                            {item.product.name}
+                          </FitText>
                           <span className="basket-item-unit-price">{item.unitPrice.toFixed(2)} ₼ each</span>
                         </div>
 
