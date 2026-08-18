@@ -21,6 +21,13 @@ function setLocalBasket(items) {
   } catch {}
 }
 
+function getBakuTimeISO() {
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  const baku = new Date(utc + (3600000 * 4));
+  return baku.toISOString();
+}
+
 function clearLocalBasket() {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -80,7 +87,7 @@ export const BasketProvider = ({ children }) => {
         if (existing) {
           return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
         }
-        return [...prev, { productId, addedAt: new Date().toISOString(), quantity: 1 }];
+        return [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
       });
 
       try {
@@ -99,7 +106,7 @@ export const BasketProvider = ({ children }) => {
         if (existing) {
           updated = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
         } else {
-          updated = [...prev, { productId, addedAt: new Date().toISOString(), quantity: 1 }];
+          updated = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
         }
         setLocalBasket(updated);
         return updated;

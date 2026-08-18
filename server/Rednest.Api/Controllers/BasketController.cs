@@ -26,6 +26,8 @@ public class BasketController : ControllerBase
         return userId;
     }
 
+    private static DateTime GetBakuTime() => DateTime.UtcNow.AddHours(4);
+
     [HttpGet]
     public async Task<IActionResult> GetBasket()
     {
@@ -65,7 +67,7 @@ public class BasketController : ControllerBase
                     new BasketItem
                     {
                         ProductId = request.ProductId,
-                        AddedAt = DateTime.UtcNow,
+                        AddedAt = GetBakuTime(),
                         Quantity = 1
                     }
                 }
@@ -84,7 +86,7 @@ public class BasketController : ControllerBase
                 basket.Items.Add(new BasketItem
                 {
                     ProductId = request.ProductId,
-                    AddedAt = DateTime.UtcNow,
+                    AddedAt = GetBakuTime(),
                     Quantity = 1
                 });
             }
@@ -150,7 +152,7 @@ public class BasketController : ControllerBase
                 Items = request.Items.Select(i => new BasketItem
                 {
                     ProductId = i.ProductId,
-                    AddedAt = i.AddedAt,
+                    AddedAt = i.AddedAt != default ? i.AddedAt : GetBakuTime(),
                     Quantity = i.Quantity
                 }).ToList()
             };
@@ -170,7 +172,7 @@ public class BasketController : ControllerBase
                     basket.Items.Add(new BasketItem
                     {
                         ProductId = incoming.ProductId,
-                        AddedAt = incoming.AddedAt,
+                        AddedAt = incoming.AddedAt != default ? incoming.AddedAt : GetBakuTime(),
                         Quantity = incoming.Quantity
                     });
                 }
