@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
@@ -12,11 +12,9 @@ import successIcon from '../../../assets/icons/success-animated.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
 
-
-
-
-const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations }) => {
+const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loadedImages }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -68,10 +66,21 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations }) => 
           <div key={item.id} className="catalog-card">
             <div className="card-image-container">
               {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="item-image" />
+                <>
+                  <img 
+                    src={item.imageUrl} 
+                    alt={item.name} 
+                    className={`item-image ${loadedImages[item.id] ? 'loaded' : ''}`} 
+                  />
+                  {!loadedImages[item.id] && (
+                    <div className="item-image-placeholder">
+                      <span className="placeholder-icon">{item.icon || '☕'}</span>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="item-image-placeholder">
-                  <span className="placeholder-icon">{item.icon}</span>
+                  <span className="placeholder-icon">{item.icon || '☕'}</span>
                 </div>
               )}
             </div>
@@ -130,9 +139,19 @@ const Catalog = () => {
   const [addedAnimations, setAddedAnimations] = useState({});
   const [menuData, setMenuData] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
-  const { addItem } = useBasket();
+  const { addItem, getItemQuantity } = useBasket();
+
+  const orderedItems = useMemo(() => {
+    return menuData.flatMap(cat => cat.items || []);
+  }, [menuData]);
+
+  const loadedImages = useSequentialImageLoader(orderedItems);
 
   const handleAddItem = (productId) => {
+    const currentQty = getItemQuantity(productId);
+    if (currentQty >= 100) {
+      return;
+    }
     addItem(productId);
     setAddedAnimations(prev => ({ ...prev, [productId]: true }));
     setTimeout(() => {
@@ -316,6 +335,7 @@ const Catalog = () => {
                 index={index}
                 onAddItem={handleAddItem}
                 addedAnimations={addedAnimations}
+                loadedImages={loadedImages}
               />
             ))
           )}
@@ -334,4 +354,3 @@ const Catalog = () => {
 };
 
 export default Catalog;
-

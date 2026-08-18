@@ -81,29 +81,37 @@ export const BasketProvider = ({ children }) => {
   }, [isAuthenticated, user, authLoading]);
 
   const addItem = useCallback(async (productId) => {
+    let shouldAdd = false;
+
     if (isAuthenticated && user) {
       setItems(prev => {
         const existing = prev.find(i => i.productId === productId);
         if (existing) {
+          if (existing.quantity >= 100) return prev;
+          shouldAdd = true;
           return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
         }
+        shouldAdd = true;
         return [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
       });
 
-      try {
-        await fetchWithRefresh(`${apiUrl}/api/basket/add`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId }),
-        });
-      } catch (err) {
-        console.error('Failed to add item:', err);
+      if (shouldAdd) {
+        try {
+          await fetchWithRefresh(`${apiUrl}/api/basket/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId }),
+          });
+        } catch (err) {
+          console.error('Failed to add item:', err);
+        }
       }
     } else {
       setItems(prev => {
         const existing = prev.find(i => i.productId === productId);
         let updated;
         if (existing) {
+          if (existing.quantity >= 100) return prev;
           updated = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
         } else {
           updated = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];

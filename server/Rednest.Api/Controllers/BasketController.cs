@@ -79,7 +79,10 @@ public class BasketController : ControllerBase
             var existing = basket.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
             if (existing != null)
             {
-                existing.Quantity += 1;
+                if (existing.Quantity < 100)
+                {
+                    existing.Quantity += 1;
+                }
             }
             else
             {
@@ -153,7 +156,7 @@ public class BasketController : ControllerBase
                 {
                     ProductId = i.ProductId,
                     AddedAt = i.AddedAt != default ? i.AddedAt : GetBakuTime(),
-                    Quantity = i.Quantity
+                    Quantity = Math.Min(100, Math.Max(1, i.Quantity))
                 }).ToList()
             };
             await _userRepository.AddBasketAsync(basket);
@@ -165,7 +168,7 @@ public class BasketController : ControllerBase
                 var existing = basket.Items.FirstOrDefault(i => i.ProductId == incoming.ProductId);
                 if (existing != null)
                 {
-                    existing.Quantity += incoming.Quantity;
+                    existing.Quantity = Math.Min(100, existing.Quantity + incoming.Quantity);
                 }
                 else
                 {
@@ -173,7 +176,7 @@ public class BasketController : ControllerBase
                     {
                         ProductId = incoming.ProductId,
                         AddedAt = incoming.AddedAt != default ? incoming.AddedAt : GetBakuTime(),
-                        Quantity = incoming.Quantity
+                        Quantity = Math.Min(100, Math.Max(1, incoming.Quantity))
                     });
                 }
             }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
@@ -10,6 +10,7 @@ import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import FitText from '../../Elements/FitText';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
+import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
 import './Basket.scss';
 
 const Basket = () => {
@@ -24,6 +25,7 @@ const Basket = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [flashingItemIds, setFlashingItemIds] = useState({});
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -105,6 +107,21 @@ const Basket = () => {
     }
   };
 
+  const handleIncrease = (item) => {
+    if (item.quantity >= 100) {
+      setFlashingItemIds(prev => ({ ...prev, [item.productId]: true }));
+      setTimeout(() => {
+        setFlashingItemIds(prev => {
+          const next = { ...prev };
+          delete next[item.productId];
+          return next;
+        });
+      }, 2500);
+      return;
+    }
+    addItem(item.productId);
+  };
+
   const isLoading = authLoading || basketLoading || productsLoading;
 
   const enrichedItems = items
@@ -116,6 +133,15 @@ const Basket = () => {
       return { ...item, product, unitPrice, totalPrice };
     })
     .filter(Boolean);
+
+  const orderedBasketItems = useMemo(() => {
+    return enrichedItems.map(item => ({
+      id: item.productId,
+      imageUrl: item.product?.imageUrl
+    }));
+  }, [enrichedItems]);
+
+  const loadedImages = useSequentialImageLoader(orderedBasketItems);
 
   const grandTotal = enrichedItems
     .reduce((sum, item) => sum + parseFloat(item.totalPrice), 0)
@@ -218,7 +244,16 @@ const Basket = () => {
                   >
                     <div className="basket-item-image">
                       {item.product.imageUrl ? (
-                        <img src={item.product.imageUrl} alt={item.product.name} />
+                        <>
+                          <img 
+                            src={item.product.imageUrl} 
+                            alt={item.product.name} 
+                            className={loadedImages[item.productId] ? 'loaded' : ''} 
+                          />
+                          {!loadedImages[item.productId] && (
+                            <div className="basket-item-image-placeholder">☕</div>
+                          )}
+                        </>
                       ) : (
                         <div className="basket-item-image-placeholder">☕</div>
                       )}
@@ -256,10 +291,12 @@ const Basket = () => {
                           >
                             −
                           </button>
-                          <span className="qty-value">{item.quantity}</span>
+                          <span className={`qty-value ${flashingItemIds[item.productId] ? 'qty-limit-flash' : ''}`}>
+                            {item.quantity}
+                          </span>
                           <button
                             className="qty-btn"
-                            onClick={() => addItem(item.productId)}
+                            onClick={() => handleIncrease(item)}
                             aria-label="Increase quantity"
                           >
                             +
