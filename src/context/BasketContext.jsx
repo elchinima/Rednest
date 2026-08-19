@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import { useAuth } from './AuthContext';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
@@ -39,7 +40,40 @@ export const BasketProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasSynced = useRef(false);
+  const hubConnectionRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      if (hubConnectionRef.current) {
+        hubConnectionRef.current.stop();
+        hubConnectionRef.current = null;
+      }
+      return;
+    }
+
+    const connection = new HubConnectionBuilder()
+      .withUrl(`${apiUrl}/hubs/basket`, {
+        withCredentials: true,
+      })
+      .withAutomaticReconnect()
+      .configureLogging(LogLevel.None)
+      .build();
+
+    connection.on('BasketUpdated', (data) => {
+      if (data?.items) {
+        setItems(data.items);
+      }
+    });
+
+    connection.start().catch(() => {});
+    hubConnectionRef.current = connection;
+
+    return () => {
+      connection.stop();
+      hubConnectionRef.current = null;
+    };
+  }, [isAuthenticated, user, apiUrl]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -79,6 +113,7 @@ export const BasketProvider = ({ children }) => {
 
     loadBasket();
   }, [isAuthenticated, user, authLoading]);
+
 
   const addItem = useCallback(async (productId) => {
     let shouldAdd = false;

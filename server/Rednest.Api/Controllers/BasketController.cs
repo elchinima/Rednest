@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Rednest.Api.Hubs;
 using Rednest.Application.Interfaces;
 using Rednest.Core.Entities;
 using Rednest.Infrastructure.Data;
@@ -14,11 +16,14 @@ namespace Rednest.Api.Controllers;
 public class BasketController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IHubContext<BasketHub> _hubContext;
 
-    public BasketController(IUserRepository userRepository)
+    public BasketController(IUserRepository userRepository, IHubContext<BasketHub> hubContext)
     {
         _userRepository = userRepository;
+        _hubContext = hubContext;
     }
+
 
     private Guid? GetUserId()
     {
@@ -98,7 +103,8 @@ public class BasketController : ControllerBase
             await _userRepository.UpdateBasketAsync(basket);
         }
 
-        return Ok();
+        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
+        return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
     [HttpPost("remove")]
@@ -108,10 +114,10 @@ public class BasketController : ControllerBase
         if (userId == null) return Unauthorized();
 
         var basket = await _userRepository.GetBasketByUserIdAsync(userId.Value);
-        if (basket == null) return Ok();
+        if (basket == null) return Ok(new { items = Array.Empty<object>() });
 
         var existing = basket.Items.FirstOrDefault(i => i.ProductId == request.ProductId);
-        if (existing == null) return Ok();
+        if (existing == null) return Ok(new { items = FormatBasketItems(basket.Items) });
 
         existing.Quantity -= 1;
         if (existing.Quantity <= 0)
@@ -120,7 +126,8 @@ public class BasketController : ControllerBase
         }
 
         await _userRepository.UpdateBasketAsync(basket);
-        return Ok();
+        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
+        return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
     [HttpDelete("delete/{productId}")]
@@ -130,12 +137,12 @@ public class BasketController : ControllerBase
         if (userId == null) return Unauthorized();
 
         var basket = await _userRepository.GetBasketByUserIdAsync(userId.Value);
-        if (basket == null) return Ok();
+        if (basket == null) return Ok(new { items = Array.Empty<object>() });
 
         basket.Items.RemoveAll(i => i.ProductId == productId);
         await _userRepository.UpdateBasketAsync(basket);
-
-        return Ok();
+        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
+        return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
     [HttpPost("sync")]
@@ -185,8 +192,27 @@ public class BasketController : ControllerBase
             await _userRepository.UpdateBasketAsync(basket);
         }
 
-        return Ok();
+        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
+        return Ok(new { items = FormatBasketItems(basket.Items) });
     }
+
+    private static object FormatBasketItems(IEnumerable<BasketItem> items) =>
+        items.Select(i => new
+        {
+            productId = i.ProductId,
+            addedAt = i.AddedAt,
+            quantity = i.Quantity
+        });
+
+    private async Task NotifyBasketUpdatedAsync(Guid userId, List<BasketItem> items)
+    {
+        var payload = new
+        {
+            items = FormatBasketItems(items)
+        };
+        await _hubContext.Clients.Group($"user_{userId}").SendAsync("BasketUpdated", payload);
+    }
+
 
     [HttpPost("apply-promo")]
     public async Task<IActionResult> ApplyPromo(

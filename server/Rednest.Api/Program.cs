@@ -27,6 +27,7 @@ if (File.Exists(envPath))
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient("supabase");
 
@@ -43,11 +44,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
+
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -130,7 +133,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
                 else
                 {
-                    context.Token = context.Request.Cookies["accessToken"];
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    else
+                    {
+                        context.Token = context.Request.Cookies["accessToken"];
+                    }
                 }
                 return Task.CompletedTask;
             }
@@ -217,6 +229,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.UseStaticFiles();
+app.MapHub<Rednest.Api.Hubs.BasketHub>("/hubs/basket");
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

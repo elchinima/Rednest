@@ -28,8 +28,8 @@ const Basket = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [flashingItemIds, setFlashingItemIds] = useState({});
   const [activePromo, setActivePromo] = useState(null);
-  const [promoDiscount, setPromoDiscount] = useState(null);
   const userMenuRef = useRef(null);
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -164,29 +164,39 @@ const Basket = () => {
     .reduce((sum, item) => sum + parseFloat(item.totalPrice), 0)
     .toFixed(2);
 
-  useEffect(() => {
-    if (!activePromo?.promoCode || enrichedItems.length === 0) return;
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    fetchWithRefresh(`${apiUrl}/api/basket/apply-promo`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ promoCode: activePromo.promoCode }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.applied && data.discountAmount > 0) {
-          setPromoDiscount(data);
-        } else {
-          setPromoDiscount(null);
-        }
-      })
-      .catch(() => setPromoDiscount(null));
-  }, [activePromo, items, products]);
+  const promoDiscountAmount = useMemo(() => {
+    if (!activePromo || !activePromo.isActive || enrichedItems.length === 0) return 0;
+    const numericTotal = parseFloat(grandTotal) || 0;
+    if (numericTotal <= 0) return 0;
 
+    switch (activePromo.prizeType) {
+      case 'Discount25':
+        return Math.round(numericTotal * 25) / 100;
+      case 'Discount50':
+        return Math.round(numericTotal * 50) / 100;
+      case 'SuperPrize':
+        return Math.min(numericTotal, 25.00);
+      case 'FreeDrink': {
+        const drinks = enrichedItems.filter(x => x.product.category === 'Main Drinks' || x.product.category === 'Specialty Drinks');
+        if (drinks.length === 0) return 0;
+        const totalQty = drinks.reduce((sum, x) => sum + x.quantity, 0);
+        const totalPrice = drinks.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+        return Math.round((totalPrice / totalQty) * 100) / 100;
+      }
+      case 'FreeDessert': {
+        const desserts = enrichedItems.filter(x => x.product.category === 'Desserts');
+        if (desserts.length === 0) return 0;
+        const totalQty = desserts.reduce((sum, x) => sum + x.quantity, 0);
+        const totalPrice = desserts.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+        return Math.round((totalPrice / totalQty) * 100) / 100;
+      }
+      default:
+        return 0;
+    }
+  }, [activePromo, enrichedItems, grandTotal]);
 
-  const discountedTotal = promoDiscount
-    ? promoDiscount.newTotal.toFixed(2)
-    : grandTotal;
+  const discountedTotal = Math.max(0, parseFloat(grandTotal) - promoDiscountAmount).toFixed(2);
+
 
   return (
     <motion.div
@@ -386,13 +396,13 @@ const Basket = () => {
                 ))}
               </div>
               <div className="summary-divider" />
-              {promoDiscount && (
+              {promoDiscountAmount > 0 && (
                 <div className="summary-subtotal">
                   <span>Subtotal</span>
                   <span>{grandTotal} ₼</span>
                 </div>
               )}
-              {promoDiscount && (
+              {promoDiscountAmount > 0 && (
                 <AnimatePresence>
                   <motion.div
                     className="summary-promo-row"
@@ -402,10 +412,10 @@ const Basket = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <span className="summary-promo-label">
-                      🎁 {promoDiscount.prizeName}
+                      🎁 {activePromo?.prizeName}
                       <span className="summary-promo-code"> ({activePromo?.promoCode})</span>
                     </span>
-                    <span className="summary-promo-discount">−{promoDiscount.discountAmount.toFixed(2)} ₼</span>
+                    <span className="summary-promo-discount">−{promoDiscountAmount.toFixed(2)} ₼</span>
                   </motion.div>
                 </AnimatePresence>
               )}
@@ -413,6 +423,7 @@ const Basket = () => {
                 <span>Total</span>
                 <span className="summary-total-price">{discountedTotal} ₼</span>
               </div>
+
               <button className="cta-btn basket-checkout-btn">
                 Place Order
               </button>
