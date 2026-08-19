@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <!-- Легкое парение вверх-вниз -->
+    <animateTransform attributeName="transform" type="translate" values="0 2; 0 -2; 0 2" dur="2.5s" repeatCount="indefinite" />
+    <!-- Небольшой наклон вперед-назад для живости -->
+    <animateTransform attributeName="transform" type="rotate" values="-3 50 50; 3 50 50; -3 50 50" dur="3.5s" repeatCount="indefinite" additive="sum" />
+
+    <!-- Бант сверху (левая и правая петли) -->
+    <path d="M 50 38 C 38 20 20 22 32 38 C 40 42 46 39 50 38" stroke="#4ade80" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M 50 38 C 62 20 80 22 68 38 C 60 42 54 39 50 38" stroke="#4ade80" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <circle cx="50" cy="38" r="4" fill="#4ade80" />
+
+    <!-- Крышка подарка -->
+    <rect x="18" y="38" width="64" height="12" rx="3" stroke="#4ade80" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Основание коробки подарка -->
+    <path d="M 24 50 L 24 82 C 24 86 28 90 33 90 L 67 90 C 72 90 76 86 76 82 L 76 50" stroke="#4ade80" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+    <!-- Вертикальная лента -->
+    <line x1="50" y1="38" x2="50" y2="90" stroke="#4ade80" stroke-width="6.5" stroke-linecap="round" />
+  </g>
+</svg>

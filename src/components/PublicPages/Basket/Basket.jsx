@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import cartAnimated from '../../../assets/icons/cart-animated.svg';
+import giftAnimated from '../../../assets/icons/gift-animated.svg';
 import Footer from '../../Footer/Footer';
 import LogoutModal from '../../Elements/LogoutModal';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
@@ -13,6 +14,26 @@ import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
 import './Basket.scss';
+
+const formatPrizeName = (name) => {
+  if (!name) return '';
+  const mapping = {
+    'SUPER PRIZE': 'Super Prize',
+    'FREE DRINK': 'Free Drink',
+    'FREE DESSERT': 'Free Dessert',
+    'DISCOUNT UP TO 25%': 'Discount up to 25%',
+    'CASHBACK ON PURCHASES': 'Cashback on Purchases',
+    'DISCOUNT UP TO 50%': 'Discount up to 50%',
+  };
+  const upper = name.trim().toUpperCase();
+  if (mapping[upper]) return mapping[upper];
+
+  return name
+    .toLowerCase()
+    .split(' ')
+    .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '')
+    .join(' ');
+};
 
 const Basket = () => {
   const { user, logout, authLoading } = useAuth();
@@ -424,8 +445,8 @@ const Basket = () => {
                     transition={{ duration: 0.3 }}
                   >
                     <span className="summary-promo-label">
-                      🎁 {activePromo?.prizeName}
-                      <span className="summary-promo-code"> ({activePromo?.promoCode})</span>
+                      <img src={giftAnimated} alt="Promo gift" className="summary-promo-icon" />
+                      <span>{formatPrizeName(activePromo?.prizeName)}</span>
                     </span>
                     <span className="summary-promo-discount">−{promoDiscountAmount.toFixed(2)} ₼</span>
                   </motion.div>

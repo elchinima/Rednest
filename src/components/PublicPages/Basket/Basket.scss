@@ -532,25 +532,28 @@
 .summary-promo-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-sm $spacing-md;
+  padding: 10px $spacing-md;
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.2);
   border-radius: $border-radius-md;
 
   .summary-promo-label {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     color: #4ade80;
     font-weight: 600;
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
-    .summary-promo-code {
-      font-size: 0.75rem;
-      font-weight: 400;
-      opacity: 0.7;
-      font-family: monospace;
+    .summary-promo-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      display: inline-block;
     }
   }
 
