@@ -9,91 +9,37 @@ import LogoutModal from '../../Elements/LogoutModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import partyPopperIcon from '../../../assets/icons/party-popper-animated.svg';
 import smileyIcon from '../../../assets/icons/smiley-animated.svg';
+import fortuneImg from '../../../assets/images/fortune_image_low.png';
 import './Fortune.scss';
 
 const SEGMENTS = [
-  { label: '10% OFF',    color: '#7f1d1d', textColor: '#fff', prize: '10% discount on your next order' },
-  { label: 'Free Ship', color: '#450a0a', textColor: 'rgba(255,255,255,0.85)', prize: 'Free shipping on your next order' },
-  { label: '5% OFF',    color: '#991b1b', textColor: '#fff', prize: '5% discount on your next order' },
-  { label: '1 Coffee',  color: '#7f1d1d', textColor: '#fff', prize: 'One free coffee of your choice!' },
-  { label: '15% OFF',   color: '#450a0a', textColor: '#fff', prize: '15% discount on your next order' },
-  { label: 'Try Again', color: '#3b0a0a', textColor: 'rgba(255,255,255,0.45)', prize: null },
-  { label: '20% OFF',   color: '#7f1d1d', textColor: '#fff', prize: '20% discount on your next order' },
-  { label: 'Free Bag',  color: '#450a0a', textColor: 'rgba(255,255,255,0.85)', prize: 'Free coffee bag with next order!' },
+  { label: 'SUPER PRIZE', prize: 'Super prize: Special exclusive Rednest gift!' },
+  { label: 'FREE DRINK', prize: 'One free drink of your choice!' },
+  { label: 'FREE DESSERT', prize: 'One free dessert with your next order!' },
+  { label: 'DISCOUNT UP TO 25%', prize: '25% discount on your next order!' },
+  { label: 'CASHBACK ON PURCHASES', prize: 'Cashback on your next coffee purchase!' },
+  { label: 'DISCOUNT UP TO 50%', prize: '50% discount on your next order!' },
 ];
 
 const NUM_SEGMENTS = SEGMENTS.length;
 const ARC = (2 * Math.PI) / NUM_SEGMENTS;
 
-function drawWheel(canvas, rotation) {
+function drawWheel(canvas, rotation, image) {
   const ctx = canvas.getContext('2d');
   const W = canvas.width;
   const H = canvas.height;
   const cx = W / 2;
   const cy = H / 2;
-  const R = Math.min(cx, cy) - 6;
 
   ctx.clearRect(0, 0, W, H);
 
-  for (let i = 0; i < NUM_SEGMENTS; i++) {
-    const startAngle = rotation + i * ARC;
-    const endAngle = startAngle + ARC;
-    const seg = SEGMENTS[i];
+  if (!image) return;
 
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = seg.color;
-    ctx.fill();
-
-    const grad = ctx.createRadialGradient(cx, cy, R * 0.05, cx, cy, R);
-    grad.addColorStop(0, 'rgba(255,255,255,0.08)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.05)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, startAngle, endAngle);
-    ctx.closePath();
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(startAngle + ARC / 2);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = seg.textColor;
-    ctx.font = `600 ${Math.round(R * 0.088)}px Inter, system-ui, sans-serif`;
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 3;
-    ctx.fillText(seg.label, R - 14, 5);
-    ctx.restore();
-  }
-
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  const hubGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.11);
-  hubGrad.addColorStop(0, '#ffffff');
-  hubGrad.addColorStop(1, '#e5e5e5');
-  ctx.beginPath();
-  ctx.arc(cx, cy, R * 0.11, 0, 2 * Math.PI);
-  ctx.fillStyle = hubGrad;
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 8;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.beginPath();
-  ctx.arc(cx, cy, R * 0.11, 0, 2 * Math.PI);
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  ctx.drawImage(image, -cx, -cy, W, H);
+  ctx.restore();
 }
 
 const Fortune = () => {
@@ -101,6 +47,7 @@ const Fortune = () => {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
   const rotationRef = useRef(0);
+  const imageRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -157,17 +104,33 @@ const Fortune = () => {
 
   const drawFrame = useCallback(() => {
     if (canvasRef.current) {
-      drawWheel(canvasRef.current, rotationRef.current);
+      drawWheel(canvasRef.current, rotationRef.current, imageRef.current);
     }
   }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = fortuneImg;
+    img.onload = () => {
+      imageRef.current = img;
+      drawFrame();
+    };
+    if (img.complete) {
+      imageRef.current = img;
+      drawFrame();
+    }
+  }, [drawFrame]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const resize = () => {
       const size = Math.min(canvas.parentElement?.clientWidth ?? 460, 460);
-      canvas.width = size;
-      canvas.height = size;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
       drawFrame();
     };
     resize();
@@ -185,7 +148,8 @@ const Fortune = () => {
 
     const winIdx = Math.floor(Math.random() * NUM_SEGMENTS);
     const seg = SEGMENTS[winIdx];
-    const targetAngle = -Math.PI / 2 - (winIdx * ARC + ARC / 2);
+    const jitter = (Math.random() - 0.5) * (ARC * 0.4);
+    const targetAngle = -winIdx * ARC + jitter;
     const normalizedTarget = ((targetAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 
     let fetchDone = !seg.prize;
