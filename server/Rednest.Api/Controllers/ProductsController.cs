@@ -37,10 +37,12 @@ public class ProductsController : ControllerBase
                         name = p.Name,
                         description = p.Description,
                         price = p.Price.ToString("0.00"),
-                        imageUrl = p.ImageUrl
+                        imageUrl = p.ImageUrl,
+                        category = p.Category
                     })
                     .ToList()
             })
+
             .Where(g => g.items.Count > 0)
             .ToList();
 

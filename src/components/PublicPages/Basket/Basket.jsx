@@ -39,9 +39,9 @@ const Basket = () => {
         if (response.ok) {
           const data = await response.json();
           const productMap = {};
-          data.forEach(category => {
-            category.items.forEach(item => {
-              productMap[item.id] = item;
+          data.forEach(categoryGroup => {
+            categoryGroup.items.forEach(item => {
+              productMap[item.id] = { ...item, category: item.category || categoryGroup.category };
             });
           });
           setProducts(productMap);
@@ -54,6 +54,7 @@ const Basket = () => {
     };
     fetchProducts();
   }, []);
+
 
   useEffect(() => {
     if (!user) return;
@@ -169,31 +170,42 @@ const Basket = () => {
     const numericTotal = parseFloat(grandTotal) || 0;
     if (numericTotal <= 0) return 0;
 
-    switch (activePromo.prizeType) {
-      case 'Discount25':
-        return Math.round(numericTotal * 25) / 100;
-      case 'Discount50':
-        return Math.round(numericTotal * 50) / 100;
-      case 'SuperPrize':
-        return Math.min(numericTotal, 25.00);
-      case 'FreeDrink': {
-        const drinks = enrichedItems.filter(x => x.product.category === 'Main Drinks' || x.product.category === 'Specialty Drinks');
-        if (drinks.length === 0) return 0;
-        const totalQty = drinks.reduce((sum, x) => sum + x.quantity, 0);
-        const totalPrice = drinks.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
-        return Math.round((totalPrice / totalQty) * 100) / 100;
-      }
-      case 'FreeDessert': {
-        const desserts = enrichedItems.filter(x => x.product.category === 'Desserts');
-        if (desserts.length === 0) return 0;
-        const totalQty = desserts.reduce((sum, x) => sum + x.quantity, 0);
-        const totalPrice = desserts.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
-        return Math.round((totalPrice / totalQty) * 100) / 100;
-      }
-      default:
-        return 0;
+    const pType = String(activePromo.prizeType || '').toLowerCase();
+    const pName = String(activePromo.prizeName || '').toUpperCase();
+
+    if (pType === 'discount25' || pType === '3' || pName.includes('25%')) {
+      return Math.round(numericTotal * 25) / 100;
     }
+    if (pType === 'discount50' || pType === '5' || pName.includes('50%')) {
+      return Math.round(numericTotal * 50) / 100;
+    }
+    if (pType === 'superprize' || pType === '0' || pName.includes('SUPER')) {
+      return Math.min(numericTotal, 25.00);
+    }
+    if (pType === 'freedrink' || pType === '1' || pName.includes('DRINK')) {
+      const drinks = enrichedItems.filter(x => {
+        const cat = (x.product?.category || '').toLowerCase();
+        return cat.includes('drink');
+      });
+      if (drinks.length === 0) return 0;
+      const totalQty = drinks.reduce((sum, x) => sum + x.quantity, 0);
+      const totalPrice = drinks.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+      return Math.round((totalPrice / totalQty) * 100) / 100;
+    }
+    if (pType === 'freedessert' || pType === '2' || pName.includes('DESSERT')) {
+      const desserts = enrichedItems.filter(x => {
+        const cat = (x.product?.category || '').toLowerCase();
+        return cat.includes('dessert');
+      });
+      if (desserts.length === 0) return 0;
+      const totalQty = desserts.reduce((sum, x) => sum + x.quantity, 0);
+      const totalPrice = desserts.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+      return Math.round((totalPrice / totalQty) * 100) / 100;
+    }
+
+    return 0;
   }, [activePromo, enrichedItems, grandTotal]);
+
 
   const discountedTotal = Math.max(0, parseFloat(grandTotal) - promoDiscountAmount).toFixed(2);
 
