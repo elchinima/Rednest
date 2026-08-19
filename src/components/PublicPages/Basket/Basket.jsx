@@ -174,7 +174,7 @@ const Basket = () => {
     })
       .then(r => r.json())
       .then(data => {
-        if (data.applied) {
+        if (data.applied && data.discountAmount > 0) {
           setPromoDiscount(data);
         } else {
           setPromoDiscount(null);
@@ -182,6 +182,7 @@ const Basket = () => {
       })
       .catch(() => setPromoDiscount(null));
   }, [activePromo, items, products]);
+
 
   const discountedTotal = promoDiscount
     ? promoDiscount.newTotal.toFixed(2)

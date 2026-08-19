@@ -269,11 +269,13 @@ public class BasketController : ControllerBase
                 break;
             }
 
-            case Rednest.Core.Entities.PrizeType.CashbackOnPurchases:
-                var pct = promo.PrizeInfo.CashbackPercent > 0 ? promo.PrizeInfo.CashbackPercent : 5;
-                discount = Math.Round(grandTotal * (pct / 100m), 2);
-                message = $"{pct}% cashback applied";
+            default:
                 break;
+        }
+
+        if (discount <= 0)
+        {
+            return Ok(new Rednest.Application.DTOs.ApplyPromoResponse { Applied = false });
         }
 
         discount = Math.Min(discount, grandTotal);
@@ -289,6 +291,7 @@ public class BasketController : ControllerBase
             NewTotal = newTotal,
             Message = message
         });
+
     }
 }
 
