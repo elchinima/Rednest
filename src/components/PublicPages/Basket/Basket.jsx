@@ -10,6 +10,7 @@ import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import FitText from '../../Elements/FitText';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
 import './Basket.scss';
 
@@ -26,6 +27,8 @@ const Basket = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [flashingItemIds, setFlashingItemIds] = useState({});
+  const [activePromo, setActivePromo] = useState(null);
+  const [promoDiscount, setPromoDiscount] = useState(null);
   const userMenuRef = useRef(null);
 
   useEffect(() => {
@@ -51,6 +54,20 @@ const Basket = () => {
     };
     fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    fetchWithRefresh(`${apiUrl}/api/auth/promo`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.hasPromo && data.isActive) {
+          setActivePromo(data);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -146,6 +163,29 @@ const Basket = () => {
   const grandTotal = enrichedItems
     .reduce((sum, item) => sum + parseFloat(item.totalPrice), 0)
     .toFixed(2);
+
+  useEffect(() => {
+    if (!activePromo?.promoCode || enrichedItems.length === 0) return;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    fetchWithRefresh(`${apiUrl}/api/basket/apply-promo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ promoCode: activePromo.promoCode }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.applied) {
+          setPromoDiscount(data);
+        } else {
+          setPromoDiscount(null);
+        }
+      })
+      .catch(() => setPromoDiscount(null));
+  }, [activePromo, items, products]);
+
+  const discountedTotal = promoDiscount
+    ? promoDiscount.newTotal.toFixed(2)
+    : grandTotal;
 
   return (
     <motion.div
@@ -345,9 +385,32 @@ const Basket = () => {
                 ))}
               </div>
               <div className="summary-divider" />
+              {promoDiscount && (
+                <div className="summary-subtotal">
+                  <span>Subtotal</span>
+                  <span>{grandTotal} ₼</span>
+                </div>
+              )}
+              {promoDiscount && (
+                <AnimatePresence>
+                  <motion.div
+                    className="summary-promo-row"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span className="summary-promo-label">
+                      🎁 {promoDiscount.prizeName}
+                      <span className="summary-promo-code"> ({activePromo?.promoCode})</span>
+                    </span>
+                    <span className="summary-promo-discount">−{promoDiscount.discountAmount.toFixed(2)} ₼</span>
+                  </motion.div>
+                </AnimatePresence>
+              )}
               <div className="summary-total">
                 <span>Total</span>
-                <span className="summary-total-price">{grandTotal} ₼</span>
+                <span className="summary-total-price">{discountedTotal} ₼</span>
               </div>
               <button className="cta-btn basket-checkout-btn">
                 Place Order

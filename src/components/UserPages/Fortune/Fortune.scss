@@ -63,11 +63,11 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 460px;
+  max-width: 485px;
   filter: drop-shadow(0 6px 32px rgba(127, 29, 29, 0.5));
 
   @media (min-width: 769px) {
-    max-width: min(55vh, 460px);
+    max-width: min(58vh, 485px);
   }
 }
 
@@ -267,7 +267,7 @@
   }
 
   .fortune-wheel-wrap {
-    max-width: min(85vw, 340px);
+    max-width: min(88vw, 360px);
   }
 
   .fortune-spin-btn {

@@ -148,6 +148,8 @@ public class AuthController : ControllerBase
                 promoCode = promo.Codes.PromoCode,
                 prizeName = promo.PrizeInfo.PrizeName,
                 prizeDescription = promo.PrizeInfo.PrizeDescription,
+                prizeType = promo.PrizeInfo.Type.ToString(),
+                cashbackPercent = promo.PrizeInfo.CashbackPercent,
                 barCode = promo.Codes.BarCode,
                 isActive = promo.IsActive,
                 activatedAt = promo.Dates.ActivatedAt,
@@ -163,7 +165,6 @@ public class AuthController : ControllerBase
     [Microsoft.AspNetCore.Authorization.Authorize]
     [HttpPost("promo")]
     public async Task<IActionResult> SavePromo(
-        [FromBody] SpinResultRequest request,
         [FromServices] IUserRepository userRepository)
     {
         try
@@ -173,7 +174,7 @@ public class AuthController : ControllerBase
                 return Unauthorized();
 
             var activePromo = await userRepository.GetActiveUserPromoAsync(userId);
-            
+
             if (activePromo != null)
             {
                 if (activePromo.Dates.ExpiresAt < DateTime.UtcNow)
@@ -187,13 +188,30 @@ public class AuthController : ControllerBase
                 }
             }
 
-            var now = DateTime.UtcNow;
+            var prizeType = PickWeightedPrize();
+            var cashbackPercent = prizeType == Rednest.Core.Entities.PrizeType.CashbackOnPurchases
+                ? Random.Shared.Next(1, 11)
+                : 0;
 
+            var (prizeName, prizeDescription) = GetPrizeDetails(prizeType, cashbackPercent);
+            var segmentIndex = (int)prizeType;
+
+            var now = DateTime.UtcNow;
             var promo = new Rednest.Core.Entities.UserPromo
             {
                 UserId = userId,
-                PrizeInfo = new Rednest.Core.Entities.PrizeInfo { PrizeName = request.PrizeName, PrizeDescription = request.PrizeDescription },
-                Dates = new Rednest.Core.Entities.PromoDates { ActivatedAt = now, ExpiresAt = now.AddDays(7) },
+                PrizeInfo = new Rednest.Core.Entities.PrizeInfo
+                {
+                    Type = prizeType,
+                    PrizeName = prizeName,
+                    PrizeDescription = prizeDescription,
+                    CashbackPercent = cashbackPercent
+                },
+                Dates = new Rednest.Core.Entities.PromoDates
+                {
+                    ActivatedAt = now,
+                    ExpiresAt = now.AddDays(7)
+                },
                 IsActive = true
             };
 
@@ -205,8 +223,13 @@ public class AuthController : ControllerBase
 
             return Ok(new
             {
-                promoCode = promoCode,
-                barCode = barCode,
+                segmentIndex,
+                prizeType = prizeType.ToString(),
+                prizeName,
+                prizeDescription,
+                promoCode,
+                barCode,
+                cashbackPercent,
                 expiresAt = now.AddDays(7)
             });
         }
@@ -215,6 +238,38 @@ public class AuthController : ControllerBase
             return BadRequest(new { Message = ex.Message });
         }
     }
+
+    private static Rednest.Core.Entities.PrizeType PickWeightedPrize()
+    {
+        var roll = Random.Shared.Next(1, 101);
+        return roll switch
+        {
+            <= 1  => Rednest.Core.Entities.PrizeType.SuperPrize,
+            <= 11 => Rednest.Core.Entities.PrizeType.FreeDrink,
+            <= 21 => Rednest.Core.Entities.PrizeType.FreeDessert,
+            <= 36 => Rednest.Core.Entities.PrizeType.Discount25,
+            <= 90 => Rednest.Core.Entities.PrizeType.CashbackOnPurchases,
+            _     => Rednest.Core.Entities.PrizeType.Discount50
+        };
+    }
+
+    private static (string Name, string Description) GetPrizeDetails(
+        Rednest.Core.Entities.PrizeType prizeType, int cashbackPercent) => prizeType switch
+    {
+        Rednest.Core.Entities.PrizeType.SuperPrize =>
+            ("SUPER PRIZE", "Free order up to 25 AZN!"),
+        Rednest.Core.Entities.PrizeType.FreeDrink =>
+            ("FREE DRINK", "One free drink with your next order!"),
+        Rednest.Core.Entities.PrizeType.FreeDessert =>
+            ("FREE DESSERT", "One free dessert with your next order!"),
+        Rednest.Core.Entities.PrizeType.Discount25 =>
+            ("DISCOUNT UP TO 25%", "25% discount on your next order!"),
+        Rednest.Core.Entities.PrizeType.CashbackOnPurchases =>
+            ("CASHBACK ON PURCHASES", $"{cashbackPercent}% cashback on your next order!"),
+        Rednest.Core.Entities.PrizeType.Discount50 =>
+            ("DISCOUNT UP TO 50%", "50% discount on your next order!"),
+        _ => ("Prize", "Congratulations!")
+    };
 
     [HttpPost("logout")]
     public IActionResult Logout()

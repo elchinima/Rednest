@@ -125,7 +125,7 @@ const Fortune = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const resize = () => {
-      const size = Math.min(canvas.parentElement?.clientWidth ?? 460, 460);
+      const size = Math.min(canvas.parentElement?.clientWidth ?? 485, 485);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = size * dpr;
       canvas.height = size * dpr;
@@ -138,7 +138,7 @@ const Fortune = () => {
     return () => window.removeEventListener('resize', resize);
   }, [drawFrame]);
 
-  const spin = useCallback(() => {
+  const spin = useCallback(async () => {
     if (spinning || !canSpin) return;
 
     setSpinning(true);
@@ -146,38 +146,42 @@ const Fortune = () => {
     setPrize(null);
     setShowPrize(false);
 
-    const winIdx = Math.floor(Math.random() * NUM_SEGMENTS);
-    const seg = SEGMENTS[winIdx];
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    let serverResult = null;
+
+    try {
+      const res = await fetchWithRefresh(`${apiUrl}/api/auth/promo`, { method: 'POST' });
+      if (res.ok) {
+        serverResult = await res.json();
+      }
+    } catch (_) {}
+
+    if (!serverResult) {
+      setSpinning(false);
+      setCanSpin(true);
+      return;
+    }
+
+    const winIdx = serverResult.segmentIndex;
+    const seg = {
+      label: serverResult.prizeName,
+      prize: serverResult.prizeDescription,
+      promoCode: serverResult.promoCode,
+      barCode: serverResult.barCode,
+      expiresAt: serverResult.expiresAt,
+      cashbackPercent: serverResult.cashbackPercent,
+    };
+
     const jitter = (Math.random() - 0.5) * (ARC * 0.4);
     const targetAngle = -winIdx * ARC + jitter;
     const normalizedTarget = ((targetAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-
-    let fetchDone = !seg.prize;
-    let minSpinTimeDone = false;
-    setTimeout(() => { minSpinTimeDone = true; }, 3000 + Math.random() * 1000);
-
-    let apiData = null;
-
-    if (seg.prize) {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      fetchWithRefresh(`${apiUrl}/api/auth/promo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prizeName: seg.label,
-          prizeDescription: seg.prize
-        })
-      })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => { apiData = data; })
-        .catch(() => { apiData = null; })
-        .finally(() => { fetchDone = true; });
-    }
 
     let phase = 'accelerating';
     let currentSpeed = 0;
     const maxSpeed = 0.015;
     const accel = 0.00002;
+    const minSpinMs = 3000 + Math.random() * 1000;
+    const startTime = performance.now();
 
     let decelStartTime = 0;
     let decelStartRotation = 0;
@@ -199,41 +203,31 @@ const Fortune = () => {
         rotationRef.current += currentSpeed * dt;
       } else if (phase === 'spinning') {
         rotationRef.current += currentSpeed * dt;
-        
-        if (fetchDone && minSpinTimeDone) {
+
+        if (now - startTime >= minSpinMs) {
           phase = 'decelerating';
           decelStartTime = now;
           decelStartRotation = rotationRef.current;
-          
+
           const baseDistance = (currentSpeed * 3000) / 3;
           const targetRot = decelStartRotation + baseDistance;
           const remainder = targetRot % (2 * Math.PI);
           let extraRot = normalizedTarget - remainder;
           if (extraRot < 0) extraRot += 2 * Math.PI;
-          
+
           decelTotalDistance = baseDistance + extraRot;
           decelDuration = (3 * decelTotalDistance) / currentSpeed;
         }
       } else if (phase === 'decelerating') {
         const elapsed = now - decelStartTime;
         const t = Math.min(elapsed / decelDuration, 1);
-        
         const easeOut = 1 - Math.pow(1 - t, 3);
         rotationRef.current = decelStartRotation + decelTotalDistance * easeOut;
 
         if (t >= 1) {
           setSpinning(false);
           setPrize(seg);
-          if (seg.prize) {
-            if (apiData) {
-              setServerPromo({ promoCode: apiData.promoCode, barCode: apiData.barCode, expiresAt: apiData.expiresAt });
-            } else {
-              setCanSpin(true);
-            }
-          } else {
-            setCanSpin(true);
-          }
-          setPromoLoading(false);
+          setServerPromo({ promoCode: seg.promoCode, barCode: seg.barCode, expiresAt: seg.expiresAt });
           setShowPrize(true);
           drawFrame();
           return;
@@ -246,6 +240,7 @@ const Fortune = () => {
 
     rafRef.current = requestAnimationFrame(animate);
   }, [spinning, canSpin, drawFrame]);
+
 
   useEffect(() => {
     return () => {
