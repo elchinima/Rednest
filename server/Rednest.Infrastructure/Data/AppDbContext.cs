@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<UserPromo> UserPromos => Set<UserPromo>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<UserBasket> UserBaskets => Set<UserBasket>();
+    public DbSet<Order> Orders => Set<Order>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +71,20 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.Property(e => e.Items).HasColumnType("jsonb");
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId).IsUnique();
+
+            entity.Property(e => e.HasActiveOrder).HasColumnType("boolean");
+            entity.Property(e => e.Orders).HasColumnType("jsonb");
 
             entity.HasOne<User>()
                   .WithMany()
