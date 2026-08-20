@@ -81,24 +81,36 @@ const UserNavPills = ({ onMenuClose }) => {
   return (
     <>
       <div className="user-nav-pills-container">
-        <Link
-          to="/profile"
-          className="user-nav-pill user-nav-avatar-pill"
-          title={`Profile - ${userName}`}
-          onClick={handleProfileClick}
-        >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={userName}
-              className="user-nav-avatar-img"
-            />
-          ) : (
-            <span className="user-nav-avatar-fallback">
-              {userName ? userName.charAt(0).toUpperCase() : 'U'}
-            </span>
-          )}
-        </Link>
+        <div className="user-nav-top-row">
+          <Link
+            to="/profile"
+            className="user-nav-pill user-nav-avatar-pill"
+            title={`Profile - ${userName}`}
+            onClick={handleProfileClick}
+          >
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={userName}
+                className="user-nav-avatar-img"
+              />
+            ) : (
+              <span className="user-nav-avatar-fallback">
+                {userName ? userName.charAt(0).toUpperCase() : 'U'}
+              </span>
+            )}
+          </Link>
+
+          <Link
+            to="/profile"
+            className="cta-btn sm user-nav-pill user-nav-balance-pill user-nav-balance-pill--mobile"
+            title="Your Balance"
+            onClick={handleProfileClick}
+          >
+            <span className="user-nav-balance-amount">{formattedBalance}</span>
+            <span className="user-nav-balance-symbol">₼</span>
+          </Link>
+        </div>
 
         <div className="user-nav-dropdown-wrapper" ref={userMenuRef}>
           <button
@@ -157,7 +169,7 @@ const UserNavPills = ({ onMenuClose }) => {
 
         <Link
           to="/profile"
-          className="cta-btn sm user-nav-pill user-nav-balance-pill"
+          className="cta-btn sm user-nav-pill user-nav-balance-pill user-nav-balance-pill--desktop"
           title="Your Balance"
           onClick={handleProfileClick}
         >
