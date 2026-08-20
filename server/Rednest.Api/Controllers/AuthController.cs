@@ -97,7 +97,8 @@ public class AuthController : ControllerBase
                 Id = user.Id, 
                 Name = user.Name,
                 Email = user.Email,
-                ProfilePictureUrl = user.ProfilePictureUrl
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Balance = user.Balance
             });
         }
         catch (Exception ex)

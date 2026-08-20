@@ -7,6 +7,7 @@ public class User
     public string? Name { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public string? ProfilePictureUrl { get; set; }
+    public decimal Balance { get; set; } = 0.00m;
     public List<UserAddress> Addresses { get; set; } = new();
 
     public UserSession? Session { get; set; }

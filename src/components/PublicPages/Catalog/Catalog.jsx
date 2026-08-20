@@ -70,6 +70,8 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
                   <img 
                     src={item.imageUrl} 
                     alt={item.name} 
+                    loading="lazy"
+                    onLoad={() => loadedImages.markLoaded?.(item.id)}
                     className={`item-image ${loadedImages[item.id] ? 'loaded' : ''}`} 
                   />
                   {!loadedImages[item.id] && (

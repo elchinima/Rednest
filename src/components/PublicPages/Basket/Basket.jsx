@@ -163,15 +163,17 @@ const Basket = () => {
 
   const isLoading = authLoading || basketLoading || productsLoading;
 
-  const enrichedItems = items
-    .map(item => {
-      const product = products[item.productId];
-      if (!product) return null;
-      const unitPrice = parseFloat(product.price);
-      const totalPrice = (unitPrice * item.quantity).toFixed(2);
-      return { ...item, product, unitPrice, totalPrice };
-    })
-    .filter(Boolean);
+  const enrichedItems = useMemo(() => {
+    return items
+      .map(item => {
+        const product = products[item.productId];
+        if (!product) return null;
+        const unitPrice = parseFloat(product.price);
+        const totalPrice = (unitPrice * item.quantity).toFixed(2);
+        return { ...item, product, unitPrice, totalPrice };
+      })
+      .filter(Boolean);
+  }, [items, products]);
 
   const orderedBasketItems = useMemo(() => {
     return enrichedItems.map(item => ({
@@ -355,6 +357,8 @@ const Basket = () => {
                           <img 
                             src={item.product.imageUrl} 
                             alt={item.product.name} 
+                            loading="lazy"
+                            onLoad={() => loadedImages.markLoaded?.(item.productId)}
                             className={loadedImages[item.productId] ? 'loaded' : ''} 
                           />
                           {!loadedImages[item.productId] && (

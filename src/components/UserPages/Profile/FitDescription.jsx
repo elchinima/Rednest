@@ -12,6 +12,7 @@ const FitDescription = ({
   ...props
 }) => {
   const containerRef = useRef(null);
+  const lastWidthRef = useRef(0);
   const [styleState, setStyleState] = useState({
     fontSize: `${maxFontSize}${unit}`,
     whiteSpace: 'normal',
@@ -24,65 +25,75 @@ const FitDescription = ({
     const availableWidth = container.clientWidth;
     if (availableWidth <= 0) return;
 
+    if (Math.abs(availableWidth - lastWidthRef.current) < 0.5) return;
+    lastWidthRef.current = availableWidth;
+
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     const maxPx = unit === 'rem' ? maxFontSize * rootFontSize : maxFontSize;
     const minPx = unit === 'rem' ? minFontSize * rootFontSize : minFontSize;
     const textString = typeof children === 'string' ? children : container.innerText;
 
-    const measurer = document.createElement('div');
-    measurer.style.visibility = 'hidden';
-    measurer.style.position = 'absolute';
-    measurer.style.top = '-9999px';
-    measurer.style.left = '-9999px';
-    measurer.style.width = `${availableWidth}px`;
-    measurer.style.whiteSpace = 'normal';
-    measurer.style.fontSize = `${maxPx}px`;
-    measurer.style.fontFamily = getComputedStyle(container).fontFamily;
-    measurer.style.fontWeight = getComputedStyle(container).fontWeight;
-    measurer.style.letterSpacing = getComputedStyle(container).letterSpacing;
-    measurer.style.lineHeight = getComputedStyle(container).lineHeight;
+    const computed = getComputedStyle(container);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const textNode = document.createTextNode(textString);
-    measurer.appendChild(textNode);
-    document.body.appendChild(measurer);
+    ctx.font = `${computed.fontWeight} ${maxPx}px ${computed.fontFamily}`;
 
-    const range = document.createRange();
-    range.selectNodeContents(textNode);
-    const rects = range.getClientRects();
+    const singleLineWidth = ctx.measureText(textString).width;
 
-    const isWrapped = rects.length > 1;
-    const secondLineWidth = isWrapped ? rects[rects.length - 1].width : 0;
+    if (singleLineWidth <= availableWidth) {
+      setStyleState((prev) => {
+        const nextFs = `${maxFontSize}${unit}`;
+        if (prev.fontSize === nextFs && prev.whiteSpace === 'normal') return prev;
+        return { fontSize: nextFs, whiteSpace: 'normal' };
+      });
+      return;
+    }
+
+    const words = textString.trim().split(/\s+/);
+    let line1 = '';
+    let line2 = '';
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine ? `${currentLine} ${words[i]}` : words[i];
+      const testWidth = ctx.measureText(testLine).width;
+      if (testWidth > availableWidth && currentLine !== '') {
+        if (!line1) {
+          line1 = currentLine;
+          currentLine = words[i];
+        } else {
+          currentLine = testLine;
+        }
+      } else {
+        currentLine = testLine;
+      }
+    }
+    line2 = currentLine;
+
+    const secondLineWidth = ctx.measureText(line2).width;
     const secondLineRatio = secondLineWidth / availableWidth;
 
-    measurer.style.width = 'auto';
-    measurer.style.whiteSpace = 'nowrap';
-    const singleLineWidth = measurer.getBoundingClientRect().width;
-
-    document.body.removeChild(measurer);
-
-    if (!isWrapped || singleLineWidth <= availableWidth) {
-      setStyleState({
-        fontSize: `${maxFontSize}${unit}`,
-        whiteSpace: 'normal',
+    if (secondLineRatio >= threshold) {
+      setStyleState((prev) => {
+        const nextFs = `${maxFontSize}${unit}`;
+        if (prev.fontSize === nextFs && prev.whiteSpace === 'normal') return prev;
+        return { fontSize: nextFs, whiteSpace: 'normal' };
       });
     } else {
-      if (secondLineRatio >= threshold) {
-        setStyleState({
-          fontSize: `${maxFontSize}${unit}`,
-          whiteSpace: 'normal',
-        });
-      } else {
-        const targetPx = Math.max(minPx, (availableWidth / singleLineWidth) * maxPx * 0.98);
-        const finalValue = unit === 'rem' ? targetPx / rootFontSize : targetPx;
-        setStyleState({
-          fontSize: `${finalValue}${unit}`,
-          whiteSpace: 'nowrap',
-        });
-      }
+      const targetPx = Math.max(minPx, (availableWidth / singleLineWidth) * maxPx * 0.98);
+      const finalValue = unit === 'rem' ? targetPx / rootFontSize : targetPx;
+      setStyleState((prev) => {
+        const nextFs = `${finalValue}${unit}`;
+        if (prev.fontSize === nextFs && prev.whiteSpace === 'nowrap') return prev;
+        return { fontSize: nextFs, whiteSpace: 'nowrap' };
+      });
     }
   }, [children, maxFontSize, minFontSize, unit, threshold]);
 
   useLayoutEffect(() => {
+    lastWidthRef.current = 0;
     calculate();
   }, [calculate]);
 
@@ -90,13 +101,21 @@ const FitDescription = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const resizeObserver = new ResizeObserver(() => {
-      calculate();
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0 && Math.abs(entry.contentRect.width - lastWidthRef.current) >= 0.5) {
+          calculate();
+        }
+      }
     });
+
     resizeObserver.observe(container);
 
     if (document.fonts) {
-      document.fonts.ready.then(calculate).catch(() => {});
+      document.fonts.ready.then(() => {
+        lastWidthRef.current = 0;
+        calculate();
+      }).catch(() => {});
     }
 
     return () => {
@@ -114,7 +133,6 @@ const FitDescription = ({
         width: '100%',
         minWidth: 0,
         lineHeight: 1.4,
-        transition: 'font-size 0.15s ease-out',
         ...style,
       }}
       {...props}

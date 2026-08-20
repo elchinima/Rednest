@@ -26,6 +26,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ProfilePictureUrl)
                   .HasColumnType("text");
 
+            entity.Property(e => e.Balance)
+                  .HasColumnType("decimal(10,2)")
+                  .HasDefaultValue(0.00m);
+
             entity.Property(e => e.Addresses)
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'[]'::jsonb");

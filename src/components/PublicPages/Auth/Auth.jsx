@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import logo from '../../../assets/icons/rednest_logo.png';
+import { useAuth } from '../../../context/AuthContext';
 import './Auth.scss';
 
 const LoaderIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g>
       <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
       <circle cx="24" cy="24" r="16" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
@@ -22,8 +23,16 @@ const Auth = () => {
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   const [step, setStep] = useState('login');
+
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,9 +59,9 @@ const Auth = () => {
       if (!data.hasName) {
         setStep('name');
       } else {
-        setSuccess(true);
         localStorage.setItem('rednest_auth', 'true');
-        window.location.href = '/';
+        login(data.user || data);
+        navigate('/', { replace: true });
       }
     } catch (err) {
       console.error("Auth Error:", err);
@@ -85,9 +94,9 @@ const Auth = () => {
         throw new Error(errorData.message || 'Failed to update name');
       }
 
-      setSuccess(true);
       localStorage.setItem('rednest_auth', 'true');
-      window.location.href = '/';
+      login({ email, name });
+      navigate('/', { replace: true });
     } catch (err) {
       console.error("Name Update Error:", err);
       setError(err.message);
@@ -102,7 +111,7 @@ const Auth = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }} 
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
     >
       <div className="auth-overlay"></div>
       
@@ -124,7 +133,9 @@ const Auth = () => {
           
           <div className="auth-card-right">
             <div className="auth-header">
-              <img src={logo} alt="Rednest Logo" className="auth-logo mobile-only-logo" />
+              <Link to="/" style={{ display: 'inline-block' }}>
+                <img src={logo} alt="Rednest Logo" className="auth-logo mobile-only-logo" />
+              </Link>
               <h2>Welcome to Rednest</h2>
               <p>Enter your email and password to log in or create a new account.</p>
             </div>
@@ -136,6 +147,8 @@ const Auth = () => {
                   <input 
                     type="email" 
                     id="email" 
+                    name="email"
+                    autoComplete="username email"
                     placeholder="Enter your email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -148,6 +161,8 @@ const Auth = () => {
                   <input 
                     type="password" 
                     id="password" 
+                    name="password"
+                    autoComplete="current-password"
                     placeholder="Enter your password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -168,16 +183,14 @@ const Auth = () => {
                   </label>
                 </div>
                 
-                <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
-                  {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
+                <div className="error-wrapper">
+                  {error && <div className="auth-error">{error}</div>}
                 </div>
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <span style={{ display: 'flex' }}>
-                        <LoaderIcon />
-                      </span>
+                      <LoaderIcon />
                       Processing...
                     </span>
                   ) : 'Continue'}
@@ -190,6 +203,8 @@ const Auth = () => {
                   <input 
                     type="text" 
                     id="name" 
+                    name="name"
+                    autoComplete="name"
                     placeholder="Enter your name" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -198,16 +213,14 @@ const Auth = () => {
                   />
                 </div>
                 
-                <div className="error-wrapper" style={{ minHeight: '24px', marginBottom: '1rem' }}>
-                  {error && <div className="auth-error" style={{ color: '#ff4d4f', fontSize: '0.9rem', margin: 0 }}>{error}</div>}
+                <div className="error-wrapper">
+                  {error && <div className="auth-error">{error}</div>}
                 </div>
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <span style={{ display: 'flex' }}>
-                        <LoaderIcon />
-                      </span>
+                      <LoaderIcon />
                       Saving...
                     </span>
                   ) : 'Complete Registration'}
