@@ -2,6 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Rednest.Application.DTOs;
 using Rednest.Application.Interfaces;
 using System.Security.Claims;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace Rednest.Api.Controllers;
 
@@ -10,10 +16,14 @@ namespace Rednest.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private static readonly string[] AllowedAvatarExtensions = [".png", ".jpg", ".jpeg"];
+    private const long MaxAvatarSizeBytes = 10 * 1024 * 1024;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IHttpClientFactory httpClientFactory)
     {
         _authService = authService;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpPost("login")]
@@ -82,11 +92,182 @@ public class AuthController : ControllerBase
                 return NotFound("User not found.");
             }
 
-            return Ok(new { Id = user.Id, Name = user.Name });
+            return Ok(new 
+            { 
+                Id = user.Id, 
+                Name = user.Name,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl
+            });
         }
         catch (Exception ex)
         {
             return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("profile/picture")]
+    public async Task<IActionResult> UploadProfilePicture(
+        IFormFile file,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "File not selected." });
+            }
+
+            if (file.Length > MaxAvatarSizeBytes)
+            {
+                return BadRequest(new { message = "File exceeds 10 MB limit." });
+            }
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedAvatarExtensions.Contains(ext))
+            {
+                return BadRequest(new { message = "Allowed formats: PNG, JPG, JPEG." });
+            }
+
+            await using var inputStream = file.OpenReadStream();
+            using var image = await Image.LoadAsync(inputStream);
+
+            image.Mutate(x => x.Resize(image.Width / 2, image.Height / 2));
+
+            await using var outputStream = new MemoryStream();
+            var encoder = new WebpEncoder { Quality = 50 };
+            await image.SaveAsync(outputStream, encoder);
+            outputStream.Position = 0;
+
+            var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
+            var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
+
+            var storagePath = $"profile/{userId}.webp";
+
+            var client = _httpClientFactory.CreateClient("supabase");
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Add("apikey", serviceKey);
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {serviceKey}");
+
+            var content = new StreamContent(outputStream);
+            content.Headers.ContentType = new MediaTypeHeaderValue("image/webp");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/storage/v1/object/public-files/{storagePath}")
+            {
+                Content = content
+            };
+            request.Headers.Add("x-upsert", "true");
+
+            var response = await client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                try
+                {
+                    var createBucketBody = JsonSerializer.Serialize(new
+                    {
+                        id = "public-files",
+                        name = "public-files",
+                        @public = true
+                    });
+                    var createRequest = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/storage/v1/bucket")
+                    {
+                        Content = new StringContent(createBucketBody, Encoding.UTF8, "application/json")
+                    };
+                    await client.SendAsync(createRequest);
+                }
+                catch { }
+
+                outputStream.Position = 0;
+                var retryContent = new StreamContent(outputStream);
+                retryContent.Headers.ContentType = new MediaTypeHeaderValue("image/webp");
+
+                var retryRequest = new HttpRequestMessage(HttpMethod.Post, $"{supabaseUrl}/storage/v1/object/public-files/{storagePath}")
+                {
+                    Content = retryContent
+                };
+                retryRequest.Headers.Add("x-upsert", "true");
+                response = await client.SendAsync(retryRequest);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var err = await response.Content.ReadAsStringAsync();
+                    return StatusCode(500, new { message = $"Supabase upload error: {err}" });
+                }
+            }
+
+            var publicUrl = $"{supabaseUrl}/storage/v1/object/public/public-files/{storagePath}?v={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+            user.ProfilePictureUrl = publicUrl;
+            await userRepository.UpdateAsync(user);
+
+            return Ok(new
+            {
+                profilePictureUrl = publicUrl,
+                sizeKb = Math.Round(outputStream.Length / 1024.0, 1)
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpDelete("profile/picture")]
+    public async Task<IActionResult> DeleteProfilePicture([FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
+            var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
+
+            var client = _httpClientFactory.CreateClient("supabase");
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Add("apikey", serviceKey);
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {serviceKey}");
+
+            var storagePath = $"profile/{userId}.webp";
+            var body = JsonSerializer.Serialize(new { prefixes = new[] { storagePath } });
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"{supabaseUrl}/storage/v1/object/public-files")
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+
+            await client.SendAsync(request);
+
+            user.ProfilePictureUrl = null;
+            await userRepository.UpdateAsync(user);
+
+            return Ok(new { message = "Profile picture deleted." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

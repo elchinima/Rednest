@@ -66,8 +66,16 @@ export const AuthProvider = ({ children }) => {
     validateSession();
   }, []);
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem('rednest_user', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, authLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, authLoading }}>
       {children}
     </AuthContext.Provider>
   );
