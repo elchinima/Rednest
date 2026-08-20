@@ -26,6 +26,10 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ProfilePictureUrl)
                   .HasColumnType("text");
 
+            entity.Property(e => e.Addresses)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
             entity.HasOne(e => e.Session)
                   .WithOne(s => s.User)
                   .HasForeignKey<UserSession>(s => s.UserId)

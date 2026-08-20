@@ -265,8 +265,31 @@ const Basket = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  style={{ position: 'absolute', top: '100%', left: 0, width: '100%', marginTop: '8px', zIndex: 100 }}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    width: '100%',
+                    marginTop: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    zIndex: 100
+                  }}
                 >
+                  <Link
+                    to="/profile"
+                    className="cta-btn sm"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    Profile
+                  </Link>
                   <button
                     className="cta-btn sm"
                     onClick={() => { setIsUserMenuOpen(false); setIsLogoutModalOpen(true); }}

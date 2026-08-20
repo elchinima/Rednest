@@ -301,9 +301,25 @@ const Fortune = () => {
                     left: 0,
                     width: '100%',
                     marginTop: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
                     zIndex: 100
                   }}
                 >
+                  <Link
+                    to="/profile"
+                    className="cta-btn sm"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'center',
+                      textDecoration: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    Profile
+                  </Link>
                   <button 
                     className="cta-btn sm"
                     onClick={() => {

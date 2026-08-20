@@ -7,6 +7,7 @@ public class User
     public string? Name { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public string? ProfilePictureUrl { get; set; }
+    public List<UserAddress> Addresses { get; set; } = new();
 
     public UserSession? Session { get; set; }
     public ICollection<UserPromo> Promos { get; set; } = new List<UserPromo>();
