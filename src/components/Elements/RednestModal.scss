@@ -1,0 +1,121 @@
+@import '../../styles/variables.scss';
+
+.rednest-modal {
+  background: rgba($color-bg-dark, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-sizing: border-box;
+
+  &__icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto $spacing-md;
+
+    svg {
+      width: 26px;
+      height: 26px;
+      stroke: $color-text;
+    }
+
+    &--danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.35);
+
+      svg {
+        stroke: #ef4444;
+      }
+    }
+
+    &--warning {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.35);
+
+      svg {
+        stroke: #f59e0b;
+      }
+    }
+  }
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 $spacing-xs;
+    color: $color-text;
+    letter-spacing: -0.3px;
+  }
+
+  &__text {
+    font-size: 0.94rem;
+    color: $color-text-muted;
+    line-height: 1.55;
+    margin: 0 0 $spacing-xl;
+    padding: 0 8px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: center;
+  }
+
+  &__btn {
+    flex: 1;
+    min-height: 44px;
+    padding: 11px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: $border-radius-full;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.25s ease;
+
+    &--cancel {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+      }
+    }
+
+    &--danger {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+
+      &:hover:not(:disabled) {
+        background: #dc2626;
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+        transform: translateY(-1px);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+  }
+}

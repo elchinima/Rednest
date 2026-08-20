@@ -1,76 +1,57 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import '../PublicPages/Auth/Auth.scss';
+import React from 'react';
+import AnimatedModalWrapper from './AnimatedModalWrapper';
+import loaderIcon from '../../assets/icons/loader-animated.svg';
+import './RednestModal.scss';
 
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div 
-          className="auth-page" 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, background: 'none' }}
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          exit={{ opacity: 0 }} 
-          transition={{ duration: 0.3 }}
-        >
-          <div className="auth-overlay" onClick={onClose} style={{ backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}></div>
-          
-          <div className="auth-container" style={{ display: 'flex', justifyContent: 'center' }}>
-            <motion.div 
-              className="auth-card-split" 
-              style={{ maxWidth: '400px', width: '100%', flex: 'none' }}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-            >
-              <div className="auth-card-right" style={{ width: '100%', padding: '40px' }}>
-                <div className="auth-header" style={{ marginBottom: '24px', textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Remove Item</h2>
-                  <p style={{ width: '85%', margin: '0 auto' }}>
-                    {itemName 
-                      ? `Are you sure you want to remove ${itemName} from your basket?` 
-                      : 'Are you sure you want to remove this item from your basket?'}
-                  </p>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-                  <button 
-                    type="button"
-                    className="cta-btn auth-submit-btn" 
-                    onClick={onClose} 
-                    disabled={loading}
-                    style={{ flex: 1, margin: 0, padding: '14px' }}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="button"
-                    className="cta-btn logout-confirm-btn" 
-                    onClick={onConfirm} 
-                    disabled={loading}
-                    style={{ flex: 1 }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <AnimatedModalWrapper
+      isOpen={isOpen}
+      onClose={() => !loading && onClose()}
+      targetBorderRadius="24px"
+    >
+      <div className="rednest-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="rednest-modal__icon rednest-modal__icon--danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </div>
+
+        <h3 className="rednest-modal__title">Remove Item</h3>
+        <p className="rednest-modal__text">
+          {itemName 
+            ? `Are you sure you want to remove ${itemName} from your basket?` 
+            : 'Are you sure you want to remove this item from your basket?'}
+        </p>
+
+        <div className="rednest-modal__actions">
+          <button
+            type="button"
+            className="rednest-modal__btn rednest-modal__btn--cancel"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="rednest-modal__btn rednest-modal__btn--danger"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src={loaderIcon} alt="Loading" style={{ width: '18px', height: '18px', filter: 'brightness(0) invert(1)' }} />
+                Removing...
+              </span>
+            ) : 'Remove'}
+          </button>
+        </div>
+      </div>
+    </AnimatedModalWrapper>
   );
 };
 

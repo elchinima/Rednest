@@ -1,88 +1,54 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import '../PublicPages/Auth/Auth.scss';
-
-const LoaderIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g>
-      <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
-      <circle cx="24" cy="24" r="16" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
-      <path d="M24 8 A16 16 0 0 1 40 24" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-    </g>
-  </svg>
-);
+import React from 'react';
+import AnimatedModalWrapper from './AnimatedModalWrapper';
+import loaderIcon from '../../assets/icons/loader-animated.svg';
+import './RednestModal.scss';
 
 const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div 
-          className="auth-page" 
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, background: 'none' }}
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          exit={{ opacity: 0 }} 
-          transition={{ duration: 0.3 }}
-        >
-          <div className="auth-overlay" onClick={onClose} style={{ backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)' }}></div>
-          
-          <div className="auth-container" style={{ display: 'flex', justifyContent: 'center' }}>
-            <motion.div 
-              className="auth-card-split" 
-              style={{ maxWidth: '400px', width: '100%', flex: 'none' }}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-            >
-              <div className="auth-card-right" style={{ width: '100%', padding: '40px' }}>
-                <div className="auth-header" style={{ marginBottom: '24px', textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>Log Out</h2>
-                  <p style={{ width: '80%', margin: '0 auto' }}>Are you sure you want to log out of your account?</p>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-                  {!loading && (
-                    <button 
-                      className="cta-btn auth-submit-btn" 
-                      onClick={onClose} 
-                      disabled={loading}
-                      style={{ flex: 1, margin: 0, padding: '14px' }}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button 
-                    className="cta-btn logout-confirm-btn" 
-                    onClick={onConfirm} 
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <span style={{ display: 'flex' }}>
-                          <LoaderIcon />
-                        </span>
-                        Processing...
-                      </span>
-                    ) : 'Log Out'}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <AnimatedModalWrapper
+      isOpen={isOpen}
+      onClose={() => !loading && onClose()}
+      targetBorderRadius="24px"
+    >
+      <div className="rednest-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="rednest-modal__icon rednest-modal__icon--danger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </div>
+
+        <h3 className="rednest-modal__title">Log Out</h3>
+        <p className="rednest-modal__text">
+          Are you sure you want to log out of your account?
+        </p>
+
+        <div className="rednest-modal__actions">
+          <button
+            type="button"
+            className="rednest-modal__btn rednest-modal__btn--cancel"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="rednest-modal__btn rednest-modal__btn--danger"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src={loaderIcon} alt="Loading" style={{ width: '18px', height: '18px', filter: 'brightness(0) invert(1)' }} />
+                Processing...
+              </span>
+            ) : 'Log Out'}
+          </button>
+        </div>
+      </div>
+    </AnimatedModalWrapper>
   );
 };
 
