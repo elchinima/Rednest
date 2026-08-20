@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import Footer from '../../Footer/Footer';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
+import FitDescription from './FitDescription';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Profile.scss';
@@ -255,7 +256,9 @@ const Profile = () => {
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
             <h1>My Profile</h1>
-            <p>Manage your account security and personal details</p>
+            <FitDescription as="p" maxFontSize={1.05} minFontSize={0.78}>
+              Manage your account security and personal details
+            </FitDescription>
           </motion.div>
 
           <motion.div
@@ -380,7 +383,9 @@ const Profile = () => {
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
                   <div className="profile-action-title">Change Password</div>
-                  <div className="profile-action-desc">Update your account password for enhanced security</div>
+                  <FitDescription className="profile-action-desc" maxFontSize={0.82} minFontSize={0.65}>
+                    Update your account password for enhanced security
+                  </FitDescription>
                 </div>
                 <button
                   type="button"
@@ -394,7 +399,9 @@ const Profile = () => {
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
                   <div className="profile-action-title">Two-Factor Authentication (2FA)</div>
-                  <div className="profile-action-desc">Add an additional layer of security during sign in</div>
+                  <FitDescription className="profile-action-desc" maxFontSize={0.82} minFontSize={0.65}>
+                    Add an additional layer of security during sign in
+                  </FitDescription>
                 </div>
                 <div className="profile-2fa-toggle-wrap">
                   <span className={`profile-2fa-status ${twoFactorEnabled ? 'active' : ''}`}>
