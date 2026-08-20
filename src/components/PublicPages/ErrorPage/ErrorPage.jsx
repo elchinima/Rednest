@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/icons/rednest_logo.png';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
-import { useAuth } from '../../../context/AuthContext';
+import UserNavPills from '../../Elements/UserNavPills';
 import './ErrorPage.scss';
 
-// Comprehensive catalog of standard HTTP status configurations
 const HTTP_ERROR_REGISTRY = {
   400: {
     badge: '400 • Bad Request',
@@ -195,12 +193,10 @@ const HTTP_ERROR_REGISTRY = {
 const ErrorPage = ({ defaultCode = '429' }) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, authLoading } = useAuth();
 
   const codeParam = searchParams.get('code') || defaultCode;
   const numCode = parseInt(codeParam, 10) || 500;
 
-  // Fallback if status code is not explicitly in dictionary
   const fallbackConfig = {
     badge: `${numCode} • ${numCode >= 500 ? 'Server Error' : 'Request Error'}`,
     badgeClass: numCode >= 500 ? 'error-badge--server' : 'error-badge--warning',
@@ -218,7 +214,6 @@ const ErrorPage = ({ defaultCode = '429' }) => {
 
   const baseConfig = HTTP_ERROR_REGISTRY[numCode] || fallbackConfig;
 
-  // Backend override: highest priority given to backend title/message
   const backendTitle = searchParams.get('title');
   const backendMessage = searchParams.get('message');
 
@@ -283,19 +278,7 @@ const ErrorPage = ({ defaultCode = '429' }) => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          {authLoading ? (
-            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
-            </span>
-          ) : user ? (
-            <Link to="/profile" className="cta-btn sm" style={{ textDecoration: 'none' }}>
-              Hello, {user.name}
-            </Link>
-          ) : (
-            <Link to="/login" className="cta-btn sm" style={{ textDecoration: 'none' }}>
-              Log In
-            </Link>
-          )}
+          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
 
         <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />

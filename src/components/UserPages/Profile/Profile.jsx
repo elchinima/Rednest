@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import Footer from '../../Footer/Footer';
+import UserNavPills from '../../Elements/UserNavPills';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
 import logo from '../../../assets/icons/rednest_logo.png';
@@ -18,9 +19,11 @@ const Profile = () => {
   const navigate = useNavigate();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isSessionsModalOpen, setIsSessionsModalOpen] = useState(false);
+  const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
+  const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
+  const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isDeleteAvatarModalOpen, setIsDeleteAvatarModalOpen] = useState(false);
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [cropperImageSrc, setCropperImageSrc] = useState('');
@@ -33,23 +36,12 @@ const Profile = () => {
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  const userMenuRef = useRef(null);
   const fileInputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const avatarUrl = user?.profilePictureUrl || user?.ProfilePictureUrl || null;
   const userName = user?.name || user?.Name || 'User';
   const userEmail = user?.email || user?.Email || 'user@rednest.com';
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const showSuccess = (msg) => {
     setSuccess(msg);
@@ -184,60 +176,7 @@ const Profile = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          {authLoading ? (
-            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
-            </span>
-          ) : user ? (
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>
-                Hello, {userName}
-              </button>
-              {isUserMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    width: '100%',
-                    marginTop: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    zIndex: 100,
-                  }}
-                >
-                  <Link
-                    to="/profile"
-                    className="cta-btn sm"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'center',
-                      textDecoration: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    className="cta-btn sm"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsLogoutModalOpen(true);
-                    }}
-                    style={{ width: '100%', cursor: 'pointer' }}
-                  >
-                    Log Out
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <Link to="/login" className="cta-btn sm" style={{ textDecoration: 'none' }}>Log In</Link>
-          )}
+          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
 
         <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
@@ -397,6 +336,22 @@ const Profile = () => {
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
+                  <div className="profile-action-title">Active Sessions</div>
+                  <p className="profile-action-desc">
+                    View and manage devices currently signed in to your account
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="cta-btn sm profile-action-btn"
+                  onClick={() => setIsSessionsModalOpen(true)}
+                >
+                  Active Sessions
+                </button>
+              </div>
+
+              <div className="profile-field-group profile-action-row">
+                <div className="profile-action-text">
                   <div className="profile-action-title">Two-Factor Authentication (2FA)</div>
                   <p className="profile-action-desc">
                     Add an additional layer of security during sign in
@@ -415,6 +370,54 @@ const Profile = () => {
                     <span className="profile-switch__handle" />
                   </button>
                 </div>
+              </div>
+
+              <div className="profile-field-group profile-action-row">
+                <div className="profile-action-text">
+                  <div className="profile-action-title">Delivery Addresses</div>
+                  <p className="profile-action-desc">
+                    Manage your saved shipping and delivery addresses
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="cta-btn sm profile-action-btn"
+                  onClick={() => setIsAddressesModalOpen(true)}
+                >
+                  Addresses
+                </button>
+              </div>
+
+              <div className="profile-field-group profile-action-row">
+                <div className="profile-action-text">
+                  <div className="profile-action-title">Payment Methods</div>
+                  <p className="profile-action-desc">
+                    Manage your saved payment cards and billing methods
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="cta-btn sm profile-action-btn"
+                  onClick={() => setIsPaymentsModalOpen(true)}
+                >
+                  Payment Methods
+                </button>
+              </div>
+
+              <div className="profile-field-group profile-action-row">
+                <div className="profile-action-text">
+                  <div className="profile-action-title">Order History</div>
+                  <p className="profile-action-desc">
+                    View your past coffee orders and purchase receipts
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="cta-btn sm profile-action-btn"
+                  onClick={() => setIsOrdersModalOpen(true)}
+                >
+                  Orders
+                </button>
               </div>
             </div>
           </motion.div>
@@ -442,6 +445,120 @@ const Profile = () => {
               type="button"
               className="cta-btn sm profile-modal__btn"
               onClick={() => setIsPasswordModalOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </AnimatedModalWrapper>
+
+      <AnimatedModalWrapper
+        isOpen={isSessionsModalOpen}
+        onClose={() => setIsSessionsModalOpen(false)}
+        targetBorderRadius="24px"
+      >
+        <div className="profile-modal">
+          <div className="profile-modal__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <h3 className="profile-modal__title">Active Sessions</h3>
+          <p className="profile-modal__text">
+            Active session management and device tracking will be available in an upcoming update.
+          </p>
+          <div className="profile-modal__actions">
+            <button
+              type="button"
+              className="cta-btn sm profile-modal__btn"
+              onClick={() => setIsSessionsModalOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </AnimatedModalWrapper>
+
+      <AnimatedModalWrapper
+        isOpen={isAddressesModalOpen}
+        onClose={() => setIsAddressesModalOpen(false)}
+        targetBorderRadius="24px"
+      >
+        <div className="profile-modal">
+          <div className="profile-modal__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+          <h3 className="profile-modal__title">Delivery Addresses</h3>
+          <p className="profile-modal__text">
+            Saved address management will be available in an upcoming update.
+          </p>
+          <div className="profile-modal__actions">
+            <button
+              type="button"
+              className="cta-btn sm profile-modal__btn"
+              onClick={() => setIsAddressesModalOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </AnimatedModalWrapper>
+
+      <AnimatedModalWrapper
+        isOpen={isPaymentsModalOpen}
+        onClose={() => setIsPaymentsModalOpen(false)}
+        targetBorderRadius="24px"
+      >
+        <div className="profile-modal">
+          <div className="profile-modal__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+          </div>
+          <h3 className="profile-modal__title">Payment Methods</h3>
+          <p className="profile-modal__text">
+            Payment method management will be available in an upcoming update.
+          </p>
+          <div className="profile-modal__actions">
+            <button
+              type="button"
+              className="cta-btn sm profile-modal__btn"
+              onClick={() => setIsPaymentsModalOpen(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      </AnimatedModalWrapper>
+
+      <AnimatedModalWrapper
+        isOpen={isOrdersModalOpen}
+        onClose={() => setIsOrdersModalOpen(false)}
+        targetBorderRadius="24px"
+      >
+        <div className="profile-modal">
+          <div className="profile-modal__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <path d="M16 10a4 4 0 0 1-8 0" />
+            </svg>
+          </div>
+          <h3 className="profile-modal__title">Order History</h3>
+          <p className="profile-modal__text">
+            Order history and tracking will be available in an upcoming update.
+          </p>
+          <div className="profile-modal__actions">
+            <button
+              type="button"
+              className="cta-btn sm profile-modal__btn"
+              onClick={() => setIsOrdersModalOpen(false)}
             >
               Got it
             </button>
@@ -488,43 +605,7 @@ const Profile = () => {
         </div>
       </AnimatedModalWrapper>
 
-      <AnimatedModalWrapper
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        targetBorderRadius="24px"
-      >
-        <div className="profile-modal">
-          <div className="profile-modal__icon profile-modal__icon--danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </div>
-          <h3 className="profile-modal__title">Confirm Logout</h3>
-          <p className="profile-modal__text">Are you sure you want to log out of your account?</p>
-          <div className="profile-modal__actions">
-            <button
-              type="button"
-              className="cta-btn sm profile-modal__btn profile-modal__btn--cancel"
-              onClick={() => setIsLogoutModalOpen(false)}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="cta-btn sm profile-modal__btn profile-modal__btn--confirm-delete"
-              onClick={async () => {
-                await logout();
-                setIsLogoutModalOpen(false);
-                navigate('/');
-              }}
-            >
-              Log Out
-            </button>
-          </div>
-        </div>
-      </AnimatedModalWrapper>
+
 
       <ImageCropperModal
         isOpen={isCropModalOpen}

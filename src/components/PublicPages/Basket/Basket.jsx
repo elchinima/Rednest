@@ -6,7 +6,7 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import cartAnimated from '../../../assets/icons/cart-animated.svg';
 import giftAnimated from '../../../assets/icons/gift-animated.svg';
 import Footer from '../../Footer/Footer';
-import LogoutModal from '../../Elements/LogoutModal';
+import UserNavPills from '../../Elements/UserNavPills';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import FitText from '../../Elements/FitText';
 import { useAuth } from '../../../context/AuthContext';
@@ -42,14 +42,10 @@ const Basket = () => {
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [flashingItemIds, setFlashingItemIds] = useState({});
   const [activePromo, setActivePromo] = useState(null);
-  const userMenuRef = useRef(null);
 
 
   useEffect(() => {
@@ -92,18 +88,6 @@ const Basket = () => {
 
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    if (isUserMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isUserMenuOpen]);
-
-  useEffect(() => {
     if (isMenuOpen) {
       document.body.classList.add('mobile-menu-open');
     } else {
@@ -111,20 +95,6 @@ const Basket = () => {
     }
     return () => document.body.classList.remove('mobile-menu-open');
   }, [isMenuOpen]);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
-      logout();
-      setIsLogoutModalOpen(false);
-    } catch (err) {
-      console.error('Logout failed:', err);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
@@ -254,57 +224,7 @@ const Basket = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          {authLoading ? (
-            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
-            </span>
-          ) : user ? (
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>
-                Hello, {user.name}
-              </button>
-              {isUserMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    width: '100%',
-                    marginTop: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    zIndex: 100
-                  }}
-                >
-                  <Link
-                    to="/profile"
-                    className="cta-btn sm"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'center',
-                      textDecoration: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    className="cta-btn sm"
-                    onClick={() => { setIsUserMenuOpen(false); setIsLogoutModalOpen(true); }}
-                    style={{ width: '100%', cursor: 'pointer' }}
-                  >
-                    Log Out
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <Link to="/login" className="cta-btn sm">Log In</Link>
-          )}
+          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
 
         <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
@@ -501,13 +421,6 @@ const Basket = () => {
         onConfirm={handleConfirmDelete}
         itemName={itemToDelete?.product?.name}
         loading={isDeleting}
-      />
-
-      <LogoutModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogout}
-        loading={isLoggingOut}
       />
       <Footer />
     </motion.div>

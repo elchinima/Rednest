@@ -4,14 +4,12 @@ import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
-import LogoutModal from '../../Elements/LogoutModal';
+import UserNavPills from '../../Elements/UserNavPills';
 import FitText from '../../Elements/FitText';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import addIcon from '../../../assets/icons/add.svg';
 import successIcon from '../../../assets/icons/success-animated.svg';
-import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
-import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
 
 const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loadedImages }) => {
@@ -134,10 +132,6 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
 
 const Catalog = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [addedAnimations, setAddedAnimations] = useState({});
   const [menuData, setMenuData] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
@@ -164,60 +158,6 @@ const Catalog = () => {
       });
     }, 1500);
   };
-
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-  const { login, logout } = useAuth();
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-    if (isUserMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isUserMenuOpen]);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
-      setUser(null);
-      logout();
-      setIsLogoutModalOpen(false);
-    } catch (err) {
-      console.error("Logout failed:", err);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-          login(data);
-        } else {
-          logout();
-        }
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      } finally {
-        setIsAuthLoading(false);
-      }
-    };
-    fetchUser();
-  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -267,61 +207,7 @@ const Catalog = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link active">Menu</Link>
           </nav>
-          {isAuthLoading ? (
-            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
-            </span>
-          ) : user ? (
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
-              {isUserMenuOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    width: '100%',
-                    marginTop: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    zIndex: 100
-                  }}
-                >
-                  <Link
-                    to="/profile"
-                    className="cta-btn sm"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'center',
-                      textDecoration: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    Profile
-                  </Link>
-                  <button 
-                    className="cta-btn sm"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsLogoutModalOpen(true);
-                    }}
-                    style={{
-                      width: '100%',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Log Out
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <Link to="/login" className="cta-btn sm">Log In</Link>
-          )}
+          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
 
         <div
@@ -360,12 +246,6 @@ const Catalog = () => {
         </div>
       </main>
 
-      <LogoutModal 
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogout}
-        loading={isLoggingOut}
-      />
       <Footer />
     </motion.div>
   );

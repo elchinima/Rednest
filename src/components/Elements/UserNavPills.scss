@@ -1,0 +1,214 @@
+@import '../../styles/variables.scss';
+
+.user-nav-pills-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+
+  .user-nav-pill {
+    background: #ffffff;
+    color: $color-bg-dark;
+    text-decoration: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.28);
+      background: #ffffff;
+      color: $color-primary;
+    }
+  }
+
+  .user-nav-avatar-pill {
+    width: 38px;
+    height: 38px;
+    border-radius: $border-radius-full;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    padding: 0;
+    box-sizing: border-box;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+
+    .user-nav-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: $border-radius-full;
+    }
+
+    .user-nav-avatar-fallback {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: $color-bg-dark;
+      line-height: 1;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    &:hover .user-nav-avatar-fallback {
+      color: $color-primary;
+    }
+  }
+
+  .user-nav-dropdown-wrapper {
+    position: relative;
+
+    .user-nav-name-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      line-height: 1.2;
+
+      .user-nav-name-text {
+        letter-spacing: 0.1px;
+      }
+
+      .user-nav-chevron {
+        transition: transform 0.25s ease;
+        flex-shrink: 0;
+
+        &.open {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    .user-nav-menu-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 100%;
+      min-width: 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 150;
+
+      .user-nav-menu-item {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+        font-size: 0.85rem;
+        padding: 8px 14px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+        border: none;
+        cursor: pointer;
+        background: #ffffff;
+        color: $color-bg-dark;
+        border-radius: $border-radius-full;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+
+        &:hover {
+          background: #ffffff;
+          color: $color-primary;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+      }
+    }
+  }
+
+  .user-nav-balance-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    line-height: 1.2;
+    cursor: pointer;
+
+    .user-nav-balance-amount {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.3px;
+    }
+
+    .user-nav-balance-symbol {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+  }
+}
+
+.user-nav-loader-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  pointer-events: none;
+  width: 38px;
+  height: 38px;
+  border-radius: $border-radius-full;
+  background: #ffffff;
+  padding: 0;
+}
+
+.user-nav-login-btn {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .nav-menu {
+    .user-nav-pills-container {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      gap: 12px;
+      margin-top: $spacing-md;
+
+      .user-nav-avatar-pill {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto;
+      }
+
+      .user-nav-dropdown-wrapper {
+        width: 100%;
+
+        .user-nav-name-pill {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .user-nav-menu-dropdown {
+          position: static;
+          margin-top: 8px;
+          width: 100%;
+        }
+      }
+
+      .user-nav-balance-pill {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .user-nav-login-btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+}

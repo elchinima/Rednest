@@ -5,8 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
-import LogoutModal from '../../Elements/LogoutModal';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import UserNavPills from '../../Elements/UserNavPills';
 import partyPopperIcon from '../../../assets/icons/party-popper-animated.svg';
 import smileyIcon from '../../../assets/icons/smiley-animated.svg';
 import fortuneImg from '../../../assets/images/fortune_image_low.png';
@@ -49,24 +48,7 @@ const Fortune = () => {
   const rotationRef = useRef(0);
   const imageRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const userMenuRef = useRef(null);
-  const { user, logout, isAuthLoading } = useAuth();
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  const { user } = useAuth();
 
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
@@ -284,61 +266,7 @@ const Fortune = () => {
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
           </nav>
-          {isAuthLoading ? (
-            <span className="cta-btn sm no-hover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', pointerEvents: 'none' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '20px', height: '20px', filter: 'brightness(0)' }} />
-            </span>
-          ) : user ? (
-            <div ref={userMenuRef} style={{ position: 'relative' }}>
-              <button className="cta-btn sm" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} style={{ cursor: 'pointer' }}>Hello, {user.name}</button>
-              {isUserMenuOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    width: '100%',
-                    marginTop: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    zIndex: 100
-                  }}
-                >
-                  <Link
-                    to="/profile"
-                    className="cta-btn sm"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'center',
-                      textDecoration: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    Profile
-                  </Link>
-                  <button 
-                    className="cta-btn sm"
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      setIsLogoutModalOpen(true);
-                    }}
-                    style={{
-                      width: '100%',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Log Out
-                  </button>
-                </motion.div>
-              )}
-            </div>
-          ) : (
-            <Link to="/login" className="cta-btn sm" style={{ textDecoration: 'none' }}>Log In</Link>
-          )}
+          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
 
         <div
