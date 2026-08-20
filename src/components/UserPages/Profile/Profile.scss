@@ -25,7 +25,7 @@
   align-items: center;
   max-width: 860px;
   width: 100%;
-  gap: $spacing-xl;
+  gap: 56px;
 }
 
 .profile-hero-text {
@@ -502,6 +502,10 @@
 @media (max-width: 768px) {
   .profile-main {
     padding: $spacing-xl $spacing-md;
+  }
+
+  .profile-hero-text {
+    margin-top: 100px;
   }
 
   .profile-container {
