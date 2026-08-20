@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import Footer from '../../Footer/Footer';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import ImageCropperModal from './ImageCropperModal';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Profile.scss';
@@ -21,6 +22,9 @@ const Profile = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isDeleteAvatarModalOpen, setIsDeleteAvatarModalOpen] = useState(false);
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState('');
+  const [cropperFileName, setCropperFileName] = useState('');
 
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarDeleting, setAvatarDeleting] = useState(false);
@@ -69,19 +73,29 @@ const Profile = () => {
     return true;
   };
 
-  const handleFileSelect = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     e.target.value = '';
     if (!file) return;
 
     if (!validateFile(file)) return;
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropperImageSrc(reader.result);
+      setCropperFileName(file.name);
+      setIsCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedFile) => {
     setAvatarUploading(true);
     setError('');
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', croppedFile);
 
       const res = await fetch(`${apiUrl}/api/auth/profile/picture`, {
         method: 'POST',
@@ -96,6 +110,8 @@ const Profile = () => {
           ProfilePictureUrl: data.profilePictureUrl,
         });
         showSuccess('Profile photo updated successfully.');
+        setIsCropModalOpen(false);
+        setCropperImageSrc('');
       } else {
         const data = await res.json().catch(() => ({}));
         showError(data.message || 'Failed to upload photo.');
@@ -503,6 +519,18 @@ const Profile = () => {
           </div>
         </div>
       </AnimatedModalWrapper>
+
+      <ImageCropperModal
+        isOpen={isCropModalOpen}
+        imageSrc={cropperImageSrc}
+        fileName={cropperFileName}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          setCropperImageSrc('');
+        }}
+        onCrop={handleCropComplete}
+        loading={avatarUploading}
+      />
 
       <div className="profile-toast-container">
         <AnimatePresence>
