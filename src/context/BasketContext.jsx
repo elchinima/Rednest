@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import { useAuth } from './AuthContext';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
 const BasketContext = createContext(null);
 
 const LOCAL_STORAGE_KEY = 'rednest_basket';
+
+const basketChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
+  ? new BroadcastChannel('rednest_basket_channel')
+  : null;
 
 function getLocalBasket() {
   try {
@@ -40,40 +43,23 @@ export const BasketProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasSynced = useRef(false);
-  const hubConnectionRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
+  // Synchronize across browser tabs instantly without websockets
   useEffect(() => {
-    if (!isAuthenticated || !user) {
-      if (hubConnectionRef.current) {
-        hubConnectionRef.current.stop();
-        hubConnectionRef.current = null;
+    if (!basketChannel) return;
+
+    const handleMessage = (event) => {
+      if (event.data?.type === 'BASKET_SYNC' && Array.isArray(event.data.items)) {
+        setItems(event.data.items);
       }
-      return;
-    }
-
-    const connection = new HubConnectionBuilder()
-      .withUrl(`${apiUrl}/hubs/basket`, {
-        withCredentials: true,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(LogLevel.None)
-      .build();
-
-    connection.on('BasketUpdated', (data) => {
-      if (data?.items) {
-        setItems(data.items);
-      }
-    });
-
-    connection.start().catch(() => {});
-    hubConnectionRef.current = connection;
-
-    return () => {
-      connection.stop();
-      hubConnectionRef.current = null;
     };
-  }, [isAuthenticated, user, apiUrl]);
+
+    basketChannel.addEventListener('message', handleMessage);
+    return () => {
+      basketChannel.removeEventListener('message', handleMessage);
+    };
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -115,22 +101,29 @@ export const BasketProvider = ({ children }) => {
   }, [isAuthenticated, user, authLoading]);
 
 
+  const broadcastSync = (newItems) => {
+    try {
+      basketChannel?.postMessage({ type: 'BASKET_SYNC', items: newItems });
+    } catch {}
+  };
+
   const addItem = useCallback(async (productId) => {
-    let shouldAdd = false;
+    let nextItems = null;
 
     if (isAuthenticated && user) {
       setItems(prev => {
         const existing = prev.find(i => i.productId === productId);
         if (existing) {
           if (existing.quantity >= 100) return prev;
-          shouldAdd = true;
-          return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
+          nextItems = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
+        } else {
+          nextItems = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
         }
-        shouldAdd = true;
-        return [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
+        return nextItems;
       });
 
-      if (shouldAdd) {
+      if (nextItems) {
+        broadcastSync(nextItems);
         try {
           await fetchWithRefresh(`${apiUrl}/api/basket/add`, {
             method: 'POST',
@@ -152,30 +145,38 @@ export const BasketProvider = ({ children }) => {
           updated = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
         }
         setLocalBasket(updated);
+        broadcastSync(updated);
         return updated;
       });
     }
   }, [isAuthenticated, user, apiUrl]);
 
   const removeItem = useCallback(async (productId) => {
+    let nextItems = null;
+
     if (isAuthenticated && user) {
       setItems(prev => {
         const existing = prev.find(i => i.productId === productId);
         if (!existing) return prev;
         if (existing.quantity <= 1) {
-          return prev.filter(i => i.productId !== productId);
+          nextItems = prev.filter(i => i.productId !== productId);
+        } else {
+          nextItems = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
         }
-        return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
+        return nextItems;
       });
 
-      try {
-        await fetchWithRefresh(`${apiUrl}/api/basket/remove`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId }),
-        });
-      } catch (err) {
-        console.error('Failed to remove item:', err);
+      if (nextItems) {
+        broadcastSync(nextItems);
+        try {
+          await fetchWithRefresh(`${apiUrl}/api/basket/remove`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId }),
+          });
+        } catch (err) {
+          console.error('Failed to remove item:', err);
+        }
       }
     } else {
       setItems(prev => {
@@ -188,6 +189,7 @@ export const BasketProvider = ({ children }) => {
           updated = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
         }
         setLocalBasket(updated);
+        broadcastSync(updated);
         return updated;
       });
     }
@@ -195,7 +197,15 @@ export const BasketProvider = ({ children }) => {
 
   const deleteItem = useCallback(async (productId) => {
     if (isAuthenticated && user) {
-      setItems(prev => prev.filter(i => i.productId !== productId));
+      let nextItems = null;
+      setItems(prev => {
+        nextItems = prev.filter(i => i.productId !== productId);
+        return nextItems;
+      });
+
+      if (nextItems) {
+        broadcastSync(nextItems);
+      }
 
       try {
         await fetchWithRefresh(`${apiUrl}/api/basket/delete/${productId}`, {
@@ -208,6 +218,7 @@ export const BasketProvider = ({ children }) => {
       setItems(prev => {
         const updated = prev.filter(i => i.productId !== productId);
         setLocalBasket(updated);
+        broadcastSync(updated);
         return updated;
       });
     }

@@ -27,7 +27,6 @@ if (File.Exists(envPath))
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient("supabase");
 
@@ -52,6 +51,13 @@ builder.Services.AddCors(options =>
 });
 
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -67,25 +73,35 @@ builder.Services.AddRateLimiter(options =>
 
     options.GlobalLimiter = PartitionedRateLimiter.CreateChained(
         PartitionedRateLimiter.Create<HttpContext, string>(context =>
-            RateLimitPartition.GetFixedWindowLimiter(
+        {
+            if (context.Request.Path.StartsWithSegments("/hubs"))
+                return RateLimitPartition.GetNoLimiter("hubs");
+
+            return RateLimitPartition.GetFixedWindowLimiter(
                 partitionKey: GetPartitionKey(context),
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 10,
+                    PermitLimit = 30,
                     Window = TimeSpan.FromSeconds(1),
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                     QueueLimit = 0
-                })),
+                });
+        }),
         PartitionedRateLimiter.Create<HttpContext, string>(context =>
-            RateLimitPartition.GetFixedWindowLimiter(
+        {
+            if (context.Request.Path.StartsWithSegments("/hubs"))
+                return RateLimitPartition.GetNoLimiter("hubs");
+
+            return RateLimitPartition.GetFixedWindowLimiter(
                 partitionKey: GetPartitionKey(context),
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
+                    PermitLimit = 300,
                     Window = TimeSpan.FromMinutes(1),
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                     QueueLimit = 0
-                }))
+                });
+        })
     );
 
     options.OnRejected = async (context, cancellationToken) =>
@@ -95,13 +111,18 @@ builder.Services.AddRateLimiter(options =>
 
         var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
             ? retryAfterValue.TotalSeconds
-            : 1;
+            : 30;
+
+        if (retryAfter <= 0) retryAfter = 30;
 
         context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter).ToString();
 
         await context.HttpContext.Response.WriteAsJsonAsync(new
         {
-            error = "Too many requests. Please try again later.",
+            statusCode = 429,
+            title = "Too Many Requests",
+            error = "Too Many Requests",
+            message = "You have made too many requests in a short period. Please wait a moment before trying again.",
             retryAfterSeconds = (int)retryAfter
         }, cancellationToken);
     };
@@ -133,16 +154,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 }
                 else
                 {
-                    var accessToken = context.Request.Query["access_token"];
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                    {
-                        context.Token = accessToken;
-                    }
-                    else
-                    {
-                        context.Token = context.Request.Cookies["accessToken"];
-                    }
+                    context.Token = context.Request.Cookies["accessToken"];
                 }
                 return Task.CompletedTask;
             }
@@ -152,6 +164,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            statusCode = 500,
+            title = "Internal Server Error",
+            error = "Internal Server Error",
+            message = "An unexpected error occurred on our server. Our team is already looking into it."
+        });
+    });
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -229,7 +260,6 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.UseStaticFiles();
-app.MapHub<Rednest.Api.Hubs.BasketHub>("/hubs/basket");
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

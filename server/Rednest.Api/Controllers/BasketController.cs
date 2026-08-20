@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Rednest.Api.Hubs;
 using Rednest.Application.Interfaces;
 using Rednest.Core.Entities;
 using Rednest.Infrastructure.Data;
@@ -16,12 +14,10 @@ namespace Rednest.Api.Controllers;
 public class BasketController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
-    private readonly IHubContext<BasketHub> _hubContext;
 
-    public BasketController(IUserRepository userRepository, IHubContext<BasketHub> hubContext)
+    public BasketController(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _hubContext = hubContext;
     }
 
 
@@ -103,7 +99,6 @@ public class BasketController : ControllerBase
             await _userRepository.UpdateBasketAsync(basket);
         }
 
-        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
         return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
@@ -126,7 +121,6 @@ public class BasketController : ControllerBase
         }
 
         await _userRepository.UpdateBasketAsync(basket);
-        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
         return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
@@ -141,7 +135,6 @@ public class BasketController : ControllerBase
 
         basket.Items.RemoveAll(i => i.ProductId == productId);
         await _userRepository.UpdateBasketAsync(basket);
-        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
         return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
@@ -192,7 +185,6 @@ public class BasketController : ControllerBase
             await _userRepository.UpdateBasketAsync(basket);
         }
 
-        await NotifyBasketUpdatedAsync(userId.Value, basket.Items);
         return Ok(new { items = FormatBasketItems(basket.Items) });
     }
 
@@ -203,15 +195,6 @@ public class BasketController : ControllerBase
             addedAt = i.AddedAt,
             quantity = i.Quantity
         });
-
-    private async Task NotifyBasketUpdatedAsync(Guid userId, List<BasketItem> items)
-    {
-        var payload = new
-        {
-            items = FormatBasketItems(items)
-        };
-        await _hubContext.Clients.Group($"user_{userId}").SendAsync("BasketUpdated", payload);
-    }
 
 
     [HttpPost("apply-promo")]

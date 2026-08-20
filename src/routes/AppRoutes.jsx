@@ -12,6 +12,7 @@ import Dashboard from '../components/AdminPages/Dashboard/Dashboard';
 import Database from '../components/AdminPages/Database/Database';
 import ProtectedRoute from './ProtectedRoute';
 import AdminProtectedRoute from './AdminProtectedRoute';
+import ErrorPage from '../components/PublicPages/ErrorPage/ErrorPage';
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
@@ -57,7 +58,8 @@ const AnimatedRoutes = () => {
           </AdminProtectedRoute>
         } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/error" element={<ErrorPage />} />
+        <Route path="*" element={<ErrorPage defaultCode="404" />} />
       </Routes>
     </AnimatePresence>
   );
