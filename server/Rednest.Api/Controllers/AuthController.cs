@@ -304,6 +304,63 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { message = "All password fields are required." });
+            }
+
+            if (request.NewPassword.Length < 6)
+            {
+                return BadRequest(new { message = "New password must be at least 6 characters long." });
+            }
+
+            if (!string.IsNullOrEmpty(request.ConfirmPassword) && request.NewPassword != request.ConfirmPassword)
+            {
+                return BadRequest(new { message = "New password and confirmation do not match." });
+            }
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                return BadRequest(new { message = "Current password is incorrect." });
+            }
+
+            if (BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+            {
+                return BadRequest(new { message = "New password cannot be the same as the current password." });
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await userRepository.UpdateAsync(user);
+
+            return Ok(new { message = "Password updated successfully." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [HttpGet("promo")]
     public async Task<IActionResult> GetPromo([FromServices] IUserRepository userRepository)
     {

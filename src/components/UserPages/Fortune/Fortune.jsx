@@ -8,6 +8,7 @@ import Footer from '../../Footer/Footer';
 import UserNavPills from '../../Elements/UserNavPills';
 import partyPopperIcon from '../../../assets/icons/party-popper-animated.svg';
 import smileyIcon from '../../../assets/icons/smiley-animated.svg';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import fortuneImg from '../../../assets/images/fortune_image_low.png';
 import './Fortune.scss';
 
@@ -230,21 +231,6 @@ const Fortune = () => {
     };
   }, []);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      await fetch(`${apiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' });
-      logout();
-      setIsLogoutModalOpen(false);
-      navigate('/');
-    } catch (err) {
-      console.error("Logout failed:", err);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
   return (
     <motion.div
       className="fortune-page"
@@ -347,13 +333,6 @@ const Fortune = () => {
           </motion.div>
         </div>
       </main>
-
-      <LogoutModal 
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={handleLogout}
-        loading={isLoggingOut}
-      />
 
       <Footer />
 
