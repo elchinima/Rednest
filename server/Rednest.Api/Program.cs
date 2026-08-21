@@ -260,7 +260,18 @@ app.Use(async (context, next) =>
 
                 context.Items["newAccessToken"] = result.AccessToken;
             }
-            catch { }
+            catch
+            {
+                var deleteCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/"
+                };
+                context.Response.Cookies.Delete("accessToken", deleteCookieOptions);
+                context.Response.Cookies.Delete("refreshToken", deleteCookieOptions);
+            }
         }
     }
 

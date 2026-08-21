@@ -75,6 +75,7 @@ public class AuthController : ControllerBase
         var refreshToken = Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
         {
+            ClearTokenCookies();
             return Unauthorized(new { Message = "No refresh token provided." });
         }
         try
@@ -93,6 +94,7 @@ public class AuthController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
+            ClearTokenCookies();
             return Unauthorized(new { Message = ex.Message });
         }
         catch (Exception ex)
@@ -600,6 +602,12 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        ClearTokenCookies();
+        return Ok();
+    }
+
+    private void ClearTokenCookies()
+    {
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
@@ -609,7 +617,6 @@ public class AuthController : ControllerBase
         };
         Response.Cookies.Delete("accessToken", cookieOptions);
         Response.Cookies.Delete("refreshToken", cookieOptions);
-        return Ok();
     }
 
     private void SetTokenCookies(string accessToken, string refreshToken)
