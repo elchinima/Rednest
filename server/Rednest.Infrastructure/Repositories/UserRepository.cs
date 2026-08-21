@@ -73,6 +73,7 @@ public class UserRepository : IUserRepository
 
     public async Task UpdateSessionAsync(UserSession session)
     {
+        _context.Entry(session).Property(s => s.Sessions).IsModified = true;
         _context.UserSessions.Update(session);
         await _context.SaveChangesAsync();
     }

@@ -23,7 +23,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [step, setStep] = useState('login');
-  const { login } = useAuth();
+  const { login, fetchCurrentUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +51,12 @@ const AuthModal = ({ isOpen, onClose }) => {
         setStep('name');
       } else {
         localStorage.setItem('rednest_auth', 'true');
-        window.location.reload();
+        if (data.user) {
+          login(data.user);
+        } else {
+          await fetchCurrentUser();
+        }
+        onClose();
       }
     } catch (err) {
       console.error("Auth Error:", err);
@@ -82,10 +87,14 @@ const AuthModal = ({ isOpen, onClose }) => {
         throw new Error(errorData.message || 'Failed to update name');
       }
 
+      const data = await response.json().catch(() => ({}));
       localStorage.setItem('rednest_auth', 'true');
-      login({ email, name });
+      if (data && (data.name || data.Name)) {
+        login(data);
+      } else {
+        await fetchCurrentUser();
+      }
       onClose();
-      window.location.reload();
     } catch (err) {
       setError(err.message);
     } finally {

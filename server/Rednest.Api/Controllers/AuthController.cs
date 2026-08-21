@@ -27,17 +27,31 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request,
+        [FromServices] IUserRepository userRepository)
     {
         try
         {
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress);
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
+
+            var user = await userRepository.GetByEmailAsync(request.Email);
+
             return Ok(new 
             { 
-                HasName = result.HasName 
+                HasName = result.HasName,
+                User = user == null ? null : new
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    ProfilePictureUrl = user.ProfilePictureUrl,
+                    Balance = user.Balance
+                }
             });
         }
         catch (UnauthorizedAccessException ex)
@@ -60,7 +74,11 @@ public class AuthController : ControllerBase
         }
         try
         {
-            var result = await _authService.RefreshTokenAsync(refreshToken);
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+
+            var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
             return Ok();
         }
@@ -295,7 +313,14 @@ public class AuthController : ControllerBase
             user.Name = nameRequest.Name;
             await userRepository.UpdateAsync(user);
 
-            return Ok();
+            return Ok(new
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Balance = user.Balance
+            });
         }
         catch (Exception ex)
         {
@@ -513,8 +538,15 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("accessToken");
-        Response.Cookies.Delete("refreshToken");
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
+        };
+        Response.Cookies.Delete("accessToken", cookieOptions);
+        Response.Cookies.Delete("refreshToken", cookieOptions);
         return Ok();
     }
 
@@ -524,16 +556,18 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddMinutes(30)
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            Expires = DateTime.UtcNow.AddMinutes(15)
         };
 
         var refreshCookieOptions = new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(30)
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            Expires = DateTime.UtcNow.AddDays(15)
         };
 
         Response.Cookies.Append("accessToken", accessToken, accessCookieOptions);

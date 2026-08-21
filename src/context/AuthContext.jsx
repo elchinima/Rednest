@@ -14,7 +14,13 @@ export const AuthProvider = ({ children }) => {
   const [authLoading, setAuthLoading] = useState(true);
 
   const login = useCallback((userData) => {
-    const profile = userData || { name: 'Guest', email: '' };
+    let profile = userData;
+    if (userData && userData.user) {
+      profile = userData.user;
+    }
+    if (!profile || (!profile.name && !profile.email && !profile.Id && !profile.id)) {
+      profile = { name: 'User', email: '' };
+    }
     localStorage.setItem('rednest_auth', 'true');
     localStorage.setItem('rednest_user', JSON.stringify(profile));
     setIsAuthenticated(true);
@@ -35,6 +41,27 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
+
+      if (response.ok) {
+        const data = await response.json();
+        login(data);
+        return data;
+      } else {
+        localStorage.removeItem('rednest_auth');
+        localStorage.removeItem('rednest_user');
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Session validation failed:', err);
+    }
+    return null;
+  }, [login]);
+
   useEffect(() => {
     const validateSession = async () => {
       const hasAuth = localStorage.getItem('rednest_auth') === 'true';
@@ -43,28 +70,12 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      try {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
-
-        if (response.ok) {
-          const data = await response.json();
-          login(data);
-        } else {
-          localStorage.removeItem('rednest_auth');
-          localStorage.removeItem('rednest_user');
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      } catch (err) {
-        console.error('Session validation failed:', err);
-      } finally {
-        setAuthLoading(false);
-      }
+      await fetchCurrentUser();
+      setAuthLoading(false);
     };
 
     validateSession();
-  }, []);
+  }, [fetchCurrentUser]);
 
   const updateUser = useCallback((updatedFields) => {
     setUser((prev) => {
@@ -75,7 +86,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, authLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, authLoading, fetchCurrentUser }}>
       {children}
     </AuthContext.Provider>
   );

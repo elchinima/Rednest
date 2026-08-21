@@ -25,7 +25,7 @@ const Auth = () => {
   const [error, setError] = useState(null);
   const [step, setStep] = useState('login');
 
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, fetchCurrentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,7 +60,11 @@ const Auth = () => {
         setStep('name');
       } else {
         localStorage.setItem('rednest_auth', 'true');
-        login(data.user || data);
+        if (data.user) {
+          login(data.user);
+        } else {
+          await fetchCurrentUser();
+        }
         navigate('/', { replace: true });
       }
     } catch (err) {
@@ -94,8 +98,13 @@ const Auth = () => {
         throw new Error(errorData.message || 'Failed to update name');
       }
 
+      const data = await response.json().catch(() => ({}));
       localStorage.setItem('rednest_auth', 'true');
-      login({ email, name });
+      if (data && (data.name || data.Name)) {
+        login(data);
+      } else {
+        await fetchCurrentUser();
+      }
       navigate('/', { replace: true });
     } catch (err) {
       console.error("Name Update Error:", err);

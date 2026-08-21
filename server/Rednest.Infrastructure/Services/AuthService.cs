@@ -21,7 +21,10 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(LoginRequest request, string? ipAddress)
+    public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(
+        LoginRequest request, 
+        string? ipAddress, 
+        string? userAgent = null)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
@@ -64,12 +67,19 @@ public class AuthService : IAuthService
         }
 
         var refreshToken = GenerateRefreshToken();
+        var uaInfo = UserAgentParser.Parse(userAgent);
+
         var sessionEntry = new SessionEntry
         {
             RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30),
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(15),
             LastLoginIp = ipAddress,
-            CreatedAt = DateTime.UtcNow
+            OperatingSystem = uaInfo.OperatingSystem,
+            DeviceName = uaInfo.DeviceName,
+            DeviceType = uaInfo.DeviceType,
+            UserAgent = userAgent,
+            CreatedAt = DateTime.UtcNow,
+            LastActiveAt = DateTime.UtcNow
         };
 
         userSession.Sessions.Add(sessionEntry);
@@ -81,7 +91,10 @@ public class AuthService : IAuthService
         return (GenerateJwtToken(user), refreshToken, hasName);
     }
 
-    public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(string refreshToken)
+    public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
+        string refreshToken, 
+        string? ipAddress = null, 
+        string? userAgent = null)
     {
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
         if (result == null || result.Value.Entry.RefreshTokenExpiryTime <= DateTime.UtcNow)
@@ -94,14 +107,21 @@ public class AuthService : IAuthService
         var newAccessToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        session.Sessions.Remove(oldEntry);
-        session.Sessions.Add(new SessionEntry
+        var uaInfo = UserAgentParser.Parse(userAgent);
+
+        oldEntry.RefreshToken = newRefreshToken;
+        oldEntry.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(15);
+        oldEntry.LastActiveAt = DateTime.UtcNow;
+        if (!string.IsNullOrEmpty(ipAddress)) oldEntry.LastLoginIp = ipAddress;
+        if (!string.IsNullOrEmpty(userAgent))
         {
-            RefreshToken = newRefreshToken,
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(30),
-            LastLoginIp = oldEntry.LastLoginIp,
-            CreatedAt = oldEntry.CreatedAt
-        });
+            oldEntry.OperatingSystem = uaInfo.OperatingSystem;
+            oldEntry.DeviceName = uaInfo.DeviceName;
+            oldEntry.DeviceType = uaInfo.DeviceType;
+            oldEntry.UserAgent = userAgent;
+        }
+
+        session.Sessions.RemoveAll(s => s.RefreshTokenExpiryTime <= DateTime.UtcNow && s.RefreshToken != newRefreshToken);
 
         await _userRepository.UpdateSessionAsync(session);
 
@@ -132,7 +152,7 @@ public class AuthService : IAuthService
             issuer: jwtIssuer,
             audience: jwtIssuer,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(30),
+            expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: creds
         );
 

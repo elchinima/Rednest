@@ -225,22 +225,28 @@ app.Use(async (context, next) =>
             var authService = context.RequestServices.GetRequiredService<IAuthService>();
             try
             {
-                var result = await authService.RefreshTokenAsync(refreshToken);
+                var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                                ?? context.Connection.RemoteIpAddress?.ToString();
+                var userAgent = context.Request.Headers["User-Agent"].ToString();
+
+                var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent);
                 
                 var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddMinutes(30)
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    Expires = DateTime.UtcNow.AddMinutes(15)
                 };
 
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(30)
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    Expires = DateTime.UtcNow.AddDays(15)
                 };
 
                 context.Response.Cookies.Append("accessToken", result.AccessToken, accessCookieOptions);

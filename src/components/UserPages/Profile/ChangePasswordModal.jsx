@@ -1,8 +1,42 @@
 import React, { useState } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './ChangePasswordModal.scss';
+
+const ButtonSpinner = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 48 48"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="pwd-btn-spinner"
+  >
+    <g>
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        values="0 24 24; 360 24 24"
+        dur="1s"
+        repeatCount="indefinite"
+      />
+      <circle
+        cx="24"
+        cy="24"
+        r="19.2"
+        stroke="currentColor"
+        strokeOpacity="0.25"
+        strokeWidth="4.5"
+      />
+      <path
+        d="M24 4.8 A19.2 19.2 0 0 1 43.2 24"
+        stroke="currentColor"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+      />
+    </g>
+  </svg>
+);
 
 const EyeIcon = ({ visible }) => (
   visible ? (
@@ -246,7 +280,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
             >
               {loading ? (
                 <span className="pwd-loader-inner">
-                  <img src={loaderIcon} alt="Saving..." className="pwd-loader-img" />
+                  <ButtonSpinner />
                   Updating...
                 </span>
               ) : (
