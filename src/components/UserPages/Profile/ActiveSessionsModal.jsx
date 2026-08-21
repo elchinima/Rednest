@@ -38,12 +38,13 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleString(undefined, {
+    return d.toLocaleString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
   } catch {
     return '—';
@@ -194,13 +195,6 @@ const ActiveSessionsModal = ({ isOpen, onClose }) => {
 
                 <div className="active-sessions-modal__card-details">
                   <div className="active-sessions-modal__detail-row">
-                    <span className="active-sessions-modal__detail-label">Device Name:</span>
-                    <span className="active-sessions-modal__detail-value">
-                      {session.deviceName || 'Unknown Device'}
-                    </span>
-                  </div>
-
-                  <div className="active-sessions-modal__detail-row">
                     <span className="active-sessions-modal__detail-label">Device Type:</span>
                     <span className="active-sessions-modal__detail-value">
                       {session.deviceType || 'Desktop'}
@@ -218,6 +212,13 @@ const ActiveSessionsModal = ({ isOpen, onClose }) => {
                     <span className="active-sessions-modal__detail-label">Country:</span>
                     <span className="active-sessions-modal__detail-value">
                       {session.country || 'Unknown'}
+                    </span>
+                  </div>
+
+                  <div className="active-sessions-modal__detail-row">
+                    <span className="active-sessions-modal__detail-label">IP Address:</span>
+                    <span className="active-sessions-modal__detail-value">
+                      {session.lastLoginIp || 'Unknown'}
                     </span>
                   </div>
 

@@ -373,7 +373,7 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 540px) {
   .active-sessions-modal {
     padding: $spacing-lg $spacing-md;
 
@@ -385,12 +385,27 @@
       padding: 12px;
     }
 
+    &__card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
     &__card-title-wrap {
+      width: 100%;
       gap: 8px;
     }
 
     &__card-device-name {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    &__card-badges {
+      margin-left: 40px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     &__detail-row {
