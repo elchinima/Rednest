@@ -24,7 +24,8 @@ public class AuthService : IAuthService
     public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(
         LoginRequest request, 
         string? ipAddress, 
-        string? userAgent = null)
+        string? userAgent = null,
+        string? platformVersion = null)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
@@ -67,7 +68,7 @@ public class AuthService : IAuthService
         }
 
         var refreshToken = GenerateRefreshToken();
-        var uaInfo = UserAgentParser.Parse(userAgent);
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion);
 
         var sessionEntry = new SessionEntry
         {
@@ -94,7 +95,8 @@ public class AuthService : IAuthService
     public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
         string? ipAddress = null, 
-        string? userAgent = null)
+        string? userAgent = null,
+        string? platformVersion = null)
     {
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
         if (result == null || result.Value.Entry.RefreshTokenExpiryTime <= DateTime.UtcNow)
@@ -107,7 +109,7 @@ public class AuthService : IAuthService
         var newAccessToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        var uaInfo = UserAgentParser.Parse(userAgent);
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion);
 
         oldEntry.RefreshToken = newRefreshToken;
         oldEntry.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(15);

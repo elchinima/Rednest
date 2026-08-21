@@ -36,7 +36,10 @@ public class AuthController : ControllerBase
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = Request.Headers["User-Agent"].ToString();
-            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent);
+            var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                  ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+
+            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent, platformVersion);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
 
             var user = await userRepository.GetByEmailAsync(request.Email);
@@ -77,8 +80,10 @@ public class AuthController : ControllerBase
             var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
                             ?? HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = Request.Headers["User-Agent"].ToString();
+            var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                  ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
 
-            var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent);
+            var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
             return Ok();
         }

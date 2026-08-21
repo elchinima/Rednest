@@ -1,9 +1,18 @@
 import { handleBackendErrorResponse } from './rateLimitInterceptor';
+import { getClientHintsHeaders } from './clientHints';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 export async function fetchWithRefresh(url, options = {}) {
-  const opts = { ...options, credentials: 'include' };
+  const clientHeaders = getClientHintsHeaders();
+  const opts = {
+    ...options,
+    credentials: 'include',
+    headers: {
+      ...clientHeaders,
+      ...(options.headers || {}),
+    },
+  };
 
   let response = await fetch(url, opts);
 

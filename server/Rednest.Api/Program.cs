@@ -228,8 +228,10 @@ app.Use(async (context, next) =>
                 var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
                                 ?? context.Connection.RemoteIpAddress?.ToString();
                 var userAgent = context.Request.Headers["User-Agent"].ToString();
+                var platformVersion = context.Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                      ?? context.Request.Headers["X-Platform-Version"].FirstOrDefault();
 
-                var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent);
+                var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion);
                 
                 var accessCookieOptions = new CookieOptions
                 {
@@ -257,6 +259,8 @@ app.Use(async (context, next) =>
             catch { }
         }
     }
+
+    context.Response.Headers["Accept-CH"] = "Sec-CH-UA-Platform-Version, Sec-CH-UA-Platform, Sec-CH-UA-Model";
 
     await next(context);
 });
