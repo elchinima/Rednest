@@ -14,18 +14,24 @@ public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
+    private readonly IGeoLocationService _geoLocationService;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(
+        IUserRepository userRepository, 
+        IConfiguration configuration,
+        IGeoLocationService geoLocationService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
+        _geoLocationService = geoLocationService;
     }
 
     public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(
         LoginRequest request, 
         string? ipAddress, 
         string? userAgent = null,
-        string? platformVersion = null)
+        string? platformVersion = null,
+        string? deviceModel = null)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
 
@@ -67,24 +73,28 @@ public class AuthService : IAuthService
             await _userRepository.AddSessionAsync(userSession);
         }
 
+        var now = DateTime.UtcNow;
+
+        userSession.Sessions.RemoveAll(s => IsSessionExpired(s, now));
+
         var refreshToken = GenerateRefreshToken();
-        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion);
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
 
         var sessionEntry = new SessionEntry
         {
             RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(15),
+            RefreshTokenExpiryTime = now.AddDays(15),
             LastLoginIp = ipAddress,
             OperatingSystem = uaInfo.OperatingSystem,
             DeviceName = uaInfo.DeviceName,
             DeviceType = uaInfo.DeviceType,
             UserAgent = userAgent,
-            CreatedAt = DateTime.UtcNow,
-            LastActiveAt = DateTime.UtcNow
+            CreatedAt = now,
+            LastActiveAt = now,
+            IsActive = true
         };
 
         userSession.Sessions.Add(sessionEntry);
-        userSession.Sessions.RemoveAll(s => s.RefreshTokenExpiryTime <= DateTime.UtcNow && s.RefreshToken != refreshToken);
 
         await _userRepository.UpdateSessionAsync(userSession);
 
@@ -96,10 +106,12 @@ public class AuthService : IAuthService
         string refreshToken, 
         string? ipAddress = null, 
         string? userAgent = null,
-        string? platformVersion = null)
+        string? platformVersion = null,
+        string? deviceModel = null)
     {
+        var now = DateTime.UtcNow;
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
-        if (result == null || result.Value.Entry.RefreshTokenExpiryTime <= DateTime.UtcNow)
+        if (result == null || IsSessionExpired(result.Value.Entry, now))
         {
             throw new UnauthorizedAccessException("Invalid or expired refresh token");
         }
@@ -109,11 +121,12 @@ public class AuthService : IAuthService
         var newAccessToken = GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
 
-        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion);
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
 
         oldEntry.RefreshToken = newRefreshToken;
-        oldEntry.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(15);
-        oldEntry.LastActiveAt = DateTime.UtcNow;
+        oldEntry.RefreshTokenExpiryTime = now.AddDays(15);
+        oldEntry.LastActiveAt = now;
+        oldEntry.IsActive = true;
         if (!string.IsNullOrEmpty(ipAddress)) oldEntry.LastLoginIp = ipAddress;
         if (!string.IsNullOrEmpty(userAgent))
         {
@@ -123,11 +136,133 @@ public class AuthService : IAuthService
             oldEntry.UserAgent = userAgent;
         }
 
-        session.Sessions.RemoveAll(s => s.RefreshTokenExpiryTime <= DateTime.UtcNow && s.RefreshToken != newRefreshToken);
+        session.Sessions.RemoveAll(s => s != oldEntry && IsSessionExpired(s, now));
 
         await _userRepository.UpdateSessionAsync(session);
 
         return (newAccessToken, newRefreshToken);
+    }
+
+    public async Task<List<UserSessionDto>> GetUserSessionsAsync(Guid userId, string? currentRefreshToken)
+    {
+        var now = DateTime.UtcNow;
+        var userSession = await _userRepository.GetSessionByUserIdAsync(userId);
+        if (userSession == null || userSession.Sessions == null || userSession.Sessions.Count == 0)
+        {
+            return new List<UserSessionDto>();
+        }
+
+        var countBefore = userSession.Sessions.Count;
+        userSession.Sessions.RemoveAll(s => IsSessionExpired(s, now));
+        if (userSession.Sessions.Count != countBefore)
+        {
+            await _userRepository.UpdateSessionAsync(userSession);
+        }
+
+        var result = new List<UserSessionDto>();
+
+        foreach (var s in userSession.Sessions)
+        {
+            var country = await _geoLocationService.GetCountryAsync(s.LastLoginIp);
+            var isCurrent = !string.IsNullOrEmpty(currentRefreshToken) && s.RefreshToken == currentRefreshToken;
+
+            using var sha256 = SHA256.Create();
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(s.RefreshToken));
+            var sessionId = Convert.ToHexString(hashBytes)[..16].ToLowerInvariant();
+
+            result.Add(new UserSessionDto
+            {
+                Id = sessionId,
+                DeviceName = s.DeviceName ?? "Unknown Device",
+                DeviceType = s.DeviceType ?? "Desktop",
+                OperatingSystem = s.OperatingSystem ?? "Unknown OS",
+                Country = country,
+                LastLoginIp = s.LastLoginIp,
+                CreatedAt = s.CreatedAt,
+                LastActiveAt = s.LastActiveAt ?? s.CreatedAt,
+                IsActive = s.IsActive == true,
+                IsCurrent = isCurrent
+            });
+        }
+
+        return result
+            .OrderByDescending(s => s.IsCurrent)
+            .ThenByDescending(s => s.LastActiveAt ?? s.CreatedAt)
+            .ToList();
+    }
+
+    public async Task<bool> RevokeSessionAsync(Guid userId, string sessionId, string? currentRefreshToken)
+    {
+        var userSession = await _userRepository.GetSessionByUserIdAsync(userId);
+        if (userSession == null || userSession.Sessions == null)
+        {
+            return false;
+        }
+
+        using var sha256 = SHA256.Create();
+
+        SessionEntry? targetSession = null;
+        foreach (var s in userSession.Sessions)
+        {
+            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(s.RefreshToken));
+            var id = Convert.ToHexString(hashBytes)[..16].ToLowerInvariant();
+            if (id == sessionId)
+            {
+                targetSession = s;
+                break;
+            }
+        }
+
+        if (targetSession == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(currentRefreshToken) && targetSession.RefreshToken == currentRefreshToken)
+        {
+            throw new InvalidOperationException("Cannot revoke the current active session.");
+        }
+
+        targetSession.IsActive = false;
+        await _userRepository.UpdateSessionAsync(userSession);
+        return true;
+    }
+
+    private static bool IsSessionExpired(SessionEntry? s, DateTime now)
+    {
+        if (s == null) return true;
+        if (string.IsNullOrWhiteSpace(s.RefreshToken)) return true;
+
+        // 1. Проверка на наличие поля IsActive и его значение
+        if (!s.IsActive.HasValue || s.IsActive.Value == false)
+        {
+            return true;
+        }
+
+        // 2. Проверка срока действия токена
+        if (s.RefreshTokenExpiryTime != default && s.RefreshTokenExpiryTime <= now)
+        {
+            return true;
+        }
+
+        // 3. Проверка 15 дней с момента создания или последней активности
+        var referenceTime = s.LastActiveAt ?? (s.CreatedAt != default ? s.CreatedAt : (DateTime?)null);
+        if (referenceTime.HasValue && referenceTime.Value != default && referenceTime.Value.AddDays(15) <= now)
+        {
+            return true;
+        }
+
+        if (referenceTime.HasValue && s.RefreshTokenExpiryTime > referenceTime.Value.AddDays(15.1) && referenceTime.Value.AddDays(15) <= now)
+        {
+            return true;
+        }
+
+        if (s.RefreshTokenExpiryTime == default)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private string GenerateJwtToken(User user)

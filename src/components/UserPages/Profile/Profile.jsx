@@ -7,6 +7,7 @@ import UserNavPills from '../../Elements/UserNavPills';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
 import ChangePasswordModal from './ChangePasswordModal';
+import ActiveSessionsModal from './ActiveSessionsModal';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Profile.scss';
@@ -431,34 +432,10 @@ const Profile = () => {
         onSuccess={(msg) => showSuccess(msg)}
       />
 
-      <AnimatedModalWrapper
+      <ActiveSessionsModal
         isOpen={isSessionsModalOpen}
         onClose={() => setIsSessionsModalOpen(false)}
-        targetBorderRadius="24px"
-      >
-        <div className="profile-modal">
-          <div className="profile-modal__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-          </div>
-          <h3 className="profile-modal__title">Active Sessions</h3>
-          <p className="profile-modal__text">
-            Active session management and device tracking will be available in an upcoming update.
-          </p>
-          <div className="profile-modal__actions">
-            <button
-              type="button"
-              className="cta-btn sm profile-modal__btn"
-              onClick={() => setIsSessionsModalOpen(false)}
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      </AnimatedModalWrapper>
+      />
 
       <AnimatedModalWrapper
         isOpen={isAddressesModalOpen}

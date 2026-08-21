@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import logo from '../../../assets/icons/rednest_logo.png';
 import { useAuth } from '../../../context/AuthContext';
-import { getClientHintsHeaders } from '../../../utils/clientHints';
+import { ensureClientHintsHeaders } from '../../../utils/clientHints';
 import './Auth.scss';
 
 const LoaderIcon = () => (
@@ -44,7 +44,7 @@ const Auth = () => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const clientHeaders = getClientHintsHeaders();
+      const clientHeaders = await ensureClientHintsHeaders();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',

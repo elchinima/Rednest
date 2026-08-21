@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const modalStyles = `
@@ -140,7 +141,7 @@ const AnimatedModalWrapper = ({ isOpen, onClose, children, targetBorderRadius = 
     }
   };
 
-  return (
+  const modalContent = (
     <>
       <style>{modalStyles}</style>
       <AnimatePresence>
@@ -174,6 +175,12 @@ const AnimatedModalWrapper = ({ isOpen, onClose, children, targetBorderRadius = 
       </AnimatePresence>
     </>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 };
 
 export default AnimatedModalWrapper;

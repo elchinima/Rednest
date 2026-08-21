@@ -28,6 +28,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("supabase");
 
 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
@@ -37,6 +38,7 @@ var dataSource = new NpgsqlDataSourceBuilder(connectionString)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(dataSource));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IGeoLocationService, GeoLocationService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddCors(options =>
@@ -230,8 +232,10 @@ app.Use(async (context, next) =>
                 var userAgent = context.Request.Headers["User-Agent"].ToString();
                 var platformVersion = context.Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
                                       ?? context.Request.Headers["X-Platform-Version"].FirstOrDefault();
+                var deviceModel = context.Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                                  ?? context.Request.Headers["X-Device-Model"].FirstOrDefault();
 
-                var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion);
+                var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion, deviceModel);
                 
                 var accessCookieOptions = new CookieOptions
                 {

@@ -1,10 +1,10 @@
 import { handleBackendErrorResponse } from './rateLimitInterceptor';
-import { getClientHintsHeaders } from './clientHints';
+import { ensureClientHintsHeaders } from './clientHints';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 export async function fetchWithRefresh(url, options = {}) {
-  const clientHeaders = getClientHintsHeaders();
+  const clientHeaders = await ensureClientHintsHeaders();
   const opts = {
     ...options,
     credentials: 'include',
@@ -25,6 +25,9 @@ export async function fetchWithRefresh(url, options = {}) {
     const refreshResponse = await fetch(`${apiUrl}/api/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
+      headers: {
+        ...clientHeaders,
+      },
     });
 
     if (refreshResponse.ok) {

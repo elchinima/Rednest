@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import { useAuth } from '../../../context/AuthContext';
-import { getClientHintsHeaders } from '../../../utils/clientHints';
+import { ensureClientHintsHeaders } from '../../../utils/clientHints';
 import './AuthModal.scss';
 
 const LoaderIcon = () => (
@@ -35,7 +35,7 @@ const AuthModal = ({ isOpen, onClose }) => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const clientHeaders = getClientHintsHeaders();
+      const clientHeaders = await ensureClientHintsHeaders();
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         credentials: 'include',

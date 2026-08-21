@@ -11,4 +11,5 @@ public class SessionEntry
     public string? UserAgent { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastActiveAt { get; set; }
+    public bool? IsActive { get; set; }
 }

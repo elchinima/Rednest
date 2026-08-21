@@ -11,7 +11,7 @@ public class UserAgentInfo
 
 public static class UserAgentParser
 {
-    public static UserAgentInfo Parse(string? userAgent, string? platformVersion = null)
+    public static UserAgentInfo Parse(string? userAgent, string? platformVersion = null, string? deviceModel = null)
     {
         var info = new UserAgentInfo();
         if (string.IsNullOrWhiteSpace(userAgent))
@@ -105,14 +105,38 @@ public static class UserAgentParser
         }
         else if (ua.Contains("Android", StringComparison.OrdinalIgnoreCase))
         {
-            var androidMatch = Regex.Match(ua, @"Android\s+([\d.]+)", RegexOptions.IgnoreCase);
-            if (androidMatch.Success)
+            if (!string.IsNullOrWhiteSpace(platformVersion))
             {
-                info.OperatingSystem = $"Android {androidMatch.Groups[1].Value}";
+                var cleanVer = platformVersion.Trim('\"', ' ', '\'');
+                var parts = cleanVer.Split('.');
+                if (parts.Length >= 2 && int.TryParse(parts[0], out var major) && int.TryParse(parts[1], out var minor))
+                {
+                    info.OperatingSystem = minor > 0 ? $"Android {major}.{minor}" : $"Android {major}";
+                }
+                else if (int.TryParse(parts[0], out var majorOnly) && majorOnly > 0)
+                {
+                    info.OperatingSystem = $"Android {majorOnly}";
+                }
+                else if (!string.IsNullOrWhiteSpace(cleanVer))
+                {
+                    info.OperatingSystem = $"Android {cleanVer}";
+                }
+                else
+                {
+                    info.OperatingSystem = "Android";
+                }
             }
             else
             {
-                info.OperatingSystem = "Android";
+                var androidMatch = Regex.Match(ua, @"Android\s+([\d.]+)", RegexOptions.IgnoreCase);
+                if (androidMatch.Success)
+                {
+                    info.OperatingSystem = $"Android {androidMatch.Groups[1].Value}";
+                }
+                else
+                {
+                    info.OperatingSystem = "Android";
+                }
             }
         }
         else if (ua.Contains("Mac OS X", StringComparison.OrdinalIgnoreCase) || ua.Contains("Macintosh", StringComparison.OrdinalIgnoreCase))
@@ -168,20 +192,49 @@ public static class UserAgentParser
         }
         else if (ua.Contains("Android", StringComparison.OrdinalIgnoreCase))
         {
-            var modelMatch = Regex.Match(ua, @";\s*Android[^;]*;\s*([^;)]+?)(?:\s+Build|[;)])", RegexOptions.IgnoreCase);
-            if (modelMatch.Success && !string.IsNullOrWhiteSpace(modelMatch.Groups[1].Value))
+            string? rawModel = null;
+            if (!string.IsNullOrWhiteSpace(deviceModel))
             {
-                var rawModel = modelMatch.Groups[1].Value.Trim();
-                if (rawModel.StartsWith("SM-", StringComparison.OrdinalIgnoreCase) || rawModel.Contains("Samsung", StringComparison.OrdinalIgnoreCase))
+                var cleanModel = deviceModel.Trim('\"', ' ', '\'');
+                if (cleanModel.Length > 0 && 
+                    !cleanModel.Equals("K", StringComparison.OrdinalIgnoreCase) && 
+                    !cleanModel.Equals("Mobile", StringComparison.OrdinalIgnoreCase))
+                {
+                    rawModel = cleanModel;
+                }
+            }
+
+            if (rawModel == null)
+            {
+                var modelMatch = Regex.Match(ua, @";\s*Android[^;]*;\s*([^;)]+?)(?:\s+Build|[;)])", RegexOptions.IgnoreCase);
+                if (modelMatch.Success && !string.IsNullOrWhiteSpace(modelMatch.Groups[1].Value))
+                {
+                    var m = modelMatch.Groups[1].Value.Trim();
+                    if (m.Length > 2 && !m.Equals("K", StringComparison.OrdinalIgnoreCase) && !m.Equals("Mobile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        rawModel = m;
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(rawModel))
+            {
+                if (rawModel.StartsWith("SM-", StringComparison.OrdinalIgnoreCase) || rawModel.StartsWith("GT-", StringComparison.OrdinalIgnoreCase))
                     device = rawModel.StartsWith("Samsung", StringComparison.OrdinalIgnoreCase) ? rawModel : $"Samsung {rawModel}";
+                else if (rawModel.StartsWith("Samsung", StringComparison.OrdinalIgnoreCase))
+                    device = rawModel;
                 else if (rawModel.StartsWith("Pixel", StringComparison.OrdinalIgnoreCase))
                     device = $"Google {rawModel}";
                 else if (rawModel.StartsWith("Mi ", StringComparison.OrdinalIgnoreCase) || rawModel.StartsWith("Redmi", StringComparison.OrdinalIgnoreCase) || rawModel.StartsWith("POCO", StringComparison.OrdinalIgnoreCase))
                     device = $"Xiaomi {rawModel}";
-                else if (rawModel.Length > 2 && !rawModel.Equals("K", StringComparison.OrdinalIgnoreCase) && !rawModel.Equals("Mobile", StringComparison.OrdinalIgnoreCase))
-                    device = rawModel;
+                else if (rawModel.StartsWith("moto", StringComparison.OrdinalIgnoreCase))
+                    device = $"Motorola {rawModel}";
+                else if (rawModel.StartsWith("CPH", StringComparison.OrdinalIgnoreCase))
+                    device = $"OPPO {rawModel}";
+                else if (rawModel.StartsWith("RMX", StringComparison.OrdinalIgnoreCase))
+                    device = $"Realme {rawModel}";
                 else
-                    device = "Android Device";
+                    device = rawModel;
             }
             else
             {

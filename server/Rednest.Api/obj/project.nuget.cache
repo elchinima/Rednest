@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "b+X86Gv/hgk=",
+  "dgSpecHash": "gscyAfdoTyg=",
   "success": true,
-  "projectFilePath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+  "projectFilePath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dmatc\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
     "C:\\Users\\dmatc\\.nuget\\packages\\dotnetenv\\3.2.0\\dotnetenv.3.2.0.nupkg.sha512",
@@ -59,9 +59,9 @@
       "code": "NU1902",
       "level": "Warning",
       "message": "У пакета \"SixLabors.ImageSharp\" 3.1.10 есть известная уязвимость https://github.com/advisories/GHSA-rxmq-m78w-7wmc (уровень серьезности: средний уровень)",
-      "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "filePath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "libraryId": "SixLabors.ImageSharp",
       "targetGraphs": [
         "net10.0"

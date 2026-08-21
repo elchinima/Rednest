@@ -3316,11 +3316,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "projectUniqueName": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "projectName": "Rednest.Api",
-      "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
+      "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\Rednest.Api.csproj",
       "packagesPath": "C:\\Users\\dmatc\\.nuget\\packages\\",
-      "outputPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\obj\\",
+      "outputPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3342,11 +3342,11 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
-              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
+            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
+              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
             },
-            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj": {
-              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj"
+            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj": {
+              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Infrastructure\\Rednest.Infrastructure.csproj"
             }
           }
         }

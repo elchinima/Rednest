@@ -38,8 +38,10 @@ public class AuthController : ControllerBase
             var userAgent = Request.Headers["User-Agent"].ToString();
             var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
                                   ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+            var deviceModel = Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                              ?? Request.Headers["X-Device-Model"].FirstOrDefault();
 
-            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent, platformVersion);
+            var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent, platformVersion, deviceModel);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
 
             var user = await userRepository.GetByEmailAsync(request.Email);
@@ -82,14 +84,69 @@ public class AuthController : ControllerBase
             var userAgent = Request.Headers["User-Agent"].ToString();
             var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
                                   ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+            var deviceModel = Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                              ?? Request.Headers["X-Device-Model"].FirstOrDefault();
 
-            var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion);
+            var result = await _authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion, deviceModel);
             SetTokenCookies(result.AccessToken, result.RefreshToken);
             return Ok();
         }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetSessions()
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var currentRefreshToken = Request.Cookies["refreshToken"];
+            var sessions = await _authService.GetUserSessionsAsync(userId, currentRefreshToken);
+            return Ok(sessions);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("sessions/{sessionId}/revoke")]
+    public async Task<IActionResult> RevokeSession(string sessionId)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var currentRefreshToken = Request.Cookies["refreshToken"];
+            var success = await _authService.RevokeSessionAsync(userId, sessionId, currentRefreshToken);
+            if (!success)
+            {
+                return NotFound(new { Message = "Session not found." });
+            }
+
+            return Ok(new { Message = "Session revoked successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
         }
         catch (Exception ex)
         {

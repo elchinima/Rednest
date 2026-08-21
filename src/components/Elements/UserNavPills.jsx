@@ -157,6 +157,7 @@ const UserNavPills = ({ onMenuClose }) => {
                   className="cta-btn sm user-nav-menu-item"
                   onClick={() => {
                     setIsUserMenuOpen(false);
+                    if (onMenuClose) onMenuClose();
                     setIsLogoutModalOpen(true);
                   }}
                 >
