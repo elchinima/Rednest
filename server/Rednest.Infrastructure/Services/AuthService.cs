@@ -111,9 +111,9 @@ public class AuthService : IAuthService
     {
         var now = DateTime.UtcNow;
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
-        if (result == null || IsSessionExpired(result.Value.Entry, now))
+        if (result == null || result.Value.Entry.IsActive == false || IsSessionExpired(result.Value.Entry, now))
         {
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+            throw new UnauthorizedAccessException("Invalid, terminated or expired refresh token");
         }
 
         var (user, session, oldEntry) = result.Value;
@@ -233,31 +233,19 @@ public class AuthService : IAuthService
         if (s == null) return true;
         if (string.IsNullOrWhiteSpace(s.RefreshToken)) return true;
 
-        // 1. Проверка на наличие поля IsActive и его значение
-        if (!s.IsActive.HasValue || s.IsActive.Value == false)
-        {
-            return true;
-        }
 
-        // 2. Проверка срока действия токена
         if (s.RefreshTokenExpiryTime != default && s.RefreshTokenExpiryTime <= now)
         {
             return true;
         }
 
-        // 3. Проверка 15 дней с момента создания или последней активности
         var referenceTime = s.LastActiveAt ?? (s.CreatedAt != default ? s.CreatedAt : (DateTime?)null);
         if (referenceTime.HasValue && referenceTime.Value != default && referenceTime.Value.AddDays(15) <= now)
         {
             return true;
         }
 
-        if (referenceTime.HasValue && s.RefreshTokenExpiryTime > referenceTime.Value.AddDays(15.1) && referenceTime.Value.AddDays(15) <= now)
-        {
-            return true;
-        }
-
-        if (s.RefreshTokenExpiryTime == default)
+        if (s.RefreshTokenExpiryTime == default && !referenceTime.HasValue)
         {
             return true;
         }

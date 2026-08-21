@@ -1645,8 +1645,8 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
-              "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
+            "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj": {
+              "projectPath": "D:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Application\\Rednest.Application.csproj"
             },
             "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj": {
               "projectPath": "d:\\Project-Work\\Rednest\\Rednest New\\server\\Rednest.Core\\Rednest.Core.csproj"
