@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         login(data);
         return data;
-      } else {
+      } else if (response.status === 401) {
         localStorage.removeItem('rednest_auth');
         localStorage.removeItem('rednest_user');
         setIsAuthenticated(false);

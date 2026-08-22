@@ -1,167 +1,169 @@
 @import '../../styles/variables.scss';
 
-.user-nav-pills-container {
+
+.user-nav-capsule-wrapper {
+  position: relative;
+}
+
+.user-nav-capsule {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  position: relative;
+  gap: 10px;
+  padding: 5px 16px 5px 5px;
+  border-radius: $border-radius-full;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 12px rgba(239, 68, 68, 0.15),
+    0 0 30px rgba(239, 68, 68, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  outline: none;
+  color: #ffffff;
 
-  .user-nav-pill {
-    background: #ffffff;
-    color: $color-bg-dark;
-    text-decoration: none;
-    border: none;
-    outline: none;
-    font-family: inherit;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.28);
-      background: #ffffff;
-      color: $color-primary;
-    }
+  &:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 0 18px rgba(239, 68, 68, 0.25),
+      0 0 40px rgba(239, 68, 68, 0.1),
+      0 6px 20px rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
   }
 
-  .user-nav-avatar-pill {
-    width: 38px;
-    height: 38px;
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
     border-radius: $border-radius-full;
+    overflow: hidden;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    transition: border-color 0.3s ease;
+    text-decoration: none;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  &__avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: $border-radius-full;
+  }
+
+  &__avatar-fallback {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    user-select: none;
+    line-height: 1;
+  }
+
+  &__name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    letter-spacing: 0.2px;
+    user-select: none;
+  }
+
+  &__divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
-    padding: 0;
-    box-sizing: border-box;
-    border: 2px solid #ffffff;
-    cursor: pointer;
-
-    .user-nav-avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      border-radius: $border-radius-full;
-    }
-
-    .user-nav-avatar-fallback {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: $color-bg-dark;
-      line-height: 1;
-      text-transform: uppercase;
-      user-select: none;
-    }
-
-    &:hover .user-nav-avatar-fallback {
-      color: $color-primary;
-    }
   }
 
-  .user-nav-dropdown-wrapper {
-    position: relative;
-
-    .user-nav-name-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      line-height: 1.2;
-
-      .user-nav-name-text {
-        letter-spacing: 0.1px;
-      }
-
-      .user-nav-chevron {
-        transition: transform 0.25s ease;
-        flex-shrink: 0;
-
-        &.open {
-          transform: rotate(180deg);
-        }
-      }
-    }
-
-    .user-nav-menu-dropdown {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      width: 100%;
-      min-width: 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 150;
-
-      .user-nav-menu-item {
-        width: 100%;
-        text-align: center;
-        box-sizing: border-box;
-        font-size: 0.85rem;
-        padding: 8px 14px;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
-        border: none;
-        cursor: pointer;
-        background: #ffffff;
-        color: $color-bg-dark;
-        border-radius: $border-radius-full;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.25s ease;
-
-        &:hover {
-          background: #ffffff;
-          color: $color-primary;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-        }
-      }
-    }
-  }
-
-  .user-nav-top-row {
-    display: contents;
-  }
-
-  .user-nav-balance-pill {
+  &__balance {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 4px;
-    padding: 8px 14px;
-    font-size: 0.9rem;
-    font-weight: 700;
+    gap: 3px;
     white-space: nowrap;
-    line-height: 1.2;
+  }
+
+  &__balance-amount {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
+  }
+
+  &__balance-symbol {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  &__chevron {
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+    opacity: 0.7;
+
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 150;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $border-radius-md;
+    padding: 6px;
+    box-shadow:
+      0 0 12px rgba(239, 68, 68, 0.12),
+      0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  &__dropdown-item {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 10px 16px;
+    border: none;
     cursor: pointer;
+    background: transparent;
+    color: #ffffff;
+    border-radius: $border-radius-sm;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-family: inherit;
 
-    .user-nav-balance-amount {
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.3px;
-    }
-
-    .user-nav-balance-symbol {
-      font-size: 0.95rem;
-      font-weight: 800;
-    }
-
-    &--mobile {
-      display: none;
-    }
-
-    &--desktop {
-      display: inline-flex;
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
     }
   }
 }
+
 
 .user-nav-loader-pill {
   display: flex;
@@ -172,8 +174,15 @@
   width: 38px;
   height: 38px;
   border-radius: $border-radius-full;
-  background: #ffffff;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 0;
+
+  img {
+    filter: brightness(10) !important;
+  }
 }
 
 .user-nav-login-btn {
@@ -186,66 +195,34 @@
     display: flex !important;
     flex-direction: column !important;
 
-    .user-nav-pills-container,
+    .user-nav-capsule-wrapper,
     .user-nav-login-btn,
     .user-nav-loader-pill {
       order: 1 !important;
       margin-top: 0 !important;
     }
 
-    .user-nav-pills-container {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
+    .user-nav-capsule-wrapper {
       width: 100%;
-      gap: 12px;
-      margin-top: 0 !important;
 
-      .user-nav-top-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
+      .user-nav-capsule {
         width: 100%;
-      }
-
-      .user-nav-avatar-pill {
-        width: 44px;
-        height: 44px;
-        margin: 0;
-        flex-shrink: 0;
-      }
-
-      .user-nav-balance-pill--mobile {
-        display: inline-flex;
-        flex: 1;
-        max-width: 140px;
         justify-content: center;
-        padding: 8px 12px;
-        margin-top: 0 !important;
+        padding: 6px 18px 6px 6px;
       }
 
-      .user-nav-balance-pill--desktop {
-        display: none;
+      .user-nav-capsule__avatar {
+        width: 36px;
+        height: 36px;
       }
 
-      .user-nav-dropdown-wrapper {
+      .user-nav-capsule__dropdown {
+        position: static;
+        margin-top: 8px;
         width: 100%;
 
-        .user-nav-name-pill {
-          width: 100%;
-          justify-content: center;
+        .user-nav-capsule__dropdown-item {
           margin-top: 0 !important;
-        }
-
-        .user-nav-menu-dropdown {
-          position: static;
-          margin-top: 8px;
-          width: 100%;
-
-          .user-nav-menu-item {
-            margin-top: 0 !important;
-          }
         }
       }
     }

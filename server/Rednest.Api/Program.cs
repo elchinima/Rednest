@@ -260,7 +260,7 @@ app.Use(async (context, next) =>
 
                 context.Items["newAccessToken"] = result.AccessToken;
             }
-            catch
+            catch (UnauthorizedAccessException)
             {
                 var deleteCookieOptions = new CookieOptions
                 {
@@ -271,6 +271,11 @@ app.Use(async (context, next) =>
                 };
                 context.Response.Cookies.Delete("accessToken", deleteCookieOptions);
                 context.Response.Cookies.Delete("refreshToken", deleteCookieOptions);
+            }
+            catch (Exception ex)
+            {
+                var logger = context.RequestServices.GetService<ILogger<Program>>();
+                logger?.LogWarning(ex, "Transient error occurred while refreshing token in middleware. Retaining existing cookies.");
             }
         }
     }

@@ -80,103 +80,90 @@ const UserNavPills = ({ onMenuClose }) => {
 
   return (
     <>
-      <div className="user-nav-pills-container">
-        <div className="user-nav-top-row">
+      <div className="user-nav-capsule-wrapper" ref={userMenuRef}>
+        <button
+          type="button"
+          className="user-nav-capsule"
+          onClick={() => setIsUserMenuOpen((prev) => !prev)}
+          aria-expanded={isUserMenuOpen}
+          aria-haspopup="true"
+        >
           <Link
             to="/profile"
-            className="user-nav-pill user-nav-avatar-pill"
+            className="user-nav-capsule__avatar"
             title={`Profile - ${userName}`}
-            onClick={handleProfileClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleProfileClick();
+            }}
           >
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt={userName}
-                className="user-nav-avatar-img"
+                className="user-nav-capsule__avatar-img"
               />
             ) : (
-              <span className="user-nav-avatar-fallback">
+              <span className="user-nav-capsule__avatar-fallback">
                 {userName ? userName.charAt(0).toUpperCase() : 'U'}
               </span>
             )}
           </Link>
 
-          <Link
-            to="/profile"
-            className="cta-btn sm user-nav-pill user-nav-balance-pill user-nav-balance-pill--mobile"
-            title="Your Balance"
-            onClick={handleProfileClick}
-          >
-            <span className="user-nav-balance-amount">{formattedBalance}</span>
-            <span className="user-nav-balance-symbol">₼</span>
-          </Link>
-        </div>
+          <span className="user-nav-capsule__name">{userName}</span>
 
-        <div className="user-nav-dropdown-wrapper" ref={userMenuRef}>
-          <button
-            type="button"
-            className="cta-btn sm user-nav-pill user-nav-name-pill"
-            onClick={() => setIsUserMenuOpen((prev) => !prev)}
-            aria-expanded={isUserMenuOpen}
-            aria-haspopup="true"
+          <span className="user-nav-capsule__divider" />
+
+          <span className="user-nav-capsule__balance">
+            <span className="user-nav-capsule__balance-amount">{formattedBalance}</span>
+            <span className="user-nav-capsule__balance-symbol">₼</span>
+          </span>
+
+          <svg
+            className={`user-nav-capsule__chevron ${isUserMenuOpen ? 'open' : ''}`}
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <span className="user-nav-name-text">Hello, {userName}</span>
-            <svg
-              className={`user-nav-chevron ${isUserMenuOpen ? 'open' : ''}`}
-              viewBox="0 0 24 24"
-              width="14"
-              height="14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        <AnimatePresence>
+          {isUserMenuOpen && (
+            <motion.div
+              className="user-nav-capsule__dropdown"
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
             >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-
-          <AnimatePresence>
-            {isUserMenuOpen && (
-              <motion.div
-                className="user-nav-menu-dropdown"
-                initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
+              <Link
+                to="/profile"
+                className="user-nav-capsule__dropdown-item"
+                onClick={handleProfileClick}
               >
-                <Link
-                  to="/profile"
-                  className="cta-btn sm user-nav-menu-item"
-                  onClick={handleProfileClick}
-                >
-                  Profile
-                </Link>
-                <button
-                  type="button"
-                  className="cta-btn sm user-nav-menu-item"
-                  onClick={() => {
-                    setIsUserMenuOpen(false);
-                    if (onMenuClose) onMenuClose();
-                    setIsLogoutModalOpen(true);
-                  }}
-                >
-                  Log Out
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <Link
-          to="/profile"
-          className="cta-btn sm user-nav-pill user-nav-balance-pill user-nav-balance-pill--desktop"
-          title="Your Balance"
-          onClick={handleProfileClick}
-        >
-          <span className="user-nav-balance-amount">{formattedBalance}</span>
-          <span className="user-nav-balance-symbol">₼</span>
-        </Link>
+                Profile
+              </Link>
+              <button
+                type="button"
+                className="user-nav-capsule__dropdown-item"
+                onClick={() => {
+                  setIsUserMenuOpen(false);
+                  if (onMenuClose) onMenuClose();
+                  setIsLogoutModalOpen(true);
+                }}
+              >
+                Log Out
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <LogoutModal
