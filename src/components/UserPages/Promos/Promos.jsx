@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { encodeCode128 } from '../../../utils/code128';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
@@ -40,6 +41,46 @@ const formatDate = (dateStr) => {
   } catch {
     return '—';
   }
+};
+
+const BarcodeVisual = ({ code }) => {
+  const binaryString = React.useMemo(() => {
+    return encodeCode128(code);
+  }, [code]);
+
+  if (!binaryString) return null;
+
+  const quietZone = 10;
+  const totalWidth = binaryString.length + quietZone * 2;
+  const height = 44;
+
+  return (
+    <div className="promo-barcode-wrap" title={`Barcode: ${code}`}>
+      <svg
+        viewBox={`0 0 ${totalWidth} ${height}`}
+        className="promo-barcode-svg"
+        preserveAspectRatio="none"
+      >
+        <rect width={totalWidth} height={height} fill="#ffffff" />
+        {binaryString.split('').map((bit, idx) => {
+          if (bit === '1') {
+            return (
+              <rect
+                key={idx}
+                x={quietZone + idx}
+                y={0}
+                width={1}
+                height={height}
+                fill="#000000"
+              />
+            );
+          }
+          return null;
+        })}
+      </svg>
+      <span className="promo-barcode-number">{code}</span>
+    </div>
+  );
 };
 
 const Promos = () => {
@@ -145,35 +186,6 @@ const Promos = () => {
             <p className="promos-hero-desc">
               Your exclusive rewards, discounts, and wheel spin bonuses
             </p>
-          </motion.div>
-
-          <motion.div
-            className="promos-stats-grid"
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="promos-stat-card">
-              <div className="promos-stat-icon">🎁</div>
-              <div className="promos-stat-info">
-                <span className="promos-stat-value">{promos.length}</span>
-                <span className="promos-stat-label">Total Earned</span>
-              </div>
-            </div>
-            <div className="promos-stat-card active-stat">
-              <div className="promos-stat-icon">✨</div>
-              <div className="promos-stat-info">
-                <span className="promos-stat-value">{activeCount}</span>
-                <span className="promos-stat-label">Active Promos</span>
-              </div>
-            </div>
-            <Link to="/fortune" className="promos-stat-card fortune-stat">
-              <div className="promos-stat-icon">🎡</div>
-              <div className="promos-stat-info">
-                <span className="promos-stat-title">Wheel of Fortune</span>
-                <span className="promos-stat-link">Spin to win more →</span>
-              </div>
-            </Link>
           </motion.div>
 
           <div className="promos-filters">
@@ -308,6 +320,10 @@ const Promos = () => {
                             )}
                           </button>
                         </div>
+
+                        {promo.barCode && (
+                          <BarcodeVisual code={promo.barCode} />
+                        )}
 
                         <div className="promo-dates-row">
                           <div className="promo-date-item">
