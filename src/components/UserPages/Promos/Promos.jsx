@@ -42,37 +42,6 @@ const formatDate = (dateStr) => {
   }
 };
 
-const BarcodeVisual = ({ code }) => {
-  const bars = React.useMemo(() => {
-    const str = String(code || '1234567890');
-    const result = [];
-    for (let i = 0; i < str.length; i++) {
-      const val = str.charCodeAt(i);
-      result.push({ width: (val % 3) + 1.5, opacity: (val % 2 === 0) ? 0.95 : 0.7 });
-      result.push({ width: ((val * 3) % 4) + 1, opacity: 0 });
-    }
-    return result;
-  }, [code]);
-
-  return (
-    <div className="promo-barcode-wrap" title={`Barcode: ${code}`}>
-      <div className="promo-barcode-lines">
-        {bars.map((bar, idx) => (
-          <span
-            key={idx}
-            className="promo-barcode-bar"
-            style={{
-              width: `${bar.width}px`,
-              opacity: bar.opacity,
-            }}
-          />
-        ))}
-      </div>
-      <span className="promo-barcode-number">{code}</span>
-    </div>
-  );
-};
-
 const Promos = () => {
   const { user } = useAuth();
   const [promos, setPromos] = useState([]);
@@ -339,10 +308,6 @@ const Promos = () => {
                             )}
                           </button>
                         </div>
-
-                        {promo.barCode && (
-                          <BarcodeVisual code={promo.barCode} />
-                        )}
 
                         <div className="promo-dates-row">
                           <div className="promo-date-item">
