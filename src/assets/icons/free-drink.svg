@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 1.5; 0 -1.5; 0 1.5" dur="2.8s" repeatCount="indefinite" />
+    
+    <path d="M 36 28 C 34 20 40 16 36 10" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round">
+      <animate attributeName="d" values="M 36 28 C 34 20 40 16 36 10; M 36 28 C 40 20 34 16 38 10; M 36 28 C 34 20 40 16 36 10" dur="2s" repeatCount="indefinite" />
+    </path>
+    <path d="M 50 26 C 48 18 54 14 50 8" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round">
+      <animate attributeName="d" values="M 50 26 C 48 18 54 14 50 8; M 50 26 C 54 18 48 14 52 8; M 50 26 C 48 18 54 14 50 8" dur="2.2s" repeatCount="indefinite" />
+    </path>
+    <path d="M 64 28 C 62 20 68 16 64 10" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round">
+      <animate attributeName="d" values="M 64 28 C 62 20 68 16 64 10; M 64 28 C 68 20 62 16 66 10; M 64 28 C 62 20 68 16 64 10" dur="2.4s" repeatCount="indefinite" />
+    </path>
+
+    <path d="M 22 36 L 28 76 C 29 83 36 88 44 88 L 56 88 C 64 88 71 83 72 76 L 78 36 Z" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    
+    <path d="M 76 44 C 86 44 92 52 90 62 C 88 70 80 74 73 72" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    
+    <path d="M 16 92 L 84 92" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />
+
+    <path d="M 44 54 C 44 54 41 60 50 66 C 56 66 58 60 58 54 C 58 54 52 52 44 54 Z" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(239, 68, 68, 0.3)" />
+  </g>
+</svg>

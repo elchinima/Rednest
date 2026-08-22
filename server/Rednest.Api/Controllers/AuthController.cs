@@ -491,6 +491,46 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("promos")]
+    public async Task<IActionResult> GetAllPromos([FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                return Unauthorized();
+
+            var promos = await userRepository.GetAllUserPromosAsync(userId);
+            var now = DateTime.UtcNow;
+
+            var list = promos.Select(promo =>
+            {
+                bool isExpired = promo.Dates.ExpiresAt < now;
+                return new
+                {
+                    id = promo.Id,
+                    promoCode = promo.Codes.PromoCode,
+                    barCode = promo.Codes.BarCode,
+                    prizeName = promo.PrizeInfo.PrizeName,
+                    prizeDescription = promo.PrizeInfo.PrizeDescription,
+                    prizeType = promo.PrizeInfo.Type.ToString(),
+                    cashbackPercent = promo.PrizeInfo.CashbackPercent,
+                    isActive = promo.IsActive && !isExpired,
+                    isExpired = isExpired,
+                    activatedAt = promo.Dates.ActivatedAt,
+                    expiresAt = promo.Dates.ExpiresAt
+                };
+            }).ToList();
+
+            return Ok(list);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [HttpPost("promo")]
     public async Task<IActionResult> SavePromo(
         [FromServices] IUserRepository userRepository)

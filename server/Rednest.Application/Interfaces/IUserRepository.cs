@@ -14,6 +14,7 @@ public interface IUserRepository
     Task UpdateSessionAsync(UserSession session);
     Task<UserPromo?> GetUserPromoAsync(Guid userId);
     Task<UserPromo?> GetActiveUserPromoAsync(Guid userId);
+    Task<List<UserPromo>> GetAllUserPromosAsync(Guid userId);
     Task AddUserPromoAsync(UserPromo promo);
     Task UpdateUserPromoAsync(UserPromo promo);
     Task<UserBasket?> GetBasketByUserIdAsync(Guid userId);

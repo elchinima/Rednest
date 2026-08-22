@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 2; 0 -2; 0 2" dur="2.7s" repeatCount="indefinite" />
+
+    <circle cx="50" cy="50" r="38" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" fill="none" />
+    <circle cx="50" cy="50" r="30" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-dasharray="6 4" fill="none" />
+
+    <path d="M 50 12 A 38 38 0 0 1 88 50" stroke="#ef4444" stroke-width="5" stroke-linecap="round" />
+    <polygon points="84,40 92,52 80,52" fill="#ef4444" />
+
+    <path d="M 50 88 A 38 38 0 0 1 12 50" stroke="#ef4444" stroke-width="5" stroke-linecap="round" />
+    <polygon points="16,60 8,48 20,48" fill="#ef4444" />
+
+    <text x="50" y="60" fill="#ffffff" font-family="'Inter', sans-serif" font-weight="900" font-size="28" text-anchor="middle">₼</text>
+  </g>
+</svg>

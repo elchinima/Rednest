@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 2; 0 -2; 0 2" dur="2.5s" repeatCount="indefinite" />
+    <animateTransform attributeName="transform" type="rotate" values="-2 50 50; 2 50 50; -2 50 50" dur="3.5s" repeatCount="indefinite" additive="sum" />
+    
+    <path d="M 18 72 L 24 36 L 40 54 L 50 26 L 60 54 L 76 36 L 82 72 Z" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+    <path d="M 18 72 C 30 76 70 76 82 72 L 82 80 C 70 84 30 84 18 80 Z" stroke="#ef4444" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(239, 68, 68, 0.2)" />
+    
+    <circle cx="24" cy="32" r="4.5" fill="#ef4444" />
+    <circle cx="50" cy="22" r="5.5" fill="#ef4444" />
+    <circle cx="76" cy="32" r="4.5" fill="#ef4444" />
+    
+    <circle cx="36" cy="76" r="2.5" fill="#ffffff" />
+    <circle cx="50" cy="76" r="3" fill="#ffffff" />
+    <circle cx="64" cy="76" r="2.5" fill="#ffffff" />
+
+    <path d="M 50 8 L 50 14 M 47 11 L 53 11" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+    <path d="M 15 20 L 15 24 M 13 22 L 17 22" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+    <path d="M 85 20 L 85 24 M 83 22 L 87 22" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+  </g>
+</svg>

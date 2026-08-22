@@ -93,6 +93,14 @@ public class UserRepository : IUserRepository
             .FirstOrDefaultAsync();
     }
 
+    public async Task<List<UserPromo>> GetAllUserPromosAsync(Guid userId)
+    {
+        return await _context.UserPromos
+            .Where(p => p.UserId == userId)
+            .OrderByDescending(p => p.Dates.ActivatedAt)
+            .ToListAsync();
+    }
+
     public async Task AddUserPromoAsync(UserPromo promo)
     {
         await _context.UserPromos.AddAsync(promo);
