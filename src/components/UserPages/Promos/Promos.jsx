@@ -15,6 +15,8 @@ import discount25Icon from '../../../assets/icons/discount-25.svg';
 import cashbackIcon from '../../../assets/icons/cashback.svg';
 import discount50Icon from '../../../assets/icons/discount-50.svg';
 import defaultGiftIcon from '../../../assets/icons/gift-animated.svg';
+import ticketAnimatedIcon from '../../../assets/icons/ticket-animated.svg';
+import fortuneWheelIcon from '../../../assets/icons/fortune-wheel.svg';
 import './Promos.scss';
 
 const PRIZE_TYPE_ICONS = {
@@ -231,7 +233,9 @@ const Promos = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <div className="promos-empty-icon">🎟️</div>
+              <div className="promos-empty-icon">
+                <img src={ticketAnimatedIcon} alt="Promo codes" className="promos-empty-icon-img" />
+              </div>
               <h3>
                 {filter === 'active'
                   ? 'No active promo codes right now'
@@ -245,7 +249,8 @@ const Promos = () => {
                   : 'Play the Fortune mini-game to unlock exclusive Rednest perks and discounts.'}
               </p>
               <Link to="/fortune" className="cta-btn sm promos-empty-btn">
-                🎡 Spin Fortune Wheel
+                <img src={fortuneWheelIcon} alt="" className="promos-empty-btn-icon" />
+                <span>Spin Fortune Wheel</span>
               </Link>
             </motion.div>
           ) : (

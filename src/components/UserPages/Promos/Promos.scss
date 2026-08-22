@@ -149,9 +149,20 @@
   gap: 12px;
 
   .promos-empty-icon {
-    font-size: 3.2rem;
-    line-height: 1;
-    margin-bottom: 4px;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+
+    .promos-empty-icon-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.25));
+    }
   }
 
   h3 {
@@ -173,6 +184,18 @@
     color: $color-bg-dark;
     font-weight: 700;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    .promos-empty-btn-icon {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      display: inline-block;
+      flex-shrink: 0;
+    }
 
     &:hover {
       color: $color-primary;

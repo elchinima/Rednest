@@ -88,14 +88,9 @@ const UserNavPills = ({ onMenuClose }) => {
           aria-expanded={isUserMenuOpen}
           aria-haspopup="true"
         >
-          <Link
-            to="/profile"
+          <div
             className="user-nav-capsule__avatar"
             title={`Profile - ${userName}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleProfileClick();
-            }}
           >
             {avatarUrl ? (
               <img
@@ -108,7 +103,7 @@ const UserNavPills = ({ onMenuClose }) => {
                 {userName ? userName.charAt(0).toUpperCase() : 'U'}
               </span>
             )}
-          </Link>
+          </div>
 
           <span className="user-nav-capsule__info-row">
             <span className="user-nav-capsule__name">{userName}</span>
@@ -140,36 +135,44 @@ const UserNavPills = ({ onMenuClose }) => {
           {isUserMenuOpen && (
             <motion.div
               className="user-nav-capsule__dropdown"
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.96 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
+              initial={{ opacity: 0, height: 0, scale: 0.96, y: -6 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1, y: 0 }}
+              exit={{ opacity: 0, height: 0, scale: 0.96, y: -6 }}
+              transition={{
+                height: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
+                opacity: { duration: 0.22, ease: 'easeOut' },
+                scale: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
+                y: { duration: 0.25, ease: [0.16, 1, 0.3, 1] },
+              }}
+              style={{ overflow: 'hidden' }}
             >
-              <Link
-                to="/profile"
-                className="user-nav-capsule__dropdown-item"
-                onClick={handleProfileClick}
-              >
-                Profile
-              </Link>
-              <Link
-                to="/promos"
-                className="user-nav-capsule__dropdown-item"
-                onClick={handleProfileClick}
-              >
-                Promos
-              </Link>
-              <button
-                type="button"
-                className="user-nav-capsule__dropdown-item"
-                onClick={() => {
-                  setIsUserMenuOpen(false);
-                  if (onMenuClose) onMenuClose();
-                  setIsLogoutModalOpen(true);
-                }}
-              >
-                Log Out
-              </button>
+              <div className="user-nav-capsule__dropdown-inner">
+                <Link
+                  to="/profile"
+                  className="user-nav-capsule__dropdown-item"
+                  onClick={handleProfileClick}
+                >
+                  Profile
+                </Link>
+                <Link
+                  to="/promos"
+                  className="user-nav-capsule__dropdown-item"
+                  onClick={handleProfileClick}
+                >
+                  Promos
+                </Link>
+                <button
+                  type="button"
+                  className="user-nav-capsule__dropdown-item"
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    if (onMenuClose) onMenuClose();
+                    setIsLogoutModalOpen(true);
+                  }}
+                >
+                  Log Out
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
