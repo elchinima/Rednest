@@ -16,7 +16,7 @@ import cashbackIcon from '../../../assets/icons/cashback.svg';
 import discount50Icon from '../../../assets/icons/discount-50.svg';
 import defaultGiftIcon from '../../../assets/icons/gift-animated.svg';
 import ticketAnimatedIcon from '../../../assets/icons/ticket-animated.svg';
-import fortuneWheelIcon from '../../../assets/icons/fortune-wheel.svg';
+import fortuneWheelDarkIcon from '../../../assets/icons/fortune-wheel-dark.svg';
 import './Promos.scss';
 
 const PRIZE_TYPE_ICONS = {
@@ -249,7 +249,7 @@ const Promos = () => {
                   : 'Play the Fortune mini-game to unlock exclusive Rednest perks and discounts.'}
               </p>
               <Link to="/fortune" className="cta-btn sm promos-empty-btn">
-                <img src={fortuneWheelIcon} alt="" className="promos-empty-btn-icon" />
+                <img src={fortuneWheelDarkIcon} alt="" className="promos-empty-btn-icon" />
                 <span>Spin Fortune Wheel</span>
               </Link>
             </motion.div>

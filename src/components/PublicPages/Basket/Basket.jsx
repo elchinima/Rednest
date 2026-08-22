@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import cartAnimated from '../../../assets/icons/cart-animated.svg';
@@ -38,6 +38,7 @@ const formatPrizeName = (name) => {
 const Basket = () => {
   const { user, logout, authLoading } = useAuth();
   const { items, addItem, removeItem, deleteItem, loading: basketLoading } = useBasket();
+  const navigate = useNavigate();
 
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
@@ -404,7 +405,10 @@ const Basket = () => {
                 <span className="summary-total-price">{discountedTotal} ₼</span>
               </div>
 
-              <button className="cta-btn basket-checkout-btn">
+              <button
+                className="cta-btn basket-checkout-btn"
+                onClick={() => navigate('/order')}
+              >
                 Place Order
               </button>
               <Link to="/catalog" className="cta-btn secondary basket-continue-btn">
