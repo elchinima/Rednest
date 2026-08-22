@@ -216,7 +216,7 @@
   &__details {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     margin-bottom: 18px;
   }
 
@@ -226,10 +226,15 @@
     line-height: 1.45;
   }
 
+  &__features-wrap {
+    overflow: hidden;
+  }
+
   &__features {
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
+    padding-top: 4px;
 
     .feature-pill {
       font-size: 0.78rem;
@@ -282,6 +287,7 @@
 
 .order-step-content {
   width: 100%;
+  scroll-margin-top: 90px;
 }
 
 .order-step-box {
@@ -420,12 +426,20 @@
     box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
     cursor: pointer;
     border: none;
-    transition: all 0.2s ease;
+    text-align: center;
+    font-family: inherit;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, color 0.2s ease;
 
     &:hover {
       background: #dc2626;
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5);
+      color: #ffffff;
+      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.55);
       transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      color: #ffffff;
     }
 
     @media (max-width: 768px) {
@@ -436,16 +450,28 @@
   .order-back-btn {
     padding: 13px 20px;
     font-size: 0.95rem;
+    font-weight: 600;
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: $border-radius-md;
     text-decoration: none;
-    display: inline-block;
-    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 
     &:hover {
       background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      color: #ffffff;
     }
 
     @media (max-width: 768px) {

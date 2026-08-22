@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -70,6 +70,7 @@ const Order = () => {
   const { items, grandTotal, discountedTotal, promoDiscountAmount } = useBasket();
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const stepBoxRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,6 +81,18 @@ const Order = () => {
     }
     return () => document.body.classList.remove('mobile-menu-open');
   }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (selectedMethod && stepBoxRef.current) {
+      const timer = setTimeout(() => {
+        stepBoxRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMethod]);
 
   const finalAmount = discountedTotal || grandTotal || '0.00';
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -179,11 +192,23 @@ const Order = () => {
                   <p className="order-method-card__desc">
                     Pay with cash or bank card in person when you pick up your fresh order at the barista counter.
                   </p>
-                  <div className="order-method-card__features">
-                    <FeaturePill icon={featureCashIcon} label="Cash Payment" />
-                    <FeaturePill icon={featureNfcIcon} label="Card & NFC" />
-                    <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
-                  </div>
+                  <AnimatePresence initial={false}>
+                    {!selectedMethod && (
+                      <motion.div
+                        className="order-method-card__features-wrap"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.35, ease: smoothEase }}
+                      >
+                        <div className="order-method-card__features">
+                          <FeaturePill icon={featureCashIcon} label="Cash Payment" />
+                          <FeaturePill icon={featureNfcIcon} label="Card & NFC" />
+                          <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="order-method-card__footer">
@@ -218,14 +243,26 @@ const Order = () => {
                   <p className="order-method-card__desc">
                     Pay securely online with your credit/debit card or Rednest balance for immediate preparation.
                   </p>
-                  <div className="order-method-card__features">
-                    <FeaturePill icon={featureCardVisaMcIcon} label="Visa or Mastercard" />
-                    <FeaturePill icon={featureWalletIcon} label="Pay via Balance" />
-                    <FeaturePill icon={featureStripeIcon} label="Pay via Stripe" />
-                    <FeaturePill icon={featureGPayIcon} label="Google Pay" />
-                    <FeaturePill icon={featureCashbackIcon} label="Earn Cashback" />
-                    <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
-                  </div>
+                  <AnimatePresence initial={false}>
+                    {!selectedMethod && (
+                      <motion.div
+                        className="order-method-card__features-wrap"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.35, ease: smoothEase }}
+                      >
+                        <div className="order-method-card__features">
+                          <FeaturePill icon={featureCardVisaMcIcon} label="Visa or Mastercard" />
+                          <FeaturePill icon={featureWalletIcon} label="Pay via Balance" />
+                          <FeaturePill icon={featureStripeIcon} label="Pay via Stripe" />
+                          <FeaturePill icon={featureGPayIcon} label="Google Pay" />
+                          <FeaturePill icon={featureCashbackIcon} label="Earn Cashback" />
+                          <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 <div className="order-method-card__footer">
@@ -240,6 +277,7 @@ const Order = () => {
           <AnimatePresence mode="wait">
             {selectedMethod && (
               <motion.div
+                ref={stepBoxRef}
                 className="order-step-content"
                 variants={stepPanelVariants}
                 initial="hidden"
@@ -288,14 +326,14 @@ const Order = () => {
                   <div className="order-actions-row">
                     <button
                       type="button"
-                      className="cta-btn order-confirm-btn"
+                      className="order-confirm-btn"
                       onClick={() => {
                         alert(`Order flow for "${selectedMethod === 'cashier' ? 'Pay at Cashier' : 'Pay Online'}" will be continued here.`);
                       }}
                     >
                       {selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'}
                     </button>
-                    <Link to="/basket" className="cta-btn secondary order-back-btn">
+                    <Link to="/basket" className="order-back-btn">
                       Back to Basket
                     </Link>
                   </div>
