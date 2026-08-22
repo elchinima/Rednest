@@ -145,15 +145,16 @@
   }
 
   &__dropdown {
-    background: rgba(18, 18, 24, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: $border-radius-md;
     padding: 6px;
     box-shadow:
-      0 0 12px rgba(239, 68, 68, 0.12),
-      0 8px 24px rgba(0, 0, 0, 0.4);
+      0 0 12px rgba(239, 68, 68, 0.15),
+      0 0 30px rgba(239, 68, 68, 0.06),
+      0 8px 24px rgba(0, 0, 0, 0.35);
     box-sizing: border-box;
   }
 
@@ -299,12 +300,15 @@
       .user-nav-capsule__dropdown {
         min-height: 0;
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.04);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: $border-radius-md;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        box-shadow:
+          0 0 12px rgba(239, 68, 68, 0.15),
+          0 0 30px rgba(239, 68, 68, 0.06),
+          0 4px 16px rgba(0, 0, 0, 0.25);
         padding: 0;
         margin-top: 8px;
         transform: none;

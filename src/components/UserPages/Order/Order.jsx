@@ -6,6 +6,13 @@ import { useBasket } from '../../../context/BasketContext';
 import logo from '../../../assets/icons/rednest_logo.png';
 import cashierIcon from '../../../assets/icons/cashier-register.svg';
 import onlineIcon from '../../../assets/icons/online-card.svg';
+import featureCashIcon from '../../../assets/icons/feature-cash.svg';
+import featureNfcIcon from '../../../assets/icons/feature-nfc.svg';
+import featurePromoIcon from '../../../assets/icons/feature-promo.svg';
+import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
+import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
+import featureStripeIcon from '../../../assets/icons/feature-stripe.svg';
+import featureCashbackIcon from '../../../assets/icons/feature-cashback.svg';
 import Footer from '../../Footer/Footer';
 import UserNavPills from '../../Elements/UserNavPills';
 import './Order.scss';
@@ -85,7 +92,6 @@ const Order = () => {
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="order-methods-grid">
-              {/* Option 1: На кассе */}
               <motion.div
                 layout
                 className={`order-method-card ${selectedMethod === 'cashier' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'cashier' ? 'unselected' : ''}`}
@@ -96,11 +102,11 @@ const Order = () => {
               >
                 <div className="order-method-card__top">
                   <div className="order-method-card__icon-wrap">
-                    <img src={cashierIcon} alt="На кассе" className="order-method-card__icon" />
+                    <img src={cashierIcon} alt="Pay at Cashier" className="order-method-card__icon" />
                   </div>
                   <div className="order-method-card__title-group">
                     <span className="order-method-card__badge">In-Store Pickup</span>
-                    <h2 className="order-method-card__title">На кассе</h2>
+                    <h2 className="order-method-card__title">Pay at Cashier</h2>
                     <span className="order-method-card__subtitle">Pay at Cashier Counter</span>
                   </div>
                 </div>
@@ -118,9 +124,18 @@ const Order = () => {
                         Pay with cash or bank card in person when you pick up your fresh order at the barista counter.
                       </p>
                       <div className="order-method-card__features">
-                        <span className="feature-pill">💵 Cash or Card</span>
-                        <span className="feature-pill">☕ Pay on Pickup</span>
-                        <span className="feature-pill">🧾 Printed Receipt</span>
+                        <span className="feature-pill">
+                          <img src={featureCashIcon} alt="" className="feature-pill__icon" />
+                          <span>Cash Payment</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featureNfcIcon} alt="" className="feature-pill__icon" />
+                          <span>Card & NFC</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featurePromoIcon} alt="" className="feature-pill__icon" />
+                          <span>Use Promo Codes</span>
+                        </span>
                       </div>
                     </motion.div>
                   )}
@@ -133,7 +148,6 @@ const Order = () => {
                 </div>
               </motion.div>
 
-              {/* Option 2: Онлайн */}
               <motion.div
                 layout
                 className={`order-method-card ${selectedMethod === 'online' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'online' ? 'unselected' : ''}`}
@@ -144,11 +158,11 @@ const Order = () => {
               >
                 <div className="order-method-card__top">
                   <div className="order-method-card__icon-wrap">
-                    <img src={onlineIcon} alt="Онлайн" className="order-method-card__icon" />
+                    <img src={onlineIcon} alt="Pay Online" className="order-method-card__icon" />
                   </div>
                   <div className="order-method-card__title-group">
                     <span className="order-method-card__badge badge-online">Instant & Contactless</span>
-                    <h2 className="order-method-card__title">Онлайн</h2>
+                    <h2 className="order-method-card__title">Pay Online</h2>
                     <span className="order-method-card__subtitle">Pay Online Instantly</span>
                   </div>
                 </div>
@@ -166,9 +180,26 @@ const Order = () => {
                         Pay securely online with your credit/debit card or Rednest balance for immediate preparation.
                       </p>
                       <div className="order-method-card__features">
-                        <span className="feature-pill">💳 Card & Balance</span>
-                        <span className="feature-pill">⚡ Immediate Queue</span>
-                        <span className="feature-pill">🔒 Secure Payment</span>
+                        <span className="feature-pill">
+                          <img src={featureCardVisaMcIcon} alt="" className="feature-pill__icon" />
+                          <span>Visa or Mastercard</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featureWalletIcon} alt="" className="feature-pill__icon" />
+                          <span>Pay via Balance</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featureStripeIcon} alt="" className="feature-pill__icon" />
+                          <span>Pay via Stripe</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featureCashbackIcon} alt="" className="feature-pill__icon" />
+                          <span>Earn Cashback</span>
+                        </span>
+                        <span className="feature-pill">
+                          <img src={featurePromoIcon} alt="" className="feature-pill__icon" />
+                          <span>Use Promo Codes</span>
+                        </span>
                       </div>
                     </motion.div>
                   )}
@@ -183,7 +214,6 @@ const Order = () => {
             </div>
           </motion.div>
 
-          {/* Selected State Panel (prepares for future steps) */}
           <AnimatePresence>
             {selectedMethod && (
               <motion.div
@@ -196,7 +226,7 @@ const Order = () => {
                 <div className="order-step-box">
                   <div className="order-step-header">
                     <div className="order-step-info">
-                      <h3>Selected Payment: <span>{selectedMethod === 'cashier' ? 'На кассе' : 'Онлайн'}</span></h3>
+                      <h3>Selected Payment: <span>{selectedMethod === 'cashier' ? 'Pay at Cashier' : 'Pay Online'}</span></h3>
                       <p>
                         {selectedMethod === 'cashier'
                           ? 'Your order will be sent to the baristas and marked for in-store payment upon pickup.'
@@ -234,11 +264,10 @@ const Order = () => {
                       type="button"
                       className="cta-btn order-confirm-btn"
                       onClick={() => {
-                        // Future implementation step
-                        alert(`Order flow for "${selectedMethod === 'cashier' ? 'На кассе' : 'Онлайн'}" will be continued here.`);
+                        alert(`Order flow for "${selectedMethod === 'cashier' ? 'Pay at Cashier' : 'Pay Online'}" will be continued here.`);
                       }}
                     >
-                      {selectedMethod === 'cashier' ? 'Confirm & Place Order (На кассе)' : 'Continue to Online Payment'}
+                      {selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'}
                     </button>
                     <Link to="/basket" className="cta-btn secondary order-back-btn">
                       Back to Basket
