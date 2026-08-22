@@ -80,6 +80,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  perspective: 800px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -99,10 +100,12 @@
   flex-direction: column;
   justify-content: space-between;
   cursor: pointer;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
   box-shadow:
     0 0 16px rgba(0, 0, 0, 0.3),
     0 4px 20px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 
   &:hover {
     border-color: rgba(239, 68, 68, 0.5);
@@ -155,6 +158,7 @@
     flex-shrink: 0;
     padding: 8px;
     box-sizing: border-box;
+    transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 
     .order-method-card__icon {
       width: 100%;
@@ -162,6 +166,12 @@
       object-fit: contain;
       display: block;
     }
+  }
+
+  &.selected &__icon-wrap {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
   }
 
   &__title-group {
@@ -208,6 +218,7 @@
     flex-direction: column;
     gap: 12px;
     margin-bottom: 18px;
+    overflow: hidden;
   }
 
   &__desc {
