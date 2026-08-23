@@ -510,7 +510,7 @@ const Order = () => {
                           Placing Order...
                         </span>
                       ) : (
-                        selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'
+                        selectedMethod === 'cashier' ? 'Confirm & Place Order' : 'Continue to Online Payment'
                       )}
                     </button>
                     <Link to="/basket" className="order-back-btn">
