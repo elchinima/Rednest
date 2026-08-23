@@ -75,7 +75,7 @@ const Order = () => {
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
   const [activePromo, setActivePromo] = useState(null);
-  const [selectedMethod, setSelectedMethod] = useState('cashier');
+  const [selectedMethod, setSelectedMethod] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState(null);
