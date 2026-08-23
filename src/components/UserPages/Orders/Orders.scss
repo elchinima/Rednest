@@ -62,102 +62,6 @@
   }
 }
 
-.orders-refresh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  padding: 8px 16px;
-  border-radius: $border-radius-full;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.2s ease;
-  font-family: inherit;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.16);
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
-  }
-
-  &.spinning svg {
-    animation: ordersSpin 1s linear infinite;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-@keyframes ordersSpin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.orders-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.orders-stat-card {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: $border-radius-md;
-  padding: 14px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-1px);
-  }
-
-  &__val {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #ffffff;
-    letter-spacing: -0.01em;
-
-    &--pending {
-      color: #f59e0b;
-    }
-
-    &--completed {
-      color: #34d399;
-    }
-  }
-
-  &__lbl {
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-}
-
 .orders-controls {
   display: flex;
   align-items: center;
@@ -184,12 +88,7 @@
   width: fit-content;
 
   @media (max-width: 768px) {
-    width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    display: none !important;
   }
 }
 
@@ -715,7 +614,7 @@
 
 .orders-receipt-modal {
   width: 100%;
-  max-width: 440px;
+  max-width: 500px;
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
@@ -904,31 +803,6 @@
         }
       }
     }
-  }
-}
-
-.orders-receipt-barcode {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px;
-  background: #ffffff;
-  border-radius: $border-radius-sm;
-  margin: 4px 0;
-
-  &-svg {
-    width: 100%;
-    max-width: 240px;
-    height: 40px;
-  }
-
-  &-num {
-    font-family: monospace, monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: #1c0707;
   }
 }
 

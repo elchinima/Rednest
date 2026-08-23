@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import { encodeCode128 } from '../../../utils/code128';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import cartIcon from '../../../assets/icons/cart-animated.svg';
@@ -48,24 +47,31 @@ const formatBakuDate = (isoStr) => {
   try {
     const d = new Date(isoStr);
     if (isNaN(d.getTime())) return '—';
-    return new Intl.DateTimeFormat('en-GB', {
+    const formatter = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-    }).format(d);
+    });
+    const parts = formatter.formatToParts(d);
+    const day = parts.find((p) => p.type === 'day')?.value || '00';
+    const month = parts.find((p) => p.type === 'month')?.value || '00';
+    const year = parts.find((p) => p.type === 'year')?.value || '0000';
+    const hour = parts.find((p) => p.type === 'hour')?.value || '00';
+    const minute = parts.find((p) => p.type === 'minute')?.value || '00';
+    return `${day}.${month}.${year}, ${hour}:${minute}`;
   } catch {
-    return new Date(isoStr).toLocaleDateString('en-GB');
+    return new Date(isoStr).toLocaleDateString('ru-RU');
   }
 };
 
 const getShortId = (id) => {
-  if (!id) return '#000000';
+  if (!id) return '00000000';
   const str = String(id).replace(/-/g, '');
-  return `#${str.slice(0, 8).toUpperCase()}`;
+  return str.slice(0, 8).toUpperCase();
 };
 
 const getStatusBadge = (status) => {
@@ -85,46 +91,6 @@ const getStatusBadge = (status) => {
   return { className: 'orders-status--completed', label: 'Completed', dotColor: '#22c55e' };
 };
 
-const BarcodeVisual = ({ code }) => {
-  const binaryString = useMemo(() => {
-    return encodeCode128(code);
-  }, [code]);
-
-  if (!binaryString) return null;
-
-  const quietZone = 8;
-  const totalWidth = binaryString.length + quietZone * 2;
-  const height = 40;
-
-  return (
-    <div className="orders-receipt-barcode" title={`Barcode: ${code}`}>
-      <svg
-        viewBox={`0 0 ${totalWidth} ${height}`}
-        className="orders-receipt-barcode-svg"
-        preserveAspectRatio="none"
-      >
-        <rect width={totalWidth} height={height} fill="#ffffff" />
-        {binaryString.split('').map((bit, idx) => {
-          if (bit === '1') {
-            return (
-              <rect
-                key={idx}
-                x={quietZone + idx}
-                y={0}
-                width={1}
-                height={height}
-                fill="#1c0707"
-              />
-            );
-          }
-          return null;
-        })}
-      </svg>
-      <span className="orders-receipt-barcode-num">{code}</span>
-    </div>
-  );
-};
-
 const Orders = () => {
   const { user } = useAuth();
   const { addItem } = useBasket();
@@ -132,7 +98,6 @@ const Orders = () => {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,9 +116,8 @@ const Orders = () => {
     }, duration);
   };
 
-  const fetchOrders = async (isManualRefresh = false) => {
-    if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
+  const fetchOrders = async () => {
+    setLoading(true);
     setError(null);
 
     try {
@@ -164,15 +128,11 @@ const Orders = () => {
       const data = await res.json();
       const list = Array.isArray(data.orders) ? data.orders : [];
       setOrders(list);
-      if (isManualRefresh) {
-        showToast('Orders updated!');
-      }
     } catch (err) {
       console.error('Error fetching orders:', err);
       setError(err.message || 'Could not load your orders. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -249,21 +209,6 @@ const Orders = () => {
     });
   }, [orders, activeFilter, searchQuery]);
 
-  const stats = useMemo(() => {
-    const total = orders.length;
-    const pending = orders.filter((o) =>
-      String(o.status || '').toLowerCase().includes('pending')
-    ).length;
-    const completed = orders.filter((o) =>
-      String(o.status || '').toLowerCase().includes('complete')
-    ).length;
-    const totalSpent = orders
-      .reduce((sum, o) => sum + Number(o.payment?.totalAmount || 0), 0)
-      .toFixed(2);
-
-    return { total, pending, completed, totalSpent };
-  }, [orders]);
-
   return (
     <motion.div
       className="orders-page"
@@ -309,48 +254,7 @@ const Orders = () => {
                 Review your coffee receipts, order history, and track live statuses
               </p>
             </div>
-
-            <button
-              type="button"
-              className={`orders-refresh-btn ${refreshing ? 'spinning' : ''}`}
-              onClick={() => fetchOrders(true)}
-              title="Refresh Orders"
-              disabled={loading || refreshing}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-              <span>Refresh</span>
-            </button>
           </motion.div>
-
-          {orders.length > 0 && (
-            <motion.div
-              className="orders-stats-grid"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <div className="orders-stat-card">
-                <div className="orders-stat-card__val">{stats.total}</div>
-                <div className="orders-stat-card__lbl">Total Orders</div>
-              </div>
-              <div className="orders-stat-card">
-                <div className="orders-stat-card__val orders-stat-card__val--pending">{stats.pending}</div>
-                <div className="orders-stat-card__lbl">Pending</div>
-              </div>
-              <div className="orders-stat-card">
-                <div className="orders-stat-card__val orders-stat-card__val--completed">{stats.completed}</div>
-                <div className="orders-stat-card__lbl">Completed</div>
-              </div>
-              <div className="orders-stat-card">
-                <div className="orders-stat-card__val">{stats.totalSpent} ₼</div>
-                <div className="orders-stat-card__lbl">Total Spent</div>
-              </div>
-            </motion.div>
-          )}
 
           <div className="orders-controls">
             <div className="orders-filters">
@@ -359,21 +263,21 @@ const Orders = () => {
                 className={`orders-filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('all')}
               >
-                All ({orders.length})
+                All
               </button>
               <button
                 type="button"
                 className={`orders-filter-btn ${activeFilter === 'pending' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('pending')}
               >
-                Pending ({stats.pending})
+                Pending
               </button>
               <button
                 type="button"
                 className={`orders-filter-btn ${activeFilter === 'completed' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('completed')}
               >
-                Completed ({stats.completed})
+                Completed
               </button>
               <button
                 type="button"
@@ -392,7 +296,7 @@ const Orders = () => {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search by order # or item..."
+                  placeholder="Search by order ID or item..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="orders-search-input"
@@ -636,16 +540,6 @@ const Orders = () => {
                 <span>Date & Time:</span>
                 <span>{formatBakuDate(selectedReceiptOrder.createdAt)}</span>
               </div>
-              <div className="orders-receipt-modal__meta-row">
-                <span>Customer:</span>
-                <span>{user?.name || user?.email || 'Valued Guest'}</span>
-              </div>
-              <div className="orders-receipt-modal__meta-row">
-                <span>Status:</span>
-                <span className={`orders-status-text ${getStatusBadge(selectedReceiptOrder.status).className}`}>
-                  {getStatusBadge(selectedReceiptOrder.status).label}
-                </span>
-              </div>
             </div>
 
             <div className="orders-receipt-modal__items">
@@ -694,8 +588,6 @@ const Orders = () => {
                 <span>{Number(selectedReceiptOrder.payment?.totalAmount || 0).toFixed(2)} ₼</span>
               </div>
             </div>
-
-            <BarcodeVisual code={selectedReceiptOrder.id.replace(/-/g, '').slice(0, 14).toUpperCase()} />
 
             <div className="orders-receipt-modal__actions">
               <button
