@@ -41,7 +41,7 @@ public class OrdersController : ControllerBase
         var basket = await _userRepository.GetBasketByUserIdAsync(userId.Value);
         if (basket == null || basket.Items == null || basket.Items.Count == 0)
         {
-            return BadRequest(new { message = "Корзина пуста." });
+            return BadRequest(new { message = "Basket is empty." });
         }
 
         var productIds = basket.Items.Select(i => i.ProductId).Distinct().ToList();
@@ -61,7 +61,7 @@ public class OrdersController : ControllerBase
 
         if (enriched.Count == 0)
         {
-            return BadRequest(new { message = "Товары из корзины не найдены в каталоге." });
+            return BadRequest(new { message = "Items from basket not found in catalog." });
         }
 
         decimal originalTotal = Math.Round(enriched.Sum(x => x.Product!.Price * x.Item.Quantity), 2);
@@ -157,11 +157,8 @@ public class OrdersController : ControllerBase
             Products = enriched.Select(x => new OrderProductItem
             {
                 ProductId = x.Product!.Id,
-                Name = x.Product.Name,
-                ImageUrl = x.Product.ImageUrl,
                 Quantity = x.Item.Quantity,
-                UnitPrice = x.Product.Price,
-                TotalPrice = Math.Round(x.Product.Price * x.Item.Quantity, 2)
+                UnitPrice = x.Product.Price
             }).ToList(),
             OriginalTotal = originalTotal,
             DiscountAmount = discount,
@@ -169,7 +166,7 @@ public class OrdersController : ControllerBase
             PromoCode = appliedPromoCode,
             PromoPrizeName = appliedPromoName,
             PaymentMethod = paymentMethod,
-            Status = "Ожидание оплаты"
+            Status = "Pending Payment"
         };
 
         var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
@@ -178,14 +175,14 @@ public class OrdersController : ControllerBase
             userOrder = new Order
             {
                 UserId = userId.Value,
-                HasActiveOrder = true,
+                Status = "Pending Payment",
                 Orders = new List<OrderEntry> { orderEntry }
             };
             await _userRepository.AddOrderAsync(userOrder);
         }
         else
         {
-            userOrder.HasActiveOrder = true;
+            userOrder.Status = "Pending Payment";
             userOrder.Orders.Add(orderEntry);
             await _userRepository.UpdateOrderAsync(userOrder);
         }
@@ -207,15 +204,16 @@ public class OrdersController : ControllerBase
         if (userId == null) return Unauthorized();
 
         var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
-        if (userOrder == null || !userOrder.HasActiveOrder || userOrder.Orders.Count == 0)
+        if (userOrder == null || userOrder.Orders.Count == 0 || userOrder.Status == "Completed" || userOrder.Status == "Cancelled")
         {
             return Ok(new { hasActiveOrder = false, order = (OrderEntry?)null });
         }
 
-        var activeOrder = userOrder.Orders.LastOrDefault(o => o.Status == "Ожидание оплаты") ?? userOrder.Orders.LastOrDefault();
+        var activeOrder = userOrder.Orders.LastOrDefault(o => o.Status == "Pending Payment" || o.Status == "Awaiting Payment" || o.Status == "Ожидание оплаты") ?? userOrder.Orders.LastOrDefault();
         return Ok(new
         {
             hasActiveOrder = true,
+            status = userOrder.Status,
             order = activeOrder
         });
     }

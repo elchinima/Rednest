@@ -91,7 +91,7 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.UserId).IsUnique();
 
-            entity.Property(e => e.HasActiveOrder).HasColumnType("boolean");
+            entity.Property(e => e.Status).HasColumnType("text");
             entity.Property(e => e.Orders).HasColumnType("jsonb");
 
             entity.HasOne<User>()

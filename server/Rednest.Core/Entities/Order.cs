@@ -12,11 +12,8 @@ public enum PaymentMethod
 public class OrderProductItem
 {
     public Guid ProductId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string? ImageUrl { get; set; }
     public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
-    public decimal TotalPrice { get; set; }
 }
 
 public class OrderEntry
@@ -31,13 +28,13 @@ public class OrderEntry
     public string? PromoCode { get; set; }
     public string? PromoPrizeName { get; set; }
     public PaymentMethod PaymentMethod { get; set; }
-    public string Status { get; set; } = "Ожидание оплаты";
+    public string Status { get; set; } = "Pending Payment";
 }
 
 public class Order
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
-    public bool HasActiveOrder { get; set; } = false;
+    public string Status { get; set; } = "Pending Payment";
     public List<OrderEntry> Orders { get; set; } = new();
 }

@@ -230,11 +230,11 @@ const Order = () => {
         clearBasket();
         setOrderSuccessData(data.order);
       } else {
-        setErrorMessage(data.message || 'Не удалось оформить заказ. Попробуйте снова.');
+        setErrorMessage(data.message || 'Failed to place order. Please try again.');
       }
     } catch (err) {
       console.error('Error placing cashier order:', err);
-      setErrorMessage('Произошла ошибка при оформлении заказа. Проверьте соединение.');
+      setErrorMessage('An error occurred while placing your order. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -314,9 +314,9 @@ const Order = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <p>Ваша корзина пуста. Добавьте товары из меню для оформления заказа.</p>
+              <p>Your basket is empty. Add items from the menu to place an order.</p>
               <Link to="/catalog" className="cta-btn sm order-empty-btn">
-                Перейти в меню
+                Browse Menu
               </Link>
             </motion.div>
           ) : (
@@ -501,7 +501,7 @@ const Order = () => {
                       {isSubmitting ? (
                         <span className="order-btn-loading">
                           <img src={loaderIcon} alt="Loading" className="order-spinner" />
-                          Оформление заказа...
+                          Placing Order...
                         </span>
                       ) : (
                         selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'
@@ -531,42 +531,42 @@ const Order = () => {
 
             <div className="order-success-modal__status-badge">
               <span className="status-dot" />
-              {orderSuccessData.status || 'Ожидание оплаты'}
+              {orderSuccessData.status || 'Pending Payment'}
             </div>
 
-            <h2 className="order-success-modal__title">Заказ успешно оформлен!</h2>
+            <h2 className="order-success-modal__title">Order Placed Successfully!</h2>
             <p className="order-success-modal__subtitle">
-              Ваш заказ передан бариста. Назовите номер заказа на кассе при получении.
+              Your order has been sent to the barista. Please mention your order number at the cashier counter upon pickup.
             </p>
 
             <div className="order-success-modal__number-card">
-              <span className="number-label">Номер заказа</span>
+              <span className="number-label">Order Number</span>
               <span className="number-value">{orderSuccessData.orderNumber}</span>
             </div>
 
             <div className="order-success-modal__details">
               <div className="detail-row">
-                <span className="detail-label">Товаров:</span>
+                <span className="detail-label">Items:</span>
                 <span className="detail-value">
-                  {orderSuccessData.products?.reduce((sum, p) => sum + p.quantity, 0) || 0} шт.
+                  {orderSuccessData.products?.reduce((sum, p) => sum + p.quantity, 0) || 0} items
                 </span>
               </div>
 
               {orderSuccessData.discountAmount > 0 && (
                 <div className="detail-row discount">
-                  <span className="detail-label">Скидка по промокоду:</span>
+                  <span className="detail-label">Promo Discount:</span>
                   <span className="detail-value">−{orderSuccessData.discountAmount.toFixed(2)} ₼</span>
                 </div>
               )}
 
               <div className="detail-row total">
-                <span className="detail-label">Сумма к оплате:</span>
+                <span className="detail-label">Total to Pay:</span>
                 <span className="detail-value">{orderSuccessData.totalAmount?.toFixed(2)} ₼</span>
               </div>
 
               <div className="detail-row payment-method">
-                <span className="detail-label">Способ оплаты:</span>
-                <span className="detail-value">На кассе (наличные / карта)</span>
+                <span className="detail-label">Payment Method:</span>
+                <span className="detail-value">Pay at Cashier (Cash / Card)</span>
               </div>
             </div>
 
@@ -576,7 +576,7 @@ const Order = () => {
                 className="cta-btn sm order-success-btn primary"
                 onClick={handleCloseSuccessModal}
               >
-                Вернуться в меню
+                Back to Menu
               </button>
               <button
                 type="button"
@@ -586,7 +586,7 @@ const Order = () => {
                   navigate('/profile');
                 }}
               >
-                В профиль
+                Go to Profile
               </button>
             </div>
           </div>
