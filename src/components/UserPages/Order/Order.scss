@@ -640,11 +640,11 @@
   }
 
   &__desc {
-    font-size: 0.88rem;
+    font-size: 0.78rem;
     color: $color-text-muted;
-    line-height: 1.45;
+    line-height: 1.35;
     margin: 0 auto;
-    max-width: 90%;
+    max-width: 290px;
   }
 
   &__number-card {
@@ -745,6 +745,7 @@
   &__actions {
     display: flex;
     gap: $spacing-md;
+    width: 100%;
   }
 
   &__btn {
@@ -760,6 +761,7 @@
     border: none;
     cursor: pointer;
     font-family: inherit;
+    white-space: nowrap;
 
     &--cancel {
       background: rgba(255, 255, 255, 0.08);
@@ -798,7 +800,12 @@
     }
 
     &__actions {
-      flex-direction: column;
+      gap: 10px;
+    }
+
+    &__btn {
+      padding: 11px 8px;
+      font-size: 0.84rem;
     }
   }
 }

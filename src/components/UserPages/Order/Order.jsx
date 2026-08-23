@@ -557,7 +557,7 @@ const Order = () => {
 
               <h2 className="order-success-modal__title">Order Placed Successfully!</h2>
               <p className="order-success-modal__desc">
-                Your order has been sent to the barista. Present your order number at the cashier counter upon pickup.
+                Order sent to barista. Show your order number at the counter.
               </p>
             </div>
 
@@ -567,7 +567,7 @@ const Order = () => {
                 <span className="order-success-modal__number-sub">Mention this at counter</span>
               </div>
               <span className="order-success-modal__number-value">
-                {orderSuccessData.id ? `#${String(orderSuccessData.id).split('-').pop().toUpperCase()}` : ''}
+                {orderSuccessData.id ? String(orderSuccessData.id).replace(/-/g, '').slice(-7).toUpperCase() : ''}
               </span>
             </div>
 
@@ -588,7 +588,7 @@ const Order = () => {
 
               <div className="order-success-modal__detail-row">
                 <span className="order-success-modal__detail-label">Payment Method</span>
-                <span className="order-success-modal__detail-value">Pay at Cashier (Cash / Card)</span>
+                <span className="order-success-modal__detail-value">Pay at Cashier</span>
               </div>
 
               <div className="order-success-modal__detail-row total">
