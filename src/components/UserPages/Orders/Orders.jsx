@@ -229,7 +229,6 @@ const Orders = () => {
           <nav className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
-            <Link to="/basket" className="nav-link">Basket</Link>
           </nav>
           <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
@@ -248,12 +247,10 @@ const Orders = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="orders-hero__left">
-              <h1>My Orders</h1>
-              <p className="orders-hero__desc">
-                Review your coffee receipts, order history, and track live statuses
-              </p>
-            </div>
+            <h1>My Orders</h1>
+            <p className="orders-hero__desc">
+              Review your coffee receipts, order history, and track live statuses
+            </p>
           </motion.div>
 
           <div className="orders-controls">
