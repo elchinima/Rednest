@@ -20,4 +20,7 @@ public interface IUserRepository
     Task<UserBasket?> GetBasketByUserIdAsync(Guid userId);
     Task AddBasketAsync(UserBasket basket);
     Task UpdateBasketAsync(UserBasket basket);
+    Task<Order?> GetOrderByUserIdAsync(Guid userId);
+    Task AddOrderAsync(Order order);
+    Task UpdateOrderAsync(Order order);
 }

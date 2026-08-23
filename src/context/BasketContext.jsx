@@ -229,10 +229,16 @@ export const BasketProvider = ({ children }) => {
     return item ? item.quantity : 0;
   }, [items]);
 
+  const clearBasket = useCallback(() => {
+    setItems([]);
+    clearLocalBasket();
+    broadcastSync([]);
+  }, []);
+
   const totalCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <BasketContext.Provider value={{ items, addItem, removeItem, deleteItem, getItemQuantity, totalCount, loading }}>
+    <BasketContext.Provider value={{ items, addItem, removeItem, deleteItem, getItemQuantity, clearBasket, totalCount, loading }}>
       {children}
     </BasketContext.Provider>
   );

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import logo from '../../../assets/icons/rednest_logo.png';
 import cashierIcon from '../../../assets/icons/cashier-register.svg';
 import onlineIcon from '../../../assets/icons/online-card.svg';
@@ -14,8 +15,11 @@ import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
 import featureStripeIcon from '../../../assets/icons/feature-stripe.svg';
 import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
 import featureCashbackIcon from '../../../assets/icons/feature-cashback.svg';
+import successAnimated from '../../../assets/icons/success-animated.svg';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
 import UserNavPills from '../../Elements/UserNavPills';
+import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import './Order.scss';
 
 const springTransition = { type: 'spring', stiffness: 280, damping: 24 };
@@ -67,11 +71,54 @@ const FeaturePill = ({ icon, label }) => (
 
 const Order = () => {
   const { user } = useAuth();
-  const { items, grandTotal, discountedTotal, promoDiscountAmount } = useBasket();
-  const [selectedMethod, setSelectedMethod] = useState(null);
+  const { items, clearBasket } = useBasket();
+  const [products, setProducts] = useState({});
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [activePromo, setActivePromo] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState('cashier');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccessData, setOrderSuccessData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const stepBoxRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/products`);
+        if (response.ok) {
+          const data = await response.json();
+          const productMap = {};
+          data.forEach(categoryGroup => {
+            categoryGroup.items.forEach(item => {
+              productMap[item.id] = { ...item, category: item.category || categoryGroup.category };
+            });
+          });
+          setProducts(productMap);
+        }
+      } catch (err) {
+        console.error('Failed to fetch products in Order:', err);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    fetchWithRefresh(`${apiUrl}/api/auth/promo`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.hasPromo && data.isActive) {
+          setActivePromo(data);
+        }
+      })
+      .catch(() => {});
+  }, [user]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -94,11 +141,108 @@ const Order = () => {
     }
   }, [selectedMethod]);
 
-  const finalAmount = discountedTotal || grandTotal || '0.00';
+  const enrichedItems = useMemo(() => {
+    return items
+      .map(item => {
+        const product = products[item.productId];
+        if (!product) return null;
+        const unitPrice = parseFloat(product.price);
+        const totalPrice = (unitPrice * item.quantity).toFixed(2);
+        return { ...item, product, unitPrice, totalPrice };
+      })
+      .filter(Boolean);
+  }, [items, products]);
+
+  const grandTotal = useMemo(() => {
+    return enrichedItems
+      .reduce((sum, item) => sum + parseFloat(item.totalPrice), 0)
+      .toFixed(2);
+  }, [enrichedItems]);
+
+  const promoDiscountAmount = useMemo(() => {
+    if (!activePromo || !activePromo.isActive || enrichedItems.length === 0) return 0;
+    const numericTotal = parseFloat(grandTotal) || 0;
+    if (numericTotal <= 0) return 0;
+
+    const pType = String(activePromo.prizeType || '').toLowerCase();
+    const pName = String(activePromo.prizeName || '').toUpperCase();
+
+    if (pType === 'cashbackonpurchases' || pType === '4' || pName.includes('CASHBACK')) {
+      return 0;
+    }
+
+    if (pType === 'discount25' || pType === '3' || pName.includes('25%')) {
+      return Math.round(numericTotal * 25) / 100;
+    }
+    if (pType === 'discount50' || pType === '5' || pName.includes('50%')) {
+      return Math.round(numericTotal * 50) / 100;
+    }
+    if (pType === 'superprize' || pType === '0' || pName.includes('SUPER')) {
+      return Math.min(numericTotal, 25.00);
+    }
+    if (pType === 'freedrink' || pType === '1' || pName.includes('DRINK')) {
+      const drinks = enrichedItems.filter(x => {
+        const cat = (x.product?.category || '').toLowerCase();
+        return cat.includes('drink');
+      });
+      if (drinks.length === 0) return 0;
+      const totalQty = drinks.reduce((sum, x) => sum + x.quantity, 0);
+      const totalPrice = drinks.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+      return Math.round((totalPrice / totalQty) * 100) / 100;
+    }
+    if (pType === 'freedessert' || pType === '2' || pName.includes('DESSERT')) {
+      const desserts = enrichedItems.filter(x => {
+        const cat = (x.product?.category || '').toLowerCase();
+        return cat.includes('dessert');
+      });
+      if (desserts.length === 0) return 0;
+      const totalQty = desserts.reduce((sum, x) => sum + x.quantity, 0);
+      const totalPrice = desserts.reduce((sum, x) => sum + x.unitPrice * x.quantity, 0);
+      return Math.round((totalPrice / totalQty) * 100) / 100;
+    }
+
+    return 0;
+  }, [activePromo, enrichedItems, grandTotal]);
+
+  const finalAmount = Math.max(0, parseFloat(grandTotal) - promoDiscountAmount).toFixed(2);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleSelectMethod = (method) => {
     setSelectedMethod(method);
+    setErrorMessage('');
+  };
+
+  const handlePlaceCashierOrder = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetchWithRefresh(`${apiUrl}/api/orders/cashier`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod: 'CashDeskCash' }),
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success) {
+        clearBasket();
+        setOrderSuccessData(data.order);
+      } else {
+        setErrorMessage(data.message || 'Не удалось оформить заказ. Попробуйте снова.');
+      }
+    } catch (err) {
+      console.error('Error placing cashier order:', err);
+      setErrorMessage('Произошла ошибка при оформлении заказа. Проверьте соединение.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setOrderSuccessData(null);
+    navigate('/catalog');
   };
 
   return (
@@ -121,7 +265,6 @@ const Order = () => {
           <nav className="nav-links">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/catalog" className="nav-link">Menu</Link>
-            <Link to="/basket" className="nav-link">Basket {itemCount > 0 ? `(${itemCount})` : ''}</Link>
           </nav>
           <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
         </div>
@@ -165,117 +308,130 @@ const Order = () => {
             </motion.p>
           </motion.div>
 
-          <div className="order-methods-container">
-            <div className="order-methods-grid">
-              <motion.div
-                custom={0}
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                className={`order-method-card ${selectedMethod === 'cashier' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'cashier' ? 'unselected' : ''}`}
-                onClick={() => handleSelectMethod('cashier')}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="order-method-card__top">
-                  <div className="order-method-card__icon-wrap">
-                    <img src={cashierIcon} alt="Pay at Cashier" className="order-method-card__icon" />
+          {itemCount === 0 && !orderSuccessData && !productsLoading ? (
+            <motion.div
+              className="order-empty-card"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <p>Ваша корзина пуста. Добавьте товары из меню для оформления заказа.</p>
+              <Link to="/catalog" className="cta-btn sm order-empty-btn">
+                Перейти в меню
+              </Link>
+            </motion.div>
+          ) : (
+            <div className="order-methods-container">
+              <div className="order-methods-grid">
+                <motion.div
+                  custom={0}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className={`order-method-card ${selectedMethod === 'cashier' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'cashier' ? 'unselected' : ''}`}
+                  onClick={() => handleSelectMethod('cashier')}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="order-method-card__top">
+                    <div className="order-method-card__icon-wrap">
+                      <img src={cashierIcon} alt="Pay at Cashier" className="order-method-card__icon" />
+                    </div>
+                    <div className="order-method-card__title-group">
+                      <span className="order-method-card__badge">In-Store Pickup</span>
+                      <h2 className="order-method-card__title">Pay at Cashier</h2>
+                      <span className="order-method-card__subtitle">Pay at Cashier Counter</span>
+                    </div>
                   </div>
-                  <div className="order-method-card__title-group">
-                    <span className="order-method-card__badge">In-Store Pickup</span>
-                    <h2 className="order-method-card__title">Pay at Cashier</h2>
-                    <span className="order-method-card__subtitle">Pay at Cashier Counter</span>
+
+                  <div className="order-method-card__details">
+                    <p className="order-method-card__desc">
+                      Pay with cash or bank card in person when you pick up your fresh order at the barista counter.
+                    </p>
+                    <AnimatePresence initial={false}>
+                      {!selectedMethod && (
+                        <motion.div
+                          className="order-method-card__features-wrap"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.35, ease: smoothEase }}
+                        >
+                          <div className="order-method-card__features">
+                            <FeaturePill icon={featureCashIcon} label="Cash Payment" />
+                            <FeaturePill icon={featureNfcIcon} label="Card & NFC" />
+                            <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
 
-                <div className="order-method-card__details">
-                  <p className="order-method-card__desc">
-                    Pay with cash or bank card in person when you pick up your fresh order at the barista counter.
-                  </p>
-                  <AnimatePresence initial={false}>
-                    {!selectedMethod && (
-                      <motion.div
-                        className="order-method-card__features-wrap"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.35, ease: smoothEase }}
-                      >
-                        <div className="order-method-card__features">
-                          <FeaturePill icon={featureCashIcon} label="Cash Payment" />
-                          <FeaturePill icon={featureNfcIcon} label="Card & NFC" />
-                          <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="order-method-card__footer">
-                  <span className={`order-method-card__radio-btn ${selectedMethod === 'cashier' ? 'selected' : ''}`}>
-                    {selectedMethod === 'cashier' ? '✓ Selected' : 'Choose Cashier'}
-                  </span>
-                </div>
-              </motion.div>
-
-              <motion.div
-                custom={1}
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-                className={`order-method-card ${selectedMethod === 'online' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'online' ? 'unselected' : ''}`}
-                onClick={() => handleSelectMethod('online')}
-                whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="order-method-card__top">
-                  <div className="order-method-card__icon-wrap">
-                    <img src={onlineIcon} alt="Pay Online" className="order-method-card__icon" />
+                  <div className="order-method-card__footer">
+                    <span className={`order-method-card__radio-btn ${selectedMethod === 'cashier' ? 'selected' : ''}`}>
+                      {selectedMethod === 'cashier' ? '✓ Selected' : 'Choose Cashier'}
+                    </span>
                   </div>
-                  <div className="order-method-card__title-group">
-                    <span className="order-method-card__badge badge-online">Instant & Contactless</span>
-                    <h2 className="order-method-card__title">Pay Online</h2>
-                    <span className="order-method-card__subtitle">Pay Online Instantly</span>
+                </motion.div>
+
+                <motion.div
+                  custom={1}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className={`order-method-card ${selectedMethod === 'online' ? 'selected' : ''} ${selectedMethod && selectedMethod !== 'online' ? 'unselected' : ''}`}
+                  onClick={() => handleSelectMethod('online')}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="order-method-card__top">
+                    <div className="order-method-card__icon-wrap">
+                      <img src={onlineIcon} alt="Pay Online" className="order-method-card__icon" />
+                    </div>
+                    <div className="order-method-card__title-group">
+                      <span className="order-method-card__badge badge-online">Instant & Contactless</span>
+                      <h2 className="order-method-card__title">Pay Online</h2>
+                      <span className="order-method-card__subtitle">Pay Online Instantly</span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="order-method-card__details">
-                  <p className="order-method-card__desc">
-                    Pay securely online with your credit/debit card or Rednest balance for immediate preparation.
-                  </p>
-                  <AnimatePresence initial={false}>
-                    {!selectedMethod && (
-                      <motion.div
-                        className="order-method-card__features-wrap"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.35, ease: smoothEase }}
-                      >
-                        <div className="order-method-card__features">
-                          <FeaturePill icon={featureCardVisaMcIcon} label="Visa or Mastercard" />
-                          <FeaturePill icon={featureWalletIcon} label="Pay via Balance" />
-                          <FeaturePill icon={featureStripeIcon} label="Pay via Stripe" />
-                          <FeaturePill icon={featureGPayIcon} label="Google Pay" />
-                          <FeaturePill icon={featureCashbackIcon} label="Earn Cashback" />
-                          <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                  <div className="order-method-card__details">
+                    <p className="order-method-card__desc">
+                      Pay securely online with your credit/debit card or Rednest balance for immediate preparation.
+                    </p>
+                    <AnimatePresence initial={false}>
+                      {!selectedMethod && (
+                        <motion.div
+                          className="order-method-card__features-wrap"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.35, ease: smoothEase }}
+                        >
+                          <div className="order-method-card__features">
+                            <FeaturePill icon={featureCardVisaMcIcon} label="Visa or Mastercard" />
+                            <FeaturePill icon={featureWalletIcon} label="Pay via Balance" />
+                            <FeaturePill icon={featureStripeIcon} label="Pay via Stripe" />
+                            <FeaturePill icon={featureGPayIcon} label="Google Pay" />
+                            <FeaturePill icon={featureCashbackIcon} label="Earn Cashback" />
+                            <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-                <div className="order-method-card__footer">
-                  <span className={`order-method-card__radio-btn ${selectedMethod === 'online' ? 'selected' : ''}`}>
-                    {selectedMethod === 'online' ? '✓ Selected' : 'Choose Online'}
-                  </span>
-                </div>
-              </motion.div>
+                  <div className="order-method-card__footer">
+                    <span className={`order-method-card__radio-btn ${selectedMethod === 'online' ? 'selected' : ''}`}>
+                      {selectedMethod === 'online' ? '✓ Selected' : 'Choose Online'}
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
             </div>
-          </div>
+          )}
 
           <AnimatePresence mode="wait">
-            {selectedMethod && (
+            {selectedMethod && itemCount > 0 && (
               <motion.div
                 ref={stepBoxRef}
                 className="order-step-content"
@@ -323,15 +479,33 @@ const Order = () => {
                     </div>
                   </div>
 
+                  {errorMessage && (
+                    <div className="order-error-message">
+                      ⚠️ {errorMessage}
+                    </div>
+                  )}
+
                   <div className="order-actions-row">
                     <button
                       type="button"
                       className="order-confirm-btn"
+                      disabled={isSubmitting || itemCount === 0}
                       onClick={() => {
-                        alert(`Order flow for "${selectedMethod === 'cashier' ? 'Pay at Cashier' : 'Pay Online'}" will be continued here.`);
+                        if (selectedMethod === 'cashier') {
+                          handlePlaceCashierOrder();
+                        } else {
+                          alert('Online payment flow will be integrated next.');
+                        }
                       }}
                     >
-                      {selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'}
+                      {isSubmitting ? (
+                        <span className="order-btn-loading">
+                          <img src={loaderIcon} alt="Loading" className="order-spinner" />
+                          Оформление заказа...
+                        </span>
+                      ) : (
+                        selectedMethod === 'cashier' ? 'Confirm & Place Order (Pay at Cashier)' : 'Continue to Online Payment'
+                      )}
                     </button>
                     <Link to="/basket" className="order-back-btn">
                       Back to Basket
@@ -343,6 +517,81 @@ const Order = () => {
           </AnimatePresence>
         </div>
       </main>
+
+      <AnimatedModalWrapper
+        isOpen={Boolean(orderSuccessData)}
+        onClose={handleCloseSuccessModal}
+        targetBorderRadius="24px"
+      >
+        {orderSuccessData && (
+          <div className="order-success-modal">
+            <div className="order-success-modal__icon-wrap">
+              <img src={successAnimated} alt="Success" className="order-success-modal__icon" />
+            </div>
+
+            <div className="order-success-modal__status-badge">
+              <span className="status-dot" />
+              {orderSuccessData.status || 'Ожидание оплаты'}
+            </div>
+
+            <h2 className="order-success-modal__title">Заказ успешно оформлен!</h2>
+            <p className="order-success-modal__subtitle">
+              Ваш заказ передан бариста. Назовите номер заказа на кассе при получении.
+            </p>
+
+            <div className="order-success-modal__number-card">
+              <span className="number-label">Номер заказа</span>
+              <span className="number-value">{orderSuccessData.orderNumber}</span>
+            </div>
+
+            <div className="order-success-modal__details">
+              <div className="detail-row">
+                <span className="detail-label">Товаров:</span>
+                <span className="detail-value">
+                  {orderSuccessData.products?.reduce((sum, p) => sum + p.quantity, 0) || 0} шт.
+                </span>
+              </div>
+
+              {orderSuccessData.discountAmount > 0 && (
+                <div className="detail-row discount">
+                  <span className="detail-label">Скидка по промокоду:</span>
+                  <span className="detail-value">−{orderSuccessData.discountAmount.toFixed(2)} ₼</span>
+                </div>
+              )}
+
+              <div className="detail-row total">
+                <span className="detail-label">Сумма к оплате:</span>
+                <span className="detail-value">{orderSuccessData.totalAmount?.toFixed(2)} ₼</span>
+              </div>
+
+              <div className="detail-row payment-method">
+                <span className="detail-label">Способ оплаты:</span>
+                <span className="detail-value">На кассе (наличные / карта)</span>
+              </div>
+            </div>
+
+            <div className="order-success-modal__actions">
+              <button
+                type="button"
+                className="cta-btn sm order-success-btn primary"
+                onClick={handleCloseSuccessModal}
+              >
+                Вернуться в меню
+              </button>
+              <button
+                type="button"
+                className="order-success-btn secondary"
+                onClick={() => {
+                  setOrderSuccessData(null);
+                  navigate('/profile');
+                }}
+              >
+                В профиль
+              </button>
+            </div>
+          </div>
+        )}
+      </AnimatedModalWrapper>
 
       <Footer />
     </motion.div>

@@ -130,4 +130,22 @@ public class UserRepository : IUserRepository
         _context.UserBaskets.Update(basket);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<Order?> GetOrderByUserIdAsync(Guid userId)
+    {
+        return await _context.Orders
+            .FirstOrDefaultAsync(o => o.UserId == userId);
+    }
+
+    public async Task AddOrderAsync(Order order)
+    {
+        await _context.Orders.AddAsync(order);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateOrderAsync(Order order)
+    {
+        _context.Orders.Update(order);
+        await _context.SaveChangesAsync();
+    }
 }
