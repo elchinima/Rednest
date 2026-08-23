@@ -8,6 +8,7 @@ import Fortune from '../components/UserPages/Fortune/Fortune';
 import Profile from '../components/UserPages/Profile/Profile';
 import Promos from '../components/UserPages/Promos/Promos';
 import Order from '../components/UserPages/Order/Order';
+import Orders from '../components/UserPages/Orders/Orders';
 import Basket from '../components/PublicPages/Basket/Basket';
 import AdminLogin from '../components/AdminPages/AdminLogin/AdminLogin';
 import Dashboard from '../components/AdminPages/Dashboard/Dashboard';
@@ -55,6 +56,11 @@ const AnimatedRoutes = () => {
         <Route path="/order" element={
           <ProtectedRoute>
             <Order />
+          </ProtectedRoute>
+        } />
+        <Route path="/orders" element={
+          <ProtectedRoute>
+            <Orders />
           </ProtectedRoute>
         } />
 

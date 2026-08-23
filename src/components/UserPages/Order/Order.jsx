@@ -610,10 +610,10 @@ const Order = () => {
                 className="cta-btn sm order-success-modal__btn order-success-modal__btn--submit"
                 onClick={() => {
                   setOrderSuccessData(null);
-                  navigate('/profile');
+                  navigate('/orders');
                 }}
               >
-                Go to Profile
+                View Orders
               </button>
             </div>
           </div>

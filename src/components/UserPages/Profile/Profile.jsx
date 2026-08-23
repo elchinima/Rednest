@@ -416,7 +416,7 @@ const Profile = () => {
                 <button
                   type="button"
                   className="cta-btn sm profile-action-btn"
-                  onClick={() => setIsOrdersModalOpen(true)}
+                  onClick={() => navigate('/orders')}
                 >
                   Orders
                 </button>

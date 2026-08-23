@@ -228,14 +228,36 @@ public class OrdersController : ControllerBase
             return Ok(new { hasActiveOrder = false, order = (Order?)null });
         }
 
+        var productIds = activeOrder.Items.Select(i => i.ProductId).Distinct().ToList();
+        var products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(p => p.Id);
+
         return Ok(new
         {
             hasActiveOrder = true,
             id = activeOrder.Id,
             status = activeOrder.Status,
             createdAt = activeOrder.CreatedAt,
-            items = activeOrder.Items,
-            payment = activeOrder.Payment
+            items = activeOrder.Items.Select(i => new
+            {
+                productId = i.ProductId,
+                quantity = i.Quantity,
+                unitPrice = i.UnitPrice,
+                name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
+                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
+            }).ToList(),
+            payment = new
+            {
+                paymentMethod = activeOrder.Payment.PaymentMethod.ToString(),
+                originalTotal = activeOrder.Payment.OriginalTotal,
+                discountAmount = activeOrder.Payment.DiscountAmount,
+                totalAmount = activeOrder.Payment.TotalAmount,
+                promoCode = activeOrder.Payment.PromoCode,
+                promoPrizeName = activeOrder.Payment.PromoPrizeName
+            }
         });
     }
 
@@ -246,6 +268,17 @@ public class OrdersController : ControllerBase
         if (userId == null) return Unauthorized();
 
         var allOrders = await _userRepository.GetAllOrdersByUserIdAsync(userId.Value);
+        var allProductIds = allOrders
+            .SelectMany(o => o.Items)
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .Where(p => allProductIds.Contains(p.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(p => p.Id);
+
         return Ok(new
         {
             orders = allOrders.Select(o => new
@@ -253,8 +286,24 @@ public class OrdersController : ControllerBase
                 id = o.Id,
                 status = o.Status,
                 createdAt = o.CreatedAt,
-                items = o.Items,
-                payment = o.Payment
+                items = o.Items.Select(i => new
+                {
+                    productId = i.ProductId,
+                    quantity = i.Quantity,
+                    unitPrice = i.UnitPrice,
+                    name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
+                    imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                    category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
+                }).ToList(),
+                payment = new
+                {
+                    paymentMethod = o.Payment.PaymentMethod.ToString(),
+                    originalTotal = o.Payment.OriginalTotal,
+                    discountAmount = o.Payment.DiscountAmount,
+                    totalAmount = o.Payment.TotalAmount,
+                    promoCode = o.Payment.PromoCode,
+                    promoPrizeName = o.Payment.PromoPrizeName
+                }
             }).ToList()
         });
     }

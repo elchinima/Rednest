@@ -151,7 +151,7 @@ const BuyNowWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  if (location.pathname === '/login' || location.pathname === '/fortune' || location.pathname === '/basket' || location.pathname === '/profile' || location.pathname === '/order' || location.pathname.startsWith('/admin')) {
+  if (location.pathname === '/login' || location.pathname === '/fortune' || location.pathname === '/basket' || location.pathname === '/profile' || location.pathname === '/order' || location.pathname === '/orders' || location.pathname.startsWith('/admin')) {
     return null;
   }
 
