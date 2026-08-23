@@ -228,7 +228,11 @@ const Order = () => {
       const data = await response.json();
       if (response.ok && data.success) {
         clearBasket();
-        setOrderSuccessData(data.order);
+        setOrderSuccessData({
+          ...data.order,
+          id: data.id,
+          status: data.status || 'Pending Payment'
+        });
       } else {
         setErrorMessage(data.message || 'Failed to place order. Please try again.');
       }
@@ -541,7 +545,9 @@ const Order = () => {
 
             <div className="order-success-modal__number-card">
               <span className="number-label">Order Number</span>
-              <span className="number-value">{orderSuccessData.orderNumber}</span>
+              <span className="number-value">
+                {orderSuccessData.id ? `#${String(orderSuccessData.id).split('-').pop().toUpperCase()}` : ''}
+              </span>
             </div>
 
             <div className="order-success-modal__details">

@@ -140,20 +140,50 @@ public class OrdersController : ControllerBase
         var paymentMethod = PaymentMethod.CashDeskCash;
         if (request != null && !string.IsNullOrEmpty(request.PaymentMethod))
         {
-            if (request.PaymentMethod.Equals("card", StringComparison.OrdinalIgnoreCase) ||
-                request.PaymentMethod.Equals("CashDeskCard", StringComparison.OrdinalIgnoreCase))
+            var pm = request.PaymentMethod.Trim();
+            if (pm.Equals("card", StringComparison.OrdinalIgnoreCase) ||
+                pm.Equals("CashDeskCard", StringComparison.OrdinalIgnoreCase))
             {
                 paymentMethod = PaymentMethod.CashDeskCard;
             }
+            else if (pm.Equals("nfc", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("CashDeskNfc", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.CashDeskNfc;
+            }
+            else if (pm.Equals("balance", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("wallet", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("OnlineBalance", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.OnlineBalance;
+            }
+            else if (pm.Equals("visa", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("mastercard", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("online_card", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("OnlineCardDetails", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.OnlineCardDetails;
+            }
+            else if (pm.Equals("stripe", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("OnlineStripe", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.OnlineStripe;
+            }
+            else if (pm.Equals("gpay", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("googlepay", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("OnlineGooglePay", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.OnlineGooglePay;
+            }
+            else if (pm.Equals("applepay", StringComparison.OrdinalIgnoreCase) ||
+                     pm.Equals("OnlineApplePay", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentMethod = PaymentMethod.OnlineApplePay;
+            }
         }
-
-        var orderNumber = $"#RN-{Random.Shared.Next(1000, 9999)}";
 
         var orderEntry = new OrderEntry
         {
-            OrderId = Guid.NewGuid(),
-            OrderNumber = orderNumber,
-            CreatedAt = GetBakuTime(),
             Products = enriched.Select(x => new OrderProductItem
             {
                 ProductId = x.Product!.Id,
@@ -165,8 +195,7 @@ public class OrdersController : ControllerBase
             TotalAmount = totalAmount,
             PromoCode = appliedPromoCode,
             PromoPrizeName = appliedPromoName,
-            PaymentMethod = paymentMethod,
-            Status = "Pending Payment"
+            PaymentMethod = paymentMethod
         };
 
         var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
@@ -175,6 +204,7 @@ public class OrdersController : ControllerBase
             userOrder = new Order
             {
                 UserId = userId.Value,
+                CreatedAt = DateTime.UtcNow,
                 Status = "Pending Payment",
                 Orders = new List<OrderEntry> { orderEntry }
             };
@@ -182,6 +212,7 @@ public class OrdersController : ControllerBase
         }
         else
         {
+            userOrder.CreatedAt = DateTime.UtcNow;
             userOrder.Status = "Pending Payment";
             userOrder.Orders.Add(orderEntry);
             await _userRepository.UpdateOrderAsync(userOrder);
@@ -193,6 +224,9 @@ public class OrdersController : ControllerBase
         return Ok(new
         {
             success = true,
+            id = userOrder.Id,
+            status = userOrder.Status,
+            createdAt = userOrder.CreatedAt,
             order = orderEntry
         });
     }
@@ -209,11 +243,13 @@ public class OrdersController : ControllerBase
             return Ok(new { hasActiveOrder = false, order = (OrderEntry?)null });
         }
 
-        var activeOrder = userOrder.Orders.LastOrDefault(o => o.Status == "Pending Payment" || o.Status == "Awaiting Payment" || o.Status == "Ожидание оплаты") ?? userOrder.Orders.LastOrDefault();
+        var activeOrder = userOrder.Orders.LastOrDefault();
         return Ok(new
         {
             hasActiveOrder = true,
+            id = userOrder.Id,
             status = userOrder.Status,
+            createdAt = userOrder.CreatedAt,
             order = activeOrder
         });
     }
@@ -225,9 +261,15 @@ public class OrdersController : ControllerBase
         if (userId == null) return Unauthorized();
 
         var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
-        var orders = userOrder?.Orders?.OrderByDescending(o => o.CreatedAt).ToList() ?? new List<OrderEntry>();
+        var orders = userOrder?.Orders?.ToList() ?? new List<OrderEntry>();
 
-        return Ok(new { orders });
+        return Ok(new
+        {
+            id = userOrder?.Id,
+            status = userOrder?.Status,
+            createdAt = userOrder?.CreatedAt,
+            orders
+        });
     }
 }
 

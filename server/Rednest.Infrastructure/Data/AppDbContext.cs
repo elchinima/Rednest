@@ -92,6 +92,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.Property(e => e.Status).HasColumnType("text");
+            entity.Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
             entity.Property(e => e.Orders).HasColumnType("jsonb");
 
             entity.HasOne<User>()
