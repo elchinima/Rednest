@@ -21,6 +21,8 @@ public interface IUserRepository
     Task AddBasketAsync(UserBasket basket);
     Task UpdateBasketAsync(UserBasket basket);
     Task<Order?> GetOrderByUserIdAsync(Guid userId);
+    Task<Order?> GetActiveOrderByUserIdAsync(Guid userId);
+    Task<List<Order>> GetAllOrdersByUserIdAsync(Guid userId);
     Task AddOrderAsync(Order order);
     Task UpdateOrderAsync(Order order);
 }

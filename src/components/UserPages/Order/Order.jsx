@@ -229,9 +229,11 @@ const Order = () => {
       if (response.ok && data.success) {
         clearBasket();
         setOrderSuccessData({
-          ...data.order,
           id: data.id,
-          status: data.status || 'Pending Payment'
+          status: data.status || 'Pending Payment',
+          createdAt: data.createdAt,
+          items: data.items || [],
+          payment: data.payment || {}
         });
       } else {
         setErrorMessage(data.message || 'Failed to place order. Please try again.');
@@ -528,65 +530,84 @@ const Order = () => {
         targetBorderRadius="24px"
       >
         {orderSuccessData && (
-          <div className="order-success-modal">
-            <div className="order-success-modal__icon-wrap">
-              <img src={successAnimated} alt="Success" className="order-success-modal__icon" />
-            </div>
+          <div className="order-success-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="order-success-modal__close"
+              onClick={handleCloseSuccessModal}
+              aria-label="Close modal"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
 
-            <div className="order-success-modal__status-badge">
-              <span className="status-dot" />
-              {orderSuccessData.status || 'Pending Payment'}
-            </div>
+            <div className="order-success-modal__header">
+              <div className="order-success-modal__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
 
-            <h2 className="order-success-modal__title">Order Placed Successfully!</h2>
-            <p className="order-success-modal__subtitle">
-              Your order has been sent to the barista. Please mention your order number at the cashier counter upon pickup.
-            </p>
+              <div className="order-success-modal__status-badge">
+                <span className="pulsing-dot" />
+                {orderSuccessData.status || 'Pending Payment'}
+              </div>
+
+              <h2 className="order-success-modal__title">Order Placed Successfully!</h2>
+              <p className="order-success-modal__desc">
+                Your order has been sent to the barista. Present your order number at the cashier counter upon pickup.
+              </p>
+            </div>
 
             <div className="order-success-modal__number-card">
-              <span className="number-label">Order Number</span>
-              <span className="number-value">
+              <div className="order-success-modal__number-info">
+                <span className="order-success-modal__number-label">Order Number</span>
+                <span className="order-success-modal__number-sub">Mention this at counter</span>
+              </div>
+              <span className="order-success-modal__number-value">
                 {orderSuccessData.id ? `#${String(orderSuccessData.id).split('-').pop().toUpperCase()}` : ''}
               </span>
             </div>
 
             <div className="order-success-modal__details">
-              <div className="detail-row">
-                <span className="detail-label">Items:</span>
-                <span className="detail-value">
-                  {orderSuccessData.products?.reduce((sum, p) => sum + p.quantity, 0) || 0} items
+              <div className="order-success-modal__detail-row">
+                <span className="order-success-modal__detail-label">Items</span>
+                <span className="order-success-modal__detail-value">
+                  {orderSuccessData.items?.reduce((sum, p) => sum + p.quantity, 0) || 0} items
                 </span>
               </div>
 
-              {orderSuccessData.discountAmount > 0 && (
-                <div className="detail-row discount">
-                  <span className="detail-label">Promo Discount:</span>
-                  <span className="detail-value">−{orderSuccessData.discountAmount.toFixed(2)} ₼</span>
+              {orderSuccessData.payment?.discountAmount > 0 && (
+                <div className="order-success-modal__detail-row discount">
+                  <span className="order-success-modal__detail-label">Promo Discount</span>
+                  <span className="order-success-modal__detail-value">−{orderSuccessData.payment.discountAmount.toFixed(2)} ₼</span>
                 </div>
               )}
 
-              <div className="detail-row total">
-                <span className="detail-label">Total to Pay:</span>
-                <span className="detail-value">{orderSuccessData.totalAmount?.toFixed(2)} ₼</span>
+              <div className="order-success-modal__detail-row">
+                <span className="order-success-modal__detail-label">Payment Method</span>
+                <span className="order-success-modal__detail-value">Pay at Cashier (Cash / Card)</span>
               </div>
 
-              <div className="detail-row payment-method">
-                <span className="detail-label">Payment Method:</span>
-                <span className="detail-value">Pay at Cashier (Cash / Card)</span>
+              <div className="order-success-modal__detail-row total">
+                <span className="order-success-modal__detail-label">Total to Pay</span>
+                <span className="order-success-modal__detail-value">{orderSuccessData.payment?.totalAmount?.toFixed(2)} ₼</span>
               </div>
             </div>
 
             <div className="order-success-modal__actions">
               <button
                 type="button"
-                className="cta-btn sm order-success-btn primary"
+                className="cta-btn sm order-success-modal__btn order-success-modal__btn--cancel"
                 onClick={handleCloseSuccessModal}
               >
                 Back to Menu
               </button>
               <button
                 type="button"
-                className="order-success-btn secondary"
+                className="cta-btn sm order-success-modal__btn order-success-modal__btn--submit"
                 onClick={() => {
                   setOrderSuccessData(null);
                   navigate('/profile');

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rednest.Core.Entities;
@@ -13,9 +14,11 @@ using Rednest.Infrastructure.Data;
 namespace Rednest.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260823103248_MakeOrdersUserIdNonUnique")]
+    partial class MakeOrdersUserIdNonUnique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,11 +36,7 @@ namespace Rednest.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<List<OrderProductItem>>("Items")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<OrderPaymentDetails>("Payment")
+                    b.Property<List<OrderEntry>>("Orders")
                         .IsRequired()
                         .HasColumnType("jsonb");
 

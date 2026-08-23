@@ -142,14 +142,11 @@ public class OrdersController : ControllerBase
         {
             var pm = request.PaymentMethod.Trim();
             if (pm.Equals("card", StringComparison.OrdinalIgnoreCase) ||
-                pm.Equals("CashDeskCard", StringComparison.OrdinalIgnoreCase))
+                pm.Equals("CashDeskCard", StringComparison.OrdinalIgnoreCase) ||
+                pm.Equals("nfc", StringComparison.OrdinalIgnoreCase) ||
+                pm.Equals("CashDeskNfc", StringComparison.OrdinalIgnoreCase))
             {
                 paymentMethod = PaymentMethod.CashDeskCard;
-            }
-            else if (pm.Equals("nfc", StringComparison.OrdinalIgnoreCase) ||
-                     pm.Equals("CashDeskNfc", StringComparison.OrdinalIgnoreCase))
-            {
-                paymentMethod = PaymentMethod.CashDeskNfc;
             }
             else if (pm.Equals("balance", StringComparison.OrdinalIgnoreCase) ||
                      pm.Equals("wallet", StringComparison.OrdinalIgnoreCase) ||
@@ -175,48 +172,35 @@ public class OrdersController : ControllerBase
             {
                 paymentMethod = PaymentMethod.OnlineGooglePay;
             }
-            else if (pm.Equals("applepay", StringComparison.OrdinalIgnoreCase) ||
-                     pm.Equals("OnlineApplePay", StringComparison.OrdinalIgnoreCase))
-            {
-                paymentMethod = PaymentMethod.OnlineApplePay;
-            }
         }
 
-        var orderEntry = new OrderEntry
+        var paymentDetails = new OrderPaymentDetails
         {
-            Products = enriched.Select(x => new OrderProductItem
-            {
-                ProductId = x.Product!.Id,
-                Quantity = x.Item.Quantity,
-                UnitPrice = x.Product.Price
-            }).ToList(),
+            PaymentMethod = paymentMethod,
             OriginalTotal = originalTotal,
             DiscountAmount = discount,
             TotalAmount = totalAmount,
             PromoCode = appliedPromoCode,
-            PromoPrizeName = appliedPromoName,
-            PaymentMethod = paymentMethod
+            PromoPrizeName = appliedPromoName
         };
 
-        var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
-        if (userOrder == null)
+        var orderItems = enriched.Select(x => new OrderProductItem
         {
-            userOrder = new Order
-            {
-                UserId = userId.Value,
-                CreatedAt = DateTime.UtcNow,
-                Status = "Pending Payment",
-                Orders = new List<OrderEntry> { orderEntry }
-            };
-            await _userRepository.AddOrderAsync(userOrder);
-        }
-        else
+            ProductId = x.Product!.Id,
+            Quantity = x.Item.Quantity,
+            UnitPrice = x.Product.Price
+        }).ToList();
+
+        var newOrder = new Order
         {
-            userOrder.CreatedAt = DateTime.UtcNow;
-            userOrder.Status = "Pending Payment";
-            userOrder.Orders.Add(orderEntry);
-            await _userRepository.UpdateOrderAsync(userOrder);
-        }
+            Id = Guid.NewGuid(),
+            UserId = userId.Value,
+            CreatedAt = DateTime.UtcNow,
+            Status = "Pending Payment",
+            Items = orderItems,
+            Payment = paymentDetails
+        };
+        await _userRepository.AddOrderAsync(newOrder);
 
         basket.Items.Clear();
         await _userRepository.UpdateBasketAsync(basket);
@@ -224,10 +208,11 @@ public class OrdersController : ControllerBase
         return Ok(new
         {
             success = true,
-            id = userOrder.Id,
-            status = userOrder.Status,
-            createdAt = userOrder.CreatedAt,
-            order = orderEntry
+            id = newOrder.Id,
+            status = newOrder.Status,
+            createdAt = newOrder.CreatedAt,
+            items = newOrder.Items,
+            payment = newOrder.Payment
         });
     }
 
@@ -237,20 +222,20 @@ public class OrdersController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
-        if (userOrder == null || userOrder.Orders.Count == 0 || userOrder.Status == "Completed" || userOrder.Status == "Cancelled")
+        var activeOrder = await _userRepository.GetActiveOrderByUserIdAsync(userId.Value);
+        if (activeOrder == null || activeOrder.Items == null || activeOrder.Items.Count == 0)
         {
-            return Ok(new { hasActiveOrder = false, order = (OrderEntry?)null });
+            return Ok(new { hasActiveOrder = false, order = (Order?)null });
         }
 
-        var activeOrder = userOrder.Orders.LastOrDefault();
         return Ok(new
         {
             hasActiveOrder = true,
-            id = userOrder.Id,
-            status = userOrder.Status,
-            createdAt = userOrder.CreatedAt,
-            order = activeOrder
+            id = activeOrder.Id,
+            status = activeOrder.Status,
+            createdAt = activeOrder.CreatedAt,
+            items = activeOrder.Items,
+            payment = activeOrder.Payment
         });
     }
 
@@ -260,15 +245,17 @@ public class OrdersController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var userOrder = await _userRepository.GetOrderByUserIdAsync(userId.Value);
-        var orders = userOrder?.Orders?.ToList() ?? new List<OrderEntry>();
-
+        var allOrders = await _userRepository.GetAllOrdersByUserIdAsync(userId.Value);
         return Ok(new
         {
-            id = userOrder?.Id,
-            status = userOrder?.Status,
-            createdAt = userOrder?.CreatedAt,
-            orders
+            orders = allOrders.Select(o => new
+            {
+                id = o.Id,
+                status = o.Status,
+                createdAt = o.CreatedAt,
+                items = o.Items,
+                payment = o.Payment
+            }).ToList()
         });
     }
 }

@@ -89,11 +89,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.UserId);
 
             entity.Property(e => e.Status).HasColumnType("text");
             entity.Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
-            entity.Property(e => e.Orders).HasColumnType("jsonb");
+            entity.Property(e => e.Items).HasColumnType("jsonb");
+            entity.Property(e => e.Payment).HasColumnType("jsonb");
 
             entity.HasOne<User>()
                   .WithMany()

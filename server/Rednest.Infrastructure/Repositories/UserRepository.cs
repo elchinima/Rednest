@@ -134,7 +134,25 @@ public class UserRepository : IUserRepository
     public async Task<Order?> GetOrderByUserIdAsync(Guid userId)
     {
         return await _context.Orders
-            .FirstOrDefaultAsync(o => o.UserId == userId);
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<Order?> GetActiveOrderByUserIdAsync(Guid userId)
+    {
+        return await _context.Orders
+            .Where(o => o.UserId == userId && o.Status != "Completed" && o.Status != "Cancelled")
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<Order>> GetAllOrdersByUserIdAsync(Guid userId)
+    {
+        return await _context.Orders
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task AddOrderAsync(Order order)
