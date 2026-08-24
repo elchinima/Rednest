@@ -652,7 +652,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Path = "/"
         };
         Response.Cookies.Delete("accessToken", cookieOptions);
@@ -665,7 +665,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Path = "/",
             Expires = DateTime.UtcNow.AddMinutes(15)
         };
@@ -674,7 +674,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Path = "/",
             Expires = DateTime.UtcNow.AddDays(15)
         };

@@ -50,11 +50,6 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         login(data);
         return data;
-      } else if (response.status === 401) {
-        localStorage.removeItem('rednest_auth');
-        localStorage.removeItem('rednest_user');
-        setIsAuthenticated(false);
-        setUser(null);
       }
     } catch (err) {
       console.error('Session validation failed:', err);
@@ -70,7 +65,20 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      await fetchCurrentUser();
+      let result = await fetchCurrentUser();
+      
+      if (!result) {
+        await new Promise(r => setTimeout(r, 3000));
+        result = await fetchCurrentUser();
+      }
+
+      if (!result) {
+        localStorage.removeItem('rednest_auth');
+        localStorage.removeItem('rednest_user');
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+
       setAuthLoading(false);
     };
 

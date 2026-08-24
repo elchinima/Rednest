@@ -3,6 +3,21 @@ import { ensureClientHintsHeaders } from './clientHints';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
+let isRefreshing = false;
+let refreshPromise = null;
+
+async function doRefresh() {
+  const clientHeaders = await ensureClientHintsHeaders();
+  const refreshResponse = await fetch(`${apiUrl}/api/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      ...clientHeaders,
+    },
+  });
+  return refreshResponse.ok;
+}
+
 export async function fetchWithRefresh(url, options = {}) {
   const clientHeaders = await ensureClientHintsHeaders();
   const opts = {
@@ -14,23 +29,47 @@ export async function fetchWithRefresh(url, options = {}) {
     },
   };
 
-  let response = await fetch(url, opts);
+  let response;
+  try {
+    response = await fetch(url, opts);
+  } catch (err) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      response = await fetch(url, opts);
+    } catch {
+      throw err;
+    }
+  }
 
-  if (response.status === 429 || (response.status >= 500 && response.status <= 599)) {
+  if (response.status === 429) {
     handleBackendErrorResponse(response);
     return response;
   }
 
-  if (response.status === 401) {
-    const refreshResponse = await fetch(`${apiUrl}/api/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        ...clientHeaders,
-      },
-    });
+  if (response.status >= 500 && response.status <= 599) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      response = await fetch(url, opts);
+    } catch {
+    }
+    if (response.status >= 500 && response.status <= 599) {
+      handleBackendErrorResponse(response);
+      return response;
+    }
+  }
 
-    if (refreshResponse.ok) {
+  if (response.status === 401) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = doRefresh().finally(() => {
+        isRefreshing = false;
+        refreshPromise = null;
+      });
+    }
+
+    const refreshed = await refreshPromise;
+
+    if (refreshed) {
       response = await fetch(url, opts);
       if (response.status === 429 || (response.status >= 500 && response.status <= 599)) {
         handleBackendErrorResponse(response);
