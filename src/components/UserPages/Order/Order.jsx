@@ -73,16 +73,16 @@ const ONLINE_PAYMENT_SERVICES = [
   {
     id: 'OnlineStripe',
     name: 'Stripe',
-    title: 'Оплата Stripe',
-    desc: 'Быстрая и безопасная международная оплата',
+    title: 'Pay with Stripe',
+    desc: 'Fast and secure international payment',
     icon: featureStripeIcon,
     badge: 'Popular',
   },
   {
     id: 'OnlineBalance',
     name: 'Rednest Balance',
-    title: 'Оплата со счета Rednest',
-    desc: 'Мгновенное списание с баланса вашего аккаунта',
+    title: 'Rednest Account Balance',
+    desc: 'Instant payment from your account balance',
     icon: featureWalletIcon,
     badge: 'Instant',
     isBalance: true,
@@ -90,16 +90,16 @@ const ONLINE_PAYMENT_SERVICES = [
   {
     id: 'OnlineCardDetails',
     name: 'Visa & Mastercard',
-    title: 'Банковские карты (Visa / Mastercard)',
-    desc: 'Оплата дебетовой или кредитной картой',
+    title: 'Visa or Mastercard',
+    desc: 'Debit or credit card payment',
     icon: featureCardVisaMcIcon,
     badge: 'Cards',
   },
   {
     id: 'OnlineGooglePay',
     name: 'Google Pay',
-    title: 'Оплата Google Pay',
-    desc: 'Оплата в один клик через Google Pay',
+    title: 'Google Pay',
+    desc: 'One-tap checkout with Google Pay',
     icon: featureGPayIcon,
     badge: '1-Tap',
   },
@@ -610,12 +610,15 @@ const Order = () => {
           </button>
 
           <div className="online-payment-modal__header">
-            <div className="online-payment-modal__icon-wrap">
-              <img src={onlineIcon} alt="Online Payment" className="online-payment-modal__header-icon" />
+            <div className="online-payment-modal__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+              </svg>
             </div>
-            <h3 className="online-payment-modal__title">Choose Payment Service</h3>
+            <h3 className="online-payment-modal__title">Online Payment Service</h3>
             <p className="online-payment-modal__desc">
-              Select your preferred service to complete payment of <span className="online-payment-modal__amount">{finalAmount} ₼</span>
+              Select your payment method for an order of <span className="online-payment-modal__amount">{finalAmount} ₼</span>
             </p>
           </div>
 
@@ -644,7 +647,7 @@ const Order = () => {
                       )}
                     </div>
                     <span className="online-payment-service-card__desc">
-                      {service.isBalance ? `Текущий баланс: ${userBalance.toFixed(2)} ₼` : service.desc}
+                      {service.isBalance ? `Current balance: ${userBalance.toFixed(2)} ₼` : service.desc}
                     </span>
                   </div>
 
@@ -661,14 +664,14 @@ const Order = () => {
           <div className="online-payment-modal__actions">
             <button
               type="button"
-              className="online-payment-modal__btn online-payment-modal__btn--cancel"
+              className="cta-btn sm online-payment-modal__btn online-payment-modal__btn--cancel"
               onClick={() => setIsOnlinePaymentModalOpen(false)}
             >
               Cancel
             </button>
             <button
               type="button"
-              className="online-payment-modal__btn online-payment-modal__btn--pay"
+              className="cta-btn sm online-payment-modal__btn online-payment-modal__btn--submit"
               onClick={() => setIsOnlinePaymentModalOpen(false)}
             >
               Select Service
