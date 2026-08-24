@@ -191,14 +191,30 @@ public class OrdersController : ControllerBase
             UnitPrice = x.Product.Price
         }).ToList();
 
+        decimal? remainingBalance = null;
+        if (paymentMethod == PaymentMethod.OnlineBalance)
+        {
+            var user = await _userRepository.GetByIdAsync(userId.Value);
+            if (user == null || user.Balance < totalAmount)
+            {
+                return BadRequest(new { message = "Insufficient balance on your Rednest account." });
+            }
+            user.Balance = Math.Round(user.Balance - totalAmount, 2);
+            await _userRepository.UpdateAsync(user);
+            remainingBalance = user.Balance;
+        }
+
+        var orderStatus = paymentMethod == PaymentMethod.OnlineBalance ? "Preparing" : "Pending Payment";
+
         var newOrder = new Order
         {
             Id = Guid.NewGuid(),
             UserId = userId.Value,
             CreatedAt = DateTime.UtcNow,
-            Status = "Pending Payment",
+            Status = orderStatus,
             Items = orderItems,
-            Payment = paymentDetails
+            Payment = paymentDetails,
+            Notes = request?.Notes ?? new OrderNotes()
         };
         await _userRepository.AddOrderAsync(newOrder);
 
@@ -212,7 +228,9 @@ public class OrdersController : ControllerBase
             status = newOrder.Status,
             createdAt = newOrder.CreatedAt,
             items = newOrder.Items,
-            payment = newOrder.Payment
+            payment = newOrder.Payment,
+            notes = newOrder.Notes,
+            remainingBalance
         });
     }
 
@@ -257,7 +275,8 @@ public class OrdersController : ControllerBase
                 totalAmount = activeOrder.Payment.TotalAmount,
                 promoCode = activeOrder.Payment.PromoCode,
                 promoPrizeName = activeOrder.Payment.PromoPrizeName
-            }
+            },
+            notes = activeOrder.Notes
         });
     }
 
@@ -303,7 +322,8 @@ public class OrdersController : ControllerBase
                     totalAmount = o.Payment.TotalAmount,
                     promoCode = o.Payment.PromoCode,
                     promoPrizeName = o.Payment.PromoPrizeName
-                }
+                },
+                notes = o.Notes
             }).ToList()
         });
     }
@@ -312,4 +332,5 @@ public class OrdersController : ControllerBase
 public class CashierOrderRequest
 {
     public string? PaymentMethod { get; set; }
+    public OrderNotes? Notes { get; set; }
 }

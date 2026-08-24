@@ -27,6 +27,16 @@ public class OrderPaymentDetails
     public string? PromoPrizeName { get; set; }
 }
 
+public class OrderNotes
+{
+    public string? Comment { get; set; }
+    public string? CustomerNote { get; set; }
+    public string? KitchenNote { get; set; }
+
+    [System.Text.Json.Serialization.JsonExtensionData]
+    public Dictionary<string, System.Text.Json.JsonElement>? ExtensionData { get; set; }
+}
+
 public class Order
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -35,6 +45,7 @@ public class Order
     public string Status { get; set; } = "Pending Payment";
     public List<OrderProductItem> Items { get; set; } = new();
     public OrderPaymentDetails Payment { get; set; } = new();
+    public OrderNotes Notes { get; set; } = new();
 }
 
 public class OrderEntry

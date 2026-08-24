@@ -69,13 +69,52 @@ const FeaturePill = ({ icon, label }) => (
   </span>
 );
 
+const ONLINE_PAYMENT_SERVICES = [
+  {
+    id: 'OnlineStripe',
+    name: 'Stripe',
+    title: 'Оплата Stripe',
+    desc: 'Быстрая и безопасная международная оплата',
+    icon: featureStripeIcon,
+    badge: 'Popular',
+  },
+  {
+    id: 'OnlineBalance',
+    name: 'Rednest Balance',
+    title: 'Оплата со счета Rednest',
+    desc: 'Мгновенное списание с баланса вашего аккаунта',
+    icon: featureWalletIcon,
+    badge: 'Instant',
+    isBalance: true,
+  },
+  {
+    id: 'OnlineCardDetails',
+    name: 'Visa & Mastercard',
+    title: 'Банковские карты (Visa / Mastercard)',
+    desc: 'Оплата дебетовой или кредитной картой',
+    icon: featureCardVisaMcIcon,
+    badge: 'Cards',
+  },
+  {
+    id: 'OnlineGooglePay',
+    name: 'Google Pay',
+    title: 'Оплата Google Pay',
+    desc: 'Оплата в один клик через Google Pay',
+    icon: featureGPayIcon,
+    badge: '1-Tap',
+  },
+];
+
 const Order = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { items, clearBasket } = useBasket();
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
   const [activePromo, setActivePromo] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState(null);
+  const [isOnlinePaymentModalOpen, setIsOnlinePaymentModalOpen] = useState(false);
+  const [selectedOnlineService, setSelectedOnlineService] = useState('OnlineStripe');
+  const [onlineModalError, setOnlineModalError] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState(null);
@@ -212,35 +251,45 @@ const Order = () => {
     setErrorMessage('');
   };
 
-  const handlePlaceCashierOrder = async () => {
+  const handlePlaceOrder = async (paymentMethod = 'CashDeskCash') => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setErrorMessage('');
+    setOnlineModalError('');
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetchWithRefresh(`${apiUrl}/api/orders/cashier`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentMethod: 'CashDeskCash' }),
+        body: JSON.stringify({ paymentMethod }),
       });
 
       const data = await response.json();
       if (response.ok && data.success) {
+        if (data.remainingBalance !== undefined && data.remainingBalance !== null && updateUser) {
+          updateUser({ balance: data.remainingBalance });
+        }
         clearBasket();
+        setIsOnlinePaymentModalOpen(false);
         setOrderSuccessData({
           id: data.id,
           status: data.status || 'Pending Payment',
           createdAt: data.createdAt,
           items: data.items || [],
-          payment: data.payment || {}
+          payment: data.payment || {},
+          notes: data.notes || {}
         });
       } else {
-        setErrorMessage(data.message || 'Failed to place order. Please try again.');
+        const msg = data.message || 'Failed to place order. Please try again.';
+        setErrorMessage(msg);
+        setOnlineModalError(msg);
       }
     } catch (err) {
-      console.error('Error placing cashier order:', err);
-      setErrorMessage('An error occurred while placing your order. Please check your connection.');
+      console.error('Error placing order:', err);
+      const msg = 'An error occurred while placing your order. Please check your connection.';
+      setErrorMessage(msg);
+      setOnlineModalError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -249,6 +298,24 @@ const Order = () => {
   const handleCloseSuccessModal = () => {
     setOrderSuccessData(null);
     navigate('/catalog');
+  };
+
+  const formatPaymentMethod = (pm) => {
+    switch (pm) {
+      case 'OnlineStripe':
+        return 'Stripe';
+      case 'OnlineBalance':
+        return 'Rednest Account Balance';
+      case 'OnlineCardDetails':
+        return 'Visa / Mastercard';
+      case 'OnlineGooglePay':
+        return 'Google Pay';
+      case 'CashDeskCard':
+        return 'Pay at Cashier (Card / NFC)';
+      case 'CashDeskCash':
+      default:
+        return 'Pay at Cashier';
+    }
   };
 
   return (
@@ -498,9 +565,9 @@ const Order = () => {
                       disabled={isSubmitting || itemCount === 0}
                       onClick={() => {
                         if (selectedMethod === 'cashier') {
-                          handlePlaceCashierOrder();
+                          handlePlaceOrder('CashDeskCash');
                         } else {
-                          alert('Online payment flow will be integrated next.');
+                          setIsOnlinePaymentModalOpen(true);
                         }
                       }}
                     >
@@ -523,6 +590,92 @@ const Order = () => {
           </AnimatePresence>
         </div>
       </main>
+
+      <AnimatedModalWrapper
+        isOpen={isOnlinePaymentModalOpen}
+        onClose={() => setIsOnlinePaymentModalOpen(false)}
+        targetBorderRadius="24px"
+      >
+        <div className="online-payment-modal" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="online-payment-modal__close"
+            onClick={() => setIsOnlinePaymentModalOpen(false)}
+            aria-label="Close modal"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+
+          <div className="online-payment-modal__header">
+            <div className="online-payment-modal__icon-wrap">
+              <img src={onlineIcon} alt="Online Payment" className="online-payment-modal__header-icon" />
+            </div>
+            <h3 className="online-payment-modal__title">Choose Payment Service</h3>
+            <p className="online-payment-modal__desc">
+              Select your preferred service to complete payment of <span className="online-payment-modal__amount">{finalAmount} ₼</span>
+            </p>
+          </div>
+
+          <div className="online-payment-modal__services">
+            {ONLINE_PAYMENT_SERVICES.map((service) => {
+              const isSelected = selectedOnlineService === service.id;
+              const userBalance = typeof user?.balance === 'number' ? user.balance : parseFloat(user?.balance || '0');
+
+              return (
+                <div
+                  key={service.id}
+                  className={`online-payment-service-card ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedOnlineService(service.id)}
+                >
+                  <div className="online-payment-service-card__icon-wrap">
+                    <img src={service.icon} alt={service.title} className="online-payment-service-card__icon" />
+                  </div>
+
+                  <div className="online-payment-service-card__info">
+                    <div className="online-payment-service-card__title-row">
+                      <span className="online-payment-service-card__title">{service.title}</span>
+                      {service.badge && (
+                        <span className="online-payment-service-card__badge">
+                          {service.isBalance ? `${userBalance.toFixed(2)} ₼` : service.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="online-payment-service-card__desc">
+                      {service.isBalance ? `Текущий баланс: ${userBalance.toFixed(2)} ₼` : service.desc}
+                    </span>
+                  </div>
+
+                  <div className="online-payment-service-card__radio">
+                    <span className={`online-radio-dot ${isSelected ? 'active' : ''}`}>
+                      {isSelected && <span className="online-radio-dot__inner" />}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="online-payment-modal__actions">
+            <button
+              type="button"
+              className="online-payment-modal__btn online-payment-modal__btn--cancel"
+              onClick={() => setIsOnlinePaymentModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="online-payment-modal__btn online-payment-modal__btn--pay"
+              onClick={() => setIsOnlinePaymentModalOpen(false)}
+            >
+              Select Service
+            </button>
+          </div>
+        </div>
+      </AnimatedModalWrapper>
 
       <AnimatedModalWrapper
         isOpen={Boolean(orderSuccessData)}
@@ -588,7 +741,9 @@ const Order = () => {
 
               <div className="order-success-modal__detail-row">
                 <span className="order-success-modal__detail-label">Payment Method</span>
-                <span className="order-success-modal__detail-value">Pay at Cashier</span>
+                <span className="order-success-modal__detail-value">
+                  {formatPaymentMethod(orderSuccessData.payment?.paymentMethod)}
+                </span>
               </div>
 
               <div className="order-success-modal__detail-row total">

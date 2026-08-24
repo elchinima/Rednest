@@ -95,6 +95,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("timestamp with time zone");
             entity.Property(e => e.Items).HasColumnType("jsonb");
             entity.Property(e => e.Payment).HasColumnType("jsonb");
+            entity.Property(e => e.Notes)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
 
             entity.HasOne<User>()
                   .WithMany()
