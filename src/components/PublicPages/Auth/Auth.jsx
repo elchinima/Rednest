@@ -193,7 +193,7 @@ const Auth = () => {
                     required 
                   />
                   <label htmlFor="agree">
-                    I agree to the <Link to="/terms" className="terms-link">Terms of Use</Link>
+                    I agree to the <Link to="/rules" className="terms-link">Terms of Use</Link>
                   </label>
                 </div>
                 

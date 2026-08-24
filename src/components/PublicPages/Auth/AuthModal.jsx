@@ -165,7 +165,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                 required 
               />
               <label htmlFor="modal-agree">
-                I agree to the <Link to="/terms" onClick={onClose} className="terms-link">Terms of Use</Link>
+                I agree to the <Link to="/rules" onClick={onClose} className="terms-link">Terms of Use</Link>
               </label>
             </div>
 

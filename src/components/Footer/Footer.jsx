@@ -85,7 +85,7 @@ const Footer = () => {
           </div>
           <p className="copyright">&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
           <div className="terms-link">
-            <Link to="/terms">Terms of Use</Link>
+            <Link to="/rules">Terms of Use</Link>
           </div>
         </div>
       </div>

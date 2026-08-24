@@ -16,6 +16,7 @@ import Database from '../components/AdminPages/Database/Database';
 import ProtectedRoute from './ProtectedRoute';
 import AdminProtectedRoute from './AdminProtectedRoute';
 import ErrorPage from '../components/PublicPages/ErrorPage/ErrorPage';
+import Rules from '../components/PublicPages/Rules/Rules';
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
@@ -76,6 +77,8 @@ const AnimatedRoutes = () => {
           </AdminProtectedRoute>
         } />
 
+        <Route path="/rules" element={<Rules />} />
+        <Route path="/terms" element={<Navigate to="/rules" replace />} />
         <Route path="/error" element={<ErrorPage />} />
         <Route path="*" element={<ErrorPage defaultCode="404" />} />
       </Routes>
@@ -102,4 +105,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-
