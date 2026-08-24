@@ -638,17 +638,17 @@ const Order = () => {
                   </div>
 
                   <div className="online-payment-service-card__info">
-                    <div className="online-payment-service-card__title-row">
-                      <span className="online-payment-service-card__title">{service.title}</span>
-                      {service.badge && (
-                        <span className="online-payment-service-card__badge">
-                          {service.isBalance ? `${userBalance.toFixed(2)} ₼` : service.badge}
-                        </span>
-                      )}
-                    </div>
+                    <span className="online-payment-service-card__title">{service.title}</span>
                     <span className="online-payment-service-card__desc">
-                      {service.isBalance ? `Current balance: ${userBalance.toFixed(2)} ₼` : service.desc}
+                      {service.desc}
                     </span>
+                    {service.badge && (
+                      <div className="online-payment-service-card__badge-row">
+                        <span className="online-payment-service-card__badge">
+                          {service.isBalance ? `Balance: ${userBalance.toFixed(2)} ₼` : service.badge}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="online-payment-service-card__radio">
