@@ -81,7 +81,7 @@ const ONLINE_PAYMENT_SERVICES = [
   {
     id: 'OnlineBalance',
     name: 'Rednest Balance',
-    title: 'Rednest Account Balance',
+    title: 'Rednest Balance',
     desc: 'Instant payment from your account balance',
     icon: featureWalletIcon,
     badge: 'Instant',
@@ -618,7 +618,7 @@ const Order = () => {
             </div>
             <h3 className="online-payment-modal__title">Online Payment Service</h3>
             <p className="online-payment-modal__desc">
-              Select your payment method for an order of <span className="online-payment-modal__amount">{finalAmount} ₼</span>
+              Select a payment method <span className="online-payment-modal__amount">{finalAmount} ₼</span>
             </p>
           </div>
 
