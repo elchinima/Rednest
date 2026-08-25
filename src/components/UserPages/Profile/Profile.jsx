@@ -7,7 +7,6 @@ import UserNavPills from '../../Elements/UserNavPills';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
 import ChangePasswordModal from './ChangePasswordModal';
-import ActiveSessionsModal from './ActiveSessionsModal';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Profile.scss';
@@ -22,7 +21,6 @@ const Profile = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isSessionsModalOpen, setIsSessionsModalOpen] = useState(false);
   const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
   const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
@@ -346,7 +344,7 @@ const Profile = () => {
                 <button
                   type="button"
                   className="cta-btn sm profile-action-btn"
-                  onClick={() => setIsSessionsModalOpen(true)}
+                  onClick={() => navigate('/sessions')}
                 >
                   Active Sessions
                 </button>
@@ -430,11 +428,6 @@ const Profile = () => {
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}
         onSuccess={(msg) => showSuccess(msg)}
-      />
-
-      <ActiveSessionsModal
-        isOpen={isSessionsModalOpen}
-        onClose={() => setIsSessionsModalOpen(false)}
       />
 
       <AnimatedModalWrapper

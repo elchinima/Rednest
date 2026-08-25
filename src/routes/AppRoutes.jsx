@@ -7,6 +7,7 @@ import Auth from '../components/PublicPages/Auth/Auth';
 import Fortune from '../components/UserPages/Fortune/Fortune';
 import Profile from '../components/UserPages/Profile/Profile';
 import Promos from '../components/UserPages/Promos/Promos';
+import Sessions from '../components/UserPages/Sessions/Sessions';
 import Order from '../components/UserPages/Order/Order';
 import Orders from '../components/UserPages/Orders/Orders';
 import Basket from '../components/PublicPages/Basket/Basket';
@@ -47,6 +48,11 @@ const AnimatedRoutes = () => {
         <Route path="/promos" element={
           <ProtectedRoute>
             <Promos />
+          </ProtectedRoute>
+        } />
+        <Route path="/sessions" element={
+          <ProtectedRoute>
+            <Sessions />
           </ProtectedRoute>
         } />
         <Route path="/basket" element={

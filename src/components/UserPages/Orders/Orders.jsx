@@ -345,8 +345,8 @@ const Orders = () => {
                 {searchQuery
                   ? 'No matching orders found'
                   : activeFilter !== 'all'
-                  ? `No ${activeFilter} orders found`
-                  : 'No orders placed yet'}
+                    ? `No ${activeFilter} orders found`
+                    : 'No orders placed yet'}
               </h3>
               <p>
                 {searchQuery

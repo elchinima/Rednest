@@ -871,6 +871,10 @@
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.06);
     }
+
+    @media (max-width: 768px) {
+      display: none;
+    }
   }
 
   &__header {

@@ -155,6 +155,13 @@ const UserNavPills = ({ onMenuClose }) => {
               >
                 Promos
               </Link>
+              <Link
+                to="/sessions"
+                className="user-nav-capsule__dropdown-item"
+                onClick={handleProfileClick}
+              >
+                Sessions
+              </Link>
               <button
                 type="button"
                 className="user-nav-capsule__dropdown-item"

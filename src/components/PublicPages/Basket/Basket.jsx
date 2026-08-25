@@ -84,7 +84,7 @@ const Basket = () => {
           setActivePromo(data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user]);
 
 
@@ -275,12 +275,12 @@ const Basket = () => {
                     <div className="basket-item-image">
                       {item.product.imageUrl ? (
                         <>
-                          <img 
-                            src={item.product.imageUrl} 
-                            alt={item.product.name} 
+                          <img
+                            src={item.product.imageUrl}
+                            alt={item.product.name}
                             loading="lazy"
                             onLoad={() => loadedImages.markLoaded?.(item.productId)}
-                            className={loadedImages[item.productId] ? 'loaded' : ''} 
+                            className={loadedImages[item.productId] ? 'loaded' : ''}
                           />
                           {!loadedImages[item.productId] && (
                             <div className="basket-item-image-placeholder">☕</div>
