@@ -54,3 +54,12 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
 }
+
+iframe[src*="link.stripe.com"],
+div[class*="LinkFloating"],
+div[data-testid*="link-floating"],
+div[class*="stripe-floating"] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

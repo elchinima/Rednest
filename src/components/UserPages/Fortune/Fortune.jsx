@@ -53,6 +53,8 @@ const Fortune = () => {
 
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
+  const [cooldownEndsAt, setCooldownEndsAt] = useState(null);
+  const [timeLeftStr, setTimeLeftStr] = useState('');
   const [promoChecked, setPromoChecked] = useState(false);
   const [prize, setPrize] = useState(null);
   const [showPrize, setShowPrize] = useState(false);
@@ -65,16 +67,54 @@ const Fortune = () => {
     fetchWithRefresh(`${apiUrl}/api/auth/promo`)
       .then(r => r.json())
       .then(data => {
-        if (data.hasPromo && data.isActive) {
+        if (data.hasPromo) {
           setServerPromo(data);
-          setCanSpin(false);
+          setCanSpin(Boolean(data.canSpin));
+          if (data.cooldownEndsAt) {
+            setCooldownEndsAt(data.cooldownEndsAt);
+          }
         } else {
           setCanSpin(true);
+          setCooldownEndsAt(null);
         }
       })
       .catch(() => { setCanSpin(true); })
       .finally(() => { setPromoChecked(true); });
   }, [user]);
+
+  useEffect(() => {
+    if (canSpin || !cooldownEndsAt) {
+      setTimeLeftStr('');
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const target = new Date(cooldownEndsAt).getTime();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        setCanSpin(true);
+        setTimeLeftStr('');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeftStr(`${days}d ${hours}h ${minutes}m`);
+      } else {
+        setTimeLeftStr(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [canSpin, cooldownEndsAt]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -209,8 +249,17 @@ const Fortune = () => {
 
         if (t >= 1) {
           setSpinning(false);
+          setCanSpin(false);
           setPrize(seg);
-          setServerPromo({ promoCode: seg.promoCode, barCode: seg.barCode, expiresAt: seg.expiresAt });
+          setServerPromo({
+            promoCode: seg.promoCode,
+            barCode: seg.barCode,
+            expiresAt: seg.expiresAt,
+            prizeName: seg.label,
+            prizeDescription: seg.prize,
+            isActive: true,
+          });
+          setCooldownEndsAt(serverResult.cooldownEndsAt || seg.expiresAt);
           setShowPrize(true);
           drawFrame();
           return;
@@ -314,21 +363,31 @@ const Fortune = () => {
                   Loading...
                 </span>
               ) : !canSpin ? (
-                'Promo already active!'
+                serverPromo?.isActive ? 'Promo already active!' : '1 spin per week'
               ) : (
                 'Spin the Wheel!'
               )}
             </motion.button>
 
-            {!canSpin && !spinning && (
-              <motion.p
-                className="fortune-note"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+            {!canSpin && !spinning && promoChecked && (
+              <motion.div
+                className="fortune-cooldown-box"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                You already have an active promo code ✨
-              </motion.p>
+                <p className="fortune-note">
+                  {serverPromo?.isActive
+                    ? 'You have an active promo code ✨'
+                    : 'You have already spun the wheel this week.'}
+                </p>
+                {timeLeftStr && (
+                  <div className="fortune-timer-badge">
+                    <span className="fortune-timer-label">Next spin available in:</span>
+                    <span className="fortune-timer-value">{timeLeftStr}</span>
+                  </div>
+                )}
+              </motion.div>
             )}
           </motion.div>
         </div>

@@ -128,11 +128,42 @@
   }
 }
 
+.fortune-cooldown-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .fortune-note {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.55);
   margin: 0;
   text-align: center;
+}
+
+.fortune-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+
+  .fortune-timer-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .fortune-timer-value {
+    color: #fbbf24;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
 }
 
 .fortune-prize-overlay {

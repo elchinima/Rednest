@@ -53,7 +53,14 @@ const StripeCheckoutForm = ({ totalAmount, onSuccess, onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="stripe-checkout-form">
       <div className="stripe-elements-container">
-        <PaymentElement options={{ layout: 'tabs' }} />
+        <PaymentElement
+          options={{
+            layout: 'tabs',
+            wallets: {
+              link: 'never',
+            },
+          }}
+        />
       </div>
 
       {errorMessage && (
@@ -175,6 +182,10 @@ const StripePaymentModal = ({
 
     return () => {
       isMounted = false;
+      const floatingElements = document.querySelectorAll(
+        'iframe[src*="link.stripe.com"], [class*="LinkFloating"], [data-testid*="link-floating"], [class*="stripe-floating"]'
+      );
+      floatingElements.forEach(el => el.remove());
     };
   }, [isOpen, serviceId, apiUrl]);
 

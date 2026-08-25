@@ -459,29 +459,43 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
                 return Unauthorized();
 
-            var promo = await userRepository.GetActiveUserPromoAsync(userId);
-            if (promo == null)
-                return Ok(new { hasPromo = false, isActive = false });
+            var now = DateTime.UtcNow;
+            var lastPromo = await userRepository.GetUserPromoAsync(userId);
 
-            if (promo.Dates.ExpiresAt < DateTime.UtcNow)
+            if (lastPromo == null)
             {
-                promo.IsActive = false;
-                await userRepository.UpdateUserPromoAsync(promo);
-                return Ok(new { hasPromo = true, isActive = false });
+                return Ok(new
+                {
+                    hasPromo = false,
+                    isActive = false,
+                    canSpin = true,
+                    cooldownEndsAt = (DateTime?)null
+                });
             }
+
+            if (lastPromo.IsActive && lastPromo.Dates.ExpiresAt < now)
+            {
+                lastPromo.IsActive = false;
+                await userRepository.UpdateUserPromoAsync(lastPromo);
+            }
+
+            var cooldownEndsAt = lastPromo.Dates.ActivatedAt.AddDays(7);
+            bool canSpin = now >= cooldownEndsAt;
 
             return Ok(new
             {
                 hasPromo = true,
-                promoCode = promo.Codes.PromoCode,
-                prizeName = promo.PrizeInfo.PrizeName,
-                prizeDescription = promo.PrizeInfo.PrizeDescription,
-                prizeType = promo.PrizeInfo.Type.ToString(),
-                cashbackPercent = promo.PrizeInfo.CashbackPercent,
-                barCode = promo.Codes.BarCode,
-                isActive = promo.IsActive,
-                activatedAt = promo.Dates.ActivatedAt,
-                expiresAt = promo.Dates.ExpiresAt
+                promoCode = lastPromo.Codes.PromoCode,
+                prizeName = lastPromo.PrizeInfo.PrizeName,
+                prizeDescription = lastPromo.PrizeInfo.PrizeDescription,
+                prizeType = lastPromo.PrizeInfo.Type.ToString(),
+                cashbackPercent = lastPromo.PrizeInfo.CashbackPercent,
+                barCode = lastPromo.Codes.BarCode,
+                isActive = lastPromo.IsActive,
+                activatedAt = lastPromo.Dates.ActivatedAt,
+                expiresAt = lastPromo.Dates.ExpiresAt,
+                canSpin = canSpin,
+                cooldownEndsAt = cooldownEndsAt
             });
         }
         catch (Exception ex)
@@ -541,18 +555,19 @@ public class AuthController : ControllerBase
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
                 return Unauthorized();
 
-            var activePromo = await userRepository.GetActiveUserPromoAsync(userId);
+            var now = DateTime.UtcNow;
+            var lastPromo = await userRepository.GetUserPromoAsync(userId);
 
-            if (activePromo != null)
+            if (lastPromo != null)
             {
-                if (activePromo.Dates.ExpiresAt < DateTime.UtcNow)
+                var cooldownEndsAt = lastPromo.Dates.ActivatedAt.AddDays(7);
+                if (now < cooldownEndsAt)
                 {
-                    activePromo.IsActive = false;
-                    await userRepository.UpdateUserPromoAsync(activePromo);
-                }
-                else
-                {
-                    return Conflict(new { Message = "User already has an active promo." });
+                    return Conflict(new
+                    {
+                        Message = "You can only spin the wheel once a week.",
+                        cooldownEndsAt = cooldownEndsAt
+                    });
                 }
             }
 
@@ -564,7 +579,6 @@ public class AuthController : ControllerBase
             var (prizeName, prizeDescription) = GetPrizeDetails(prizeType, cashbackPercent);
             var segmentIndex = (int)prizeType;
 
-            var now = DateTime.UtcNow;
             var promo = new Rednest.Core.Entities.UserPromo
             {
                 UserId = userId,
@@ -598,7 +612,8 @@ public class AuthController : ControllerBase
                 promoCode,
                 barCode,
                 cashbackPercent,
-                expiresAt = now.AddDays(7)
+                expiresAt = now.AddDays(7),
+                cooldownEndsAt = now.AddDays(7)
             });
         }
         catch (Exception ex)
