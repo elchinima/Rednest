@@ -105,7 +105,7 @@ const Fortune = () => {
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       if (days > 0) {
-        setTimeLeftStr(`${days}d ${hours}h ${minutes}m`);
+        setTimeLeftStr(`${days}d ${hours}h ${minutes}m ${seconds}s`);
       } else {
         setTimeLeftStr(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
       }
@@ -363,7 +363,7 @@ const Fortune = () => {
                   Loading...
                 </span>
               ) : !canSpin ? (
-                serverPromo?.isActive ? 'Promo already active!' : '1 spin per week'
+                timeLeftStr || (serverPromo?.isActive ? 'Promo already active!' : '1 spin per week')
               ) : (
                 'Spin the Wheel!'
               )}
@@ -381,12 +381,6 @@ const Fortune = () => {
                     ? 'You have an active promo code ✨'
                     : 'You have already spun the wheel this week.'}
                 </p>
-                {timeLeftStr && (
-                  <div className="fortune-timer-badge">
-                    <span className="fortune-timer-label">Next spin available in:</span>
-                    <span className="fortune-timer-value">{timeLeftStr}</span>
-                  </div>
-                )}
               </motion.div>
             )}
           </motion.div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js/pure';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import featureStripeIcon from '../../../assets/icons/feature-stripe.svg';

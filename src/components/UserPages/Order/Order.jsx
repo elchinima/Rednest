@@ -20,8 +20,9 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
 import UserNavPills from '../../Elements/UserNavPills';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import StripePaymentModal from './StripePaymentModal';
 import './Order.scss';
+
+const StripePaymentModal = React.lazy(() => import('./StripePaymentModal'));
 
 const springTransition = { type: 'spring', stiffness: 280, damping: 24 };
 const smoothEase = [0.16, 1, 0.3, 1];
@@ -814,13 +815,17 @@ const Order = () => {
         )}
       </AnimatedModalWrapper>
 
-      <StripePaymentModal
-        isOpen={isStripeModalOpen}
-        onClose={() => setIsStripeModalOpen(false)}
-        serviceId={selectedOnlineService}
-        finalAmount={finalAmount}
-        onOrderSuccess={handleStripeOrderSuccess}
-      />
+      {isStripeModalOpen && (
+        <React.Suspense fallback={null}>
+          <StripePaymentModal
+            isOpen={isStripeModalOpen}
+            onClose={() => setIsStripeModalOpen(false)}
+            serviceId={selectedOnlineService}
+            finalAmount={finalAmount}
+            onOrderSuccess={handleStripeOrderSuccess}
+          />
+        </React.Suspense>
+      )}
 
       <Footer />
     </motion.div>
