@@ -145,70 +145,6 @@
   gap: 16px;
 }
 
-.stripe-test-banner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: $border-radius-sm;
-  padding: 8px 12px;
-  font-size: 0.78rem;
-  color: #fde68a;
-
-  &__badge {
-    background: #f59e0b;
-    color: #000000;
-    font-weight: 800;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
-  }
-
-  &__text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-
-    .stripe-test-card-num {
-      background: rgba(0, 0, 0, 0.35);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: monospace;
-      color: #ffffff;
-      font-weight: 700;
-    }
-  }
-
-  .stripe-test-copy-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.72rem;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.35);
-    }
-  }
-
-  @media (max-width: 768px) {
-    font-size: 0.68rem;
-    padding: 6px 10px;
-  }
-}
-
 .stripe-elements-container {
   min-height: 180px;
   padding: 4px 0;
@@ -254,24 +190,36 @@
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.16);
       color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
     }
   }
 
-  &--pay {
-    background: #ef4444;
-    color: #ffffff;
-    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.4);
+  &--submit {
+    background: $color-text;
+    color: $color-bg-dark;
+    border: 1px solid transparent;
 
     &:hover:not(:disabled) {
-      background: #dc2626;
-      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6);
+      background: rgba(255, 255, 255, 0.95);
+      color: $color-primary;
       transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
     }
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   @media (max-width: 480px) {

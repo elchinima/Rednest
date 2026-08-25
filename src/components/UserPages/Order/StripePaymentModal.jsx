@@ -20,13 +20,6 @@ const StripeCheckoutForm = ({ totalAmount, onSuccess, onCancel }) => {
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [copiedCard, setCopiedCard] = useState(false);
-
-  const handleCopyTestCard = () => {
-    navigator.clipboard.writeText('4242424242424242');
-    setCopiedCard(true);
-    setTimeout(() => setCopiedCard(false), 2000);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,21 +52,6 @@ const StripeCheckoutForm = ({ totalAmount, onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="stripe-checkout-form">
-      <div className="stripe-test-banner">
-        <div className="stripe-test-banner__badge">TEST MODE</div>
-        <div className="stripe-test-banner__text">
-          <span>Card:</span>
-          <code className="stripe-test-card-num">4242 4242 4242 4242</code>
-        </div>
-        <button
-          type="button"
-          className="stripe-test-copy-btn"
-          onClick={handleCopyTestCard}
-        >
-          {copiedCard ? '✓ Copied' : 'Copy'}
-        </button>
-      </div>
-
       <div className="stripe-elements-container">
         <PaymentElement options={{ layout: 'tabs' }} />
       </div>
@@ -95,7 +73,7 @@ const StripeCheckoutForm = ({ totalAmount, onSuccess, onCancel }) => {
         </button>
         <button
           type="submit"
-          className="cta-btn sm stripe-modal-btn stripe-modal-btn--pay"
+          className="cta-btn sm stripe-modal-btn stripe-modal-btn--submit"
           disabled={!stripe || !elements || isProcessing}
         >
           {isProcessing ? (
