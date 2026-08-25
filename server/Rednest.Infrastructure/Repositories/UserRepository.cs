@@ -47,6 +47,25 @@ public class UserRepository : IUserRepository
         return null;
     }
 
+    public async Task<(User User, UserSession Session, SessionEntry Entry)?> GetByPreviousRefreshTokenAsync(string previousRefreshToken)
+    {
+        var sessions = await _context.UserSessions
+            .Include(s => s.User)
+            .Where(s => s.Sessions != null && s.Sessions.Count > 0)
+            .ToListAsync();
+
+        foreach (var session in sessions)
+        {
+            var entry = session.Sessions.FirstOrDefault(e => e.PreviousRefreshToken == previousRefreshToken);
+            if (entry != null)
+            {
+                return (session.User, session, entry);
+            }
+        }
+
+        return null;
+    }
+
     public async Task<UserSession?> GetSessionByUserIdAsync(Guid userId)
     {
         return await _context.UserSessions

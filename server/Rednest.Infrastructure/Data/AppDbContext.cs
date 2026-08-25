@@ -34,6 +34,10 @@ public class AppDbContext : DbContext
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'[]'::jsonb");
 
+            entity.Property(e => e.PaymentMethods)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
             entity.HasOne(e => e.Session)
                   .WithOne(s => s.User)
                   .HasForeignKey<UserSession>(s => s.UserId)

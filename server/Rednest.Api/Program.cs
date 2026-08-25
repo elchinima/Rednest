@@ -282,15 +282,9 @@ app.Use(async (context, next) =>
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        var deleteCookieOptions = new CookieOptions
-                        {
-                            HttpOnly = true,
-                            Secure = true,
-                            SameSite = SameSiteMode.None,
-                            Path = "/"
-                        };
-                        context.Response.Cookies.Delete("accessToken", deleteCookieOptions);
-                        context.Response.Cookies.Delete("refreshToken", deleteCookieOptions);
+                        // Don't delete cookies here — the session may be valid but the token
+                        // was already rotated by a concurrent request (race condition).
+                        // The API will return 401 on actual protected endpoints if truly unauthorized.
                         break;
                     }
                     catch (Exception ex)

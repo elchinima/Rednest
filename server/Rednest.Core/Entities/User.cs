@@ -9,6 +9,7 @@ public class User
     public string? ProfilePictureUrl { get; set; }
     public decimal Balance { get; set; } = 0.00m;
     public List<UserAddress> Addresses { get; set; } = new();
+    public List<UserPaymentMethod> PaymentMethods { get; set; } = new();
 
     public UserSession? Session { get; set; }
     public ICollection<UserPromo> Promos { get; set; } = new List<UserPromo>();

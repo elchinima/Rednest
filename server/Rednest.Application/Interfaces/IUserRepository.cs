@@ -7,6 +7,7 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByIdAsync(Guid id);
     Task<(User User, UserSession Session, SessionEntry Entry)?> GetByRefreshTokenAsync(string refreshToken);
+    Task<(User User, UserSession Session, SessionEntry Entry)?> GetByPreviousRefreshTokenAsync(string previousRefreshToken);
     Task<UserSession?> GetSessionByUserIdAsync(Guid userId);
     Task AddAsync(User user);
     Task UpdateAsync(User user);

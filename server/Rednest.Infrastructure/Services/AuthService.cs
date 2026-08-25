@@ -111,6 +111,25 @@ public class AuthService : IAuthService
     {
         var now = DateTime.UtcNow;
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+
+        // Grace period: if the token was recently rotated (within 30s), accept the previous token
+        // This handles concurrent requests that all arrive with the same old refresh token
+        if (result == null)
+        {
+            result = await _userRepository.GetByPreviousRefreshTokenAsync(refreshToken);
+            if (result != null)
+            {
+                var rotatedAt = result.Value.Entry.PreviousTokenRotatedAt;
+                // If the previous token was rotated more than 30 seconds ago — real invalid token
+                if (!rotatedAt.HasValue || (now - rotatedAt.Value).TotalSeconds > 30)
+                {
+                    throw new UnauthorizedAccessException("Invalid, terminated or expired refresh token");
+                }
+                // Within grace period — return the already-rotated new token
+                return (GenerateJwtToken(result.Value.User), result.Value.Entry.RefreshToken);
+            }
+        }
+
         if (result == null || result.Value.Entry.IsActive == false || IsSessionExpired(result.Value.Entry, now))
         {
             throw new UnauthorizedAccessException("Invalid, terminated or expired refresh token");
@@ -122,6 +141,10 @@ public class AuthService : IAuthService
         var newRefreshToken = GenerateRefreshToken();
 
         var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
+
+        // Store the previous token for grace period handling of concurrent requests
+        oldEntry.PreviousRefreshToken = oldEntry.RefreshToken;
+        oldEntry.PreviousTokenRotatedAt = now;
 
         oldEntry.RefreshToken = newRefreshToken;
         oldEntry.RefreshTokenExpiryTime = now.AddDays(15);
