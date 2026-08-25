@@ -239,57 +239,68 @@ app.Use(async (context, next) =>
             if (!isExplicitRefreshEndpoint)
             {
                 var authService = context.RequestServices.GetRequiredService<IAuthService>();
-                try
+                var logger = context.RequestServices.GetService<ILogger<Program>>();
+
+                const int maxRetries = 2;
+                for (int attempt = 0; attempt <= maxRetries; attempt++)
                 {
-                    var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
-                                    ?? context.Connection.RemoteIpAddress?.ToString();
-                    var userAgent = context.Request.Headers["User-Agent"].ToString();
-                    var platformVersion = context.Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
-                                          ?? context.Request.Headers["X-Platform-Version"].FirstOrDefault();
-                    var deviceModel = context.Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
-                                      ?? context.Request.Headers["X-Device-Model"].FirstOrDefault();
-
-                    var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion, deviceModel);
-                    
-                    var accessCookieOptions = new CookieOptions
+                    try
                     {
-                        HttpOnly = true,
-                        Secure = true,
-                        SameSite = SameSiteMode.None,
-                        Path = "/",
-                        Expires = DateTime.UtcNow.AddMinutes(15)
-                    };
+                        var ipAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                                        ?? context.Connection.RemoteIpAddress?.ToString();
+                        var userAgent = context.Request.Headers["User-Agent"].ToString();
+                        var platformVersion = context.Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                              ?? context.Request.Headers["X-Platform-Version"].FirstOrDefault();
+                        var deviceModel = context.Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                                          ?? context.Request.Headers["X-Device-Model"].FirstOrDefault();
 
-                    var refreshCookieOptions = new CookieOptions
+                        var result = await authService.RefreshTokenAsync(refreshToken, ipAddress, userAgent, platformVersion, deviceModel);
+                        
+                        var accessCookieOptions = new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.None,
+                            Path = "/",
+                            Expires = DateTime.UtcNow.AddMinutes(15)
+                        };
+
+                        var refreshCookieOptions = new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.None,
+                            Path = "/",
+                            Expires = DateTime.UtcNow.AddDays(15)
+                        };
+
+                        context.Response.Cookies.Append("accessToken", result.AccessToken, accessCookieOptions);
+                        context.Response.Cookies.Append("refreshToken", result.RefreshToken, refreshCookieOptions);
+
+                        context.Items["newAccessToken"] = result.AccessToken;
+                        break;
+                    }
+                    catch (UnauthorizedAccessException)
                     {
-                        HttpOnly = true,
-                        Secure = true,
-                        SameSite = SameSiteMode.None,
-                        Path = "/",
-                        Expires = DateTime.UtcNow.AddDays(15)
-                    };
-
-                    context.Response.Cookies.Append("accessToken", result.AccessToken, accessCookieOptions);
-                    context.Response.Cookies.Append("refreshToken", result.RefreshToken, refreshCookieOptions);
-
-                    context.Items["newAccessToken"] = result.AccessToken;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    var deleteCookieOptions = new CookieOptions
+                        var deleteCookieOptions = new CookieOptions
+                        {
+                            HttpOnly = true,
+                            Secure = true,
+                            SameSite = SameSiteMode.None,
+                            Path = "/"
+                        };
+                        context.Response.Cookies.Delete("accessToken", deleteCookieOptions);
+                        context.Response.Cookies.Delete("refreshToken", deleteCookieOptions);
+                        break;
+                    }
+                    catch (Exception ex)
                     {
-                        HttpOnly = true,
-                        Secure = true,
-                        SameSite = SameSiteMode.None,
-                        Path = "/"
-                    };
-                    context.Response.Cookies.Delete("accessToken", deleteCookieOptions);
-                    context.Response.Cookies.Delete("refreshToken", deleteCookieOptions);
-                }
-                catch (Exception ex)
-                {
-                    var logger = context.RequestServices.GetService<ILogger<Program>>();
-                    logger?.LogWarning(ex, "Transient error occurred while refreshing token in middleware. Retaining existing cookies.");
+                        logger?.LogWarning(ex, "Transient error refreshing token (attempt {Attempt}/{MaxRetries})", attempt + 1, maxRetries + 1);
+                        if (attempt < maxRetries)
+                        {
+                            await Task.Delay(500 * (attempt + 1));
+                        }
+                    }
                 }
             }
         }

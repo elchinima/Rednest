@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -162,9 +163,10 @@ public class OrdersController : ControllerBase
     [AllowAnonymous]
     public IActionResult GetStripeConfig()
     {
-        var publishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY")
+        var publishableKey = StripWhitespace(
+            Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY")
             ?? Environment.GetEnvironmentVariable("VITE_STRIPE_PUBLISHABLE_KEY")
-            ?? "";
+            ?? "");
         return Ok(new { publishableKey });
     }
 
@@ -174,7 +176,7 @@ public class OrdersController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+        var stripeSecretKey = StripWhitespace(Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "");
         if (string.IsNullOrEmpty(stripeSecretKey))
         {
             return StatusCode(500, new { message = "Stripe secret key is not configured on the server." });
@@ -259,7 +261,7 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = "PaymentIntentId is required." });
         }
 
-        var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
+        var stripeSecretKey = StripWhitespace(Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "");
         if (string.IsNullOrEmpty(stripeSecretKey))
         {
             return StatusCode(500, new { message = "Stripe secret key is not configured on the server." });
@@ -608,6 +610,9 @@ public class OrdersController : ControllerBase
             }).ToList()
         });
     }
+
+    private static string StripWhitespace(string value)
+        => Regex.Replace(value, @"\s+", "");
 }
 
 public class OrderCalculationResult

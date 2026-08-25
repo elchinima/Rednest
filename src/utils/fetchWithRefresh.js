@@ -8,14 +8,25 @@ let refreshPromise = null;
 
 async function doRefresh() {
   const clientHeaders = await ensureClientHintsHeaders();
-  const refreshResponse = await fetch(`${apiUrl}/api/auth/refresh`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      ...clientHeaders,
-    },
-  });
-  return refreshResponse.ok;
+  
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const refreshResponse = await fetch(`${apiUrl}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          ...clientHeaders,
+        },
+      });
+      if (refreshResponse.ok) return true;
+      if (refreshResponse.status === 401) return false;
+    } catch {
+    }
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    }
+  }
+  return false;
 }
 
 export async function fetchWithRefresh(url, options = {}) {

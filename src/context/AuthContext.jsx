@@ -65,10 +65,11 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
+      const retryDelays = [3000, 6000, 10000];
       let result = await fetchCurrentUser();
-      
-      if (!result) {
-        await new Promise(r => setTimeout(r, 3000));
+
+      for (let i = 0; i < retryDelays.length && !result; i++) {
+        await new Promise(r => setTimeout(r, retryDelays[i]));
         result = await fetchCurrentUser();
       }
 
