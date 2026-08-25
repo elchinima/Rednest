@@ -1,0 +1,303 @@
+@import '../../../styles/variables.scss';
+
+.stripe-modal {
+  position: relative;
+  background: rgba($color-bg-dark, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  max-width: 520px;
+  width: 100%;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.8);
+  box-sizing: border-box;
+  color: $color-text;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__close {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    z-index: 2;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.06);
+    }
+  }
+
+  &__header {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  &__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto $spacing-sm;
+
+    img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+  }
+
+  &__title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: $color-text;
+    letter-spacing: -0.02em;
+  }
+
+  &__desc {
+    font-size: 0.88rem;
+    color: $color-text-muted;
+    line-height: 1.45;
+    margin: 0 auto;
+
+    @media (max-width: 768px) {
+      font-size: 0.62rem;
+    }
+  }
+
+  &__amount {
+    color: $color-primary;
+    font-weight: 800;
+    font-size: 1.05em;
+  }
+
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 16px;
+    gap: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+
+    .stripe-spinner-lg {
+      width: 32px;
+      height: 32px;
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &__error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: $border-radius-md;
+    padding: 16px;
+    text-align: center;
+    color: #fca5a5;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  @media (max-width: 480px) {
+    padding: $spacing-lg $spacing-md;
+    gap: 14px;
+
+    &__title {
+      font-size: 1.2rem;
+    }
+
+    &__desc {
+      font-size: 0.62rem;
+    }
+  }
+}
+
+.stripe-checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stripe-test-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: $border-radius-sm;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: #fde68a;
+
+  &__badge {
+    background: #f59e0b;
+    color: #000000;
+    font-weight: 800;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    .stripe-test-card-num {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #ffffff;
+      font-weight: 700;
+    }
+  }
+
+  .stripe-test-copy-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.68rem;
+    padding: 6px 10px;
+  }
+}
+
+.stripe-elements-container {
+  min-height: 180px;
+  padding: 4px 0;
+}
+
+.stripe-error-message {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: $border-radius-md;
+  color: #fca5a5;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.stripe-checkout-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.stripe-modal-btn {
+  flex: 1;
+  padding: 13px 18px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  border-radius: $border-radius-md;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+
+  &--cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: $color-text;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+  }
+
+  &--pay {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.4);
+
+    &:hover:not(:disabled) {
+      background: #dc2626;
+      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6);
+      transform: translateY(-1px);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 480px) {
+    padding: 11px 10px;
+    font-size: 0.86rem;
+  }
+}
+
+.stripe-btn-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .stripe-spinner {
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

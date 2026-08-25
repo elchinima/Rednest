@@ -20,6 +20,7 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
 import UserNavPills from '../../Elements/UserNavPills';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import StripePaymentModal from './StripePaymentModal';
 import './Order.scss';
 
 const springTransition = { type: 'spring', stiffness: 280, damping: 24 };
@@ -113,6 +114,7 @@ const Order = () => {
   const [activePromo, setActivePromo] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [isOnlinePaymentModalOpen, setIsOnlinePaymentModalOpen] = useState(false);
+  const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   const [selectedOnlineService, setSelectedOnlineService] = useState('OnlineStripe');
   const [onlineModalError, setOnlineModalError] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -274,11 +276,12 @@ const Order = () => {
         setIsOnlinePaymentModalOpen(false);
         setOrderSuccessData({
           id: data.id,
-          status: data.status || 'Pending Payment',
+          status: data.status || (paymentMethod === 'OnlineBalance' ? 'Paid Online' : 'Pending Payment'),
           createdAt: data.createdAt,
           items: data.items || [],
           payment: data.payment || {},
-          notes: data.notes || {}
+          notes: data.notes || {},
+          cashbackEarned: data.cashbackEarned || 0,
         });
       } else {
         const msg = data.message || 'Failed to place order. Please try again.';
@@ -292,6 +295,32 @@ const Order = () => {
       setOnlineModalError(msg);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStripeOrderSuccess = (data) => {
+    if (data.remainingBalance !== undefined && data.remainingBalance !== null && updateUser) {
+      updateUser({ balance: data.remainingBalance });
+    }
+    clearBasket();
+    setIsStripeModalOpen(false);
+    setOrderSuccessData({
+      id: data.id,
+      status: data.status || 'Paid Online',
+      createdAt: data.createdAt,
+      items: data.items || [],
+      payment: data.payment || {},
+      notes: data.notes || {},
+      cashbackEarned: data.cashbackEarned || 0,
+    });
+  };
+
+  const handleSelectOnlineServiceSubmit = () => {
+    setIsOnlinePaymentModalOpen(false);
+    if (selectedOnlineService === 'OnlineBalance') {
+      handlePlaceOrder('OnlineBalance');
+    } else {
+      setIsStripeModalOpen(true);
     }
   };
 
@@ -672,9 +701,9 @@ const Order = () => {
             <button
               type="button"
               className="cta-btn sm online-payment-modal__btn online-payment-modal__btn--submit"
-              onClick={() => setIsOnlinePaymentModalOpen(false)}
+              onClick={handleSelectOnlineServiceSubmit}
             >
-              Select Service
+              {selectedOnlineService === 'OnlineBalance' ? 'Pay with Balance' : 'Continue to Payment'}
             </button>
           </div>
         </div>
@@ -742,6 +771,13 @@ const Order = () => {
                 </div>
               )}
 
+              {orderSuccessData.cashbackEarned > 0 && (
+                <div className="order-success-modal__detail-row cashback">
+                  <span className="order-success-modal__detail-label">Cashback Added</span>
+                  <span className="order-success-modal__detail-value">+{Number(orderSuccessData.cashbackEarned).toFixed(2)} ₼</span>
+                </div>
+              )}
+
               <div className="order-success-modal__detail-row">
                 <span className="order-success-modal__detail-label">Payment Method</span>
                 <span className="order-success-modal__detail-value">
@@ -777,6 +813,14 @@ const Order = () => {
           </div>
         )}
       </AnimatedModalWrapper>
+
+      <StripePaymentModal
+        isOpen={isStripeModalOpen}
+        onClose={() => setIsStripeModalOpen(false)}
+        serviceId={selectedOnlineService}
+        finalAmount={finalAmount}
+        onOrderSuccess={handleStripeOrderSuccess}
+      />
 
       <Footer />
     </motion.div>

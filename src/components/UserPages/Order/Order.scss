@@ -224,6 +224,11 @@
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.45;
+
+    @media (max-width: 768px) {
+      font-size: 0.6rem;
+      line-height: 1.35;
+    }
   }
 
   &__features-wrap {
@@ -335,6 +340,11 @@
       font-size: 0.9rem;
       color: rgba(255, 255, 255, 0.7);
       line-height: 1.45;
+
+      @media (max-width: 768px) {
+        font-size: 0.63rem;
+        line-height: 1.35;
+      }
     }
   }
 
@@ -711,6 +721,13 @@
       }
     }
 
+    &.cashback {
+      .order-success-modal__detail-value {
+        color: #38bdf8;
+        font-weight: 700;
+      }
+    }
+
     &.total {
       padding-top: 10px;
       margin-top: 2px;
@@ -893,6 +910,10 @@
     color: $color-text-muted;
     line-height: 1.45;
     margin: 0 auto;
+
+    @media (max-width: 768px) {
+      font-size: 0.62rem;
+    }
   }
 
   &__amount {
@@ -962,7 +983,7 @@
     }
 
     &__desc {
-      font-size: 0.82rem;
+      font-size: 0.62rem;
     }
 
     &__actions {
@@ -1041,6 +1062,11 @@
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.6);
     line-height: 1.35;
+
+    @media (max-width: 768px) {
+      font-size: 0.56rem;
+      line-height: 1.3;
+    }
   }
 
   &__badge-row {

@@ -76,6 +76,9 @@ const getShortId = (id) => {
 
 const getStatusBadge = (status) => {
   const s = String(status || '').toLowerCase();
+  if (s.includes('paid online') || s === 'paid online') {
+    return { className: 'orders-status--paid-online', label: 'Paid Online', dotColor: '#10b981' };
+  }
   if (s.includes('pending')) {
     return { className: 'orders-status--pending', label: 'Pending Payment', dotColor: '#f59e0b' };
   }

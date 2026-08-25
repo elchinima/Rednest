@@ -18,10 +18,20 @@ Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "f
 
 var builder = WebApplication.CreateBuilder(args);
 
-var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "secret", ".env");
-if (File.Exists(envPath))
+var possibleEnvPaths = new[]
 {
-    Env.Load(envPath);
+    Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "secret", ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), "..", "secret", ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), "secret", ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), ".env")
+};
+foreach (var p in possibleEnvPaths)
+{
+    if (File.Exists(p))
+    {
+        Env.Load(p);
+        break;
+    }
 }
 
 builder.Services.AddControllers();
