@@ -18,6 +18,7 @@ import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
 import UserNavPills from '../../Elements/UserNavPills';
 import Footer from '../../Footer/Footer';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
 const PAYMENT_METHODS = {
@@ -421,8 +422,8 @@ const Orders = () => {
                             return (
                               <div key={item.productId || iIdx} className="order-card__item-row">
                                 <div className="order-card__item-thumb">
-                                  {item.imageUrl ? (
-                                    <img src={item.imageUrl} alt={item.name || 'Product'} />
+                                  {getProductIconUrl(item) || item.imageUrl ? (
+                                    <img src={getProductIconUrl(item) || item.imageUrl} alt={item.name || 'Product'} />
                                   ) : (
                                     <div className="order-card__item-thumb-placeholder">☕</div>
                                   )}
