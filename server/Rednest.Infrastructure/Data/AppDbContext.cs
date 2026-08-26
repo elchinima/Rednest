@@ -52,6 +52,10 @@ public class AppDbContext : DbContext
                   .HasColumnName("2FA")
                   .HasDefaultValue(false);
 
+            entity.Property(e => e.Subscribe)
+                  .HasColumnName("Subscribe")
+                  .HasDefaultValue(false);
+
             entity.Property(e => e.AccountVerify)
                   .HasColumnName("AccountVerify")
                   .HasColumnType("jsonb")

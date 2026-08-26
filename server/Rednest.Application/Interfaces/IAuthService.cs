@@ -23,6 +23,10 @@ public interface IAuthService
 
     Task<bool> ToggleTwoFactorAsync(Guid userId, bool? enabled = null);
 
+    Task RequestSubscriptionCodeAsync(string email);
+
+    Task VerifySubscriptionCodeAsync(string email, string code);
+
     Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
         string? ipAddress = null, 

@@ -163,6 +163,54 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("subscribe/request")]
+    public async Task<IActionResult> RequestSubscribe([FromBody] SubscribeRequest request)
+    {
+        try
+        {
+            await _authService.RequestSubscriptionCodeAsync(request.Email);
+            return Ok(new { message = "Verification code sent to your email." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("subscribe/verify")]
+    public async Task<IActionResult> VerifySubscribe([FromBody] VerifySubscribeRequest request)
+    {
+        try
+        {
+            await _authService.VerifySubscriptionCodeAsync(request.Email, request.Code);
+            return Ok(new { message = "Successfully subscribed to the Rednest Club!" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {

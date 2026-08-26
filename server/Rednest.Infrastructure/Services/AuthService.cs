@@ -52,6 +52,7 @@ public class AuthService : IAuthService
                 UserId = user.Id,
                 RegistrationIp = ipAddress,
                 TwoFactorEnabled = false,
+                Subscribe = false,
                 AccountVerify = new List<AccountVerifyEntry>(),
                 Sessions = new List<SessionEntry>()
             };
@@ -74,6 +75,7 @@ public class AuthService : IAuthService
                 UserId = user.Id,
                 RegistrationIp = ipAddress,
                 TwoFactorEnabled = false,
+                Subscribe = false,
                 AccountVerify = new List<AccountVerifyEntry>(),
                 Sessions = new List<SessionEntry>()
             };
@@ -95,7 +97,6 @@ public class AuthService : IAuthService
         if (userSession.TwoFactorEnabled)
         {
             var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString("D4");
-            userSession.AccountVerify.RemoveAll(v => v.Type == "2FA");
             userSession.AccountVerify.Add(new AccountVerifyEntry
             {
                 Type = "2FA",
@@ -163,7 +164,10 @@ public class AuthService : IAuthService
         CleanExpiredData(userSession, now);
 
         var trimmedCode = request.Code.Trim();
-        var entry = userSession.AccountVerify.FirstOrDefault(v => v.Type == "2FA" && v.Code == trimmedCode);
+        var entry = userSession.AccountVerify
+            .Where(v => v.Type == "2FA" && v.Code == trimmedCode)
+            .OrderByDescending(v => v.CreateData)
+            .FirstOrDefault();
 
         if (entry == null)
         {
@@ -172,12 +176,8 @@ public class AuthService : IAuthService
 
         if (entry.CreateData.AddMinutes(entry.Expire) <= now)
         {
-            userSession.AccountVerify.Remove(entry);
-            await _userRepository.UpdateSessionAsync(userSession);
             throw new UnauthorizedAccessException("Verification code has expired. Please request a new code.");
         }
-
-        userSession.AccountVerify.Remove(entry);
 
         if (userSession.Sessions == null)
         {
@@ -236,7 +236,6 @@ public class AuthService : IAuthService
         CleanExpiredData(userSession, now);
 
         var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString("D4");
-        userSession.AccountVerify.RemoveAll(v => v.Type == "2FA");
         userSession.AccountVerify.Add(new AccountVerifyEntry
         {
             Type = "2FA",
@@ -258,6 +257,7 @@ public class AuthService : IAuthService
             {
                 UserId = userId,
                 TwoFactorEnabled = enabled ?? true,
+                Subscribe = false,
                 AccountVerify = new List<AccountVerifyEntry>(),
                 Sessions = new List<SessionEntry>()
             };
@@ -276,6 +276,96 @@ public class AuthService : IAuthService
 
         await _userRepository.UpdateSessionAsync(userSession);
         return userSession.TwoFactorEnabled;
+    }
+
+    public async Task RequestSubscriptionCodeAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email is required");
+        }
+
+        var user = await _userRepository.GetByEmailAsync(email.Trim());
+        if (user == null)
+        {
+            throw new KeyNotFoundException("This email is not registered. Please create an account first.");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession == null)
+        {
+            userSession = new UserSession
+            {
+                UserId = user.Id,
+                TwoFactorEnabled = false,
+                Subscribe = false,
+                AccountVerify = new List<AccountVerifyEntry>(),
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(userSession);
+        }
+
+        if (userSession.AccountVerify == null)
+        {
+            userSession.AccountVerify = new List<AccountVerifyEntry>();
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString("D4");
+        userSession.AccountVerify.Add(new AccountVerifyEntry
+        {
+            Type = "Subscribe",
+            Code = code,
+            Expire = 15,
+            CreateData = now
+        });
+
+        await _userRepository.UpdateSessionAsync(userSession);
+        await _emailService.SendSubscriptionCodeAsync(user.Email, code);
+    }
+
+    public async Task VerifySubscriptionCodeAsync(string email, string code)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(code))
+        {
+            throw new ArgumentException("Email and confirmation code are required");
+        }
+
+        var user = await _userRepository.GetByEmailAsync(email.Trim());
+        if (user == null)
+        {
+            throw new KeyNotFoundException("This email is not registered.");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession == null || userSession.AccountVerify == null || userSession.AccountVerify.Count == 0)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired confirmation code");
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var trimmedCode = code.Trim();
+        var entry = userSession.AccountVerify
+            .Where(v => v.Type == "Subscribe" && v.Code == trimmedCode)
+            .OrderByDescending(v => v.CreateData)
+            .FirstOrDefault();
+
+        if (entry == null)
+        {
+            throw new UnauthorizedAccessException("Invalid confirmation code");
+        }
+
+        if (entry.CreateData.AddMinutes(entry.Expire) <= now)
+        {
+            throw new UnauthorizedAccessException("Confirmation code has expired. Please request a new code.");
+        }
+
+        userSession.Subscribe = true;
+        await _userRepository.UpdateSessionAsync(userSession);
     }
 
     public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(

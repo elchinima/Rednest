@@ -371,6 +371,29 @@
         border-radius: 50px;
       }
     }
+
+    .newsletter-msg {
+      margin-top: $spacing-md;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      text-align: center;
+      max-width: 70%;
+      margin-left: auto;
+      margin-right: auto;
+
+      &--success {
+        color: #48bb78;
+        background: rgba(72, 187, 120, 0.1);
+        border: 1px solid rgba(72, 187, 120, 0.25);
+      }
+
+      &--error {
+        color: #ff6b6b;
+        background: rgba(255, 80, 80, 0.1);
+        border: 1px solid rgba(255, 80, 80, 0.25);
+      }
+    }
   }
 }
 

@@ -1,0 +1,211 @@
+@import '../../../styles/variables.scss';
+
+.subscribe-modal-content {
+  box-sizing: border-box;
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid $color-glass-border;
+  border-radius: $border-radius-lg;
+  width: 100%;
+  max-width: 440px;
+  padding: 40px;
+  position: relative;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: $color-text;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  .subscribe-modal-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05) rotate(90deg);
+    }
+  }
+
+  .subscribe-modal-header {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    .subscribe-modal-logo {
+      height: 48px;
+      margin-bottom: $spacing-md;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    p {
+      color: $color-text-muted;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 90%;
+      margin: 0 auto;
+
+      strong {
+        color: #ffffff;
+      }
+    }
+  }
+
+  .subscribe-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .two-factor-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 4px 0;
+
+      .two-factor-digit {
+        width: 54px;
+        height: 60px;
+        font-size: 1.8rem;
+        font-weight: 700;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: $border-radius-md;
+        color: $color-text;
+        transition: all 0.25s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $color-primary;
+          background: rgba(0, 0, 0, 0.7);
+          box-shadow: 0 0 0 4px rgba($color-primary, 0.2);
+          transform: translateY(-2px);
+        }
+      }
+    }
+
+    .subscribe-timer-info {
+      text-align: center;
+      font-size: 0.9rem;
+      color: $color-text-muted;
+
+      .timer-value {
+        color: #f6ad55;
+        font-weight: 600;
+      }
+
+      .timer-expired {
+        color: #ff6b6b;
+        font-weight: 600;
+      }
+    }
+
+    .subscribe-success-msg {
+      color: #48bb78;
+      font-size: 0.85rem;
+      padding: 10px 14px;
+      background: rgba(72, 187, 120, 0.1);
+      border: 1px solid rgba(72, 187, 120, 0.25);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .subscribe-error-msg {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      padding: 10px 14px;
+      background: rgba(255, 80, 80, 0.1);
+      border: 1px solid rgba(255, 80, 80, 0.25);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .subscribe-submit-btn {
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-top: 8px;
+      width: 100%;
+      padding: 16px;
+      font-size: 1.05rem;
+      background: $color-text;
+      color: $color-bg-dark;
+      border-radius: $border-radius-md;
+      transition: all 0.3s ease;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.95);
+        color: $color-primary;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+
+    .subscribe-modal-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 4px;
+
+      .subscribe-resend-btn {
+        background: none;
+        border: none;
+        color: $color-primary;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          text-decoration: underline;
+          background: rgba(229, 62, 62, 0.08);
+        }
+
+        &:disabled {
+          color: rgba(255, 255, 255, 0.35);
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 30px 20px;
+
+    .subscribe-modal-header h2 {
+      font-size: 1.4rem;
+    }
+
+    .two-factor-inputs .two-factor-digit {
+      width: 44px;
+      height: 52px;
+      font-size: 1.5rem;
+    }
+  }
+}

@@ -7,6 +7,7 @@ import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
 import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
 import bgVideo from '../../../assets/video/media_1.mp4';
 import aboutImage from '../../../assets/images/about_image.png';
+import SubscribeModal from './SubscribeModal';
 const STORAGE_BASE_URL = 'https://tlcehlxztgewbidcvwye.supabase.co/storage/v1/object/public/admin-files/database';
 const cappuccinoImg = `${STORAGE_BASE_URL}/cappuccino_8765432354.webp`;
 const redLatteImg = `${STORAGE_BASE_URL}/red_latte_9876543221.webp`;
@@ -18,6 +19,13 @@ import './Home.scss';
 
 const Home = () => {
   const videoRef = useRef(null);
+  const [subscribeEmail, setSubscribeEmail] = useState('');
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [subscribeError, setSubscribeError] = useState('');
+  const [subscribeSuccess, setSubscribeSuccess] = useState('');
+
+  const apiUrl = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -50,6 +58,33 @@ const Home = () => {
       }
     };
   }, []);
+
+  const handleSubscribeSubmit = async (e) => {
+    e.preventDefault();
+    if (!subscribeEmail.trim() || subscribeLoading) return;
+    setSubscribeLoading(true);
+    setSubscribeError('');
+    setSubscribeSuccess('');
+
+    try {
+      const res = await fetch(`${apiUrl}/api/auth/subscribe/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: subscribeEmail.trim() })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Subscription request failed');
+      }
+
+      setIsSubscribeModalOpen(true);
+    } catch (err) {
+      setSubscribeError(err.message);
+    } finally {
+      setSubscribeLoading(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -203,12 +238,42 @@ const Home = () => {
         <div className="newsletter-container">
           <h2>Join the Rednest Club</h2>
           <p>Subscribe to receive exclusive offers, new roast announcements, and brewing tips directly to your inbox.</p>
-          <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
-            <input type="email" placeholder="Enter your email address" required />
-            <button type="submit" className="cta-btn" id='subscribe-btn'>Subscribe</button>
+          <form className="newsletter-form" onSubmit={handleSubscribeSubmit}>
+            <input 
+              type="email" 
+              placeholder="Enter your email address" 
+              value={subscribeEmail}
+              onChange={(e) => setSubscribeEmail(e.target.value)}
+              required 
+            />
+            <button type="submit" className="cta-btn" id="subscribe-btn" disabled={subscribeLoading}>
+              {subscribeLoading ? 'Sending...' : 'Subscribe'}
+            </button>
           </form>
+
+          {subscribeSuccess && (
+            <div className="newsletter-msg newsletter-msg--success">
+              {subscribeSuccess}
+            </div>
+          )}
+
+          {subscribeError && (
+            <div className="newsletter-msg newsletter-msg--error">
+              {subscribeError}
+            </div>
+          )}
         </div>
       </motion.section>
+
+      <SubscribeModal
+        isOpen={isSubscribeModalOpen}
+        onClose={() => setIsSubscribeModalOpen(false)}
+        email={subscribeEmail}
+        onSuccess={(msg) => {
+          setSubscribeSuccess(msg);
+          setSubscribeEmail('');
+        }}
+      />
 
       <Footer />
     </motion.div>
