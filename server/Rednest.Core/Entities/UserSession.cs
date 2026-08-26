@@ -6,6 +6,7 @@ public class UserSession
     public string? RegistrationIp { get; set; }
     public bool TwoFactorEnabled { get; set; } = false;
     public bool Subscribe { get; set; } = false;
+    public bool IsActive { get; set; } = true;
     public List<AccountVerifyEntry> AccountVerify { get; set; } = new();
     public List<SessionEntry> Sessions { get; set; } = new();
 

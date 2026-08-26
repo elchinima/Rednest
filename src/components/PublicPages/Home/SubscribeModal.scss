@@ -165,34 +165,6 @@
         opacity: 0.6;
       }
     }
-
-    .subscribe-modal-actions {
-      display: flex;
-      justify-content: center;
-      margin-top: 4px;
-
-      .subscribe-resend-btn {
-        background: none;
-        border: none;
-        color: $color-primary;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        padding: 6px 12px;
-        border-radius: 6px;
-        transition: all 0.2s ease;
-
-        &:hover:not(:disabled) {
-          text-decoration: underline;
-          background: rgba(229, 62, 62, 0.08);
-        }
-
-        &:disabled {
-          color: rgba(255, 255, 255, 0.35);
-          cursor: not-allowed;
-        }
-      }
-    }
   }
 
   @media (max-width: 480px) {

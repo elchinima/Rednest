@@ -19,7 +19,6 @@ const Profile = () => {
   const navigate = useNavigate();
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-  const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
   const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
   const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false);
   const [isDeleteAvatarModalOpen, setIsDeleteAvatarModalOpen] = useState(false);
@@ -382,7 +381,7 @@ const Profile = () => {
                 <button
                   type="button"
                   className="cta-btn sm profile-action-btn"
-                  onClick={() => setIsAddressesModalOpen(true)}
+                  onClick={() => navigate('/addresses')}
                 >
                   Addresses
                 </button>
@@ -429,34 +428,6 @@ const Profile = () => {
         onClose={() => setIsPasswordModalOpen(false)}
         onSuccess={(msg) => showSuccess(msg)}
       />
-
-      <AnimatedModalWrapper
-        isOpen={isAddressesModalOpen}
-        onClose={() => setIsAddressesModalOpen(false)}
-        targetBorderRadius="24px"
-      >
-        <div className="profile-modal">
-          <div className="profile-modal__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-          </div>
-          <h3 className="profile-modal__title">Delivery Addresses</h3>
-          <p className="profile-modal__text">
-            Saved address management will be available in an upcoming update.
-          </p>
-          <div className="profile-modal__actions">
-            <button
-              type="button"
-              className="cta-btn sm profile-modal__btn"
-              onClick={() => setIsAddressesModalOpen(false)}
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      </AnimatedModalWrapper>
 
       <AnimatedModalWrapper
         isOpen={isPaymentsModalOpen}

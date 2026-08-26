@@ -16,11 +16,8 @@ const LoaderIcon = () => (
 const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
   const [digits, setDigits] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(900);
-  const [resendCooldown, setResendCooldown] = useState(60);
   const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
-  const [successInfo, setSuccessInfo] = useState('');
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -30,12 +27,9 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
     if (isOpen) {
       setDigits(['', '', '', '']);
       setTimer(900);
-      setResendCooldown(60);
       setError('');
-      setSuccessInfo('');
       interval = setInterval(() => {
         setTimer((prev) => (prev > 0 ? prev - 1 : 0));
-        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
     }
     return () => {
@@ -116,7 +110,6 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
     if (loading) return;
     setLoading(true);
     setError('');
-    setSuccessInfo('');
 
     try {
       const response = await fetch(`${apiUrl}/api/auth/subscribe/verify`, {
@@ -136,36 +129,6 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (resendCooldown > 0 || resending) return;
-    setResending(true);
-    setError('');
-    setSuccessInfo('');
-
-    try {
-      const response = await fetch(`${apiUrl}/api/auth/subscribe/request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend code');
-      }
-
-      setSuccessInfo('A new confirmation code has been sent to your email.');
-      setResendCooldown(60);
-      setTimer(900);
-      setDigits(['', '', '', '']);
-      inputRefs[0].current?.focus();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setResending(false);
     }
   };
 
@@ -210,36 +173,21 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
             {timer > 0 ? (
               <span>Code expires in <strong className="timer-value">{formatTimer(timer)}</strong></span>
             ) : (
-              <span className="timer-expired">Code has expired. Please request a new one.</span>
+              <span className="timer-expired">Code has expired. Please enter your email again.</span>
             )}
           </div>
-
-          {successInfo && (
-            <div className="subscribe-success-msg">{successInfo}</div>
-          )}
 
           {error && (
             <div className="subscribe-error-msg">{error}</div>
           )}
 
-          <button type="submit" className="cta-btn subscribe-submit-btn" disabled={loading || digits.join('').length < 4}>
+          <button type="submit" className="cta-btn subscribe-submit-btn" disabled={loading || digits.join('').length < 4 || timer === 0}>
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <LoaderIcon /> Confirming...
               </span>
             ) : 'Confirm Subscription'}
           </button>
-
-          <div className="subscribe-modal-actions">
-            <button
-              type="button"
-              className="subscribe-resend-btn"
-              onClick={handleResend}
-              disabled={resendCooldown > 0 || resending}
-            >
-              {resending ? 'Sending...' : resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
-            </button>
-          </div>
         </form>
       </div>
     </AnimatedModalWrapper>

@@ -96,6 +96,7 @@ public class UserRepository : IUserRepository
         _context.Entry(session).Property(s => s.AccountVerify).IsModified = true;
         _context.Entry(session).Property(s => s.TwoFactorEnabled).IsModified = true;
         _context.Entry(session).Property(s => s.Subscribe).IsModified = true;
+        _context.Entry(session).Property(s => s.IsActive).IsModified = true;
         _context.UserSessions.Update(session);
         await _context.SaveChangesAsync();
     }

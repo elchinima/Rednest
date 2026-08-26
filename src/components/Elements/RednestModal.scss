@@ -49,6 +49,15 @@
         stroke: #f59e0b;
       }
     }
+
+    &--success {
+      background: rgba(72, 187, 120, 0.15);
+      border-color: rgba(72, 187, 120, 0.35);
+
+      svg {
+        stroke: #48bb78;
+      }
+    }
   }
 
   &__title {
@@ -108,6 +117,18 @@
       &:hover:not(:disabled) {
         background: #dc2626;
         box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+        transform: translateY(-1px);
+      }
+    }
+
+    &--success {
+      background: #48bb78;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(72, 187, 120, 0.35);
+
+      &:hover:not(:disabled) {
+        background: #38a169;
+        box-shadow: 0 6px 20px rgba(72, 187, 120, 0.45);
         transform: translateY(-1px);
       }
     }

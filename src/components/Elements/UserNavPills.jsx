@@ -142,6 +142,13 @@ const UserNavPills = ({ onMenuClose }) => {
                 Profile
               </Link>
               <Link
+                to="/addresses"
+                className="user-nav-capsule__dropdown-item"
+                onClick={handleProfileClick}
+              >
+                Addresses
+              </Link>
+              <Link
                 to="/orders"
                 className="user-nav-capsule__dropdown-item"
                 onClick={handleProfileClick}

@@ -29,8 +29,6 @@ const Auth = () => {
 
   const [twoFactorDigits, setTwoFactorDigits] = useState(['', '', '', '']);
   const [twoFactorTimer, setTwoFactorTimer] = useState(900);
-  const [resendCooldown, setResendCooldown] = useState(60);
-  const [resending, setResending] = useState(false);
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const { login, isAuthenticated, fetchCurrentUser } = useAuth();
@@ -48,7 +46,6 @@ const Auth = () => {
     if (step === '2fa') {
       interval = setInterval(() => {
         setTwoFactorTimer((prev) => (prev > 0 ? prev - 1 : 0));
-        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
     }
     return () => {
@@ -213,36 +210,6 @@ const Auth = () => {
       setError(err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResend2FA = async () => {
-    if (resendCooldown > 0 || resending) return;
-    setResending(true);
-    setError(null);
-    setSuccessInfo('');
-
-    try {
-      const response = await fetch(`${apiUrl}/api/auth/2fa/resend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to resend code');
-      }
-
-      setSuccessInfo('A new verification code has been sent to your email.');
-      setResendCooldown(60);
-      setTwoFactorTimer(900);
-      setTwoFactorDigits(['', '', '', '']);
-      inputRefs[0].current?.focus();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setResending(false);
     }
   };
 
@@ -429,14 +396,6 @@ const Auth = () => {
                 </button>
 
                 <div className="two-factor-actions">
-                  <button
-                    type="button"
-                    className="two-factor-resend-btn"
-                    onClick={handleResend2FA}
-                    disabled={resendCooldown > 0 || resending}
-                  >
-                    {resending ? 'Sending...' : resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
-                  </button>
                   <button
                     type="button"
                     className="two-factor-back-btn"

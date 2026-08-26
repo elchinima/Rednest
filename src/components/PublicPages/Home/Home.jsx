@@ -8,6 +8,9 @@ import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
 import bgVideo from '../../../assets/video/media_1.mp4';
 import aboutImage from '../../../assets/images/about_image.png';
 import SubscribeModal from './SubscribeModal';
+import SubscribeErrorModal from './SubscribeErrorModal';
+import SubscribeSuccessModal from './SubscribeSuccessModal';
+import AuthModal from '../Auth/AuthModal';
 const STORAGE_BASE_URL = 'https://tlcehlxztgewbidcvwye.supabase.co/storage/v1/object/public/admin-files/database';
 const cappuccinoImg = `${STORAGE_BASE_URL}/cappuccino_8765432354.webp`;
 const redLatteImg = `${STORAGE_BASE_URL}/red_latte_9876543221.webp`;
@@ -21,9 +24,12 @@ const Home = () => {
   const videoRef = useRef(null);
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
-  const [subscribeError, setSubscribeError] = useState('');
-  const [subscribeSuccess, setSubscribeSuccess] = useState('');
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -63,8 +69,6 @@ const Home = () => {
     e.preventDefault();
     if (!subscribeEmail.trim() || subscribeLoading) return;
     setSubscribeLoading(true);
-    setSubscribeError('');
-    setSubscribeSuccess('');
 
     try {
       const res = await fetch(`${apiUrl}/api/auth/subscribe/request`, {
@@ -75,12 +79,13 @@ const Home = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Subscription request failed');
+        throw new Error(data.message || 'This email is not registered. Please create an account first.');
       }
 
       setIsSubscribeModalOpen(true);
     } catch (err) {
-      setSubscribeError(err.message);
+      setErrorMessage(err.message || 'This email is not registered. Please create an account first.');
+      setIsErrorModalOpen(true);
     } finally {
       setSubscribeLoading(false);
     }
@@ -250,18 +255,6 @@ const Home = () => {
               {subscribeLoading ? 'Sending...' : 'Subscribe'}
             </button>
           </form>
-
-          {subscribeSuccess && (
-            <div className="newsletter-msg newsletter-msg--success">
-              {subscribeSuccess}
-            </div>
-          )}
-
-          {subscribeError && (
-            <div className="newsletter-msg newsletter-msg--error">
-              {subscribeError}
-            </div>
-          )}
         </div>
       </motion.section>
 
@@ -270,9 +263,28 @@ const Home = () => {
         onClose={() => setIsSubscribeModalOpen(false)}
         email={subscribeEmail}
         onSuccess={(msg) => {
-          setSubscribeSuccess(msg);
+          setSuccessMessage(msg);
+          setIsSuccessModalOpen(true);
           setSubscribeEmail('');
         }}
+      />
+
+      <SubscribeErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={errorMessage}
+        onOpenRegister={() => setIsAuthModalOpen(true)}
+      />
+
+      <SubscribeSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        message={successMessage}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
 
       <Footer />

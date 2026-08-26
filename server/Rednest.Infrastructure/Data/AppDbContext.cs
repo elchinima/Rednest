@@ -56,6 +56,10 @@ public class AppDbContext : DbContext
                   .HasColumnName("Subscribe")
                   .HasDefaultValue(false);
 
+            entity.Property(e => e.IsActive)
+                  .HasColumnName("IsActive")
+                  .HasDefaultValue(true);
+
             entity.Property(e => e.AccountVerify)
                   .HasColumnName("AccountVerify")
                   .HasColumnType("jsonb")
