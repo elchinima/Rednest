@@ -99,7 +99,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
     }
 
     onSave({
-      title: title.trim() || 'Home',
+      title: title.trim() || null,
       address: address.trim(),
       city: city.trim(),
       apartment: apartment.trim() || null,
@@ -258,7 +258,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
           </div>
 
           <div className="address-modal__default-toggle" onClick={() => !loading && setIsDefault((prev) => !prev)}>
-            <span className="address-modal__toggle-title">Set as default delivery address</span>
+            <span className="address-modal__toggle-title">Set as default</span>
             <button
               type="button"
               className={`address-modal__switch ${isDefault ? 'address-modal__switch--on' : ''}`}

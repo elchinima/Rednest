@@ -12,26 +12,6 @@ import './Addresses.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
-const getCategoryIcon = (title = '') => {
-  const t = title.toLowerCase();
-  if (t.includes('home') || t.includes('дом') || t.includes('ev')) {
-    return { icon: '🏠', badgeClass: 'address-card__icon-badge--home' };
-  }
-  if (t.includes('work') || t.includes('office') || t.includes('работа') || t.includes('ofis') || t.includes('iş')) {
-    return { icon: '🏢', badgeClass: 'address-card__icon-badge--work' };
-  }
-  if (t.includes('gym') || t.includes('sport') || t.includes('зал') || t.includes('fit')) {
-    return { icon: '🏋️', badgeClass: 'address-card__icon-badge--gym' };
-  }
-  if (t.includes('parent') || t.includes('mom') || t.includes('dad') || t.includes('родител')) {
-    return { icon: '🏡', badgeClass: 'address-card__icon-badge--home' };
-  }
-  if (t.includes('apart') || t.includes('квартир') || t.includes('mənzil')) {
-    return { icon: '🏬', badgeClass: 'address-card__icon-badge--home' };
-  }
-  return { icon: '📍', badgeClass: '' };
-};
-
 const formatBakuDate = (dateStr) => {
   if (!dateStr) return '';
   try {
@@ -108,25 +88,22 @@ const Addresses = () => {
       setAddresses(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching addresses:', err);
-      setError(err.message || 'Failed to load addresses.');
+      setError(err.message || 'Unable to connect to server.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      fetchAddresses();
-    }
-  }, [user]);
+    fetchAddresses();
+  }, []);
 
   const handleSaveAddress = async (formData) => {
     setModalLoading(true);
     try {
       const isEditing = Boolean(addressToEdit && addressToEdit.id);
-      const url = isEditing
-        ? `${apiUrl}/api/addresses/${addressToEdit.id}`
-        : `${apiUrl}/api/addresses`;
+      const endpoint = isEditing ? `/api/addresses/${addressToEdit.id}` : '/api/addresses';
+      const url = `${apiUrl}${endpoint}`;
       const method = isEditing ? 'PUT' : 'POST';
 
       const res = await fetchWithRefresh(url, {
@@ -189,7 +166,7 @@ const Addresses = () => {
           }))
           .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
       );
-      showToast(`"${address.title}" set as default address!`);
+      showToast(`"${address.title || address.address}" set as default address!`);
     } catch (err) {
       showToast(err.message || 'Error setting default address.', 'error');
     } finally {
@@ -225,23 +202,6 @@ const Addresses = () => {
     } finally {
       setDeleteLoading(false);
     }
-  };
-
-  const handleCopyAddress = (address) => {
-    if (!address) return;
-    const fullText = [
-      address.title,
-      address.address,
-      address.apartment ? `Apt/Floor: ${address.apartment}` : null,
-      address.city ? `City: ${address.city}` : null,
-      address.phone ? `Phone: ${address.phone}` : null,
-      address.notes ? `Note: ${address.notes}` : null,
-    ]
-      .filter(Boolean)
-      .join(', ');
-
-    navigator.clipboard.writeText(fullText);
-    showToast('Full address copied to clipboard!');
   };
 
   const isEmpty = !loading && addresses.length === 0;
@@ -307,156 +267,152 @@ const Addresses = () => {
             <>
               <div className="addresses-grid">
                 <AnimatePresence>
-                  {addresses.map((addr, idx) => {
-                    const { icon, badgeClass } = getCategoryIcon(addr.title);
-                    return (
-                      <motion.div
-                        key={addr.id}
-                        className={`address-card ${addr.isDefault ? 'address-card--default' : ''}`}
-                        variants={cardVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        custom={idx}
-                        layout
-                      >
-                          <div className="address-card__header">
-                            <div className="address-card__title-group">
-                              <div className={`address-card__icon-badge ${badgeClass}`}>
-                                {icon}
-                              </div>
-                              <div className="address-card__meta">
-                                <h3 className="address-card__title">{addr.title || 'Address'}</h3>
+                  {addresses.map((addr, idx) => (
+                    <motion.div
+                      key={addr.id}
+                      className={`address-card ${addr.isDefault ? 'address-card--default' : ''}`}
+                      variants={cardVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      custom={idx}
+                      layout
+                    >
+                      <div className="address-card__header">
+                        <div className="address-card__title-group">
+                          <div className="address-card__icon-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                          </div>
+                          <div className="address-card__meta">
+                            {addr.title ? (
+                              <>
+                                <h3 className="address-card__title">{addr.title}</h3>
                                 {addr.createdAt && (
                                   <span className="address-card__date">
                                     Added {formatBakuDate(addr.createdAt)}
                                   </span>
                                 )}
-                              </div>
-                            </div>
-
-                            <div className="address-card__badges">
-                              {addr.isDefault && (
-                                <span className="address-card__badge-default">
-                                  <span className="pulsing-dot" />
-                                  Default
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="address-card__body">
-                            <div className="address-card__street">
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                <circle cx="12" cy="10" r="3" />
-                              </svg>
-                              <span>{addr.address}</span>
-                            </div>
-
-                            <div className="address-card__details-grid">
-                              {addr.city && (
-                                <div className="address-card__detail-item">
-                                  <span className="address-card__detail-label">City</span>
-                                  <span className="address-card__detail-val">{addr.city}</span>
-                                </div>
-                              )}
-
-                              {addr.apartment && (
-                                <div className="address-card__detail-item">
-                                  <span className="address-card__detail-label">Apt / Floor</span>
-                                  <span className="address-card__detail-val">{addr.apartment}</span>
-                                </div>
-                              )}
-
-                              {addr.phone && (
-                                <div className="address-card__detail-item">
-                                  <span className="address-card__detail-label">Phone</span>
-                                  <span className="address-card__detail-val">{addr.phone}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {addr.notes && (
-                              <div className="address-card__note-box">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                </svg>
-                                <span>{addr.notes}</span>
-                              </div>
+                              </>
+                            ) : (
+                              <span className="address-card__date address-card__date--standalone">
+                                {addr.createdAt ? `Added ${formatBakuDate(addr.createdAt)}` : 'Delivery Address'}
+                              </span>
                             )}
                           </div>
+                        </div>
 
-                          <div className="address-card__footer">
-                            <div className="address-card__footer-left">
-                              {!addr.isDefault && (
-                                <button
-                                  type="button"
-                                  className="address-card__action-btn address-card__action-btn--default"
-                                  onClick={() => handleSetDefault(addr)}
-                                  disabled={settingDefaultId === addr.id}
-                                  title="Set as default delivery address"
-                                >
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                  </svg>
-                                  <span>{settingDefaultId === addr.id ? 'Setting...' : 'Set Default'}</span>
-                                </button>
-                              )}
+                        <div className="address-card__badges">
+                          {addr.isDefault && (
+                            <span className="address-card__badge-default">
+                              <span className="pulsing-dot" />
+                              Default
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                              <button
-                                type="button"
-                                className="address-card__action-btn"
-                                onClick={() => handleCopyAddress(addr)}
-                                title="Copy address text"
-                              >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                </svg>
-                                <span>Copy</span>
-                              </button>
+                      <div className="address-card__body">
+                        <div className="address-card__street">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          <span>{addr.address}</span>
+                        </div>
+
+                        <div className="address-card__details-grid">
+                          {addr.city && (
+                            <div className="address-card__detail-item">
+                              <span className="address-card__detail-label">City</span>
+                              <span className="address-card__detail-val">{addr.city}</span>
                             </div>
+                          )}
 
-                            <div className="address-card__footer-right">
-                              <button
-                                type="button"
-                                className="address-card__action-btn address-card__action-btn--edit"
-                                onClick={() => {
-                                  setAddressToEdit(addr);
-                                  setIsAddressModalOpen(true);
-                                }}
-                                title="Edit address"
-                              >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                                <span>Edit</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                className="address-card__action-btn address-card__action-btn--delete"
-                                onClick={() => {
-                                  setAddressToDelete(addr);
-                                  setIsDeleteModalOpen(true);
-                                }}
-                                title="Delete address"
-                              >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                </svg>
-                                <span>Delete</span>
-                              </button>
+                          {addr.apartment && (
+                            <div className="address-card__detail-item">
+                              <span className="address-card__detail-label">Apt / Floor</span>
+                              <span className="address-card__detail-val">{addr.apartment}</span>
                             </div>
+                          )}
+
+                          {addr.phone && (
+                            <div className="address-card__detail-item">
+                              <span className="address-card__detail-label">Phone</span>
+                              <span className="address-card__detail-val">{addr.phone}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {addr.notes && (
+                          <div className="address-card__note-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            <span>{addr.notes}</span>
                           </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
+                        )}
+                      </div>
+
+                      <div className="address-card__footer">
+                        <div className="address-card__footer-left">
+                          {!addr.isDefault && (
+                            <button
+                              type="button"
+                              className="address-card__action-btn address-card__action-btn--default"
+                              onClick={() => handleSetDefault(addr)}
+                              disabled={settingDefaultId === addr.id}
+                              title="Set as default delivery address"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                              </svg>
+                              <span>{settingDefaultId === addr.id ? 'Setting...' : 'Set Default'}</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="address-card__footer-right">
+                          <button
+                            type="button"
+                            className="address-card__action-btn address-card__action-btn--edit"
+                            onClick={() => {
+                              setAddressToEdit(addr);
+                              setIsAddressModalOpen(true);
+                            }}
+                            title="Edit address"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="address-card__action-btn address-card__action-btn--delete"
+                            onClick={() => {
+                              setAddressToDelete(addr);
+                              setIsDeleteModalOpen(true);
+                            }}
+                            title="Delete address"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
             </>
           )}
         </div>
@@ -480,7 +436,7 @@ const Addresses = () => {
           setAddressToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        itemName={addressToDelete ? `"${addressToDelete.title}" (${addressToDelete.address})` : 'this address'}
+        itemName={addressToDelete ? (addressToDelete.title ? `"${addressToDelete.title}" (${addressToDelete.address})` : `"${addressToDelete.address}"`) : 'this address'}
         loading={deleteLoading}
       />
 

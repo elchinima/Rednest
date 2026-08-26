@@ -105,7 +105,7 @@ public class AddressesController : ControllerBase
         var newAddress = new UserAddress
         {
             Id = nextId,
-            Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim(),
+            Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim(),
             Address = request.Address.Trim(),
             City = request.City.Trim(),
             Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim(),
@@ -174,7 +174,7 @@ public class AddressesController : ControllerBase
             }
         }
 
-        target.Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim();
+        target.Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim();
         target.Address = request.Address.Trim();
         target.City = request.City.Trim();
         target.Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim();
