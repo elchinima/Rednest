@@ -73,18 +73,14 @@ const Addresses = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal States
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
 
-  // Delete modal states
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Filter & Notification states
-  const [activeTab, setActiveTab] = useState('all');
   const [toastMessage, setToastMessage] = useState(null);
   const [toastType, setToastType] = useState('success');
   const [settingDefaultId, setSettingDefaultId] = useState(null);
@@ -124,7 +120,6 @@ const Addresses = () => {
     }
   }, [user]);
 
-  // Handle Create or Update
   const handleSaveAddress = async (formData) => {
     setModalLoading(true);
     try {
@@ -174,7 +169,6 @@ const Addresses = () => {
     }
   };
 
-  // Handle Set Default
   const handleSetDefault = async (address) => {
     if (!address || address.isDefault || settingDefaultId) return;
     setSettingDefaultId(address.id);
@@ -203,7 +197,6 @@ const Addresses = () => {
     }
   };
 
-  // Handle Delete
   const handleConfirmDelete = async () => {
     if (!addressToDelete || deleteLoading) return;
     setDeleteLoading(true);
@@ -234,14 +227,13 @@ const Addresses = () => {
     }
   };
 
-  // Copy address to clipboard
   const handleCopyAddress = (address) => {
     if (!address) return;
     const fullText = [
       address.title,
       address.address,
       address.apartment ? `Apt/Floor: ${address.apartment}` : null,
-      address.city || 'Baku',
+      address.city ? `City: ${address.city}` : null,
       address.phone ? `Phone: ${address.phone}` : null,
       address.notes ? `Note: ${address.notes}` : null,
     ]
@@ -251,39 +243,6 @@ const Addresses = () => {
     navigator.clipboard.writeText(fullText);
     showToast('Full address copied to clipboard!');
   };
-
-  // Filter addresses
-  const filteredAddresses = useMemo(() => {
-    if (activeTab === 'all') return addresses;
-    if (activeTab === 'home') {
-      return addresses.filter((a) => {
-        const t = (a.title || '').toLowerCase();
-        return t.includes('home') || t.includes('дом') || t.includes('ev') || t.includes('apart');
-      });
-    }
-    if (activeTab === 'work') {
-      return addresses.filter((a) => {
-        const t = (a.title || '').toLowerCase();
-        return t.includes('work') || t.includes('office') || t.includes('работа') || t.includes('ofis');
-      });
-    }
-    if (activeTab === 'other') {
-      return addresses.filter((a) => {
-        const t = (a.title || '').toLowerCase();
-        return (
-          !t.includes('home') &&
-          !t.includes('дом') &&
-          !t.includes('ev') &&
-          !t.includes('apart') &&
-          !t.includes('work') &&
-          !t.includes('office') &&
-          !t.includes('работа') &&
-          !t.includes('ofis')
-        );
-      });
-    }
-    return addresses;
-  }, [addresses, activeTab]);
 
   return (
     <motion.div
@@ -297,20 +256,12 @@ const Addresses = () => {
 
       <main className="addresses-main">
         <div className="addresses-container">
-          {/* Hero Header */}
           <motion.div
             className="addresses-hero"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="addresses-hero__badge">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span>Saved Places</span>
-            </div>
             <h1>Delivery Addresses</h1>
             <p className="addresses-hero__desc">
               Manage your delivery locations, set default shipping destination, and configure courier instructions
@@ -334,7 +285,6 @@ const Addresses = () => {
             </div>
           </motion.div>
 
-          {/* Loading state */}
           {loading ? (
             <div className="addresses-loading-state">
               <img src={loaderIcon} alt="Loading..." className="addresses-loader-icon" />
@@ -353,103 +303,21 @@ const Addresses = () => {
             </div>
           ) : (
             <>
-              {/* Toolbar & Filter tabs */}
-              {addresses.length > 0 && (
-                <div className="addresses-toolbar">
-                  <div className="addresses-tabs">
-                    <button
-                      type="button"
-                      className={`addresses-tab-btn ${activeTab === 'all' ? 'addresses-tab-btn--active' : ''}`}
-                      onClick={() => setActiveTab('all')}
-                    >
-                      <span>All</span>
-                      <span className="addresses-tab-count">{addresses.length}</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`addresses-tab-btn ${activeTab === 'home' ? 'addresses-tab-btn--active' : ''}`}
-                      onClick={() => setActiveTab('home')}
-                    >
-                      <span>🏠 Home</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`addresses-tab-btn ${activeTab === 'work' ? 'addresses-tab-btn--active' : ''}`}
-                      onClick={() => setActiveTab('work')}
-                    >
-                      <span>🏢 Work</span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`addresses-tab-btn ${activeTab === 'other' ? 'addresses-tab-btn--active' : ''}`}
-                      onClick={() => setActiveTab('other')}
-                    >
-                      <span>📍 Other</span>
-                    </button>
-                  </div>
-
-                  <div className="addresses-count-summary">
-                    <span>Showing</span>
-                    <strong>{filteredAddresses.length}</strong>
-                    <span>of {addresses.length} addresses</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Empty state */}
-              {addresses.length === 0 ? (
-                <div className="addresses-empty-card">
-                  <div className="addresses-empty-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                  </div>
-                  <h3>No addresses saved yet</h3>
-                  <p>
-                    Add your home, office, or favorite delivery locations to enjoy lightning-fast ordering and automatic courier routing.
-                  </p>
-                  <button
-                    type="button"
-                    className="cta-btn primary-red"
-                    onClick={() => {
-                      setAddressToEdit(null);
-                      setIsAddressModalOpen(true);
-                    }}
-                  >
-                    + Add Your First Address
-                  </button>
-                </div>
-              ) : filteredAddresses.length === 0 ? (
-                <div className="addresses-empty-card">
-                  <h3>No matching addresses</h3>
-                  <p>No saved addresses found under this category filter.</p>
-                  <button
-                    type="button"
-                    className="cta-btn sm secondary"
-                    onClick={() => setActiveTab('all')}
-                  >
-                    Show All Addresses
-                  </button>
-                </div>
-              ) : (
-                /* Addresses Grid */
-                <div className="addresses-grid">
-                  <AnimatePresence>
-                    {filteredAddresses.map((addr, idx) => {
-                      const { icon, badgeClass } = getCategoryIcon(addr.title);
-                      return (
-                        <motion.div
-                          key={addr.id}
-                          className={`address-card ${addr.isDefault ? 'address-card--default' : ''}`}
-                          variants={cardVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          custom={idx}
-                          layout
-                        >
-                          {/* Header */}
+              <div className="addresses-grid">
+                <AnimatePresence>
+                  {addresses.map((addr, idx) => {
+                    const { icon, badgeClass } = getCategoryIcon(addr.title);
+                    return (
+                      <motion.div
+                        key={addr.id}
+                        className={`address-card ${addr.isDefault ? 'address-card--default' : ''}`}
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        custom={idx}
+                        layout
+                      >
                           <div className="address-card__header">
                             <div className="address-card__title-group">
                               <div className={`address-card__icon-badge ${badgeClass}`}>
@@ -475,7 +343,6 @@ const Addresses = () => {
                             </div>
                           </div>
 
-                          {/* Body */}
                           <div className="address-card__body">
                             <div className="address-card__street">
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -485,12 +352,13 @@ const Addresses = () => {
                               <span>{addr.address}</span>
                             </div>
 
-                            {/* Details Grid */}
                             <div className="address-card__details-grid">
-                              <div className="address-card__detail-item">
-                                <span className="address-card__detail-label">City</span>
-                                <span className="address-card__detail-val">{addr.city || 'Baku'}</span>
-                              </div>
+                              {addr.city && (
+                                <div className="address-card__detail-item">
+                                  <span className="address-card__detail-label">City</span>
+                                  <span className="address-card__detail-val">{addr.city}</span>
+                                </div>
+                              )}
 
                               {addr.apartment && (
                                 <div className="address-card__detail-item">
@@ -507,7 +375,6 @@ const Addresses = () => {
                               )}
                             </div>
 
-                            {/* Courier Note */}
                             {addr.notes && (
                               <div className="address-card__note-box">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -518,7 +385,6 @@ const Addresses = () => {
                             )}
                           </div>
 
-                          {/* Footer Actions */}
                           <div className="address-card__footer">
                             <div className="address-card__footer-left">
                               {!addr.isDefault && (
@@ -589,13 +455,11 @@ const Addresses = () => {
                     })}
                   </AnimatePresence>
                 </div>
-              )}
             </>
           )}
         </div>
       </main>
 
-      {/* Add / Edit Modal */}
       <AddressModal
         isOpen={isAddressModalOpen}
         onClose={() => {
@@ -607,7 +471,6 @@ const Addresses = () => {
         loading={modalLoading}
       />
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
@@ -619,7 +482,6 @@ const Addresses = () => {
         loading={deleteLoading}
       />
 
-      {/* Toast Notification Container */}
       <div className="addresses-toast-container">
         <AnimatePresence>
           {toastMessage && (

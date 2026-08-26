@@ -41,7 +41,6 @@ public class AddressesController : ControllerBase
 
         var addresses = user.Addresses ?? new List<UserAddress>();
 
-        // Return ordered with default address first, then newer addresses first
         var ordered = addresses
             .OrderByDescending(a => a.IsDefault)
             .ThenByDescending(a => a.CreatedAt)
@@ -76,6 +75,11 @@ public class AddressesController : ControllerBase
             return BadRequest(new { message = "Address line is required." });
         }
 
+        if (string.IsNullOrWhiteSpace(request.Phone))
+        {
+            return BadRequest(new { message = "Contact phone number is required." });
+        }
+
         var user = await _userRepository.GetByIdAsync(userId.Value);
         if (user == null) return NotFound(new { message = "User not found." });
 
@@ -98,9 +102,9 @@ public class AddressesController : ControllerBase
             Id = nextId,
             Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim(),
             Address = request.Address.Trim(),
-            City = string.IsNullOrWhiteSpace(request.City) ? "Baku" : request.City.Trim(),
+            City = string.IsNullOrWhiteSpace(request.City) ? null : request.City.Trim(),
             Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim(),
-            Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
+            Phone = request.Phone.Trim(),
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
             IsDefault = shouldBeDefault,
             CreatedAt = GetBakuTime()
@@ -123,6 +127,11 @@ public class AddressesController : ControllerBase
             return BadRequest(new { message = "Address line is required." });
         }
 
+        if (string.IsNullOrWhiteSpace(request.Phone))
+        {
+            return BadRequest(new { message = "Contact phone number is required." });
+        }
+
         var user = await _userRepository.GetByIdAsync(userId.Value);
         if (user == null) return NotFound(new { message = "User not found." });
 
@@ -141,7 +150,6 @@ public class AddressesController : ControllerBase
         else
         {
             target.IsDefault = false;
-            // If this was default and user unchecked it, ensure at least one remains default if list is not empty
             if (!user.Addresses.Any(a => a.IsDefault))
             {
                 var firstOther = user.Addresses.FirstOrDefault(a => a.Id != id);
@@ -158,9 +166,9 @@ public class AddressesController : ControllerBase
 
         target.Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim();
         target.Address = request.Address.Trim();
-        target.City = string.IsNullOrWhiteSpace(request.City) ? "Baku" : request.City.Trim();
+        target.City = string.IsNullOrWhiteSpace(request.City) ? null : request.City.Trim();
         target.Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim();
-        target.Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim();
+        target.Phone = request.Phone.Trim();
         target.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
 
         await _userRepository.UpdateAsync(user);

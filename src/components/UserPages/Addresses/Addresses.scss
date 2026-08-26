@@ -28,9 +28,6 @@
   gap: 28px;
 }
 
-/* ==========================================================================
-   Hero Header
-   ========================================================================== */
 .addresses-hero {
   text-align: center;
   display: flex;
@@ -99,87 +96,6 @@
   }
 }
 
-/* ==========================================================================
-   Filter & Toolbar Bar
-   ========================================================================== */
-.addresses-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  flex-wrap: wrap;
-}
-
-.addresses-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.addresses-tab-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-  padding: 7px 16px;
-  border-radius: 9999px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-
-  &--active {
-    background: $color-primary;
-    color: #fff;
-    border-color: $color-primary;
-    box-shadow: 0 4px 14px rgba($color-primary, 0.35);
-
-    &:hover {
-      background: lighten($color-primary, 5%);
-      color: #fff;
-    }
-  }
-
-  .addresses-tab-count {
-    background: rgba(0, 0, 0, 0.25);
-    padding: 1px 7px;
-    border-radius: 9999px;
-    font-size: 0.74rem;
-  }
-}
-
-.addresses-count-summary {
-  font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  strong {
-    color: #fff;
-  }
-}
-
-/* ==========================================================================
-   Addresses Grid & Cards
-   ========================================================================== */
 .addresses-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
@@ -227,7 +143,6 @@
     }
   }
 
-  /* Card Header */
   &__header {
     display: flex;
     align-items: center;
@@ -299,7 +214,6 @@
     flex-shrink: 0;
   }
 
-  /* Default Badge */
   &__badge-default {
     background: rgba(34, 197, 94, 0.16);
     color: #4ade80;
@@ -324,7 +238,6 @@
     }
   }
 
-  /* Address Body */
   &__body {
     display: flex;
     flex-direction: column;
@@ -349,7 +262,6 @@
     }
   }
 
-  /* Details Grid */
   &__details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -390,7 +302,6 @@
     word-break: break-word;
   }
 
-  /* Courier Note Box */
   &__note-box {
     display: flex;
     align-items: flex-start;
@@ -412,7 +323,6 @@
     }
   }
 
-  /* Card Footer Actions */
   &__footer {
     display: flex;
     align-items: center;
@@ -435,7 +345,6 @@
     gap: 8px;
   }
 
-  /* Action buttons */
   &__action-btn {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -515,9 +424,6 @@
   }
 }
 
-/* ==========================================================================
-   Empty, Loading & Error States
-   ========================================================================== */
 .addresses-empty-card {
   background: rgba(255, 255, 255, 0.02);
   border: 1px dashed rgba(255, 255, 255, 0.1);
@@ -588,332 +494,6 @@
   filter: brightness(0) invert(1);
 }
 
-/* ==========================================================================
-   Address Modal Styling
-   ========================================================================== */
-.address-modal {
-  background: rgba(26, 8, 8, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: $border-radius-lg;
-  padding: 32px;
-  width: 540px;
-  max-width: calc(100vw - 36px);
-  box-sizing: border-box;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    position: relative;
-  }
-
-  &__icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-
-    svg {
-      width: 22px;
-      height: 22px;
-      stroke: $color-primary;
-    }
-  }
-
-  &__title-wrap {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 0;
-  }
-
-  &__subtitle {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.55);
-    margin: 0;
-    line-height: 1.4;
-  }
-
-  &__close-btn {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    &:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.1);
-    }
-  }
-
-  &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  &__error {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.35);
-    color: #fca5a5;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 0.88rem;
-    font-weight: 500;
-  }
-
-  &__row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-
-    &--grow {
-      flex: 2;
-    }
-
-    &--city {
-      flex: 1;
-    }
-  }
-
-  &__label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  &__required {
-    color: $color-primary;
-    font-weight: 700;
-  }
-
-  &__chips {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
-  }
-
-  &__chip {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.75);
-    padding: 5px 10px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-
-    &--active {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: rgba(239, 68, 68, 0.5);
-      color: #fff;
-    }
-  }
-
-  &__input,
-  &__textarea {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: #fff;
-    font-family: $font-family-base;
-    font-size: 0.92rem;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-    width: 100%;
-
-    &:focus {
-      outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 0 2px rgba($color-primary, 0.25);
-      background: rgba(0, 0, 0, 0.45);
-    }
-
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.3);
-    }
-  }
-
-  &__textarea {
-    resize: vertical;
-    min-height: 56px;
-    line-height: 1.4;
-  }
-
-  /* Default Toggle Switch */
-  &__default-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    padding: 12px 16px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-    }
-  }
-
-  &__toggle-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  &__toggle-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  &__toggle-desc {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  &__switch {
-    width: 44px;
-    height: 24px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    flex-shrink: 0;
-    padding: 2px;
-
-    &--on {
-      background: #22c55e;
-    }
-  }
-
-  &__switch-handle {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-
-    .address-modal__switch--on & {
-      transform: translateX(20px);
-    }
-  }
-
-  /* Actions */
-  &__actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 8px;
-  }
-
-  &__btn {
-    padding: 10px 22px;
-    font-size: 0.92rem;
-    font-weight: 600;
-    border-radius: 9999px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    &--cancel {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.75);
-
-      &:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.3);
-      }
-    }
-
-    &--save {
-      min-width: 130px;
-    }
-  }
-
-  &__btn-spinner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    img {
-      width: 18px;
-      height: 18px;
-      filter: brightness(0) invert(1);
-    }
-  }
-}
-
-/* ==========================================================================
-   Toast Notification Banner
-   ========================================================================== */
 .addresses-toast-container {
   position: fixed;
   bottom: 30px;
@@ -965,9 +545,6 @@
   }
 }
 
-/* ==========================================================================
-   Responsive Adaptations
-   ========================================================================== */
 @media (max-width: 768px) {
   .addresses-main {
     padding: $spacing-xl $spacing-md;
@@ -1022,25 +599,6 @@
     &__footer-right .address-card__action-btn {
       flex: 1;
       justify-content: center;
-    }
-  }
-
-  .address-modal {
-    padding: 24px 18px;
-    gap: 18px;
-
-    &__row {
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    &__actions {
-      flex-direction: column-reverse;
-      width: 100%;
-
-      .address-modal__btn {
-        width: 100%;
-      }
     }
   }
 }
