@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import './Database.scss';
@@ -6,6 +6,7 @@ import './Database.scss';
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 const MAX_SIZE_MB = 10;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+const PAGE_SIZE = 8;
 
 const formatSize = (kb) => {
   if (kb < 1024) return `${Math.round(kb)} KB`;
@@ -14,6 +15,8 @@ const formatSize = (kb) => {
 
 const Database = () => {
   const [files, setFiles] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -26,6 +29,26 @@ const Database = () => {
   const [fileToDelete, setFileToDelete] = useState(null);
   const inputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) return files;
+    const q = searchQuery.toLowerCase().trim();
+    return files.filter((f) => (f.fileName || '').toLowerCase().includes(q));
+  }, [files, searchQuery]);
+
+  const visibleFiles = useMemo(() => {
+    return filteredFiles.slice(0, visibleCount);
+  }, [filteredFiles, visibleCount]);
+
+  const hasMore = visibleCount < filteredFiles.length;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  };
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchQuery]);
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -289,21 +312,41 @@ const Database = () => {
         </motion.div>
 
         <div className="database__files-header">
-          <h2 className="database__files-title">
-            Uploaded files
-            {!loading && <span className="database__files-count">{files.length}</span>}
-          </h2>
-          <button
-            id="database-refresh-btn"
-            className="database__refresh-btn"
-            onClick={fetchFiles}
-            title="Refresh"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+          <div className="database__files-header-left">
+            <h2 className="database__files-title">
+              Uploaded files
+              {!loading && (
+                <span className="database__files-count">
+                  {visibleFiles.length} of {filteredFiles.length}
+                </span>
+              )}
+            </h2>
+          </div>
+
+          <div className="database__search-wrap">
+            <svg className="database__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-          </button>
+            <input
+              id="database-search-input"
+              type="text"
+              placeholder="Search by file name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="database__search-input"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="database__search-clear"
+                onClick={() => setSearchQuery('')}
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -317,96 +360,131 @@ const Database = () => {
             </svg>
             <p>No files uploaded yet</p>
           </motion.div>
+        ) : filteredFiles.length === 0 ? (
+          <motion.div className="database__empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <p>No files match "{searchQuery}"</p>
+            <button
+              type="button"
+              className="cta-btn sm"
+              onClick={() => setSearchQuery('')}
+              style={{ marginTop: '8px' }}
+            >
+              Clear Search
+            </button>
+          </motion.div>
         ) : (
-          <motion.div
-            className="database__grid"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.15 }}
-          >
-            <AnimatePresence>
-              {files.map((file, i) => (
-                <motion.div
-                  key={file.fileName}
-                  className="database__file-card"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: i * 0.04, duration: 0.3 }}
-                  layout
-                >
-                  <div
-                    className="database__file-img"
-                    onClick={() => setPreviewFile(file)}
-                    title="Click to view large preview"
+          <>
+            <motion.div
+              className="database__grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              <AnimatePresence>
+                {visibleFiles.map((file, i) => (
+                  <motion.div
+                    key={file.fileName}
+                    className="database__file-card"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ delay: i * 0.04, duration: 0.3 }}
+                    layout
                   >
-                    <img src={file.publicUrl} alt={file.fileName} loading="lazy" />
-                    <div className="database__file-img-overlay">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                        <line x1="11" y1="8" x2="11" y2="14" />
-                        <line x1="8" y1="11" x2="14" y2="11" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="database__file-info">
-                    <p
-                      className="database__file-name database__file-name--clickable"
+                    <div
+                      className="database__file-img"
                       onClick={() => setPreviewFile(file)}
                       title="Click to view large preview"
                     >
-                      {file.fileName}
-                    </p>
-                    <div className="database__file-meta">
-                      <span className="database__file-badge">WebP</span>
-                      <span className="database__file-size">{formatSize(file.sizeKb)}</span>
-                    </div>
-                    <div className="database__file-actions">
-                      <button
-                        id={`database-copy-${i}`}
-                        className={`database__file-btn database__file-btn--copy${copiedUrl === file.fileName ? ' database__file-btn--copied' : ''}`}
-                        onClick={() => handleCopyUrl(file.publicUrl, file.fileName)}
-                        title="Copy URL"
-                      >
-                        {copiedUrl === file.fileName ? (
-                          <>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
-                            Copied
-                          </>
-                        ) : (
-                          <>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                            Copy URL
-                          </>
-                        )}
-                      </button>
-                      <button
-                        id={`database-delete-${i}`}
-                        className="database__file-btn database__file-btn--delete"
-                        onClick={() => setFileToDelete(file)}
-                        disabled={deletingFile === file.fileName}
-                        title="Delete file"
-                      >
+                      <img src={file.publicUrl} alt={file.fileName} loading="lazy" decoding="async" />
+                      <div className="database__file-img-overlay">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <path d="M10 11v6M14 11v6" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                          <line x1="11" y1="8" x2="11" y2="14" />
+                          <line x1="8" y1="11" x2="14" y2="11" />
                         </svg>
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                    <div className="database__file-info">
+                      <p
+                        className="database__file-name database__file-name--clickable"
+                        onClick={() => setPreviewFile(file)}
+                        title="Click to view large preview"
+                      >
+                        {file.fileName}
+                      </p>
+                      <div className="database__file-meta">
+                        <span className="database__file-badge">WebP</span>
+                        <span className="database__file-size">{formatSize(file.sizeKb)}</span>
+                      </div>
+                      <div className="database__file-actions">
+                        <button
+                          id={`database-copy-${i}`}
+                          className={`database__file-btn database__file-btn--copy${copiedUrl === file.fileName ? ' database__file-btn--copied' : ''}`}
+                          onClick={() => handleCopyUrl(file.publicUrl, file.fileName)}
+                          title="Copy URL"
+                        >
+                          {copiedUrl === file.fileName ? (
+                            <>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              Copied
+                            </>
+                          ) : (
+                            <>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </svg>
+                              Copy URL
+                            </>
+                          )}
+                        </button>
+                        <button
+                          id={`database-delete-${i}`}
+                          className="database__file-btn database__file-btn--delete"
+                          onClick={() => setFileToDelete(file)}
+                          disabled={deletingFile === file.fileName}
+                          title="Delete file"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {hasMore && (
+              <div className="database__load-more-wrap">
+                <button
+                  id="database-load-more-btn"
+                  type="button"
+                  className="cta-btn secondary database__load-more-btn"
+                  onClick={handleLoadMore}
+                >
+                  <span>Show More</span>
+                  <span className="database__load-more-count">
+                    ({filteredFiles.length - visibleCount} remaining)
+                  </span>
+                </button>
+              </div>
+            )}
+          </>
         )}
+
       </div>
 
       <AnimatePresence>

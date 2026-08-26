@@ -288,7 +288,9 @@ public class OrdersController : ControllerBase
         if (basket == null || basket.Items == null || basket.Items.Count == 0)
         {
             var existingOrders = await _userRepository.GetAllOrdersByUserIdAsync(userId.Value);
-            var existingOrder = existingOrders.FirstOrDefault(o => o.Notes?.CustomerNote == request.PaymentIntentId);
+            var existingOrder = existingOrders.FirstOrDefault(o =>
+                o.Payment?.PaymentIntentId == request.PaymentIntentId ||
+                o.Notes?.CustomerNote == request.PaymentIntentId);
             if (existingOrder != null)
             {
                 return Ok(new
@@ -353,11 +355,16 @@ public class OrdersController : ControllerBase
             DiscountAmount = calc.Discount,
             TotalAmount = calc.TotalAmount,
             PromoCode = calc.AppliedPromoCode,
-            PromoPrizeName = calc.AppliedPromoName
+            PromoPrizeName = calc.AppliedPromoName,
+            PaymentIntentId = request.PaymentIntentId
         };
 
-        var notes = request.Notes ?? new OrderNotes();
-        notes.CustomerNote = request.PaymentIntentId;
+        var notes = new OrderNotes
+        {
+            Comment = string.IsNullOrWhiteSpace(request.Notes?.Comment) ? null : request.Notes.Comment.Trim(),
+            CustomerNote = string.IsNullOrWhiteSpace(request.Notes?.CustomerNote) ? null : request.Notes.CustomerNote.Trim(),
+            KitchenNote = string.IsNullOrWhiteSpace(request.Notes?.KitchenNote) ? null : request.Notes.KitchenNote.Trim()
+        };
 
         var newOrder = new Order
         {
@@ -488,6 +495,13 @@ public class OrdersController : ControllerBase
 
         var orderStatus = paymentMethod == CorePaymentMethod.OnlineBalance ? "Paid Online" : "Pending Payment";
 
+        var notes = new OrderNotes
+        {
+            Comment = string.IsNullOrWhiteSpace(request?.Notes?.Comment) ? null : request.Notes.Comment.Trim(),
+            CustomerNote = string.IsNullOrWhiteSpace(request?.Notes?.CustomerNote) ? null : request.Notes.CustomerNote.Trim(),
+            KitchenNote = string.IsNullOrWhiteSpace(request?.Notes?.KitchenNote) ? null : request.Notes.KitchenNote.Trim()
+        };
+
         var newOrder = new Order
         {
             Id = Guid.NewGuid(),
@@ -496,7 +510,7 @@ public class OrdersController : ControllerBase
             Status = orderStatus,
             Items = calc.OrderItems,
             Payment = paymentDetails,
-            Notes = request?.Notes ?? new OrderNotes()
+            Notes = notes
         };
         await _userRepository.AddOrderAsync(newOrder);
 

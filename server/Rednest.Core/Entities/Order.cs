@@ -25,6 +25,7 @@ public class OrderPaymentDetails
     public decimal TotalAmount { get; set; }
     public string? PromoCode { get; set; }
     public string? PromoPrizeName { get; set; }
+    public string? PaymentIntentId { get; set; }
 }
 
 public class OrderNotes
