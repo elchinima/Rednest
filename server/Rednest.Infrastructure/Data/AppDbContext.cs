@@ -48,6 +48,15 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.UserId);
 
+            entity.Property(e => e.TwoFactorEnabled)
+                  .HasColumnName("2FA")
+                  .HasDefaultValue(false);
+
+            entity.Property(e => e.AccountVerify)
+                  .HasColumnName("AccountVerify")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
             entity.Property(e => e.Sessions)
                   .HasColumnType("jsonb");
         });

@@ -42,26 +42,120 @@ public class AuthController : ControllerBase
                               ?? Request.Headers["X-Device-Model"].FirstOrDefault();
 
             var result = await _authService.AuthenticateOrRegisterAsync(request, ipAddress, userAgent, platformVersion, deviceModel);
-            SetTokenCookies(result.AccessToken, result.RefreshToken);
 
-            var user = await userRepository.GetByEmailAsync(request.Email);
+            if (result.Requires2FA)
+            {
+                return Ok(new
+                {
+                    requires2FA = true,
+                    email = request.Email
+                });
+            }
+
+            SetTokenCookies(result.AccessToken!, result.RefreshToken!);
+
+            var user = result.User ?? await userRepository.GetByEmailAsync(request.Email);
+            var userSession = user?.Session ?? (user != null ? await userRepository.GetSessionByUserIdAsync(user.Id) : null);
 
             return Ok(new 
             { 
-                HasName = result.HasName,
-                User = user == null ? null : new
+                requires2FA = false,
+                hasName = result.HasName,
+                user = user == null ? null : new
                 {
-                    Id = user.Id,
-                    Name = user.Name,
-                    Email = user.Email,
-                    ProfilePictureUrl = user.ProfilePictureUrl,
-                    Balance = user.Balance
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email,
+                    profilePictureUrl = user.ProfilePictureUrl,
+                    balance = user.Balance,
+                    twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
                 }
             });
         }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpPost("2fa/verify")]
+    public async Task<IActionResult> VerifyTwoFactor([FromBody] VerifyTwoFactorRequest request)
+    {
+        try
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                  ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+            var deviceModel = Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                              ?? Request.Headers["X-Device-Model"].FirstOrDefault();
+
+            var result = await _authService.VerifyTwoFactorAsync(request, ipAddress, userAgent, platformVersion, deviceModel);
+            SetTokenCookies(result.AccessToken, result.RefreshToken);
+
+            return Ok(new
+            {
+                requires2FA = false,
+                hasName = result.HasName,
+                user = new
+                {
+                    id = result.User.Id,
+                    name = result.User.Name,
+                    email = result.User.Email,
+                    profilePictureUrl = result.User.ProfilePictureUrl,
+                    balance = result.User.Balance,
+                    twoFactorEnabled = true
+                }
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [HttpPost("2fa/resend")]
+    public async Task<IActionResult> ResendTwoFactor([FromBody] ResendTwoFactorRequest request)
+    {
+        try
+        {
+            await _authService.ResendTwoFactorCodeAsync(request.Email);
+            return Ok(new { message = "Verification code resent successfully." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPut("2fa/toggle")]
+    [HttpPost("2fa/toggle")]
+    public async Task<IActionResult> ToggleTwoFactor([FromBody] ToggleTwoFactorRequest? request)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var enabled = await _authService.ToggleTwoFactorAsync(userId, request?.Enabled);
+            return Ok(new { twoFactorEnabled = enabled });
         }
         catch (Exception ex)
         {
@@ -174,13 +268,16 @@ public class AuthController : ControllerBase
                 return NotFound("User not found.");
             }
 
+            var userSession = user.Session ?? await userRepository.GetSessionByUserIdAsync(user.Id);
+
             return Ok(new 
             { 
                 Id = user.Id, 
                 Name = user.Name,
                 Email = user.Email,
                 ProfilePictureUrl = user.ProfilePictureUrl,
-                Balance = user.Balance
+                Balance = user.Balance,
+                TwoFactorEnabled = userSession?.TwoFactorEnabled ?? false
             });
         }
         catch (Exception ex)

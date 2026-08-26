@@ -141,16 +141,38 @@ const Profile = () => {
     }
   };
 
-  const handleToggle2FA = () => {
-    setTwoFactorEnabled((prev) => {
-      const next = !prev;
-      if (next) {
-        showSuccess('Two-Factor Authentication simulated: Enabled.');
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setTwoFactorEnabled(Boolean(user.twoFactorEnabled ?? user.TwoFactorEnabled));
+    }
+  }, [user]);
+
+  const handleToggle2FA = async () => {
+    if (twoFactorLoading) return;
+    setTwoFactorLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/auth/2fa/toggle`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ enabled: !twoFactorEnabled })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTwoFactorEnabled(data.twoFactorEnabled);
+        updateUser({ twoFactorEnabled: data.twoFactorEnabled, TwoFactorEnabled: data.twoFactorEnabled });
+        showSuccess(`Two-Factor Authentication ${data.twoFactorEnabled ? 'enabled' : 'disabled'}.`);
       } else {
-        showSuccess('Two-Factor Authentication simulated: Disabled.');
+        const data = await res.json().catch(() => ({}));
+        showError(data.message || 'Failed to update Two-Factor Authentication.');
       }
-      return next;
-    });
+    } catch {
+      showError('Connection error. Please try again.');
+    } finally {
+      setTwoFactorLoading(false);
+    }
   };
 
   return (

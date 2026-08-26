@@ -15,7 +15,8 @@ const formatSize = (kb) => {
 
 const Database = () => {
   const [files, setFiles] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -31,10 +32,10 @@ const Database = () => {
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const filteredFiles = useMemo(() => {
-    if (!searchQuery.trim()) return files;
-    const q = searchQuery.toLowerCase().trim();
+    if (!appliedSearch.trim()) return files;
+    const q = appliedSearch.toLowerCase().trim();
     return files.filter((f) => (f.fileName || '').toLowerCase().includes(q));
-  }, [files, searchQuery]);
+  }, [files, appliedSearch]);
 
   const visibleFiles = useMemo(() => {
     return filteredFiles.slice(0, visibleCount);
@@ -46,9 +47,26 @@ const Database = () => {
     setVisibleCount((prev) => prev + PAGE_SIZE);
   };
 
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setAppliedSearch(searchInput.trim());
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setAppliedSearch(searchInput.trim());
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setAppliedSearch('');
+  };
+
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchQuery]);
+  }, [appliedSearch]);
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -323,7 +341,7 @@ const Database = () => {
             </h2>
           </div>
 
-          <div className="database__search-wrap">
+          <form className="database__search-wrap" onSubmit={handleSearchSubmit}>
             <svg className="database__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -332,21 +350,28 @@ const Database = () => {
               id="database-search-input"
               type="text"
               placeholder="Search by file name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchInput(val);
+                if (!val.trim() && appliedSearch) {
+                  setAppliedSearch('');
+                }
+              }}
+              onKeyDown={handleSearchKeyDown}
               className="database__search-input"
             />
-            {searchQuery && (
+            {searchInput && (
               <button
                 type="button"
                 className="database__search-clear"
-                onClick={() => setSearchQuery('')}
+                onClick={handleClearSearch}
                 title="Clear search"
               >
                 ✕
               </button>
             )}
-          </div>
+          </form>
         </div>
 
         {loading ? (
@@ -366,11 +391,11 @@ const Database = () => {
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <p>No files match "{searchQuery}"</p>
+            <p>No files match "{appliedSearch}"</p>
             <button
               type="button"
               className="cta-btn sm"
-              onClick={() => setSearchQuery('')}
+              onClick={handleClearSearch}
               style={{ marginTop: '8px' }}
             >
               Clear Search

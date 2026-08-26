@@ -15,18 +15,21 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
     private readonly IGeoLocationService _geoLocationService;
+    private readonly IEmailService _emailService;
 
     public AuthService(
         IUserRepository userRepository, 
         IConfiguration configuration,
-        IGeoLocationService geoLocationService)
+        IGeoLocationService geoLocationService,
+        IEmailService emailService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
         _geoLocationService = geoLocationService;
+        _emailService = emailService;
     }
 
-    public async Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(
+    public async Task<(bool Requires2FA, string? AccessToken, string? RefreshToken, bool HasName, User? User)> AuthenticateOrRegisterAsync(
         LoginRequest request, 
         string? ipAddress, 
         string? userAgent = null,
@@ -48,6 +51,8 @@ public class AuthService : IAuthService
             {
                 UserId = user.Id,
                 RegistrationIp = ipAddress,
+                TwoFactorEnabled = false,
+                AccountVerify = new List<AccountVerifyEntry>(),
                 Sessions = new List<SessionEntry>()
             };
             await _userRepository.AddSessionAsync(newSession);
@@ -68,14 +73,43 @@ public class AuthService : IAuthService
             {
                 UserId = user.Id,
                 RegistrationIp = ipAddress,
+                TwoFactorEnabled = false,
+                AccountVerify = new List<AccountVerifyEntry>(),
                 Sessions = new List<SessionEntry>()
             };
             await _userRepository.AddSessionAsync(userSession);
         }
 
-        var now = DateTime.UtcNow;
+        if (userSession.AccountVerify == null)
+        {
+            userSession.AccountVerify = new List<AccountVerifyEntry>();
+        }
+        if (userSession.Sessions == null)
+        {
+            userSession.Sessions = new List<SessionEntry>();
+        }
 
-        userSession.Sessions.RemoveAll(s => IsSessionExpired(s, now));
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        if (userSession.TwoFactorEnabled)
+        {
+            var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString("D4");
+            userSession.AccountVerify.RemoveAll(v => v.Type == "2FA");
+            userSession.AccountVerify.Add(new AccountVerifyEntry
+            {
+                Type = "2FA",
+                Code = code,
+                Expire = 15,
+                CreateData = now
+            });
+
+            await _userRepository.UpdateSessionAsync(userSession);
+            await _emailService.SendTwoFactorCodeAsync(user.Email, code);
+
+            bool hasName = !string.IsNullOrEmpty(user.Name);
+            return (true, null, null, hasName, user);
+        }
 
         var refreshToken = GenerateRefreshToken();
         var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
@@ -95,37 +129,175 @@ public class AuthService : IAuthService
         };
 
         userSession.Sessions.Add(sessionEntry);
+        await _userRepository.UpdateSessionAsync(userSession);
 
+        bool userHasName = !string.IsNullOrEmpty(user.Name);
+        return (false, GenerateJwtToken(user), refreshToken, userHasName, user);
+    }
+
+    public async Task<(string AccessToken, string RefreshToken, bool HasName, User User)> VerifyTwoFactorAsync(
+        VerifyTwoFactorRequest request,
+        string? ipAddress,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
+        {
+            throw new UnauthorizedAccessException("Email and verification code are required");
+        }
+
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("Invalid credentials");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession == null || userSession.AccountVerify == null || userSession.AccountVerify.Count == 0)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired verification code");
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var trimmedCode = request.Code.Trim();
+        var entry = userSession.AccountVerify.FirstOrDefault(v => v.Type == "2FA" && v.Code == trimmedCode);
+
+        if (entry == null)
+        {
+            throw new UnauthorizedAccessException("Invalid verification code");
+        }
+
+        if (entry.CreateData.AddMinutes(entry.Expire) <= now)
+        {
+            userSession.AccountVerify.Remove(entry);
+            await _userRepository.UpdateSessionAsync(userSession);
+            throw new UnauthorizedAccessException("Verification code has expired. Please request a new code.");
+        }
+
+        userSession.AccountVerify.Remove(entry);
+
+        if (userSession.Sessions == null)
+        {
+            userSession.Sessions = new List<SessionEntry>();
+        }
+
+        var refreshToken = GenerateRefreshToken();
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
+
+        var sessionEntry = new SessionEntry
+        {
+            RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = now.AddDays(15),
+            LastLoginIp = ipAddress,
+            OperatingSystem = uaInfo.OperatingSystem,
+            DeviceName = uaInfo.DeviceName,
+            DeviceType = uaInfo.DeviceType,
+            UserAgent = userAgent,
+            CreatedAt = now,
+            LastActiveAt = now,
+            IsActive = true
+        };
+
+        userSession.Sessions.Add(sessionEntry);
         await _userRepository.UpdateSessionAsync(userSession);
 
         bool hasName = !string.IsNullOrEmpty(user.Name);
-        return (GenerateJwtToken(user), refreshToken, hasName);
+        return (GenerateJwtToken(user), refreshToken, hasName, user);
+    }
+
+    public async Task ResendTwoFactorCodeAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new UnauthorizedAccessException("Email is required");
+        }
+
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null)
+        {
+            throw new UnauthorizedAccessException("User not found");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession == null || !userSession.TwoFactorEnabled)
+        {
+            throw new InvalidOperationException("Two-Factor Authentication is not enabled for this account");
+        }
+
+        if (userSession.AccountVerify == null)
+        {
+            userSession.AccountVerify = new List<AccountVerifyEntry>();
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var code = RandomNumberGenerator.GetInt32(1000, 10000).ToString("D4");
+        userSession.AccountVerify.RemoveAll(v => v.Type == "2FA");
+        userSession.AccountVerify.Add(new AccountVerifyEntry
+        {
+            Type = "2FA",
+            Code = code,
+            Expire = 15,
+            CreateData = now
+        });
+
+        await _userRepository.UpdateSessionAsync(userSession);
+        await _emailService.SendTwoFactorCodeAsync(user.Email, code);
+    }
+
+    public async Task<bool> ToggleTwoFactorAsync(Guid userId, bool? enabled = null)
+    {
+        var userSession = await _userRepository.GetSessionByUserIdAsync(userId);
+        if (userSession == null)
+        {
+            userSession = new UserSession
+            {
+                UserId = userId,
+                TwoFactorEnabled = enabled ?? true,
+                AccountVerify = new List<AccountVerifyEntry>(),
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(userSession);
+            return userSession.TwoFactorEnabled;
+        }
+
+        if (enabled.HasValue)
+        {
+            userSession.TwoFactorEnabled = enabled.Value;
+        }
+        else
+        {
+            userSession.TwoFactorEnabled = !userSession.TwoFactorEnabled;
+        }
+
+        await _userRepository.UpdateSessionAsync(userSession);
+        return userSession.TwoFactorEnabled;
     }
 
     public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
         string? ipAddress = null, 
-        string? userAgent = null,
+        string? userAgent = null, 
         string? platformVersion = null,
         string? deviceModel = null)
     {
         var now = DateTime.UtcNow;
         var result = await _userRepository.GetByRefreshTokenAsync(refreshToken);
 
-        // Grace period: if the token was recently rotated (within 30s), accept the previous token
-        // This handles concurrent requests that all arrive with the same old refresh token
         if (result == null)
         {
             result = await _userRepository.GetByPreviousRefreshTokenAsync(refreshToken);
             if (result != null)
             {
                 var rotatedAt = result.Value.Entry.PreviousTokenRotatedAt;
-                // If the previous token was rotated more than 30 seconds ago — real invalid token
                 if (!rotatedAt.HasValue || (now - rotatedAt.Value).TotalSeconds > 30)
                 {
                     throw new UnauthorizedAccessException("Invalid, terminated or expired refresh token");
                 }
-                // Within grace period — return the already-rotated new token
                 return (GenerateJwtToken(result.Value.User), result.Value.Entry.RefreshToken);
             }
         }
@@ -142,7 +314,6 @@ public class AuthService : IAuthService
 
         var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
 
-        // Store the previous token for grace period handling of concurrent requests
         oldEntry.PreviousRefreshToken = oldEntry.RefreshToken;
         oldEntry.PreviousTokenRotatedAt = now;
 
@@ -175,9 +346,8 @@ public class AuthService : IAuthService
             return new List<UserSessionDto>();
         }
 
-        var countBefore = userSession.Sessions.Count;
-        userSession.Sessions.RemoveAll(s => IsSessionExpired(s, now));
-        if (userSession.Sessions.Count != countBefore)
+        var changed = CleanExpiredData(userSession, now);
+        if (changed)
         {
             await _userRepository.UpdateSessionAsync(userSession);
         }
@@ -251,11 +421,30 @@ public class AuthService : IAuthService
         return true;
     }
 
+    private static bool CleanExpiredData(UserSession userSession, DateTime now)
+    {
+        var changed = false;
+        if (userSession.Sessions != null)
+        {
+            var countBefore = userSession.Sessions.Count;
+            userSession.Sessions.RemoveAll(s => IsSessionExpired(s, now));
+            if (userSession.Sessions.Count != countBefore) changed = true;
+        }
+
+        if (userSession.AccountVerify != null)
+        {
+            var countBefore = userSession.AccountVerify.Count;
+            userSession.AccountVerify.RemoveAll(v => v.CreateData.AddHours(24) <= now);
+            if (userSession.AccountVerify.Count != countBefore) changed = true;
+        }
+
+        return changed;
+    }
+
     private static bool IsSessionExpired(SessionEntry? s, DateTime now)
     {
         if (s == null) return true;
         if (string.IsNullOrWhiteSpace(s.RefreshToken)) return true;
-
 
         if (s.RefreshTokenExpiryTime != default && s.RefreshTokenExpiryTime <= now)
         {

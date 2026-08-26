@@ -221,11 +221,116 @@
     }
   }
 
+  .two-factor-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 8px 0;
+
+    .two-factor-digit {
+      width: 54px;
+      height: 60px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: $border-radius-md;
+      color: $color-text;
+      transition: all 0.25s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 0 4px rgba($color-primary, 0.2);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  .two-factor-info {
+    text-align: center;
+    font-size: 0.9rem;
+    color: $color-text-muted;
+    margin-top: 4px;
+
+    .two-factor-timer {
+      color: #f6ad55;
+      font-weight: 600;
+    }
+
+    .two-factor-expired {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+  }
+
+  .two-factor-success {
+    color: #48bb78;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid rgba(72, 187, 120, 0.25);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .two-factor-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+
+    .two-factor-resend-btn {
+      background: none;
+      border: none;
+      color: $color-primary;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        text-decoration: underline;
+        background: rgba(229, 62, 62, 0.08);
+      }
+
+      &:disabled {
+        color: rgba(255, 255, 255, 0.35);
+        cursor: not-allowed;
+      }
+    }
+
+    .two-factor-back-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
+
   @media (max-width: 480px) {
     padding: 30px 20px;
     
     .auth-modal-header h2 {
       font-size: 1.4rem;
+    }
+
+    .two-factor-inputs .two-factor-digit {
+      width: 44px;
+      height: 52px;
+      font-size: 1.5rem;
     }
   }
 

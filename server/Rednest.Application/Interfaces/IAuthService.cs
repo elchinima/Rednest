@@ -1,15 +1,27 @@
 using Rednest.Application.DTOs;
+using Rednest.Core.Entities;
 
 namespace Rednest.Application.Interfaces;
 
 public interface IAuthService
 {
-    Task<(string AccessToken, string RefreshToken, bool HasName)> AuthenticateOrRegisterAsync(
+    Task<(bool Requires2FA, string? AccessToken, string? RefreshToken, bool HasName, User? User)> AuthenticateOrRegisterAsync(
         LoginRequest request, 
         string? ipAddress, 
         string? userAgent = null, 
         string? platformVersion = null,
         string? deviceModel = null);
+
+    Task<(string AccessToken, string RefreshToken, bool HasName, User User)> VerifyTwoFactorAsync(
+        VerifyTwoFactorRequest request,
+        string? ipAddress,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null);
+
+    Task ResendTwoFactorCodeAsync(string email);
+
+    Task<bool> ToggleTwoFactorAsync(Guid userId, bool? enabled = null);
 
     Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
