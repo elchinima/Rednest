@@ -14,8 +14,15 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: $spacing-xxl $spacing-xl;
+  padding: 120px 24px 60px;
   box-sizing: border-box;
+
+  &--empty {
+    min-height: 100vh;
+    padding: 80px 24px;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 .addresses-container {
@@ -26,6 +33,12 @@
   max-width: 960px;
   width: 100%;
   gap: 28px;
+
+  &--empty {
+    margin: auto 0;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 .addresses-hero {
@@ -547,11 +560,18 @@
 
 @media (max-width: 768px) {
   .addresses-main {
-    padding: $spacing-xl $spacing-md;
+    padding: 85px 16px 40px;
+
+    &--empty {
+      min-height: 100vh;
+      padding: 60px 16px;
+      justify-content: center;
+      align-items: center;
+    }
   }
 
   .addresses-hero {
-    margin-top: 70px;
+    margin-top: 0;
   }
 
   .addresses-grid {

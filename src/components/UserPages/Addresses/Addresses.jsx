@@ -244,6 +244,8 @@ const Addresses = () => {
     showToast('Full address copied to clipboard!');
   };
 
+  const isEmpty = !loading && addresses.length === 0;
+
   return (
     <motion.div
       className="addresses-page"
@@ -254,8 +256,8 @@ const Addresses = () => {
     >
       <Navbar />
 
-      <main className="addresses-main">
-        <div className="addresses-container">
+      <main className={`addresses-main ${isEmpty ? 'addresses-main--empty' : ''}`}>
+        <div className={`addresses-container ${isEmpty ? 'addresses-container--empty' : ''}`}>
           <motion.div
             className="addresses-hero"
             initial={{ opacity: 0, y: 20 }}

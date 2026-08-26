@@ -7,6 +7,8 @@
   padding: $spacing-xl;
   max-width: 480px;
   width: 100%;
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04),
     0 24px 60px rgba(0, 0, 0, 0.65);
@@ -175,9 +177,9 @@
     }
 
     textarea {
-      resize: vertical;
-      min-height: 56px;
-      line-height: 1.4;
+      resize: none;
+      height: 72px;
+      line-height: 1.45;
     }
   }
 
@@ -190,11 +192,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: $border-radius-md;
-    padding: 11px 14px;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: $border-radius-sm;
+    padding: 7px 12px;
     cursor: pointer;
     transition: background 0.2s ease;
 
@@ -203,27 +205,16 @@
     }
   }
 
-  &__toggle-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    text-align: left;
-  }
-
   &__toggle-title {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  &__toggle-desc {
-    font-size: 0.76rem;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    user-select: none;
   }
 
   &__switch {
-    width: 42px;
-    height: 23px;
+    width: 28px;
+    height: 16px;
     border-radius: 9999px;
     background: rgba(255, 255, 255, 0.15);
     border: none;
@@ -231,7 +222,7 @@
     cursor: pointer;
     transition: all 0.25s ease;
     flex-shrink: 0;
-    padding: 2px;
+    padding: 0;
 
     &--on {
       background: #22c55e;
@@ -245,17 +236,17 @@
 
   &__switch-handle {
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 17px;
-    height: 17px;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 
     .address-modal__switch--on & {
-      transform: translateX(19px);
+      transform: translateX(12px);
     }
   }
 
@@ -329,9 +320,21 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .address-modal {
     padding: $spacing-lg $spacing-md;
+
+    &__close {
+      display: none;
+    }
+
+    &__header {
+      margin-bottom: $spacing-md;
+    }
+
+    &__icon {
+      display: none;
+    }
 
     &__title {
       font-size: 1.2rem;
@@ -347,11 +350,12 @@
     }
 
     &__actions {
-      flex-direction: column-reverse;
+      flex-direction: row;
       gap: 10px;
 
       .address-modal__btn {
-        width: 100%;
+        flex: 1;
+        width: auto;
       }
     }
   }

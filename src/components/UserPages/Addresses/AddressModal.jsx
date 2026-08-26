@@ -88,6 +88,11 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
       return;
     }
 
+    if (!city.trim()) {
+      setError('Please enter your city.');
+      return;
+    }
+
     if (!phone.trim()) {
       setError('Please enter your contact phone number.');
       return;
@@ -96,7 +101,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
     onSave({
       title: title.trim() || 'Home',
       address: address.trim(),
-      city: city.trim() || null,
+      city: city.trim(),
       apartment: apartment.trim() || null,
       phone: phone.trim(),
       notes: notes.trim() || null,
@@ -153,43 +158,27 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
             </div>
           )}
 
-          <div className="address-modal__field">
-            <label htmlFor="addr-title">Title</label>
-            <input
-              id="addr-title"
-              type="text"
-              placeholder="e.g. Home, Office, Gym..."
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (error) setError('');
-              }}
-              maxLength={40}
-              disabled={loading}
-            />
-          </div>
-
           <div className="address-modal__row">
-            <div className="address-modal__field address-modal__field--grow">
-              <label htmlFor="addr-street">
-                Street Address <span className="address-modal__required">*</span>
-              </label>
+            <div className="address-modal__field">
+              <label htmlFor="addr-title">Title</label>
               <input
-                id="addr-street"
+                id="addr-title"
                 type="text"
-                placeholder="e.g. Nizami Street 48, Building 2"
-                value={address}
+                placeholder="e.g. Home, Office, Gym..."
+                value={title}
                 onChange={(e) => {
-                  setAddress(e.target.value);
+                  setTitle(e.target.value);
                   if (error) setError('');
                 }}
-                required
+                maxLength={40}
                 disabled={loading}
               />
             </div>
 
-            <div className="address-modal__field address-modal__field--city">
-              <label htmlFor="addr-city">City</label>
+            <div className="address-modal__field">
+              <label htmlFor="addr-city">
+                City <span className="address-modal__required">*</span>
+              </label>
               <input
                 id="addr-city"
                 type="text"
@@ -199,9 +188,28 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
                   setCity(e.target.value);
                   if (error) setError('');
                 }}
+                required
                 disabled={loading}
               />
             </div>
+          </div>
+
+          <div className="address-modal__field">
+            <label htmlFor="addr-street">
+              Street Address <span className="address-modal__required">*</span>
+            </label>
+            <input
+              id="addr-street"
+              type="text"
+              placeholder="e.g. Nizami Street 48, Building 2"
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                if (error) setError('');
+              }}
+              required
+              disabled={loading}
+            />
           </div>
 
           <div className="address-modal__row">
@@ -250,12 +258,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
           </div>
 
           <div className="address-modal__default-toggle" onClick={() => !loading && setIsDefault((prev) => !prev)}>
-            <div className="address-modal__toggle-info">
-              <span className="address-modal__toggle-title">Set as default delivery address</span>
-              <span className="address-modal__toggle-desc">
-                This address will be selected automatically during checkout
-              </span>
-            </div>
+            <span className="address-modal__toggle-title">Set as default delivery address</span>
             <button
               type="button"
               className={`address-modal__switch ${isDefault ? 'address-modal__switch--on' : ''}`}
@@ -282,7 +285,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
             <button
               type="submit"
               className="cta-btn sm address-modal__btn address-modal__btn--submit"
-              disabled={loading || !address.trim() || !phone.trim()}
+              disabled={loading || !address.trim() || !phone.trim() || !city.trim()}
             >
               {loading ? (
                 <span className="address-loader-inner">

@@ -75,6 +75,11 @@ public class AddressesController : ControllerBase
             return BadRequest(new { message = "Address line is required." });
         }
 
+        if (string.IsNullOrWhiteSpace(request.City))
+        {
+            return BadRequest(new { message = "City is required." });
+        }
+
         if (string.IsNullOrWhiteSpace(request.Phone))
         {
             return BadRequest(new { message = "Contact phone number is required." });
@@ -102,7 +107,7 @@ public class AddressesController : ControllerBase
             Id = nextId,
             Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim(),
             Address = request.Address.Trim(),
-            City = string.IsNullOrWhiteSpace(request.City) ? null : request.City.Trim(),
+            City = request.City.Trim(),
             Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim(),
             Phone = request.Phone.Trim(),
             Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
@@ -125,6 +130,11 @@ public class AddressesController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Address))
         {
             return BadRequest(new { message = "Address line is required." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.City))
+        {
+            return BadRequest(new { message = "City is required." });
         }
 
         if (string.IsNullOrWhiteSpace(request.Phone))
@@ -166,7 +176,7 @@ public class AddressesController : ControllerBase
 
         target.Title = string.IsNullOrWhiteSpace(request.Title) ? "Home" : request.Title.Trim();
         target.Address = request.Address.Trim();
-        target.City = string.IsNullOrWhiteSpace(request.City) ? null : request.City.Trim();
+        target.City = request.City.Trim();
         target.Apartment = string.IsNullOrWhiteSpace(request.Apartment) ? null : request.Apartment.Trim();
         target.Phone = request.Phone.Trim();
         target.Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim();
