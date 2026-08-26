@@ -134,7 +134,8 @@ const SupportWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  if (location.pathname === '/login' || location.pathname === '/fortune' || location.pathname === '/profile' || location.pathname === '/order' || location.pathname === '/orders' || location.pathname.startsWith('/admin')) {
+  const hiddenPaths = ['/login', '/fortune', '/profile', '/sessions', '/promos', '/order', '/orders', '/error'];
+  if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith('/admin')) {
     return null;
   }
 

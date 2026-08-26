@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/icons/rednest_logo.png';
 import './Catalog.scss';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import FitText from '../../Elements/FitText';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import addIcon from '../../../assets/icons/add.svg';
@@ -131,7 +130,6 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
 };
 
 const Catalog = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [addedAnimations, setAddedAnimations] = useState({});
   const [menuData, setMenuData] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
@@ -177,14 +175,6 @@ const Catalog = () => {
     fetchProducts();
   }, []);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   return (
     <motion.div 
@@ -194,31 +184,7 @@ const Catalog = () => {
       exit={{ opacity: 0 }} 
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link active">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div
-          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-        />
-
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="catalog-main">
         <div className="catalog-hero">

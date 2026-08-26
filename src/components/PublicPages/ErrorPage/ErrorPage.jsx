@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import './ErrorPage.scss';
 
 const HTTP_ERROR_REGISTRY = {
@@ -227,7 +226,6 @@ const ErrorPage = ({ defaultCode = '429' }) => {
 
   const [timeLeft, setTimeLeft] = useState(initialRetry);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (initialRetry <= 0) return;
@@ -265,27 +263,7 @@ const ErrorPage = ({ defaultCode = '429' }) => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="error-main">
         <div className="error-ambient-bg" />

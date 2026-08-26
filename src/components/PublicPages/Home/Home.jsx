@@ -13,21 +13,11 @@ const redLatteImg = `${STORAGE_BASE_URL}/red_latte_9876543221.webp`;
 const nestCappuccinoImg = `${STORAGE_BASE_URL}/nest_cappuccino_9876543290.webp`;
 const hotChocolateImg = `${STORAGE_BASE_URL}/hot_chocolate_7690568000.webp`;
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import './Home.scss';
 
 const Home = () => {
   const videoRef = useRef(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -69,29 +59,7 @@ const Home = () => {
       exit={{ opacity: 0 }} 
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <img src={logo} alt="Rednest Logo" className="logo" />
-          <span className="brand-name">Rednest</span>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link active">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div
-          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-        />
-
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <section className="hero-section">
         <video ref={videoRef} autoPlay loop muted playsInline className="hero-video-bg">

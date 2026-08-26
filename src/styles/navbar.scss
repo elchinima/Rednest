@@ -1,0 +1,211 @@
+@import './variables.scss';
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18.5px $spacing-xl;
+  background: rgba($color-bg-dark, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    .logo {
+      height: 25px;
+      width: auto;
+      max-height: 25px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .brand-name {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: $color-text;
+    }
+  }
+
+  .mobile-menu-btn {
+    display: none;
+  }
+
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xl;
+
+    .nav-links {
+      display: flex;
+      gap: $spacing-lg;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+
+      .nav-link {
+        color: $color-text-muted;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+        position: relative;
+
+        &:hover,
+        &.active {
+          color: $color-text;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          width: 0;
+          height: 2px;
+          bottom: -4px;
+          left: 0;
+          background-color: $color-text;
+          transition: width 0.3s ease;
+        }
+
+        &:hover::after,
+        &.active::after {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .menu-overlay {
+    display: none;
+  }
+}
+
+.cta-btn {
+  background: $color-text;
+  color: $color-bg-dark;
+  border: none;
+  padding: 10px 24px;
+  border-radius: $border-radius-full;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+
+  &:hover {
+    background: $color-primary;
+    color: $color-text;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba($color-primary, 0.4);
+  }
+
+  &.sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  &.lg {
+    padding: 14px 32px;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-header {
+    flex-direction: row;
+    padding: 15px $spacing-md;
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+
+    .logo-container {
+      position: relative;
+      z-index: 200;
+    }
+
+    .mobile-menu-btn {
+      display: block;
+      background: none;
+      border: none;
+      color: $color-text;
+      font-size: 1.5rem;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .menu-overlay {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 140;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+
+      &.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
+    .nav-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh;
+      background: $color-bg-dark;
+      flex-direction: column;
+      padding: 130px $spacing-xl $spacing-xl;
+      gap: $spacing-xl;
+      border-bottom: none;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: none;
+      z-index: 150;
+
+      opacity: 1;
+      transform: translateX(-100%);
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+
+      &.open {
+        transform: translateX(0);
+        pointer-events: auto;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .nav-links {
+        position: relative;
+        left: auto;
+        transform: none;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        gap: $spacing-lg;
+
+        .nav-link {
+          font-size: 1.25rem;
+        }
+      }
+
+      .cta-btn {
+        width: 100%;
+        text-align: center;
+        margin-top: $spacing-xl;
+      }
+    }
+  }
+}

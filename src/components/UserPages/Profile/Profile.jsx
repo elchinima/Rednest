@@ -3,11 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
 import ChangePasswordModal from './ChangePasswordModal';
-import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Profile.scss';
 
@@ -19,7 +18,6 @@ const Profile = () => {
   const { user, logout, updateUser, authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isAddressesModalOpen, setIsAddressesModalOpen] = useState(false);
   const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
@@ -163,27 +161,7 @@ const Profile = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="profile-main">
         <div className="profile-container">

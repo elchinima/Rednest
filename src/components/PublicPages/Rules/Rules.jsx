@@ -1,27 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import logo from '../../../assets/icons/rednest_logo.png';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import './Rules.scss';
 
 const Rules = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   useEffect(() => {
     document.title = 'Terms of Use | Rednest';
     window.scrollTo(0, 0);
   }, []);
-
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   return (
     <motion.div 
@@ -31,35 +19,7 @@ const Rules = () => {
       exit={{ opacity: 0 }} 
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div
-          className={`menu-overlay ${isMenuOpen ? 'open' : ''}`}
-          onClick={() => setIsMenuOpen(false)}
-        />
-
-        <button 
-          className="mobile-menu-btn" 
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="rules-main">
         <div className="rules-ambient-bg" />

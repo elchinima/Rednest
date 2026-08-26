@@ -4,10 +4,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import { encodeCode128 } from '../../../utils/code128';
-import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import superPrizeIcon from '../../../assets/icons/super-prize.svg';
 import freeDrinkIcon from '../../../assets/icons/free-drink.svg';
 import freeDessertIcon from '../../../assets/icons/free-dessert.svg';
@@ -92,7 +91,6 @@ const Promos = () => {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [copiedCode, setCopiedCode] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -119,14 +117,6 @@ const Promos = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   const handleCopy = (code) => {
     if (!code) return;
@@ -154,27 +144,7 @@ const Promos = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="promos-main">
         <div className="promos-container">

@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../../../assets/icons/rednest_logo.png';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import cartAnimated from '../../../assets/icons/cart-animated.svg';
 import giftAnimated from '../../../assets/icons/gift-animated.svg';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import FitText from '../../Elements/FitText';
 import { useAuth } from '../../../context/AuthContext';
@@ -43,7 +41,6 @@ const Basket = () => {
 
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [flashingItemIds, setFlashingItemIds] = useState({});
@@ -89,14 +86,6 @@ const Basket = () => {
   }, [user]);
 
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
@@ -213,27 +202,7 @@ const Basket = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="basket-main">
         <div className="basket-hero">

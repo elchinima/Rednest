@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import './Sessions.scss';
 
@@ -63,13 +62,9 @@ const Sessions = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [revokingId, setRevokingId] = useState(null);
-  const [revokingAll, setRevokingAll] = useState(false);
   const [copiedIp, setCopiedIp] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const showToast = (msg, duration = 3000) => {
     setToastMessage(msg);
@@ -102,17 +97,8 @@ const Sessions = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
-
   const handleRevoke = async (sessionId) => {
-    if (!sessionId || revokingId || revokingAll) return;
+    if (!sessionId || revokingId) return;
     setRevokingId(sessionId);
     try {
       const res = await fetchWithRefresh(`${apiUrl}/api/auth/sessions/${sessionId}/revoke`, {
@@ -134,37 +120,6 @@ const Sessions = () => {
     }
   };
 
-  const handleRevokeAllOther = async () => {
-    const otherActiveSessions = sessions.filter((s) => !s.isCurrent && s.isActive);
-    if (otherActiveSessions.length === 0 || revokingAll || revokingId) return;
-
-    if (!window.confirm(`Are you sure you want to terminate ${otherActiveSessions.length} other active session(s)?`)) {
-      return;
-    }
-
-    setRevokingAll(true);
-    let successCount = 0;
-
-    for (const session of otherActiveSessions) {
-      try {
-        const res = await fetchWithRefresh(`${apiUrl}/api/auth/sessions/${session.id}/revoke`, {
-          method: 'POST',
-        });
-        if (res.ok) {
-          successCount++;
-          setSessions((prev) =>
-            prev.map((s) => (s.id === session.id ? { ...s, isActive: false } : s))
-          );
-        }
-      } catch (e) {
-        console.error('Failed to revoke session', session.id, e);
-      }
-    }
-
-    setRevokingAll(false);
-    showToast(`Terminated ${successCount} session(s).`);
-  };
-
   const handleCopyIp = (ip) => {
     if (!ip) return;
     navigator.clipboard.writeText(ip);
@@ -175,29 +130,6 @@ const Sessions = () => {
     }, 2000);
   };
 
-  const filteredSessions = useMemo(() => {
-    return sessions.filter((session) => {
-      if (activeFilter === 'active' && !session.isActive) return false;
-      if (activeFilter === 'terminated' && session.isActive) return false;
-
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const nameMatches = String(session.deviceName || '').toLowerCase().includes(query);
-        const osMatches = String(session.operatingSystem || '').toLowerCase().includes(query);
-        const ipMatches = String(session.lastLoginIp || '').toLowerCase().includes(query);
-        const countryMatches = String(session.country || '').toLowerCase().includes(query);
-        const typeMatches = String(session.deviceType || '').toLowerCase().includes(query);
-        return nameMatches || osMatches || ipMatches || countryMatches || typeMatches;
-      }
-
-      return true;
-    });
-  }, [sessions, activeFilter, searchQuery]);
-
-  const activeCount = sessions.filter((s) => s.isActive).length;
-  const terminatedCount = sessions.filter((s) => !s.isActive).length;
-  const otherActiveCount = sessions.filter((s) => !s.isCurrent && s.isActive).length;
-
   return (
     <motion.div
       className="sessions-page"
@@ -206,27 +138,7 @@ const Sessions = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="sessions-main">
         <div className="sessions-container">
@@ -236,162 +148,11 @@ const Sessions = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="sessions-hero__badge">
-              <span className="sessions-hero__badge-dot" />
-              <span>Security & Access</span>
-            </div>
             <h1>Active Sessions</h1>
             <p className="sessions-hero__desc">
               Manage connected devices, monitor browser logins, and secure your Rednest account
             </p>
           </motion.div>
-
-          <motion.div
-            className="sessions-stats-bar"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08, duration: 0.45 }}
-          >
-            <div className="sessions-stat-card">
-              <div className="sessions-stat-card__icon sessions-stat-card__icon--primary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                  <line x1="8" y1="21" x2="16" y2="21" />
-                  <line x1="12" y1="17" x2="12" y2="21" />
-                </svg>
-              </div>
-              <div className="sessions-stat-card__content">
-                <span className="sessions-stat-card__label">Active Devices</span>
-                <span className="sessions-stat-card__value">{activeCount}</span>
-              </div>
-            </div>
-
-            <div className="sessions-stat-card">
-              <div className="sessions-stat-card__icon sessions-stat-card__icon--current">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </div>
-              <div className="sessions-stat-card__content">
-                <span className="sessions-stat-card__label">Current Session</span>
-                <span className="sessions-stat-card__value sessions-stat-card__value--green">Protected</span>
-              </div>
-            </div>
-
-            <div className="sessions-stat-card">
-              <div className="sessions-stat-card__icon sessions-stat-card__icon--history">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12 6 12 12 16 14" />
-                </svg>
-              </div>
-              <div className="sessions-stat-card__content">
-                <span className="sessions-stat-card__label">Total Recorded</span>
-                <span className="sessions-stat-card__value">{sessions.length}</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <div className="sessions-controls">
-            <div className="sessions-filters">
-              <button
-                type="button"
-                className={`sessions-filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('all')}
-              >
-                All ({sessions.length})
-              </button>
-              <button
-                type="button"
-                className={`sessions-filter-btn ${activeFilter === 'active' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('active')}
-              >
-                Active ({activeCount})
-              </button>
-              <button
-                type="button"
-                className={`sessions-filter-btn ${activeFilter === 'terminated' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('terminated')}
-              >
-                Terminated ({terminatedCount})
-              </button>
-            </div>
-
-            <div className="sessions-controls__right">
-              {sessions.length > 1 && (
-                <div className="sessions-search-box">
-                  <svg className="sessions-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Search device, OS, IP, country..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="sessions-search-input"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      className="sessions-search-clear"
-                      onClick={() => setSearchQuery('')}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {otherActiveCount > 0 && (
-                <button
-                  type="button"
-                  className="sessions-btn-danger"
-                  onClick={handleRevokeAllOther}
-                  disabled={revokingAll || Boolean(revokingId)}
-                  title="Sign out of all devices except this one"
-                >
-                  {revokingAll ? (
-                    <>
-                      <img src={loaderIcon} alt="" className="sessions-btn-spinner" />
-                      <span>Terminating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                      </svg>
-                      <span>Terminate Other Devices ({otherActiveCount})</span>
-                    </>
-                  )}
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="sessions-refresh-btn"
-                onClick={fetchSessions}
-                disabled={loading}
-                title="Refresh sessions list"
-              >
-                <svg
-                  className={loading ? 'sessions-refresh-icon--spinning' : ''}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  width="16"
-                  height="16"
-                >
-                  <polyline points="23 4 23 10 17 10" />
-                  <polyline points="1 20 1 14 7 14" />
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                </svg>
-              </button>
-            </div>
-          </div>
 
           {loading ? (
             <div className="sessions-loading-state">
@@ -410,7 +171,7 @@ const Sessions = () => {
                 Try Again
               </button>
             </div>
-          ) : filteredSessions.length === 0 ? (
+          ) : sessions.length === 0 ? (
             <motion.div
               className="sessions-empty-card"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -424,18 +185,8 @@ const Sessions = () => {
                   <line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
               </div>
-              <h3>
-                {searchQuery
-                  ? 'No matching sessions found'
-                  : activeFilter !== 'all'
-                  ? `No ${activeFilter} sessions found`
-                  : 'No sessions found'}
-              </h3>
-              <p>
-                {searchQuery
-                  ? 'Try searching with a different device name, IP address, or location.'
-                  : 'No device sessions have been recorded for your account yet.'}
-              </p>
+              <h3>No sessions found</h3>
+              <p>No device sessions have been recorded for your account yet.</p>
               <button type="button" className="cta-btn sm sessions-empty-btn" onClick={() => navigate('/profile')}>
                 Back to Profile
               </button>
@@ -449,7 +200,7 @@ const Sessions = () => {
               transition={{ duration: 0.3 }}
             >
               <AnimatePresence>
-                {filteredSessions.map((session, idx) => {
+                {sessions.map((session, idx) => {
                   const isCurrent = session.isCurrent;
                   const isActive = session.isActive;
                   const isRevoking = revokingId === session.id;

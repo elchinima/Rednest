@@ -4,21 +4,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import logo from '../../../assets/icons/rednest_logo.png';
-import cashierIcon from '../../../assets/icons/cashier-register.svg';
-import onlineIcon from '../../../assets/icons/online-card.svg';
-import featureCashIcon from '../../../assets/icons/feature-cash.svg';
-import featureNfcIcon from '../../../assets/icons/feature-nfc.svg';
-import featurePromoIcon from '../../../assets/icons/feature-promo.svg';
-import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
-import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
-import featureStripeIcon from '../../../assets/icons/feature-stripe.svg';
-import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
-import featureCashbackIcon from '../../../assets/icons/feature-cashback.svg';
-import successAnimated from '../../../assets/icons/success-animated.svg';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
-import UserNavPills from '../../Elements/UserNavPills';
+import Navbar from '../../Elements/Navbar';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import './Order.scss';
 
@@ -118,7 +106,6 @@ const Order = () => {
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
   const [selectedOnlineService, setSelectedOnlineService] = useState('OnlineStripe');
   const [onlineModalError, setOnlineModalError] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -162,14 +149,6 @@ const Order = () => {
       .catch(() => {});
   }, [user]);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   useEffect(() => {
     if (selectedMethod && stepBoxRef.current) {
@@ -356,27 +335,7 @@ const Order = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <header className="home-header">
-        <div className="logo-container">
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src={logo} alt="Rednest Logo" className="logo" />
-            <span className="brand-name">Rednest</span>
-          </Link>
-        </div>
-
-        <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
-          <nav className="nav-links">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/catalog" className="nav-link">Menu</Link>
-          </nav>
-          <UserNavPills onMenuClose={() => setIsMenuOpen(false)} />
-        </div>
-
-        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
-        <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
-        </button>
-      </header>
+      <Navbar />
 
       <main className="order-main">
         <div className="order-container">
