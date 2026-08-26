@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import cartAnimated from '../../../assets/icons/cart-animated.svg';
 import giftAnimated from '../../../assets/icons/gift-animated.svg';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';

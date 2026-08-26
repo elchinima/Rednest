@@ -335,7 +335,7 @@ const Sessions = () => {
                             type="button"
                             className="session-card__revoke-btn"
                             onClick={() => handleRevoke(session.id)}
-                            disabled={isRevoking || revokingAll}
+                            disabled={isRevoking}
                           >
                             {isRevoking ? (
                               <>

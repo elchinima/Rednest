@@ -49,12 +49,18 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         login(data);
-        return data;
+        return { ok: true, data };
       }
+
+      if (response.status === 401) {
+        return { ok: false, unauthorized: true };
+      }
+
+      return { ok: false, unauthorized: false };
     } catch (err) {
       console.error('Session validation failed:', err);
+      return { ok: false, unauthorized: false };
     }
-    return null;
   }, [login]);
 
   useEffect(() => {
@@ -65,21 +71,20 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const retryDelays = [3000, 6000, 10000];
+      const retryDelays = [5000, 10000, 15000, 20000];
       let result = await fetchCurrentUser();
 
-      for (let i = 0; i < retryDelays.length && !result; i++) {
+      for (let i = 0; i < retryDelays.length && result && !result.ok && !result.unauthorized; i++) {
         await new Promise(r => setTimeout(r, retryDelays[i]));
         result = await fetchCurrentUser();
       }
 
-      if (!result) {
+      if (result && result.unauthorized) {
         localStorage.removeItem('rednest_auth');
         localStorage.removeItem('rednest_user');
         setIsAuthenticated(false);
         setUser(null);
       }
-
       setAuthLoading(false);
     };
 
