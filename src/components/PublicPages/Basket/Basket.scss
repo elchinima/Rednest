@@ -9,44 +9,6 @@
 }
 
 
-.basket-page .cta-btn {
-  background: $color-text;
-  color: $color-bg-dark;
-  border: none;
-  border-radius: $border-radius-full;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-md $spacing-lg;
-
-  &.sm {
-    padding: $spacing-sm $spacing-md;
-    font-size: 0.9rem;
-  }
-
-  &:hover:not(.no-hover) {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.95);
-    color: $color-primary;
-  }
-
-  &.secondary {
-    background: transparent;
-    color: $color-text;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.8);
-      color: $color-text;
-      transform: translateY(-2px);
-    }
-  }
-}
 
 .basket-main {
   flex: 1;

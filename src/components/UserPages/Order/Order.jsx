@@ -13,6 +13,8 @@ import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
 import featureCashbackIcon from '../../../assets/icons/feature-cashback.svg';
 import featureNfcIcon from '../../../assets/icons/feature-nfc.svg';
 import featurePromoIcon from '../../../assets/icons/feature-promo.svg';
+import cashierIcon from '../../../assets/icons/cashier-register.svg';
+import onlineIcon from '../../../assets/icons/online-card.svg';
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';

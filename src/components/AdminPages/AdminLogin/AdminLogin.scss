@@ -243,17 +243,6 @@
   }
 }
 
-.cta-btn {
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: $font-family-base;
-}
-
 @keyframes adminPopIn {
   from { opacity: 0; transform: translateY(40px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    }

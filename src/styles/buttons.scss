@@ -1,0 +1,77 @@
+@import './variables.scss';
+
+.cta-btn {
+  background: $color-text;
+  color: $color-bg-dark;
+  border: none;
+  border-radius: $border-radius-full;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-family: $font-family-base;
+  box-sizing: border-box;
+
+  svg {
+    transition: stroke 0.3s ease, color 0.3s ease;
+  }
+
+  &.sm {
+    padding: 8px 16px;
+    font-size: 0.88rem;
+  }
+
+  &.lg {
+    padding: 14px 32px;
+    font-size: 1.1rem;
+  }
+
+  &:hover:not(.no-hover):not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.95);
+    color: $color-primary;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+
+    svg {
+      stroke: $color-primary;
+      color: $color-primary;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &.secondary {
+    background: transparent;
+    color: $color-text;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.8);
+      color: $color-text;
+      transform: translateY(-2px);
+    }
+  }
+
+  &.primary-red {
+    background: $color-primary;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba($color-primary, 0.35);
+
+    &:hover:not(:disabled) {
+      background: lighten($color-primary, 6%);
+      box-shadow: 0 8px 24px rgba($color-primary, 0.45);
+      color: #fff;
+    }
+  }
+}

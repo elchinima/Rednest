@@ -114,14 +114,6 @@ const Fortune = () => {
     return () => clearInterval(interval);
   }, [canSpin, cooldownEndsAt]);
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.classList.add('mobile-menu-open');
-    } else {
-      document.body.classList.remove('mobile-menu-open');
-    }
-    return () => document.body.classList.remove('mobile-menu-open');
-  }, [isMenuOpen]);
 
   const drawFrame = useCallback(() => {
     if (canvasRef.current) {
