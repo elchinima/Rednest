@@ -1,0 +1,82 @@
+<svg viewBox="0 0 350 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="productShimmerGrad" x1="-150%" y1="0%" x2="150%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+      <animate attributeName="x1" from="-150%" to="150%" dur="1.8s" repeatCount="indefinite" />
+      <animate attributeName="x2" from="0%" to="300%" dur="1.8s" repeatCount="indefinite" />
+    </linearGradient>
+
+    <clipPath id="cardClipPath">
+      <rect x="1" y="1" width="348" height="498" rx="24" />
+    </clipPath>
+
+    <clipPath id="imageClipPath">
+      <path d="M1 25C1 11.7452 11.7452 1 25 1H325C338.255 1 349 11.7452 349 25V350H1V25Z" />
+    </clipPath>
+
+    <radialGradient id="imageAmbientGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.55; }
+    }
+    @keyframes subtleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .cup-icon {
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+    .steam-line {
+      animation: subtleFloat 2s ease-in-out infinite;
+    }
+  </style>
+
+  <rect x="1" y="1" width="348" height="498" rx="24" fill="#2d0a0e" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
+
+  <g clip-path="url(#imageClipPath)">
+    <rect x="1" y="1" width="348" height="349" fill="#24070a" />
+    <rect x="1" y="1" width="348" height="349" fill="url(#imageAmbientGlow)" />
+
+    <g class="cup-icon" transform="translate(140, 125)">
+      <path class="steam-line" d="M25 8 C22 15, 28 22, 25 30" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-linecap="round" fill="none" />
+      <path class="steam-line" d="M35 5 C32 14, 38 21, 35 30" stroke="rgba(255, 255, 255, 0.35)" stroke-width="2" stroke-linecap="round" fill="none" style="animation-delay: 0.4s;" />
+      <path class="steam-line" d="M45 8 C42 15, 48 22, 45 30" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-linecap="round" fill="none" style="animation-delay: 0.8s;" />
+
+      <path d="M18 36 C18 36, 15 52, 26 62 C29 65, 30 72, 25 82 C20 90, 24 96, 35 96 C46 96, 50 90, 45 82 C40 72, 41 65, 44 62 C55 52, 52 36, 52 36 Z" 
+            fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="2.5" stroke-linejoin="round" />
+      
+      <path d="M22 55 C24 57, 27 60, 26 63 C29 66, 30 72, 26 81 C23 87, 26 92, 35 92 C44 92, 47 87, 44 81 C40 72, 41 66, 44 63 C43 60, 46 57, 48 55 Z" 
+            fill="rgba(239, 68, 68, 0.12)" />
+
+      <ellipse cx="35" cy="100" rx="32" ry="6" fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="2" />
+    </g>
+  </g>
+
+  <line x1="1" y1="350" x2="349" y2="350" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1" />
+
+  <g>
+    <rect x="28" y="374" width="115" height="24" rx="7" fill="rgba(255, 255, 255, 0.14)" />
+
+    <rect x="242" y="372" width="80" height="28" rx="14" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1" />
+    <rect x="254" y="381" width="56" height="10" rx="4" fill="rgba(255, 255, 255, 0.22)" />
+
+    <rect x="28" y="420" width="294" height="12" rx="6" fill="rgba(255, 255, 255, 0.08)" />
+    <rect x="28" y="442" width="210" height="12" rx="6" fill="rgba(255, 255, 255, 0.08)" />
+  </g>
+
+  <g clip-path="url(#cardClipPath)">
+    <rect x="1" y="1" width="348" height="498" fill="url(#productShimmerGrad)" pointer-events="none" />
+  </g>
+
+  <rect x="1" y="1" width="348" height="498" rx="24" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" pointer-events="none" />
+</svg>

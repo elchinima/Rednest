@@ -1,0 +1,86 @@
+<svg viewBox="0 0 300 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="homeCardShimmerGrad" x1="-150%" y1="0%" x2="150%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.12" />
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+      <animate attributeName="x1" from="-150%" to="150%" dur="1.8s" repeatCount="indefinite" />
+      <animate attributeName="x2" from="0%" to="300%" dur="1.8s" repeatCount="indefinite" />
+    </linearGradient>
+
+    <clipPath id="homeCardClip">
+      <rect x="1" y="1" width="298" height="498" rx="24" />
+    </clipPath>
+
+    <clipPath id="homeImageClip">
+      <path d="M1 25C1 11.7452 11.7452 1 25 1H275C288.255 1 299 11.7452 299 25V300H1V25Z" />
+    </clipPath>
+
+    <radialGradient id="homeImageGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.25; }
+      50% { opacity: 0.55; }
+    }
+    @keyframes steamFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .home-cup-icon {
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+    .home-steam {
+      animation: steamFloat 2s ease-in-out infinite;
+    }
+  </style>
+
+  <rect x="1" y="1" width="298" height="498" rx="24" fill="#2d0a0e" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" />
+
+  <g clip-path="url(#homeImageClip)">
+    <rect x="1" y="1" width="298" height="299" fill="#24070a" />
+    <rect x="1" y="1" width="298" height="299" fill="url(#homeImageGlow)" />
+
+    <g class="home-cup-icon" transform="translate(115, 105)">
+      <path class="home-steam" d="M22 6 C19 13, 25 19, 22 26" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-linecap="round" fill="none" />
+      <path class="home-steam" d="M35 3 C32 11, 38 18, 35 26" stroke="rgba(255, 255, 255, 0.35)" stroke-width="2" stroke-linecap="round" fill="none" style="animation-delay: 0.4s;" />
+      <path class="home-steam" d="M48 6 C45 13, 51 19, 48 26" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-linecap="round" fill="none" style="animation-delay: 0.8s;" />
+
+      <path d="M12 34 H58 C58 34, 57 72, 35 72 C13 72, 12 34, 12 34 Z" 
+            fill="rgba(255, 255, 255, 0.06)" stroke="rgba(255, 255, 255, 0.3)" stroke-width="2.5" stroke-linejoin="round" />
+      
+      <path d="M57 40 C67 40, 67 58, 55 60" 
+            fill="none" stroke="rgba(255, 255, 255, 0.3)" stroke-width="2.5" stroke-linecap="round" />
+
+      <ellipse cx="35" cy="35" rx="22" ry="5" fill="rgba(239, 68, 68, 0.15)" stroke="rgba(255, 255, 255, 0.25)" stroke-width="1.5" />
+      <path d="M35 36 C33 33, 30 33, 30 35 C30 37, 35 40, 35 40 C35 40, 40 37, 40 35 C40 33, 37 33, 35 36 Z" 
+            fill="rgba(255, 255, 255, 0.4)" />
+
+      <ellipse cx="35" cy="74" rx="34" ry="6" fill="none" stroke="rgba(255, 255, 255, 0.22)" stroke-width="2" />
+    </g>
+  </g>
+
+  <line x1="1" y1="300" x2="299" y2="300" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1" />
+
+  <g>
+    <rect x="75" y="324" width="150" height="24" rx="7" fill="rgba(255, 255, 255, 0.14)" />
+
+    <rect x="24" y="364" width="252" height="11" rx="5.5" fill="rgba(255, 255, 255, 0.08)" />
+    <rect x="36" y="384" width="228" height="11" rx="5.5" fill="rgba(255, 255, 255, 0.08)" />
+    <rect x="54" y="404" width="192" height="11" rx="5.5" fill="rgba(255, 255, 255, 0.08)" />
+
+    <rect x="110" y="445" width="80" height="24" rx="7" fill="rgba(255, 255, 255, 0.18)" />
+  </g>
+
+  <g clip-path="url(#homeCardClip)">
+    <rect x="1" y="1" width="298" height="498" fill="url(#homeCardShimmerGrad)" pointer-events="none" />
+  </g>
+
+  <rect x="1" y="1" width="298" height="498" rx="24" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1.5" pointer-events="none" />
+</svg>

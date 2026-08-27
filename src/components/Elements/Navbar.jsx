@@ -5,7 +5,19 @@ import UserNavPills from './UserNavPills';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
+  const isHome = location.pathname === '/';
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -25,7 +37,9 @@ const Navbar = () => {
   const handleCloseMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="home-header">
+    <header
+      className={`home-header ${isHome ? 'home-header--home' : ''} ${isScrolled ? 'home-header--scrolled' : 'home-header--transparent'}`}
+    >
       <div className="logo-container">
         <Link
           to="/"

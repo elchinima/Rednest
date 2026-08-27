@@ -56,6 +56,21 @@
   column-gap: $spacing-xl;
 }
 
+.catalog-skeleton-card {
+  width: 100%;
+  aspect-ratio: 350 / 500;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+  display: flex;
+
+  .skeleton-svg-img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: fill;
+  }
+}
+
 .catalog-card {
   background: rgba(255, 255, 255, 0.03);
   border-radius: $border-radius-lg;

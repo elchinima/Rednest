@@ -21,6 +21,10 @@
     gap: $spacing-md;
     position: relative;
     margin-bottom: $spacing-lg;
+
+    @media (max-width: 768px) {
+      padding-right: 36px;
+    }
   }
 
   &__icon {
@@ -38,6 +42,10 @@
       width: 22px;
       height: 22px;
       stroke: $color-primary;
+    }
+
+    @media (max-width: 768px) {
+      display: none;
     }
   }
 
@@ -82,16 +90,27 @@
 
 .card-preview {
   position: relative;
+  width: 100%;
+  aspect-ratio: 1.586 / 1;
   background: linear-gradient(135deg, rgba(30, 20, 25, 0.9) 0%, rgba(70, 15, 20, 0.85) 50%, rgba(120, 20, 30, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  padding: 20px 24px;
+  padding: 22px 24px;
   margin-bottom: $spacing-lg;
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.4),
     inset 0 1px 1px rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  @media (max-width: 480px) {
+    padding: 16px 18px;
+    border-radius: 12px;
+  }
 
   &::before {
     content: '';
@@ -118,7 +137,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 22px;
+    margin-bottom: 0;
   }
 
   &__chip {

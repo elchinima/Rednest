@@ -6,6 +6,7 @@ import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import FitText from '../../Elements/FitText';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import productCardLoader from '../../../assets/icons/product-card-loader.svg';
 import addIcon from '../../../assets/icons/add.svg';
 import successIcon from '../../../assets/icons/success-animated.svg';
 import { useBasket } from '../../../context/BasketContext';
@@ -135,6 +136,25 @@ const Catalog = () => {
   const [isMenuLoading, setIsMenuLoading] = useState(true);
   const { addItem, getItemQuantity } = useBasket();
 
+  const [skeletonCount, setSkeletonCount] = useState(() => {
+    if (typeof window === 'undefined') return 3;
+    const w = window.innerWidth;
+    if (w < 768) return 1;
+    if (w < 1150) return 2;
+    return 3;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 768) setSkeletonCount(1);
+      else if (w < 1150) setSkeletonCount(2);
+      else setSkeletonCount(3);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const orderedItems = useMemo(() => {
     return menuData.flatMap(cat => cat.items || []);
   }, [menuData]);
@@ -175,7 +195,6 @@ const Catalog = () => {
     fetchProducts();
   }, []);
 
-
   return (
     <motion.div 
       className="catalog-page"
@@ -194,8 +213,12 @@ const Catalog = () => {
 
         <div className="menu-categories">
           {isMenuLoading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem 0' }}>
-              <img src={loaderIcon} alt="Loading" style={{ width: '40px', height: '40px' }} />
+            <div className="catalog-grid skeleton-grid">
+              {Array.from({ length: skeletonCount }).map((_, i) => (
+                <div key={i} className="catalog-skeleton-card">
+                  <img src={productCardLoader} alt="Loading product" className="skeleton-svg-img" />
+                </div>
+              ))}
             </div>
           ) : (
             menuData.map((categoryObj, index) => (

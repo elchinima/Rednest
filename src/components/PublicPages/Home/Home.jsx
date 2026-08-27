@@ -1,10 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
 import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
 import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
+import homeCardLoader from '../../../assets/icons/home-product-card-loader.svg';
 import bgVideo from '../../../assets/video/media_1.mp4';
 import aboutImage from '../../../assets/images/about_image.png';
 import SubscribeModal from './SubscribeModal';
@@ -30,6 +31,7 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth > 768;
@@ -37,13 +39,59 @@ const Home = () => {
     return true;
   });
 
+  const [skeletonCount, setSkeletonCount] = useState(() => {
+    if (typeof window === 'undefined') return 4;
+    const w = window.innerWidth;
+    if (w < 640) return 1;
+    if (w < 980) return 2;
+    if (w < 1280) return 3;
+    return 4;
+  });
+
   useEffect(() => {
     const handleResize = () => {
       setIsDesktop(window.innerWidth > 768);
+      const w = window.innerWidth;
+      if (w < 640) setSkeletonCount(1);
+      else if (w < 980) setSkeletonCount(2);
+      else if (w < 1280) setSkeletonCount(3);
+      else setSkeletonCount(4);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const favoriteImages = useMemo(() => [
+    cappuccinoImg,
+    redLatteImg,
+    nestCappuccinoImg,
+    hotChocolateImg
+  ], []);
+
+  useEffect(() => {
+    let isMounted = true;
+    let loadedCount = 0;
+
+    favoriteImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = img.onerror = () => {
+        loadedCount++;
+        if (loadedCount >= favoriteImages.length && isMounted) {
+          setFavoritesLoading(false);
+        }
+      };
+    });
+
+    const timeout = setTimeout(() => {
+      if (isMounted) setFavoritesLoading(false);
+    }, 2500);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
+  }, [favoriteImages]);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -179,42 +227,52 @@ const Home = () => {
           <p>Discover the drinks our customers love the most.</p>
         </div>
         <div className="menu-grid">
-          <div className="menu-item-card">
-            <div className="favorite-badge">Favorite</div>
-            <img src={cappuccinoImg} alt="Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-            <div className="menu-info">
-              <h4>Cappuccino</h4>
-              <p>The perfect balance of coffee and milk foam. The soft foam on top brings happiness with every sip.</p>
-              <span className="price">3.49 ₼</span>
-            </div>
-          </div>
-          <div className="menu-item-card">
-            <div className="favorite-badge">Favorite</div>
-            <img src={redLatteImg} alt="Red Latte" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-            <div className="menu-info">
-              <h4>Red Latte</h4>
-              <p>Special Rednest recipe: The harmony of latte and strawberry syrup. A sweet and romantic taste.</p>
-              <span className="price">3.75 ₼</span>
-            </div>
-          </div>
-          <div className="menu-item-card">
-            <div className="favorite-badge">Favorite</div>
-            <img src={nestCappuccinoImg} alt="Nest Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-            <div className="menu-info">
-              <h4>Nest Cappuccino</h4>
-              <p>Cappuccino enriched with the sweetness of caramel and the aroma of hazelnut. Like a warm hug. </p>
-              <span className="price">4.25 ₼</span>
-            </div>
-          </div>
-          <div className="menu-item-card">
-            <div className="favorite-badge">Favorite</div>
-            <img src={hotChocolateImg} alt="Hot Chocolate" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-            <div className="menu-info">
-              <h4>Hot Chocolate</h4>
-              <p>A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.</p>
-              <span className="price">3.99 ₼</span>
-            </div>
-          </div>
+          {favoritesLoading ? (
+            Array.from({ length: skeletonCount }).map((_, i) => (
+              <div key={i} className="home-skeleton-card">
+                <img src={homeCardLoader} alt="Loading product" className="skeleton-svg-img" />
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="menu-item-card">
+                <div className="favorite-badge">Favorite</div>
+                <img src={cappuccinoImg} alt="Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
+                <div className="menu-info">
+                  <h4>Cappuccino</h4>
+                  <p>The perfect balance of coffee and milk foam. The soft foam on top brings happiness with every sip.</p>
+                  <span className="price">3.49 ₼</span>
+                </div>
+              </div>
+              <div className="menu-item-card">
+                <div className="favorite-badge">Favorite</div>
+                <img src={redLatteImg} alt="Red Latte" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
+                <div className="menu-info">
+                  <h4>Red Latte</h4>
+                  <p>Special Rednest recipe: The harmony of latte and strawberry syrup. A sweet and romantic taste.</p>
+                  <span className="price">3.75 ₼</span>
+                </div>
+              </div>
+              <div className="menu-item-card">
+                <div className="favorite-badge">Favorite</div>
+                <img src={nestCappuccinoImg} alt="Nest Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
+                <div className="menu-info">
+                  <h4>Nest Cappuccino</h4>
+                  <p>Cappuccino enriched with the sweetness of caramel and the aroma of hazelnut. Like a warm hug. </p>
+                  <span className="price">4.25 ₼</span>
+                </div>
+              </div>
+              <div className="menu-item-card">
+                <div className="favorite-badge">Favorite</div>
+                <img src={hotChocolateImg} alt="Hot Chocolate" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
+                <div className="menu-info">
+                  <h4>Hot Chocolate</h4>
+                  <p>A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.</p>
+                  <span className="price">3.99 ₼</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className="section-actions">
           <Link to="/catalog" className="cta-btn secondary">View Full Menu</Link>
