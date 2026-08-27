@@ -51,6 +51,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IGeoLocationService, GeoLocationService>();
 builder.Services.AddScoped<IEmailService, BrevoEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<IPaymentEncryptionService, PaymentEncryptionService>();
 
 builder.Services.AddCors(options =>
 {

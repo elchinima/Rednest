@@ -15,10 +15,12 @@ namespace Rednest.Api.Controllers;
 public class PaymentMethodsController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPaymentEncryptionService _encryptionService;
 
-    public PaymentMethodsController(IUserRepository userRepository)
+    public PaymentMethodsController(IUserRepository userRepository, IPaymentEncryptionService encryptionService)
     {
         _userRepository = userRepository;
+        _encryptionService = encryptionService;
     }
 
     private Guid? GetUserId()
@@ -118,10 +120,12 @@ public class PaymentMethodsController : ControllerBase
             .ThenByDescending(c => c.CreatedAt)
             .Select(c =>
             {
-                var digits = Regex.Replace(c.CardNumber ?? string.Empty, @"\D", "");
-                var last4 = digits.Length >= 4 ? digits[^4..] : digits;
-                var masked = digits.Length >= 4 ? $"•••• •••• •••• {last4}" : c.CardNumber;
-                var brand = !string.IsNullOrWhiteSpace(c.CardBrand) ? c.CardBrand : DetectCardBrand(digits);
+                var last4 = !string.IsNullOrWhiteSpace(c.Last4)
+                    ? c.Last4
+                    : (c.Id > 0 && c.Id <= 9999 ? c.Id.ToString("D4") : "••••");
+
+                var masked = $"•••• {last4}";
+                var brand = !string.IsNullOrWhiteSpace(c.CardBrand) ? c.CardBrand : "Card";
 
                 return new
                 {
@@ -185,14 +189,22 @@ public class PaymentMethodsController : ControllerBase
 
         user.PaymentMethods ??= new List<UserPaymentMethod>();
 
-        var existingCard = user.PaymentMethods.FirstOrDefault(c =>
-            Regex.Replace(c.CardNumber ?? "", @"\D", "") == cleanNumber);
-        if (existingCard != null)
+        var last4 = cleanNumber.Length >= 4 ? cleanNumber[^4..] : cleanNumber;
+        if (!int.TryParse(last4, out var last4Id))
         {
-            return BadRequest(new { message = "This card is already added to your account." });
+            return BadRequest(new { message = "Invalid card number ending." });
         }
 
-        var nextId = user.PaymentMethods.Count > 0 ? user.PaymentMethods.Max(c => c.Id) + 1 : 1;
+        var existingCard = user.PaymentMethods.FirstOrDefault(c =>
+            c.Id == last4Id ||
+            c.Last4 == last4 ||
+            (!string.IsNullOrEmpty(c.Last4) && c.Last4 == last4));
+
+        if (existingCard != null)
+        {
+            return BadRequest(new { message = $"A card ending in {last4} is already registered in your account." });
+        }
+
         var isFirst = user.PaymentMethods.Count == 0;
         var shouldBeDefault = request.IsDefault || isFirst;
 
@@ -209,14 +221,18 @@ public class PaymentMethodsController : ControllerBase
             ? (user.Name ?? "Cardholder")
             : request.CardholderName.Trim().ToUpperInvariant();
 
+        var encryptedNumber = _encryptionService.Encrypt(cleanNumber);
+        var encryptedCvc = _encryptionService.Encrypt(cleanCvc);
+
         var newCard = new UserPaymentMethod
         {
-            Id = nextId,
+            Id = last4Id,
+            Last4 = last4,
             CardName = string.IsNullOrWhiteSpace(request.CardName) ? $"{brand} Card" : request.CardName.Trim(),
             CardholderName = cardholder,
-            CardNumber = cleanNumber,
+            CardNumber = encryptedNumber,
             ExpiryDate = formattedExpiry,
-            Cvc = cleanCvc,
+            Cvc = encryptedCvc,
             CardBrand = brand,
             IsDefault = shouldBeDefault,
             CreatedAt = GetBakuTime()
@@ -225,13 +241,12 @@ public class PaymentMethodsController : ControllerBase
         user.PaymentMethods.Add(newCard);
         await _userRepository.UpdateAsync(user);
 
-        var last4 = cleanNumber.Length >= 4 ? cleanNumber[^4..] : cleanNumber;
         return Ok(new
         {
             newCard.Id,
             newCard.CardName,
             newCard.CardholderName,
-            CardNumber = $"•••• •••• •••• {last4}",
+            CardNumber = $"•••• {last4}",
             Last4 = last4,
             CardBrand = brand,
             newCard.ExpiryDate,

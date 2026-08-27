@@ -17,7 +17,8 @@
   position: relative;
 
   @media (max-width: 768px) {
-    padding: 38px $spacing-md $spacing-lg;
+    padding: 24px 18px 20px;
+    border-radius: 20px;
   }
 
   &__close-btn {
@@ -39,8 +40,7 @@
     z-index: 10;
 
     @media (max-width: 768px) {
-      top: 12px;
-      right: 12px;
+      display: none !important;
     }
 
     &:hover:not(:disabled) {
@@ -59,7 +59,9 @@
     padding-right: 40px;
 
     @media (max-width: 768px) {
-      display: none !important;
+      margin-bottom: 18px;
+      gap: 12px;
+      padding-right: 0;
     }
   }
 
@@ -74,6 +76,17 @@
     justify-content: center;
     flex-shrink: 0;
 
+    @media (max-width: 768px) {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
     svg {
       width: 22px;
       height: 22px;
@@ -87,24 +100,32 @@
     margin: 0 0 2px;
     color: #ffffff;
     letter-spacing: -0.2px;
+
+    @media (max-width: 768px) {
+      font-size: 1.15rem;
+    }
   }
 
   &__subtitle {
     font-size: 0.85rem;
     color: $color-text-muted;
     margin: 0;
+
+    @media (max-width: 768px) {
+      font-size: 0.78rem;
+    }
   }
 }
 
 .card-preview {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.586 / 1;
+  aspect-ratio: 2.115 / 1;
   background: linear-gradient(135deg, rgba(30, 20, 25, 0.9) 0%, rgba(70, 15, 20, 0.85) 50%, rgba(120, 20, 30, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 22px 24px;
-  margin-bottom: $spacing-lg;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.4),
     inset 0 1px 1px rgba(255, 255, 255, 0.2);
@@ -115,9 +136,8 @@
   flex-direction: column;
   justify-content: space-between;
 
-  @media (max-width: 480px) {
-    padding: 16px 18px;
-    border-radius: 12px;
+  @media (max-width: 768px) {
+    display: none !important;
   }
 
   &::before {
@@ -149,10 +169,10 @@
   }
 
   &__chip {
-    width: 36px;
-    height: 26px;
+    width: 32px;
+    height: 22px;
     background: linear-gradient(135deg, #e2c069 0%, #c49a37 100%);
-    border-radius: 5px;
+    border-radius: 4px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     position: relative;
   }
@@ -163,8 +183,8 @@
     opacity: 0.7;
 
     svg {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       stroke: #ffffff;
     }
   }
@@ -175,7 +195,7 @@
   }
 
   .brand-logo--visa {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     font-weight: 900;
     font-style: italic;
     letter-spacing: 1.5px;
@@ -187,12 +207,12 @@
     display: flex;
     align-items: center;
     position: relative;
-    width: 38px;
-    height: 24px;
+    width: 34px;
+    height: 22px;
 
     .mc-circle {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       position: absolute;
 
@@ -210,7 +230,7 @@
   }
 
   .brand-logo--generic {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.4);
@@ -218,11 +238,11 @@
 
   &__number {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
-    letter-spacing: 2.5px;
+    letter-spacing: 2px;
     color: #ffffff;
-    margin-bottom: 18px;
+    margin: 4px 0;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
   }
@@ -235,14 +255,14 @@
 
   &__label {
     display: block;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: rgba(255, 255, 255, 0.6);
     letter-spacing: 0.5px;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
   &__val {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #ffffff;
     letter-spacing: 0.5px;
@@ -432,14 +452,15 @@
 
   .add-card-modal__actions {
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: $spacing-md;
-    justify-content: flex-end;
     margin-top: $spacing-md;
     padding-top: $spacing-sm;
 
     button {
       min-height: 42px;
-      padding: 0 22px;
+      padding: 0 24px;
     }
   }
 }

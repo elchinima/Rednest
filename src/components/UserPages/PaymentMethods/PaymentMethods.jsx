@@ -248,8 +248,7 @@ const PaymentMethods = () => {
                     const id = card.id || card.Id;
                     const isDef = card.isDefault || card.IsDefault;
                     const brand = (card.cardBrand || card.CardBrand || 'Card').toLowerCase();
-                    const last4 = card.last4 || card.Last4 || (card.cardNumber || '').slice(-4) || '••••';
-                    const masked = card.cardNumber || card.CardNumber || `•••• •••• •••• ${last4}`;
+                    const last4 = (id ? String(id).padStart(4, '0') : '') || card.last4 || card.Last4 || '••••';
                     const expiry = card.expiryDate || card.ExpiryDate || 'MM/YY';
                     const holder = card.cardholderName || card.CardholderName || user?.name || 'CARDHOLDER';
                     const title = card.cardName || card.CardName || (brand === 'visa' ? 'Visa Card' : brand === 'mastercard' ? 'Mastercard' : 'Bank Card');
@@ -301,7 +300,7 @@ const PaymentMethods = () => {
                         <div className="payment-card__body">
                           <div className="payment-card__number-row">
                             <div className="payment-card__number">
-                              <span className="dots-group">•••• •••• ••••</span>
+                              <span className="dots-group">••••</span>
                               <span className="last-digits">{last4}</span>
                             </div>
                             <div className="payment-card__brand-tag">
@@ -320,11 +319,6 @@ const PaymentMethods = () => {
                             <div className="payment-card__detail-item">
                               <span className="payment-card__detail-label">Expires</span>
                               <span className="payment-card__detail-val">{expiry}</span>
-                            </div>
-
-                            <div className="payment-card__detail-item">
-                              <span className="payment-card__detail-label">Brand</span>
-                              <span className="payment-card__detail-val">{brand === 'visa' ? 'Visa' : brand === 'mastercard' ? 'Mastercard' : 'Bank Card'}</span>
                             </div>
                           </div>
                         </div>
@@ -392,7 +386,7 @@ const PaymentMethods = () => {
         onConfirm={handleConfirmDelete}
         itemName={
           cardToDelete
-            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ending in ${cardToDelete.last4 || cardToDelete.Last4 || (cardToDelete.cardNumber || '').slice(-4) || '••••'}`
+            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ending in ${(cardToDelete.id || cardToDelete.Id ? String(cardToDelete.id || cardToDelete.Id).padStart(4, '0') : '') || cardToDelete.last4 || cardToDelete.Last4 || '••••'}`
             : 'this card'
         }
         loading={deleteLoading}
