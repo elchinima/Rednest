@@ -120,11 +120,8 @@ public class PaymentMethodsController : ControllerBase
             .ThenByDescending(c => c.CreatedAt)
             .Select(c =>
             {
-                var last4 = !string.IsNullOrWhiteSpace(c.Last4)
-                    ? c.Last4
-                    : (c.Id > 0 && c.Id <= 9999 ? c.Id.ToString("D4") : "••••");
-
-                var masked = $"•••• {last4}";
+                var formattedId = c.Id > 0 ? c.Id.ToString("D4") : "••••";
+                var masked = $"•••• {formattedId}";
                 var brand = !string.IsNullOrWhiteSpace(c.CardBrand) ? c.CardBrand : "Card";
 
                 return new
@@ -133,7 +130,6 @@ public class PaymentMethodsController : ControllerBase
                     c.CardName,
                     c.CardholderName,
                     CardNumber = masked,
-                    Last4 = last4,
                     CardBrand = brand,
                     c.ExpiryDate,
                     c.IsDefault,
@@ -195,10 +191,7 @@ public class PaymentMethodsController : ControllerBase
             return BadRequest(new { message = "Invalid card number ending." });
         }
 
-        var existingCard = user.PaymentMethods.FirstOrDefault(c =>
-            c.Id == last4Id ||
-            c.Last4 == last4 ||
-            (!string.IsNullOrEmpty(c.Last4) && c.Last4 == last4));
+        var existingCard = user.PaymentMethods.FirstOrDefault(c => c.Id == last4Id);
 
         if (existingCard != null)
         {
@@ -227,7 +220,6 @@ public class PaymentMethodsController : ControllerBase
         var newCard = new UserPaymentMethod
         {
             Id = last4Id,
-            Last4 = last4,
             CardName = string.IsNullOrWhiteSpace(request.CardName) ? $"{brand} Card" : request.CardName.Trim(),
             CardholderName = cardholder,
             CardNumber = encryptedNumber,
@@ -246,8 +238,7 @@ public class PaymentMethodsController : ControllerBase
             newCard.Id,
             newCard.CardName,
             newCard.CardholderName,
-            CardNumber = $"•••• {last4}",
-            Last4 = last4,
+            CardNumber = $"•••• {newCard.Id:D4}",
             CardBrand = brand,
             newCard.ExpiryDate,
             newCard.IsDefault,

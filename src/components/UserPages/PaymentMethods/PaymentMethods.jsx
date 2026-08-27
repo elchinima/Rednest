@@ -248,7 +248,7 @@ const PaymentMethods = () => {
                     const id = card.id || card.Id;
                     const isDef = card.isDefault || card.IsDefault;
                     const brand = (card.cardBrand || card.CardBrand || 'Card').toLowerCase();
-                    const last4 = (id ? String(id).padStart(4, '0') : '') || card.last4 || card.Last4 || '••••';
+                    const last4 = id ? String(id).padStart(4, '0') : '••••';
                     const expiry = card.expiryDate || card.ExpiryDate || 'MM/YY';
                     const holder = card.cardholderName || card.CardholderName || user?.name || 'CARDHOLDER';
                     const title = card.cardName || card.CardName || (brand === 'visa' ? 'Visa Card' : brand === 'mastercard' ? 'Mastercard' : 'Bank Card');
@@ -386,7 +386,7 @@ const PaymentMethods = () => {
         onConfirm={handleConfirmDelete}
         itemName={
           cardToDelete
-            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ending in ${(cardToDelete.id || cardToDelete.Id ? String(cardToDelete.id || cardToDelete.Id).padStart(4, '0') : '') || cardToDelete.last4 || cardToDelete.Last4 || '••••'}`
+            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ending in ${cardToDelete.id || cardToDelete.Id ? String(cardToDelete.id || cardToDelete.Id).padStart(4, '0') : '••••'}`
             : 'this card'
         }
         loading={deleteLoading}
