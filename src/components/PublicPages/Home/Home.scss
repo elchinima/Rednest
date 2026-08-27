@@ -21,7 +21,7 @@
   height: 100dvh;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 0 $spacing-xl;
+  padding: 80px $spacing-xl 40px;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
@@ -47,12 +47,16 @@
   }
 
   .hero-content {
-    flex: 1;
+    flex: none;
     max-width: 800px;
     z-index: 2;
     animation: slideUp 0.8s ease-out forwards;
-    margin: 0 auto;
+    margin: auto;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
 
@@ -440,14 +444,14 @@
     height: 100dvh;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: 0 $spacing-md;
+    padding: 70px $spacing-md 30px;
     box-sizing: border-box;
 
     .hero-content {
       flex: none;
       width: 100%;
       max-width: 500px;
-      margin: 0 auto;
+      margin: auto;
       display: flex;
       flex-direction: column;
       align-items: center;

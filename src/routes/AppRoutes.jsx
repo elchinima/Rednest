@@ -37,6 +37,7 @@ const AnimatedRoutes = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/login" element={<Auth />} />
           <Route path="/fortune" element={

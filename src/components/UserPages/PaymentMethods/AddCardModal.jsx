@@ -172,6 +172,16 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
       targetBorderRadius="24px"
     >
       <div className="add-card-modal" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className="add-card-modal__close-btn"
+          onClick={onClose}
+          disabled={loading}
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
+
         <div className="add-card-modal__header">
           <div className="add-card-modal__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -183,15 +193,6 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
             <h3 className="add-card-modal__title">Add Payment Card</h3>
             <p className="add-card-modal__subtitle">Enter your Visa or Mastercard details</p>
           </div>
-          <button
-            type="button"
-            className="add-card-modal__close-btn"
-            onClick={onClose}
-            disabled={loading}
-            aria-label="Close modal"
-          >
-            ✕
-          </button>
         </div>
 
         <div className={`card-preview ${brand ? `card-preview--${brand.toLowerCase()}` : ''}`}>
@@ -300,35 +301,37 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="cardholder-name">Cardholder Name (Optional)</label>
-            <input
-              id="cardholder-name"
-              type="text"
-              placeholder="e.g. ELCHIN IMANOV"
-              value={cardholderName}
-              onChange={handleCardholderChange}
-              onBlur={() => handleBlur('cardholderName')}
-              className="form-input"
-              autoComplete="cc-name"
-              disabled={loading}
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="cardholder-name">Cardholder (Optional)</label>
+              <input
+                id="cardholder-name"
+                type="text"
+                placeholder="e.g. ELCHIN"
+                value={cardholderName}
+                onChange={handleCardholderChange}
+                onBlur={() => handleBlur('cardholderName')}
+                className="form-input"
+                autoComplete="cc-name"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="card-label">Card Label (Optional)</label>
+              <input
+                id="card-label"
+                type="text"
+                placeholder="e.g. Salary Card"
+                value={cardName}
+                onChange={(e) => setCardName(e.target.value)}
+                className="form-input"
+                disabled={loading}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="card-label">Card Label (Optional)</label>
-            <input
-              id="card-label"
-              type="text"
-              placeholder="e.g. Salary Card, Everyday"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              className="form-input"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="checkbox-row">
+          <div className="checkboxes-row">
             <label className="custom-checkbox-label">
               <input
                 type="checkbox"
@@ -337,12 +340,10 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
                 disabled={loading}
               />
               <span className="checkbox-box" />
-              <span className="checkbox-text">Set as default payment method</span>
+              <span className="checkbox-text">Set as default</span>
             </label>
-          </div>
 
-          <div className="checkbox-row terms-row">
-            <label className="custom-checkbox-label">
+            <label className="custom-checkbox-label terms-label">
               <input
                 type="checkbox"
                 checked={agreedToRules}
@@ -356,16 +357,16 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
               />
               <span className="checkbox-box" />
               <span className="checkbox-text">
-                I have read and agree to the{' '}
+                Agree to{' '}
                 <Link to="/rules" target="_blank" rel="noopener noreferrer" className="terms-link">
-                  Payment Rules & Security Terms
+                  Payment Rules
                 </Link>
               </span>
             </label>
-            {touched.agreedToRules && errors.agreedToRules && (
-              <span className="error-text">{errors.agreedToRules}</span>
-            )}
           </div>
+          {touched.agreedToRules && errors.agreedToRules && (
+            <span className="error-text" style={{ marginTop: '-4px', display: 'block' }}>{errors.agreedToRules}</span>
+          )}
 
           <div className="add-card-modal__actions">
             <button
