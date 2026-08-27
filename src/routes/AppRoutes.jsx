@@ -12,6 +12,7 @@ const Sessions = lazy(() => import('../components/UserPages/Sessions/Sessions'))
 const Order = lazy(() => import('../components/UserPages/Order/Order'));
 const Orders = lazy(() => import('../components/UserPages/Orders/Orders'));
 const Addresses = lazy(() => import('../components/UserPages/Addresses/Addresses'));
+const PaymentMethods = lazy(() => import('../components/UserPages/PaymentMethods/PaymentMethods'));
 const Basket = lazy(() => import('../components/PublicPages/Basket/Basket'));
 const AdminLogin = lazy(() => import('../components/AdminPages/AdminLogin/AdminLogin'));
 const Dashboard = lazy(() => import('../components/AdminPages/Dashboard/Dashboard'));
@@ -56,6 +57,11 @@ const AnimatedRoutes = () => {
           <Route path="/adresses" element={
             <ProtectedRoute>
               <Addresses />
+            </ProtectedRoute>
+          } />
+          <Route path="/payment-methods" element={
+            <ProtectedRoute>
+              <PaymentMethods />
             </ProtectedRoute>
           } />
           <Route path="/promos" element={

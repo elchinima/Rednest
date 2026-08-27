@@ -30,6 +30,20 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -227,9 +241,11 @@ const Home = () => {
               Step into our cozy atmosphere and let us awaken your senses.
             </p>
           </div>
-          <div className="about-visual">
-            <img src={aboutImage} alt="The Rednest Experience" className="about-image" />
-          </div>
+          {isDesktop && (
+            <div className="about-visual">
+              <img src={aboutImage} alt="The Rednest Experience" className="about-image" loading="lazy" />
+            </div>
+          )}
         </div>
       </motion.section>
 

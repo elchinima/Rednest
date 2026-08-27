@@ -397,7 +397,7 @@ const Profile = () => {
                 <button
                   type="button"
                   className="cta-btn sm profile-action-btn"
-                  onClick={() => setIsPaymentsModalOpen(true)}
+                  onClick={() => navigate('/payment-methods')}
                 >
                   Payment Methods
                 </button>

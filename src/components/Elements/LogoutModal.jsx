@@ -3,7 +3,15 @@ import AnimatedModalWrapper from './AnimatedModalWrapper';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 import './RednestModal.scss';
 
-const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
+const LogoutModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading,
+  title = 'Log Out',
+  text = 'Are you sure you want to log out of your account?',
+  confirmText = 'Log Out',
+}) => {
   return (
     <AnimatedModalWrapper
       isOpen={isOpen}
@@ -19,9 +27,9 @@ const LogoutModal = ({ isOpen, onClose, onConfirm, loading }) => {
           </svg>
         </div>
 
-        <h3 className="rednest-modal__title">Log Out</h3>
+        <h3 className="rednest-modal__title">{title}</h3>
         <p className="rednest-modal__text">
-          Are you sure you want to log out of your account?
+          {text}
         </p>
 
         <div className="rednest-modal__actions">

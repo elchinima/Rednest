@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../../assets/icons/rednest_logo.png';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
+import LogoutModal from '../../Elements/LogoutModal';
 import './AdminLayout.scss';
 
 const NAV_ITEMS = [
@@ -36,6 +37,8 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Close sidebar on route change
   useEffect(() => {
@@ -55,8 +58,16 @@ const AdminLayout = ({ children }) => {
   }, [sidebarOpen]);
 
   const handleLogout = async () => {
-    await adminLogout();
-    navigate('/admin', { replace: true });
+    setIsLoggingOut(true);
+    try {
+      await adminLogout();
+      setIsLogoutModalOpen(false);
+      navigate('/admin', { replace: true });
+    } catch (err) {
+      console.error('Admin logout failed:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -83,7 +94,7 @@ const AdminLayout = ({ children }) => {
 
         <button
           className="admin-mobile-header__logout"
-          onClick={handleLogout}
+          onClick={() => setIsLogoutModalOpen(true)}
           aria-label="Sign out"
           title="Sign Out"
         >
@@ -162,7 +173,7 @@ const AdminLayout = ({ children }) => {
         <button
           id="admin-logout-btn"
           className="admin-sidebar__logout"
-          onClick={handleLogout}
+          onClick={() => setIsLogoutModalOpen(true)}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -176,6 +187,16 @@ const AdminLayout = ({ children }) => {
       <main className="admin-content">
         {children}
       </main>
+
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        loading={isLoggingOut}
+        title="Sign Out"
+        text="Are you sure you want to sign out of the Admin Panel?"
+        confirmText="Sign Out"
+      />
     </div>
   );
 };
