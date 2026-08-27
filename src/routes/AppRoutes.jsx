@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
@@ -31,7 +31,38 @@ import { BasketProvider } from '../context/BasketContext';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
+
+  useEffect(() => {
+    const cleanStripe = () => {
+      const selectors = [
+        'iframe[src*="link.stripe.com"]',
+        'iframe[src*="stripe.com"]',
+        'iframe[name*="__privateStripe"]',
+        '[class*="LinkFloating"]',
+        '[class*="link-floating"]',
+        '[data-testid*="link-floating"]',
+        '[class*="stripe-floating"]',
+        '[class*="FloatingButton"]',
+        '[class*="floating-button"]',
+      ];
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          try {
+            el.remove();
+          } catch {}
+        });
+      });
+    };
+
+    cleanStripe();
+    const timer1 = setTimeout(cleanStripe, 100);
+    const timer2 = setTimeout(cleanStripe, 500);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [location.pathname]);
+
   return (
     <Suspense fallback={null}>
       <AnimatePresence mode="wait">

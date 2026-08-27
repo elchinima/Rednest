@@ -1,100 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js/pure';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
-import featureStripeIcon from '../../../assets/icons/feature-stripe.svg';
+import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import PaymentErrorModal from '../PaymentMethods/PaymentErrorModal';
 import './StripePaymentModal.scss';
 
-let stripePromiseCache = null;
-const getStripePromise = (publishableKey) => {
-  if (!stripePromiseCache && publishableKey) {
-    stripePromiseCache = loadStripe(publishableKey);
+const checkLuhn = (numStr) => {
+  let sum = 0;
+  let alternate = false;
+  for (let i = numStr.length - 1; i >= 0; i--) {
+    let n = parseInt(numStr.charAt(i), 10);
+    if (isNaN(n)) return false;
+    if (alternate) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    alternate = !alternate;
   }
-  return stripePromiseCache;
+  return sum % 10 === 0;
 };
 
-const StripeCheckoutForm = ({ totalAmount, onSuccess, onCancel }) => {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    setErrorMessage('');
-
-    try {
-      const result = await stripe.confirmPayment({
-        elements,
-        redirect: 'if_required',
-      });
-
-      if (result.error) {
-        setErrorMessage(result.error.message || 'Payment could not be processed. Please check your card details.');
-        setIsProcessing(false);
-      } else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-        await onSuccess(result.paymentIntent.id);
-      } else {
-        setErrorMessage('Payment could not be confirmed.');
-        setIsProcessing(false);
-      }
-    } catch (err) {
-      console.error('Stripe submit error:', err);
-      setErrorMessage('An unexpected error occurred during payment processing.');
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="stripe-checkout-form">
-      <div className="stripe-elements-container">
-        <PaymentElement
-          options={{
-            layout: 'tabs',
-            wallets: {
-              link: 'never',
-            },
-          }}
-        />
-      </div>
-
-      {errorMessage && (
-        <div className="stripe-error-message">
-          ⚠️ {errorMessage}
-        </div>
-      )}
-
-      <div className="stripe-checkout-actions">
-        <button
-          type="button"
-          className="cta-btn sm stripe-modal-btn stripe-modal-btn--cancel"
-          onClick={onCancel}
-          disabled={isProcessing}
-        >
-          Back
-        </button>
-        <button
-          type="submit"
-          className="cta-btn sm stripe-modal-btn stripe-modal-btn--submit"
-          disabled={!stripe || !elements || isProcessing}
-        >
-          {isProcessing ? (
-            <span className="stripe-btn-loading">
-              <img src={loaderIcon} alt="Loading" className="stripe-spinner" />
-              Processing Payment...
-            </span>
-          ) : (
-            `Pay ${totalAmount} ₼`
-          )}
-        </button>
-      </div>
-    </form>
-  );
+const getCardBrand = (digits) => {
+  if (!digits) return null;
+  if (digits.startsWith('4')) return 'Visa';
+  if (digits.length >= 2) {
+    const firstTwo = parseInt(digits.slice(0, 2), 10);
+    if (firstTwo >= 51 && firstTwo <= 55) return 'Mastercard';
+  }
+  if (digits.length >= 4) {
+    const firstFour = parseInt(digits.slice(0, 4), 10);
+    if (firstFour >= 2221 && firstFour <= 2720) return 'Mastercard';
+  }
+  return null;
 };
 
 const StripePaymentModal = ({
@@ -104,99 +44,166 @@ const StripePaymentModal = ({
   finalAmount,
   onOrderSuccess,
 }) => {
-  const [clientSecret, setClientSecret] = useState('');
-  const [publishableKey, setPublishableKey] = useState('');
-  const [stripePromise, setStripePromise] = useState(null);
-  const [loadingIntent, setLoadingIntent] = useState(false);
-  const [intentError, setIntentError] = useState('');
+  const [savedCards, setSavedCards] = useState([]);
+  const [loadingCards, setLoadingCards] = useState(true);
+  const [viewMode, setViewMode] = useState('select');
+  const [selectedCardId, setSelectedCardId] = useState(null);
+
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvc, setCvc] = useState('');
+  const [cardholderName, setCardholderName] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [saveCard, setSaveCard] = useState(true);
+  const [agreedToRules, setAgreedToRules] = useState(false);
+
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
+  const fetchCards = async () => {
+    setLoadingCards(true);
+    try {
+      let res = await fetchWithRefresh(`${apiUrl}/api/payment-methods`);
+      if (!res.ok && res.status === 404) {
+        res = await fetchWithRefresh(`${apiUrl}/api/paymentmethods`);
+      }
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        setSavedCards(list);
+        if (list.length > 0) {
+          const def = list.find((c) => c.isDefault || c.IsDefault) || list[0];
+          setSelectedCardId(def.id || def.Id);
+          setViewMode('select');
+        } else {
+          setViewMode('new');
+        }
+      } else {
+        setViewMode('new');
+      }
+    } catch {
+      setViewMode('new');
+    } finally {
+      setLoadingCards(false);
+    }
+  };
+
   useEffect(() => {
-    if (!isOpen) {
-      setClientSecret('');
-      setIntentError('');
-      return;
+    if (isOpen) {
+      setCardNumber('');
+      setExpiryDate('');
+      setCvc('');
+      setCardholderName('');
+      setCardName('');
+      setSaveCard(true);
+      setAgreedToRules(false);
+      setErrors({});
+      setTouched({});
+      setErrorMessage('');
+      setIsProcessing(false);
+      fetchCards();
+    }
+  }, [isOpen]);
+
+  const cleanDigits = useMemo(() => cardNumber.replace(/\D/g, ''), [cardNumber]);
+  const brand = useMemo(() => getCardBrand(cleanDigits), [cleanDigits]);
+
+  const handleCardNumberChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+    const parts = raw.match(/[\s\S]{1,4}/g) || [];
+    setCardNumber(parts.join(' '));
+  };
+
+  const handleExpiryChange = (e) => {
+    let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+    if (raw.length >= 3) {
+      raw = `${raw.slice(0, 2)}/${raw.slice(2)}`;
+    }
+    setExpiryDate(raw);
+  };
+
+  const handleCvcChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 3);
+    setCvc(raw);
+  };
+
+  const handleCardholderChange = (e) => {
+    const val = e.target.value.toUpperCase();
+    setCardholderName(val);
+  };
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const validateNewCardForm = () => {
+    const newErrors = {};
+
+    if (!cleanDigits) {
+      newErrors.cardNumber = 'Card number is required.';
+    } else if (cleanDigits.length < 16) {
+      newErrors.cardNumber = 'Card number must be 16 digits.';
+    } else if (!brand) {
+      newErrors.cardNumber = 'Only Visa and Mastercard cards are supported.';
+    } else if (!checkLuhn(cleanDigits)) {
+      newErrors.cardNumber = 'Invalid card number checksum.';
     }
 
-    let isMounted = true;
+    if (!expiryDate) {
+      newErrors.expiryDate = 'Expiry date is required.';
+    } else if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+      newErrors.expiryDate = 'Format must be MM/YY.';
+    } else {
+      const [mStr, yStr] = expiryDate.split('/');
+      const month = parseInt(mStr, 10);
+      const year = parseInt(yStr, 10) + 2000;
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1;
 
-    const initStripe = async () => {
-      setLoadingIntent(true);
-      setIntentError('');
-
-      try {
-        let pk = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
-        if (!pk) {
-          try {
-            const configRes = await fetch(`${apiUrl}/api/orders/stripe/config`);
-            if (configRes.ok) {
-              const configData = await configRes.json();
-              pk = configData.publishableKey || '';
-            }
-          } catch (e) {
-            console.error('Failed to fetch stripe config:', e);
-          }
-        }
-
-        if (!pk) {
-          if (isMounted) {
-            setIntentError('Stripe publishable key is missing. Please check your environment configuration.');
-            setLoadingIntent(false);
-          }
-          return;
-        }
-
-        if (isMounted) {
-          setPublishableKey(pk);
-          setStripePromise(getStripePromise(pk));
-        }
-
-        const res = await fetchWithRefresh(`${apiUrl}/api/orders/stripe/create-intent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentMethod: serviceId || 'OnlineStripe' }),
-        });
-
-        const data = await res.json();
-        if (!isMounted) return;
-
-        if (res.ok && data.clientSecret) {
-          setClientSecret(data.clientSecret);
-        } else {
-          setIntentError(data.message || 'Failed to initialize Stripe payment.');
-        }
-      } catch (err) {
-        console.error('Stripe init error:', err);
-        if (isMounted) {
-          setIntentError('Error connecting to payment service. Please try again.');
-        }
-      } finally {
-        if (isMounted) {
-          setLoadingIntent(false);
-        }
+      if (month < 1 || month > 12) {
+        newErrors.expiryDate = 'Month must be 01–12.';
+      } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+        newErrors.expiryDate = 'Card has expired.';
       }
-    };
+    }
 
-    initStripe();
+    if (!cvc) {
+      newErrors.cvc = 'CVC is required.';
+    } else if (cvc.length !== 3) {
+      newErrors.cvc = 'Must be 3 digits.';
+    }
 
-    return () => {
-      isMounted = false;
-      const floatingElements = document.querySelectorAll(
-        'iframe[src*="link.stripe.com"], [class*="LinkFloating"], [data-testid*="link-floating"], [class*="stripe-floating"]'
-      );
-      floatingElements.forEach(el => el.remove());
-    };
-  }, [isOpen, serviceId, apiUrl]);
+    if (cardholderName && cardholderName.trim().length < 3) {
+      newErrors.cardholderName = 'Please enter a valid cardholder name.';
+    }
 
-  const handleStripeSuccess = async (paymentIntentId) => {
+    if (!agreedToRules) {
+      newErrors.agreedToRules = 'You must agree to the payment rules.';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePayWithSavedCard = async (e) => {
+    e.preventDefault();
+    if (!selectedCardId || isProcessing) return;
+
+    setIsProcessing(true);
+    setErrorMessage('');
+
     try {
-      const res = await fetchWithRefresh(`${apiUrl}/api/orders/stripe/confirm`, {
+      const res = await fetchWithRefresh(`${apiUrl}/api/orders/cashier`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentIntentId,
-          paymentMethod: serviceId || 'OnlineStripe',
+          paymentMethod: 'OnlineCardDetails',
         }),
       });
 
@@ -204,105 +211,399 @@ const StripePaymentModal = ({
       if (res.ok && data.success) {
         onOrderSuccess(data);
       } else {
-        setIntentError(data.message || 'Payment succeeded, but order creation failed. Please contact support.');
+        const msg = data.message || 'Payment failed. Please try again.';
+        setErrorMessage(msg);
+        setIsErrorModalOpen(true);
       }
     } catch (err) {
-      console.error('Stripe confirm error:', err);
-      setIntentError('Error confirming order with server.');
+      const msg = err.message || 'Payment processing error.';
+      setErrorMessage(msg);
+      setIsErrorModalOpen(true);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const appearance = {
-    theme: 'night',
-    variables: {
-      colorPrimary: '#ef4444',
-      colorBackground: '#1a0b0b',
-      colorText: '#ffffff',
-      colorDanger: '#f87171',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      borderRadius: '12px',
-      spacingUnit: '4px',
-    },
-    rules: {
-      '.Input': {
-        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        color: '#ffffff',
-        boxShadow: 'none',
-      },
-      '.Input:focus': {
-        borderColor: '#ef4444',
-        boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.25)',
-      },
-      '.Label': {
-        color: 'rgba(255, 255, 255, 0.8)',
-        fontWeight: '500',
-        fontSize: '0.85rem',
-      },
-      '.Tab': {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        color: '#ffffff',
-      },
-      '.Tab--selected': {
-        backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        borderColor: '#ef4444',
-      },
-    },
+  const handlePayWithNewCard = async (e) => {
+    e.preventDefault();
+    setTouched({
+      cardNumber: true,
+      expiryDate: true,
+      cvc: true,
+      cardholderName: true,
+      agreedToRules: true,
+    });
+
+    if (!validateNewCardForm() || isProcessing) return;
+
+    setIsProcessing(true);
+    setErrorMessage('');
+
+    try {
+      if (saveCard) {
+        if (savedCards.length >= 3) {
+          setErrorMessage('You can only save up to 3 payment cards. Please uncheck "Save card" or delete an existing card.');
+          setIsErrorModalOpen(true);
+          setIsProcessing(false);
+          return;
+        }
+
+        try {
+          const saveRes = await fetchWithRefresh(`${apiUrl}/api/payment-methods`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cardNumber: cleanDigits,
+              expiryDate: expiryDate.trim(),
+              cvc: cvc.trim(),
+              cardholderName: cardholderName.trim(),
+              cardName: cardName.trim() || undefined,
+              isDefault: savedCards.length === 0,
+            }),
+          });
+
+          if (!saveRes.ok) {
+            const errData = await saveRes.json().catch(() => ({}));
+            if (errData.message) {
+              setErrorMessage(errData.message);
+              setIsErrorModalOpen(true);
+              setIsProcessing(false);
+              return;
+            }
+          }
+        } catch (saveErr) {
+          console.error('Failed to save card:', saveErr);
+        }
+      }
+
+      const orderRes = await fetchWithRefresh(`${apiUrl}/api/orders/cashier`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentMethod: 'OnlineCardDetails',
+        }),
+      });
+
+      const orderData = await orderRes.json();
+      if (orderRes.ok && orderData.success) {
+        onOrderSuccess(orderData);
+      } else {
+        const msg = orderData.message || 'Payment failed. Please check your card information.';
+        setErrorMessage(msg);
+        setIsErrorModalOpen(true);
+      }
+    } catch (err) {
+      const msg = err.message || 'An error occurred during payment processing.';
+      setErrorMessage(msg);
+      setIsErrorModalOpen(true);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
+  const isNewCardValid = cleanDigits.length === 16 && brand && expiryDate.length === 5 && cvc.length === 3 && agreedToRules;
+
   return (
-    <AnimatedModalWrapper isOpen={isOpen} onClose={onClose} targetBorderRadius="24px">
-      <div className="stripe-modal" onClick={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          className="stripe-modal__close"
-          onClick={onClose}
-          aria-label="Close modal"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+    <>
+      <AnimatedModalWrapper isOpen={isOpen} onClose={onClose} targetBorderRadius="24px">
+        <div className="stripe-modal" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            className="stripe-modal__close"
+            onClick={onClose}
+            disabled={isProcessing}
+            aria-label="Close modal"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
 
-        <div className="stripe-modal__header">
-          <div className="stripe-modal__icon">
-            <img src={featureStripeIcon} alt="Stripe" />
+          <div className="stripe-modal__header">
+            <div className="stripe-modal__icon">
+              <img src={featureCardVisaMcIcon} alt="Card Payment" />
+            </div>
+            <h3 className="stripe-modal__title">Card & Online Payment</h3>
+            <p className="stripe-modal__desc">
+              Amount to pay: <span className="stripe-modal__amount">{finalAmount} ₼</span>
+            </p>
           </div>
-          <h3 className="stripe-modal__title">Card & Online Payment</h3>
-          <p className="stripe-modal__desc">
-            Amount to pay: <span className="stripe-modal__amount">{finalAmount} ₼</span>
-          </p>
+
+          {loadingCards ? (
+            <div className="stripe-modal__loading">
+              <img src={loaderIcon} alt="Loading" className="stripe-spinner-lg" />
+              <p>Loading payment options...</p>
+            </div>
+          ) : viewMode === 'select' && savedCards.length > 0 ? (
+            <form onSubmit={handlePayWithSavedCard} className="saved-cards-form">
+              <div className="saved-cards-header-row">
+                <span className="saved-cards-header-title">Select Saved Card</span>
+                <button
+                  type="button"
+                  className="add-new-card-link-btn"
+                  onClick={() => setViewMode('new')}
+                  disabled={isProcessing}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  <span>Use New Card</span>
+                </button>
+              </div>
+
+              <div className="saved-cards-list">
+                {savedCards.map((card) => {
+                  const id = card.id || card.Id;
+                  const isSelected = selectedCardId === id;
+                  const isDef = card.isDefault || card.IsDefault;
+                  const cardBrand = (card.cardBrand || card.CardBrand || 'Card').toLowerCase();
+                  const last4 = id ? String(id).padStart(4, '0') : '••••';
+                  const title = card.cardName || card.CardName || (cardBrand === 'visa' ? 'Visa Card' : cardBrand === 'mastercard' ? 'Mastercard' : 'Bank Card');
+                  const expiry = card.expiryDate || card.ExpiryDate || 'MM/YY';
+
+                  return (
+                    <div
+                      key={id}
+                      className={`saved-card-item ${isSelected ? 'selected' : ''}`}
+                      onClick={() => setSelectedCardId(id)}
+                    >
+                      <div className="saved-card-item__radio">
+                        <span className={`saved-card-radio-circle ${isSelected ? 'active' : ''}`}>
+                          {isSelected && <span className="saved-card-radio-dot" />}
+                        </span>
+                      </div>
+
+                      <div className={`saved-card-item__icon-badge saved-card-item__icon-badge--${cardBrand}`}>
+                        {cardBrand === 'visa' ? 'VISA' : cardBrand === 'mastercard' ? 'MC' : 'CARD'}
+                      </div>
+
+                      <div className="saved-card-item__info">
+                        <div className="saved-card-item__title-row">
+                          <span className="saved-card-item__title">{title}</span>
+                          {isDef && <span className="saved-card-item__badge-default">DEFAULT</span>}
+                        </div>
+                        <div className="saved-card-item__sub-row">
+                          <span className="saved-card-item__number">•••• {last4}</span>
+                          <span className="saved-card-item__expiry">{expiry}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="stripe-checkout-actions">
+                <button
+                  type="button"
+                  className="cta-btn sm stripe-modal-btn stripe-modal-btn--cancel"
+                  onClick={onClose}
+                  disabled={isProcessing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="cta-btn sm stripe-modal-btn stripe-modal-btn--submit"
+                  disabled={!selectedCardId || isProcessing}
+                >
+                  {isProcessing ? (
+                    <span className="stripe-btn-loading">
+                      <img src={loaderIcon} alt="Loading" className="stripe-spinner" />
+                      Processing...
+                    </span>
+                  ) : (
+                    `Pay ${finalAmount} ₼`
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handlePayWithNewCard} className="new-card-form" noValidate>
+              {savedCards.length > 0 && (
+                <button
+                  type="button"
+                  className="back-to-saved-link"
+                  onClick={() => setViewMode('select')}
+                  disabled={isProcessing}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  <span>Choose from saved cards</span>
+                </button>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="checkout-card-number">Card Number</label>
+                <div className="input-with-brand">
+                  <input
+                    id="checkout-card-number"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="4123 4567 8901 2345"
+                    value={cardNumber}
+                    onChange={handleCardNumberChange}
+                    onBlur={() => handleBlur('cardNumber')}
+                    className={`form-input ${touched.cardNumber && errors.cardNumber ? 'error' : ''}`}
+                    autoComplete="cc-number"
+                    disabled={isProcessing}
+                  />
+                  <div className="brand-indicator">
+                    {brand === 'Visa' && <span className="badge-visa">VISA</span>}
+                    {brand === 'Mastercard' && <span className="badge-mc">MC</span>}
+                  </div>
+                </div>
+                {touched.cardNumber && errors.cardNumber && (
+                  <span className="error-text">{errors.cardNumber}</span>
+                )}
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="checkout-card-expiry">Expiry Date</label>
+                  <input
+                    id="checkout-card-expiry"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="MM/YY"
+                    value={expiryDate}
+                    onChange={handleExpiryChange}
+                    onBlur={() => handleBlur('expiryDate')}
+                    className={`form-input ${touched.expiryDate && errors.expiryDate ? 'error' : ''}`}
+                    autoComplete="cc-exp"
+                    disabled={isProcessing}
+                  />
+                  {touched.expiryDate && errors.expiryDate && (
+                    <span className="error-text">{errors.expiryDate}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="checkout-card-cvc">CVC / CVV</label>
+                  <input
+                    id="checkout-card-cvc"
+                    type="password"
+                    inputMode="numeric"
+                    placeholder="•••"
+                    value={cvc}
+                    onChange={handleCvcChange}
+                    onBlur={() => handleBlur('cvc')}
+                    className={`form-input ${touched.cvc && errors.cvc ? 'error' : ''}`}
+                    autoComplete="cc-csc"
+                    disabled={isProcessing}
+                  />
+                  {touched.cvc && errors.cvc && (
+                    <span className="error-text">{errors.cvc}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="checkout-cardholder-name">Cardholder (Optional)</label>
+                  <input
+                    id="checkout-cardholder-name"
+                    type="text"
+                    placeholder="e.g. ELCHIN"
+                    value={cardholderName}
+                    onChange={handleCardholderChange}
+                    onBlur={() => handleBlur('cardholderName')}
+                    className="form-input"
+                    autoComplete="cc-name"
+                    disabled={isProcessing}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="checkout-card-label">Card Label (Optional)</label>
+                  <input
+                    id="checkout-card-label"
+                    type="text"
+                    placeholder="e.g. Salary Card"
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                    className="form-input"
+                    disabled={isProcessing}
+                  />
+                </div>
+              </div>
+
+              <div className="checkboxes-row">
+                <label className="custom-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={saveCard}
+                    onChange={(e) => setSaveCard(e.target.checked)}
+                    disabled={isProcessing}
+                  />
+                  <span className="checkbox-box" />
+                  <span className="checkbox-text">Save card for future payments</span>
+                </label>
+
+                <label className="custom-checkbox-label terms-label">
+                  <input
+                    type="checkbox"
+                    checked={agreedToRules}
+                    onChange={(e) => {
+                      setAgreedToRules(e.target.checked);
+                      if (e.target.checked) {
+                        setErrors((prev) => ({ ...prev, agreedToRules: null }));
+                      }
+                    }}
+                    disabled={isProcessing}
+                  />
+                  <span className="checkbox-box" />
+                  <span className="checkbox-text">
+                    Agree to{' '}
+                    <Link to="/rules" target="_blank" rel="noopener noreferrer" className="terms-link">
+                      Payment Rules
+                    </Link>
+                  </span>
+                </label>
+              </div>
+              {touched.agreedToRules && errors.agreedToRules && (
+                <span className="error-text" style={{ marginTop: '-4px', display: 'block' }}>{errors.agreedToRules}</span>
+              )}
+
+              <div className="stripe-checkout-actions">
+                <button
+                  type="button"
+                  className="cta-btn sm stripe-modal-btn stripe-modal-btn--cancel"
+                  onClick={onClose}
+                  disabled={isProcessing}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="cta-btn sm stripe-modal-btn stripe-modal-btn--submit"
+                  disabled={!isNewCardValid || isProcessing}
+                >
+                  {isProcessing ? (
+                    <span className="stripe-btn-loading">
+                      <img src={loaderIcon} alt="Loading" className="stripe-spinner" />
+                      Processing...
+                    </span>
+                  ) : (
+                    `Pay ${finalAmount} ₼`
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
+      </AnimatedModalWrapper>
 
-        {loadingIntent && (
-          <div className="stripe-modal__loading">
-            <img src={loaderIcon} alt="Loading" className="stripe-spinner-lg" />
-            <p>Initializing secure payment...</p>
-          </div>
-        )}
-
-        {intentError && (
-          <div className="stripe-modal__error">
-            <p>⚠️ {intentError}</p>
-            <button type="button" className="cta-btn sm stripe-modal-btn" onClick={onClose}>
-              Close
-            </button>
-          </div>
-        )}
-
-        {!loadingIntent && !intentError && clientSecret && stripePromise && (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-            <StripeCheckoutForm
-              totalAmount={finalAmount}
-              onSuccess={handleStripeSuccess}
-              onCancel={onClose}
-            />
-          </Elements>
-        )}
-      </div>
-    </AnimatedModalWrapper>
+      <PaymentErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={errorMessage}
+        title="Payment Error"
+      />
+    </>
   );
 };
 

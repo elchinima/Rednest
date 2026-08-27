@@ -40,7 +40,7 @@ const modalStyles = `
 }
 `;
 
-const AnimatedModalWrapper = ({ isOpen, onClose, children, targetBorderRadius = "24px" }) => {
+const AnimatedModalWrapper = ({ isOpen, onClose, children, targetBorderRadius = "24px", zIndex = 99999 }) => {
   const [openPos, setOpenPos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const [closePos, setClosePos] = useState(null);
 
@@ -146,7 +146,7 @@ const AnimatedModalWrapper = ({ isOpen, onClose, children, targetBorderRadius = 
       <style>{modalStyles}</style>
       <AnimatePresence>
         {isOpen && (
-          <div key="modal-wrapper" className="animated-modal-wrapper" onMouseDown={(e) => {
+          <div key="modal-wrapper" className="animated-modal-wrapper" style={{ zIndex }} onMouseDown={(e) => {
             if (e.target === e.currentTarget) {
               onClose();
             }

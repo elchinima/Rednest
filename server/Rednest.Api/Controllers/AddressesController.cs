@@ -90,6 +90,11 @@ public class AddressesController : ControllerBase
 
         user.Addresses ??= new List<UserAddress>();
 
+        if (user.Addresses.Count >= 3)
+        {
+            return BadRequest(new { message = "You can only save up to 3 delivery addresses. Please delete an existing address to add a new one." });
+        }
+
         var nextId = user.Addresses.Count > 0 ? user.Addresses.Max(a => a.Id) + 1 : 1;
         var isFirst = user.Addresses.Count == 0;
         var shouldBeDefault = request.IsDefault || isFirst;

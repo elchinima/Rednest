@@ -57,10 +57,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 iframe[src*="link.stripe.com"],
+iframe[src*="stripe.com"],
+iframe[name*="__privateStripe"],
 div[class*="LinkFloating"],
+div[class*="link-floating"],
 div[data-testid*="link-floating"],
-div[class*="stripe-floating"] {
+div[class*="stripe-floating"],
+div[class*="FloatingButton"],
+div[class*="floating-button"],
+div[id*="link-floating"],
+div:has(> iframe[src*="stripe.com"]),
+div:has(> iframe[src*="link.stripe.com"]) {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  left: -99999px !important;
+  top: -99999px !important;
+  z-index: -99999 !important;
 }

@@ -8,6 +8,7 @@ import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddressModal from './AddressModal';
+import PaymentErrorModal from '../PaymentMethods/PaymentErrorModal';
 import './Addresses.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -56,6 +57,9 @@ const Addresses = () => {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
+
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
@@ -140,7 +144,8 @@ const Addresses = () => {
       setIsAddressModalOpen(false);
       setAddressToEdit(null);
     } catch (err) {
-      showToast(err.message || 'Error saving address.', 'error');
+      setErrorModalMessage(err.message || 'Error saving address.');
+      setIsErrorModalOpen(true);
     } finally {
       setModalLoading(false);
     }
@@ -234,8 +239,13 @@ const Addresses = () => {
                 type="button"
                 className="cta-btn primary-red addresses-hero__add-btn"
                 onClick={() => {
-                  setAddressToEdit(null);
-                  setIsAddressModalOpen(true);
+                  if (addresses.length >= 3) {
+                    setErrorModalMessage('You can only save up to 3 delivery addresses. Please delete an existing address to add a new one.');
+                    setIsErrorModalOpen(true);
+                  } else {
+                    setAddressToEdit(null);
+                    setIsAddressModalOpen(true);
+                  }
                 }}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -438,6 +448,13 @@ const Addresses = () => {
         onConfirm={handleConfirmDelete}
         itemName={addressToDelete ? (addressToDelete.title ? `"${addressToDelete.title}" (${addressToDelete.address})` : `"${addressToDelete.address}"`) : 'this address'}
         loading={deleteLoading}
+      />
+
+      <PaymentErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={errorModalMessage}
+        title="Address Limit"
       />
 
       <div className="addresses-toast-container">

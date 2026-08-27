@@ -6,7 +6,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: $border-radius-lg;
   padding: $spacing-xl;
-  max-width: 520px;
+  max-width: 500px;
   width: 100%;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04),
@@ -39,7 +39,7 @@
       height: 16px;
     }
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.15);
       transform: scale(1.06);
@@ -55,8 +55,8 @@
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.35);
+    background: rgba($color-primary, 0.15);
+    border: 1px solid rgba($color-primary, 0.35);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -82,10 +82,6 @@
     color: $color-text-muted;
     line-height: 1.45;
     margin: 0 auto;
-
-    @media (max-width: 768px) {
-      font-size: 0.62rem;
-    }
   }
 
   &__amount {
@@ -111,20 +107,6 @@
     }
   }
 
-  &__error {
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: $border-radius-md;
-    padding: 16px;
-    text-align: center;
-    color: #fca5a5;
-    font-size: 0.9rem;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-  }
-
   @media (max-width: 480px) {
     padding: $spacing-lg $spacing-md;
     gap: 14px;
@@ -132,45 +114,413 @@
     &__title {
       font-size: 1.2rem;
     }
-
-    &__desc {
-      font-size: 0.62rem;
-    }
   }
 }
 
-.stripe-checkout-form {
+.saved-cards-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.stripe-elements-container {
-  min-height: 180px;
-  padding: 4px 0;
+.saved-cards-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  .saved-cards-header-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .add-new-card-link-btn {
+    background: rgba($color-primary, 0.12);
+    border: 1px solid rgba($color-primary, 0.3);
+    color: $color-primary-hover;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover:not(:disabled) {
+      background: $color-primary;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+  }
 }
 
-.stripe-error-message {
-  padding: 10px 14px;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: $border-radius-md;
-  color: #fca5a5;
+.saved-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 2px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+}
+
+.saved-card-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  &.selected {
+    background: rgba($color-primary, 0.1);
+    border-color: rgba($color-primary, 0.45);
+    box-shadow: 0 0 16px rgba($color-primary, 0.15);
+  }
+
+  &__radio {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    .saved-card-radio-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &.active {
+        border-color: $color-primary;
+
+        .saved-card-radio-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: $color-primary;
+        }
+      }
+    }
+  }
+
+  &__icon-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+
+    &--visa {
+      background: rgba(66, 153, 225, 0.15);
+      border: 1px solid rgba(66, 153, 225, 0.35);
+      color: #4299e1;
+      font-style: italic;
+    }
+
+    &--mastercard {
+      background: rgba(245, 101, 101, 0.15);
+      border: 1px solid rgba(245, 101, 101, 0.35);
+      color: #f56565;
+    }
+
+    &--card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ffffff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge-default {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 2px 6px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  &__sub-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__number {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+  }
+
+  &__expiry {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+.back-to-saved-link {
+  background: none;
+  border: none;
+  color: $color-primary-hover;
   font-size: 0.84rem;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin-bottom: 2px;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:hover {
+    color: #ffffff;
+    transform: translateX(-2px);
+  }
+}
+
+.new-card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .input-with-brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    input {
+      padding-right: 60px;
+    }
+
+    .brand-indicator {
+      position: absolute;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      pointer-events: none;
+
+      .badge-visa {
+        font-size: 0.78rem;
+        font-weight: 900;
+        font-style: italic;
+        color: #4299e1;
+        letter-spacing: 0.5px;
+      }
+
+      .badge-mc {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #f79e1b;
+      }
+    }
+  }
+
+  .form-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: $border-radius-md;
+    color: #ffffff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    &:focus {
+      border-color: $color-primary;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba($color-primary, 0.2);
+    }
+
+    &.error {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .error-text {
+    font-size: 0.78rem;
+    color: #ff6b6b;
+    margin-top: 2px;
+  }
+
+  .checkboxes-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .custom-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.8);
+    user-select: none;
+    line-height: 1.2;
+
+    input[type='checkbox'] {
+      display: none;
+
+      &:checked + .checkbox-box {
+        background: $color-primary;
+        border-color: $color-primary;
+
+        &::after {
+          opacity: 1;
+          transform: rotate(45deg) scale(1);
+        }
+      }
+    }
+
+    .checkbox-box {
+      width: 17px;
+      height: 17px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        width: 4px;
+        height: 8px;
+        border: solid #ffffff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg) scale(0.5);
+        opacity: 0;
+        transition: all 0.15s ease;
+        margin-bottom: 2px;
+      }
+    }
+
+    .terms-link {
+      color: $color-primary-hover;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #ffffff;
+      }
+    }
+  }
 }
 
 .stripe-checkout-actions {
   display: flex;
   gap: 12px;
   width: 100%;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .stripe-modal-btn {
   flex: 1;
-  padding: 13px 18px;
-  font-size: 0.96rem;
+  padding: 12px 18px;
+  font-size: 0.95rem;
   font-weight: 700;
   border-radius: $border-radius-md;
   display: inline-flex;

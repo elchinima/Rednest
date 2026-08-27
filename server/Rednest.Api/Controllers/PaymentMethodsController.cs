@@ -185,6 +185,11 @@ public class PaymentMethodsController : ControllerBase
 
         user.PaymentMethods ??= new List<UserPaymentMethod>();
 
+        if (user.PaymentMethods.Count >= 3)
+        {
+            return BadRequest(new { message = "You can only save up to 3 payment cards. Please delete an existing card to add a new one." });
+        }
+
         var last4 = cleanNumber.Length >= 4 ? cleanNumber[^4..] : cleanNumber;
         if (!int.TryParse(last4, out var last4Id))
         {

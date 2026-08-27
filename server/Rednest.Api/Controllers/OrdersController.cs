@@ -493,7 +493,7 @@ public class OrdersController : ControllerBase
             PromoPrizeName = calc.AppliedPromoName
         };
 
-        var orderStatus = paymentMethod == CorePaymentMethod.OnlineBalance ? "Paid Online" : "Pending Payment";
+        var orderStatus = (paymentMethod == CorePaymentMethod.OnlineBalance || paymentMethod == CorePaymentMethod.OnlineCardDetails) ? "Paid Online" : "Pending Payment";
 
         var notes = new OrderNotes
         {

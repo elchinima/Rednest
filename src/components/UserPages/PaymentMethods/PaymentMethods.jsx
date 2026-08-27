@@ -8,6 +8,7 @@ import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddCardModal from './AddCardModal';
+import PaymentErrorModal from './PaymentErrorModal';
 import './PaymentMethods.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -55,6 +56,9 @@ const PaymentMethods = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
+
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState('');
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
@@ -115,7 +119,8 @@ const PaymentMethods = () => {
       await fetchCards();
       showToast('Payment card added successfully!');
     } catch (err) {
-      showToast(err.message || 'Failed to add card.', 'error');
+      setErrorModalMessage(err.message || 'Failed to add card.');
+      setIsErrorModalOpen(true);
     } finally {
       setAddLoading(false);
     }
@@ -213,7 +218,14 @@ const PaymentMethods = () => {
               <button
                 type="button"
                 className="cta-btn primary-red payment-methods-hero__add-btn"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={() => {
+                  if (cards.length >= 3) {
+                    setErrorModalMessage('You can only save up to 3 payment cards. Please delete an existing card to add a new one.');
+                    setIsErrorModalOpen(true);
+                  } else {
+                    setIsAddModalOpen(true);
+                  }
+                }}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -390,6 +402,13 @@ const PaymentMethods = () => {
             : 'this card'
         }
         loading={deleteLoading}
+      />
+
+      <PaymentErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={errorModalMessage}
+        title="Card Error"
       />
 
       <div className="payment-methods-toast-container">
