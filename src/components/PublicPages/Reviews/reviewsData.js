@@ -28,21 +28,37 @@ export const getAvatarGradient = (idOrName) => {
 };
 
 export const formatTimeAgo = (dateInput) => {
-  if (!dateInput) return 'Recently';
+  if (!dateInput) return 'Today';
   const d = new Date(dateInput);
-  if (isNaN(d.getTime())) return 'Recently';
+  if (isNaN(d.getTime())) return 'Today';
 
-  const diffMs = Date.now() - d.getTime();
+  const diffMs = Math.max(0, Date.now() - d.getTime());
   const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHours = Math.floor(diffMin / 60);
+  const diffHours = Math.floor(diffSec / 3600);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSec < 60) return 'Just now';
-  if (diffMin < 60) return `${diffMin} min${diffMin > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (diffSec < 60) {
+    return 'Just now';
+  }
+
+  if (diffHours < 1) {
+    return '1 hour ago';
+  }
+
+  if (diffHours < 24) {
+    return 'Today';
+  }
+
+  if (diffDays < 7) {
+    return 'This week';
+  }
+
+  if (diffDays < 30) {
+    return 'This month';
+  }
+
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}.${month}.${year}`;
 };

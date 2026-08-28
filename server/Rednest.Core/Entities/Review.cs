@@ -21,5 +21,6 @@ public class Review
     public Guid OrderId { get; set; }
     public ReviewCategory Category { get; set; }
     public ReviewDetails ReviewData { get; set; } = new();
+    public List<Guid> Likes { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

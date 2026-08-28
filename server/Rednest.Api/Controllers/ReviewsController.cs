@@ -23,6 +23,8 @@ public class ReviewsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()
     {
+        var currentUserId = GetUserId();
+
         var reviews = await _db.Reviews
             .AsNoTracking()
             .OrderByDescending(r => r.CreatedAt)
@@ -41,6 +43,10 @@ public class ReviewsController : ControllerBase
                 ? user.Name.Trim().Split(' ')[0]
                 : "Customer";
 
+            var likesList = r.Likes ?? new List<Guid>();
+            var isLiked = currentUserId.HasValue && likesList.Contains(currentUserId.Value);
+            var isOwner = currentUserId.HasValue && r.UserId == currentUserId.Value;
+
             return new
             {
                 id = r.Id,
@@ -52,6 +58,9 @@ public class ReviewsController : ControllerBase
                 category = r.Category.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
+                likes = likesList.Count,
+                userLiked = isLiked,
+                isOwner = isOwner,
                 createdAt = r.CreatedAt
             };
         }).ToList();
@@ -136,6 +145,7 @@ public class ReviewsController : ControllerBase
                 Rating = Math.Round(request.Rating, 2),
                 Comment = request.Comment.Trim()
             },
+            Likes = new List<Guid>(),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -156,7 +166,73 @@ public class ReviewsController : ControllerBase
             category = review.Category.ToString(),
             rating = review.ReviewData.Rating,
             comment = review.ReviewData.Comment,
+            likes = 0,
+            userLiked = false,
+            isOwner = true,
             createdAt = review.CreatedAt
+        });
+    }
+
+    [HttpPost("{id:guid}/like")]
+    [Authorize]
+    public async Task<IActionResult> ToggleLike(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var review = await _db.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        if (review.UserId == userId.Value)
+            return BadRequest(new { message = "You cannot like your own review." });
+
+        review.Likes ??= new List<Guid>();
+
+        bool userLiked;
+        if (review.Likes.Contains(userId.Value))
+        {
+            review.Likes.Remove(userId.Value);
+            userLiked = false;
+        }
+        else
+        {
+            review.Likes.Add(userId.Value);
+            userLiked = true;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            success = true,
+            likes = review.Likes.Count,
+            userLiked
+        });
+    }
+
+    [HttpDelete("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var review = await _db.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        if (review.UserId != userId.Value)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "You can only delete your own review." });
+
+        _db.Reviews.Remove(review);
+        await _db.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Review deleted successfully.",
+            id = id,
+            orderId = review.OrderId
         });
     }
 }

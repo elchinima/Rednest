@@ -3,7 +3,16 @@ import AnimatedModalWrapper from './AnimatedModalWrapper';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 import './RednestModal.scss';
 
-const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) => {
+const DeleteConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  itemName,
+  title = 'Remove Item',
+  text,
+  confirmLabel = 'Remove',
+  loading
+}) => {
   return (
     <AnimatedModalWrapper
       isOpen={isOpen}
@@ -20,11 +29,11 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) =
           </svg>
         </div>
 
-        <h3 className="rednest-modal__title">Remove Item</h3>
+        <h3 className="rednest-modal__title">{title}</h3>
         <p className="rednest-modal__text">
-          {itemName 
-            ? `Are you sure you want to remove ${itemName} from your basket?` 
-            : 'Are you sure you want to remove this item from your basket?'}
+          {text || (itemName
+            ? `Are you sure you want to remove ${itemName} from your basket?`
+            : 'Are you sure you want to remove this item from your basket?')}
         </p>
 
         <div className="rednest-modal__actions">
@@ -45,9 +54,9 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, itemName, loading }) =
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <img src={loaderIcon} alt="Loading" style={{ width: '18px', height: '18px', filter: 'brightness(0) invert(1)' }} />
-                Removing...
+                Deleting...
               </span>
-            ) : 'Remove'}
+            ) : confirmLabel}
           </button>
         </div>
       </div>

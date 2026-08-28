@@ -141,6 +141,11 @@ public class AppDbContext : DbContext
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'{}'::jsonb");
 
+            entity.Property(e => e.Likes)
+                  .HasColumnName("Likes")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");
