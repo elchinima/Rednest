@@ -121,12 +121,11 @@ ADMIN_SECRET=your_admin_secret_key
 # Supabase Storage Integration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_KEY=your_supabase_service_role_key
-```
 
-For frontend development, configure `.env` in the root:
-
-```env
-VITE_API_URL=http://localhost:5045
+# Stripe Payments & Frontend (Vite)
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ---

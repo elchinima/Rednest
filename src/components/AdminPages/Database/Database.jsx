@@ -32,9 +32,12 @@ const Database = () => {
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const filteredFiles = useMemo(() => {
-    if (!appliedSearch.trim()) return files;
-    const q = appliedSearch.toLowerCase().trim();
-    return files.filter((f) => (f.fileName || '').toLowerCase().includes(q));
+    let list = [...files];
+    if (appliedSearch.trim()) {
+      const q = appliedSearch.toLowerCase().trim();
+      list = list.filter((f) => (f.fileName || '').toLowerCase().includes(q));
+    }
+    return list.sort((a, b) => (parseFloat(a.sizeKb) || 0) - (parseFloat(b.sizeKb) || 0));
   }, [files, appliedSearch]);
 
   const visibleFiles = useMemo(() => {

@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 import { transformWithOxc } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
+  envDir: './secret',
   plugins: [
     {
       name: 'transform-js-as-jsx',
