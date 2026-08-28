@@ -1,8 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Rednest.Application.Interfaces;
-using Rednest.Core.Entities;
-using Rednest.Infrastructure.Data;
-
 namespace Rednest.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository

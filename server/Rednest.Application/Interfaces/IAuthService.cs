@@ -1,6 +1,3 @@
-using Rednest.Application.DTOs;
-using Rednest.Core.Entities;
-
 namespace Rednest.Application.Interfaces;
 
 public interface IAuthService

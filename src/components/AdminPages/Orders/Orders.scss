@@ -77,42 +77,6 @@
     }
   }
 
-  &__refresh-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: $border-radius-sm;
-    color: $color-text;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: $font-family-base;
-
-    svg {
-      width: 15px;
-      height: 15px;
-
-      &.spin {
-        animation: spin 1s linear infinite;
-      }
-    }
-
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-
   &__btn-secondary {
     display: inline-flex;
     align-items: center;
@@ -439,7 +403,6 @@
     }
   }
 
-  /* Status Badges & Selects */
   .status-badge {
     appearance: none;
     display: inline-flex;
@@ -511,7 +474,6 @@
     }
   }
 
-  /* Table Card View */
   &__table-card {
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid rgba(255, 255, 255, 0.07);
@@ -570,45 +532,59 @@
     text-align: center;
   }
 
-  /* Table Cells */
-  &__id-cell {
-    .id-copy-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 4px 8px;
-      border-radius: 4px;
-      cursor: pointer;
-      color: rgba(255, 255, 255, 0.85);
-      font-size: 0.78rem;
-      transition: all 0.2s ease;
+  .id-copy-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.78rem;
+    transition: all 0.2s ease;
+    font-family: inherit;
+
+    code {
+      font-family: monospace;
+      font-weight: 700;
+      color: #fff;
+      transition: color 0.2s ease;
+    }
+
+    svg {
+      width: 12px;
+      height: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+
+    &.copied {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
 
       code {
-        font-family: monospace;
-        font-weight: 700;
-        color: #fff;
+        color: #34d399;
       }
 
       svg {
-        width: 12px;
-        height: 12px;
-        color: rgba(255, 255, 255, 0.4);
-      }
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #fff;
-      }
-
-      .copied-hint {
         color: #34d399;
-        font-weight: 600;
-        font-size: 0.72rem;
       }
     }
+  }
+
+  &__id-cell {
+    display: flex;
+    align-items: center;
   }
 
   &__customer-cell {
@@ -635,6 +611,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
       }
 
       &--sm {
@@ -780,7 +757,6 @@
     }
   }
 
-  /* Grid Card View */
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -844,12 +820,14 @@
         color: #fff;
         font-weight: 700;
         font-size: 0.85rem;
+        flex-shrink: 0;
         overflow: hidden;
 
         img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          display: block;
         }
       }
 
@@ -1063,7 +1041,6 @@
     }
   }
 
-  /* Modal System */
   &__modal-backdrop {
     position: fixed;
     inset: 0;
@@ -1166,17 +1143,36 @@
       }
 
       .copy-chip-btn {
-        background: none;
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: rgba(255, 255, 255, 0.7);
-        padding: 2px 6px;
+        padding: 3px 8px;
         border-radius: 4px;
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+
+        svg {
+          width: 12px;
+          height: 12px;
+        }
 
         &:hover {
           color: #fff;
           background: rgba(255, 255, 255, 0.1);
+        }
+
+        &.copied {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          color: #34d399;
+
+          svg {
+            color: #34d399;
+          }
         }
       }
     }
@@ -1242,7 +1238,6 @@
     }
   }
 
-  /* Receipt Modal Interior */
   .receipt-meta-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1258,10 +1253,13 @@
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: $border-radius-sm;
-      padding: 12px 14px;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       gap: 6px;
+      min-height: 74px;
+      box-sizing: border-box;
 
       .meta-label {
         font-size: 0.7rem;
@@ -1274,6 +1272,15 @@
       .meta-value {
         font-size: 0.88rem;
         color: #fff;
+        font-weight: 600;
+      }
+
+      .status-changer-inline {
+        display: flex;
+        select {
+          width: auto;
+          max-width: 100%;
+        }
       }
 
       .pay-method-flex {
@@ -1287,26 +1294,59 @@
         .pay-icon {
           width: 18px;
           height: 18px;
+          object-fit: contain;
+          flex-shrink: 0;
         }
       }
 
       .customer-preview {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+
+        .customer-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, $color-primary, #b91c1c);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #fff;
+          font-weight: 700;
+          font-size: 0.85rem;
+          flex-shrink: 0;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+        }
 
         .customer-meta {
           display: flex;
           flex-direction: column;
+          min-width: 0;
+          gap: 2px;
 
           strong {
             font-size: 0.88rem;
             color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
 
           span {
             font-size: 0.74rem;
             color: $color-text-muted;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
           }
         }
       }
@@ -1328,11 +1368,23 @@
       border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: $border-radius-sm;
       overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba($color-primary, 0.3) transparent;
+
+      &::-webkit-scrollbar {
+        height: 5px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      &::-webkit-scrollbar-thumb {
+        background: rgba($color-primary, 0.3);
+        border-radius: 999px;
+      }
     }
 
     .receipt-items-table {
       width: 100%;
-      min-width: 480px;
       border-collapse: collapse;
 
       th {
@@ -1342,6 +1394,7 @@
         color: rgba(255, 255, 255, 0.4);
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         background: rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
       }
 
       td {
@@ -1359,13 +1412,18 @@
       .item-name-cell {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
 
         .item-thumb {
-          width: 32px;
-          height: 32px;
-          border-radius: 4px;
-          object-fit: cover;
+          width: 36px;
+          height: 36px;
+          border-radius: 8px;
+          object-fit: contain;
+          flex-shrink: 0;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(0, 0, 0, 0.35);
+          padding: 3px;
+          box-sizing: border-box;
         }
 
         strong {
@@ -1380,6 +1438,7 @@
         border-radius: 4px;
         background: rgba(255, 255, 255, 0.06);
         color: rgba(255, 255, 255, 0.6);
+        white-space: nowrap;
       }
 
       .qty-tag {
@@ -1390,6 +1449,7 @@
       .highlight {
         font-weight: 700;
         color: #fbbf24;
+        white-space: nowrap;
       }
     }
   }
@@ -1531,7 +1591,6 @@
     }
   }
 
-  /* Delete Modal */
   .delete-modal-body {
     padding: 24px;
     display: flex;

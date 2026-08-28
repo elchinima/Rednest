@@ -1,18 +1,3 @@
-using System.Security.Claims;
-using System.Text;
-using System.Threading.RateLimiting;
-using Npgsql;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Rednest.Api.Middleware;
-using Rednest.Application.Interfaces;
-using Rednest.Infrastructure.Data;
-using Rednest.Infrastructure.Repositories;
-using Rednest.Infrastructure.Services;
-using DotNetEnv;
-
 Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "true");
 Environment.SetEnvironmentVariable("DOTNET_hostBuilder:reloadConfigOnChange", "false");
 

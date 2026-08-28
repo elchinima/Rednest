@@ -1,5 +1,3 @@
-using Rednest.Core.Entities;
-
 namespace Rednest.Application.Interfaces;
 
 public interface IUserRepository

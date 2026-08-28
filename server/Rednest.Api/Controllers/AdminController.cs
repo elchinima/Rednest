@@ -1,17 +1,3 @@
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Rednest.Core.Entities;
-using Rednest.Infrastructure.Data;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
-
 namespace Rednest.Api.Controllers;
 
 [Authorize]

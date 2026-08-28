@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Rednest.Api.Middleware;
 
 public class BandwidthThrottlingMiddleware

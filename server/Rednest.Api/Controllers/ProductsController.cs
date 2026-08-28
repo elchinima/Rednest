@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Rednest.Infrastructure.Data;
 
 namespace Rednest.Api.Controllers;
 

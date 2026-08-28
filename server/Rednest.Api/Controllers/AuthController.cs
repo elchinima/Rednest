@@ -1,13 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
-using Rednest.Application.DTOs;
-using Rednest.Application.Interfaces;
-using System.Security.Claims;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 
 namespace Rednest.Api.Controllers;
 

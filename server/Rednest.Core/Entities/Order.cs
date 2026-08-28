@@ -34,8 +34,8 @@ public class OrderNotes
     public string? CustomerNote { get; set; }
     public string? KitchenNote { get; set; }
 
-    [System.Text.Json.Serialization.JsonExtensionData]
-    public Dictionary<string, System.Text.Json.JsonElement>? ExtensionData { get; set; }
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtensionData { get; set; }
 }
 
 public class Order

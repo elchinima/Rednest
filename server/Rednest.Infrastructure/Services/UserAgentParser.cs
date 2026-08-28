@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace Rednest.Infrastructure.Services;
 
 public class UserAgentInfo

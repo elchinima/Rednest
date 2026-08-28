@@ -10,6 +10,7 @@ import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
 import cashierIcon from '../../../assets/icons/cashier-register.svg';
 import onlineIcon from '../../../assets/icons/online-card.svg';
 import logo from '../../../assets/icons/rednest_logo.png';
+import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
 const PAGE_SIZE = 15;
@@ -179,6 +180,17 @@ const Orders = () => {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  useEffect(() => {
+    if (selectedReceiptOrder || orderToDelete) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedReceiptOrder, orderToDelete]);
 
   const copyToClipboard = (text, id) => {
     if (!text) return;
@@ -352,26 +364,8 @@ const Orders = () => {
               Real-time feed of customer coffee receipts, orders, and payment statuses
             </p>
           </div>
-          <button
-            className="admin-orders__refresh-btn"
-            onClick={fetchOrders}
-            disabled={loading}
-            title="Refresh Orders"
-          >
-            <svg
-              className={loading ? 'spin' : ''}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-            </svg>
-            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
         </motion.div>
 
-        {/* KPI Stats */}
         <div className="admin-orders__stats">
           <motion.div
             className="admin-orders__stat-card"
@@ -462,7 +456,6 @@ const Orders = () => {
           </motion.div>
         </div>
 
-        {/* Controls Bar */}
         <div className="admin-orders__controls">
           <div className="admin-orders__search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -616,7 +609,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Table View */}
         {!loading && filteredOrders.length > 0 && viewMode === 'table' && (
           <div className="admin-orders__table-card">
             <div className="admin-orders__table-responsive">
@@ -625,7 +617,6 @@ const Orders = () => {
                   <tr>
                     <th>Order ID</th>
                     <th>Customer</th>
-                    <th>Items</th>
                     <th>Payment & Total</th>
                     <th>Status</th>
                     <th>Date & Time</th>
@@ -649,13 +640,15 @@ const Orders = () => {
                         <td>
                           <div className="admin-orders__id-cell">
                             <button
-                              className="id-copy-tag"
+                              className={`id-copy-tag${copiedId === order.id ? ' copied' : ''}`}
                               onClick={() => copyToClipboard(order.id, order.id)}
                               title="Click to copy full Order ID"
                             >
                               <code>#{shortId}</code>
                               {copiedId === order.id ? (
-                                <span className="copied-hint">Copied!</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
                               ) : (
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                   <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -683,21 +676,6 @@ const Orders = () => {
                                 {order.user?.name || 'Guest / Unnamed'}
                               </span>
                               <span className="customer-email">{order.user?.email || '—'}</span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td>
-                          <div className="admin-orders__items-cell">
-                            <span className="items-count-badge">
-                              {order.itemsCount} {order.itemsCount === 1 ? 'item' : 'items'}
-                            </span>
-                            <div className="items-preview-names">
-                              {(order.items || [])
-                                .slice(0, 2)
-                                .map((it, idx) => `${it.quantity}x ${it.name}`)
-                                .join(', ')}
-                              {order.items?.length > 2 ? ` +${order.items.length - 2} more` : ''}
                             </div>
                           </div>
                         </td>
@@ -781,7 +759,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Grid View */}
         {!loading && filteredOrders.length > 0 && viewMode === 'grid' && (
           <div className="admin-orders__grid">
             {visibleOrders.map((order, i) => {
@@ -801,12 +778,21 @@ const Orders = () => {
                   <div className="grid-card-top">
                     <div className="id-date">
                       <button
-                        className="id-copy-tag"
+                        className={`id-copy-tag${copiedId === `grid-${order.id}` ? ' copied' : ''}`}
                         onClick={() => copyToClipboard(order.id, `grid-${order.id}`)}
-                        title="Click to copy Order ID"
+                        title="Click to copy full Order ID"
                       >
                         <code>#{shortId}</code>
-                        {copiedId === `grid-${order.id}` && <span className="copied-hint">Copied!</span>}
+                        {copiedId === `grid-${order.id}` ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                        )}
                       </button>
                       <span className="grid-date">{formatBakuDate(order.createdAt)}</span>
                     </div>
@@ -920,7 +906,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Detailed Receipt Modal */}
         <AnimatePresence>
           {selectedReceiptOrder && (
             <div
@@ -943,10 +928,20 @@ const Orders = () => {
                     <p className="order-id-sub">
                       ID: <code>{selectedReceiptOrder.id}</code>
                       <button
-                        className="copy-chip-btn"
+                        className={`copy-chip-btn${copiedId === 'modal-order-id' ? ' copied' : ''}`}
                         onClick={() => copyToClipboard(selectedReceiptOrder.id, 'modal-order-id')}
                       >
-                        {copiedId === 'modal-order-id' ? 'Copied!' : 'Copy ID'}
+                        {copiedId === 'modal-order-id' ? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                          </svg>
+                        )}
+                        <span>Copy ID</span>
                       </button>
                     </p>
                   </div>
@@ -962,7 +957,6 @@ const Orders = () => {
                 </div>
 
                 <div className="admin-orders__modal-body">
-                  {/* Top Bar with Customer and Status */}
                   <div className="receipt-meta-grid">
                     <div className="meta-card customer-card">
                       <span className="meta-label">Customer Info</span>
@@ -1024,7 +1018,6 @@ const Orders = () => {
                     </div>
                   </div>
 
-                  {/* Items List */}
                   <div className="receipt-items-section">
                     <h3>Ordered Items ({selectedReceiptOrder.items?.length || 0})</h3>
                     <div className="receipt-items-table-wrap">
@@ -1039,34 +1032,36 @@ const Orders = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {(selectedReceiptOrder.items || []).map((it, idx) => (
-                            <tr key={idx}>
-                              <td>
-                                <div className="item-name-cell">
-                                  {it.imageUrl && (
-                                    <img src={it.imageUrl} alt={it.name} className="item-thumb" />
-                                  )}
-                                  <strong>{it.name || 'Product'}</strong>
-                                </div>
-                              </td>
-                              <td>
-                                <span className="category-pill">{it.category || 'General'}</span>
-                              </td>
-                              <td className="text-center">
-                                <span className="qty-tag">{it.quantity}</span>
-                              </td>
-                              <td className="text-right">{formatCurrency(it.unitPrice)}</td>
-                              <td className="text-right highlight">
-                                {formatCurrency(it.unitPrice * it.quantity)}
-                              </td>
-                            </tr>
-                          ))}
+                          {(selectedReceiptOrder.items || []).map((it, idx) => {
+                            const itemIcon = getProductIconUrl(it) || it.imageUrl;
+                            return (
+                              <tr key={idx}>
+                                <td>
+                                  <div className="item-name-cell">
+                                    {itemIcon ? (
+                                      <img src={itemIcon} alt={it.name || 'Product'} className="item-thumb" />
+                                    ) : null}
+                                    <strong>{it.name || 'Product'}</strong>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className="category-pill">{it.category || 'General'}</span>
+                                </td>
+                                <td className="text-center">
+                                  <span className="qty-tag">{it.quantity}</span>
+                                </td>
+                                <td className="text-right">{formatCurrency(it.unitPrice)}</td>
+                                <td className="text-right highlight">
+                                  {formatCurrency(it.unitPrice * it.quantity)}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
                   </div>
 
-                  {/* Notes Section (if any) */}
                   {(selectedReceiptOrder.notes?.CustomerNote ||
                     selectedReceiptOrder.notes?.KitchenNote ||
                     selectedReceiptOrder.notes?.Comment) && (
@@ -1095,7 +1090,6 @@ const Orders = () => {
                     </div>
                   )}
 
-                  {/* Payment Breakdown Box */}
                   <div className="receipt-payment-summary">
                     <h3>Payment Breakdown</h3>
                     <div className="summary-rows">
@@ -1158,7 +1152,6 @@ const Orders = () => {
           )}
         </AnimatePresence>
 
-        {/* Delete Confirmation Modal */}
         <AnimatePresence>
           {orderToDelete && (
             <div

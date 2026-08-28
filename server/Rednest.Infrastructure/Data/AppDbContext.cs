@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Rednest.Core.Entities;
-
 namespace Rednest.Infrastructure.Data;
 
 public class AppDbContext : DbContext

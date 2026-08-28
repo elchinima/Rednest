@@ -1,10 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Rednest.Application.Interfaces;
-using Rednest.Core.Entities;
-using Rednest.Infrastructure.Data;
-using System.Security.Claims;
 
 namespace Rednest.Api.Controllers;
 

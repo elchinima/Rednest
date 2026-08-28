@@ -1,12 +1,4 @@
-using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Rednest.Application.Interfaces;
-using Rednest.Core.Entities;
-using Rednest.Infrastructure.Data;
 using Stripe;
-using System.Security.Claims;
 using CorePaymentMethod = Rednest.Core.Entities.PaymentMethod;
 
 namespace Rednest.Api.Controllers;
