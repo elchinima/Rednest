@@ -7,7 +7,7 @@ import './Rules.scss';
 
 const Rules = () => {
   useEffect(() => {
-    document.title = 'Terms of Use | Rednest';
+    document.title = 'Rednest';
     window.scrollTo(0, 0);
   }, []);
 

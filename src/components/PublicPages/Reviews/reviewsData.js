@@ -1,151 +1,48 @@
-export const INITIAL_REVIEWS = [
-  {
-    id: 'rev-1',
-    author: 'Alexander',
-    initials: 'A',
-    avatarGradient: 'linear-gradient(135deg, #ef4444, #b91c1c)',
-    rating: 5,
-    date: '2 hours ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 120,
-    title: 'Unbeatable Red Latte & Cozy Vibe',
-    comment: 'The signature Red Latte is simply a masterpiece! Silky microfoam with just the right touch of spice and rich espresso. The staff is always smiling and the music playlist is pure warmth. My essential morning stop before work.',
-    category: 'coffee',
-    likes: 18,
-    userLiked: false
-  },
-  {
-    id: 'rev-2',
-    author: 'Elena',
-    initials: 'E',
-    avatarGradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
-    rating: 5,
-    date: 'Yesterday',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 24,
-    title: 'The best specialty coffee in the city!',
-    comment: 'I am extremely picky about espresso extraction, but Rednest nails the flavor balance every single time. Baristas clearly know their craft. Also love that oat and almond milk are always fresh and perfectly textured.',
-    category: 'coffee',
-    likes: 27,
-    userLiked: false
-  },
-  {
-    id: 'rev-3',
-    author: 'Dmitry',
-    initials: 'D',
-    avatarGradient: 'linear-gradient(135deg, #ec4899, #be185d)',
-    rating: 4.8,
-    date: '3 days ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 72,
-    title: 'Exquisite pour-over and Basque Cheesecake',
-    comment: 'Tried the single-origin Ethiopian pour-over alongside their burnt Basque cheesecake. The bright citrus and floral notes paired wonderfully with the creamy dessert. A bit crowded during rush hour, but well worth the wait.',
-    category: 'desserts',
-    likes: 12,
-    userLiked: false
-  },
-  {
-    id: 'rev-4',
-    author: 'Maria',
-    initials: 'M',
-    avatarGradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-    rating: 5,
-    date: '5 days ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 120,
-    title: 'Lightning-fast delivery & adorable packaging',
-    comment: 'Ordered delivery via the web app. It arrived in less than 20 minutes! The hot drinks were securely sealed with thermal insulation and came with a cute handwritten note and sticker. Exceptional care for customers!',
-    category: 'delivery',
-    likes: 21,
-    userLiked: false
-  },
-  {
-    id: 'rev-5',
-    author: 'Roman',
-    initials: 'R',
-    avatarGradient: 'linear-gradient(135deg, #10b981, #047857)',
-    rating: 4.5,
-    date: '1 week ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 168,
-    title: 'Ideal atmosphere for remote laptop work',
-    comment: 'Reliable high-speed Wi-Fi, plenty of power outlets under every wooden table, and comfortable leather seating. The Flat White keeps my energy high through long coding sessions. Highly recommend!',
-    category: 'atmosphere',
-    likes: 34,
-    userLiked: false
-  },
-  {
-    id: 'rev-6',
-    author: 'Anna',
-    initials: 'A',
-    avatarGradient: 'linear-gradient(135deg, #f43f5e, #be123c)',
-    rating: 5,
-    date: '1 week ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 190,
-    title: 'Salted Caramel Raf is pure indulgence',
-    comment: 'If you have a sweet tooth, you MUST try their Salted Caramel Raf. Thick, velvety, rich and not overly sugary. The pistachio macarons are also among the crispest in town. Love the loyalty perks too!',
-    category: 'desserts',
-    likes: 15,
-    userLiked: false
-  },
-  {
-    id: 'rev-7',
-    author: 'Maxim',
-    initials: 'M',
-    avatarGradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-    rating: 5,
-    date: '2 weeks ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 336,
-    title: 'Top-tier espresso roast with authentic crema',
-    comment: 'As someone who worked as a head barista for 5 years, I judge coffee places strictly by their double shot espresso. Rednest gets a 10/10. Freshly ground on demand, zero bitterness, great crema and acidity balance.',
-    category: 'coffee',
-    likes: 9,
-    userLiked: false
-  },
-  {
-    id: 'rev-8',
-    author: 'Sofia',
-    initials: 'S',
-    avatarGradient: 'linear-gradient(135deg, #06b6d4, #0e7490)',
-    rating: 4.7,
-    date: '2 weeks ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 360,
-    title: 'Creative seasonal menu & fun fortune wheel!',
-    comment: 'The seasonal iced matcha with strawberry foam was delightful and refreshing! Spinning the Fortune Wheel on the app before placing my order gave me a 15% discount code which made it even sweeter. Great gamification!',
-    category: 'service',
-    likes: 24,
-    userLiked: false
-  },
-  {
-    id: 'rev-9',
-    author: 'Kirill',
-    initials: 'K',
-    avatarGradient: 'linear-gradient(135deg, #6366f1, #4338ca)',
-    rating: 5,
-    date: '3 weeks ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 504,
-    title: 'Staff went above and beyond to help me',
-    comment: 'I was looking for whole coffee beans for my V60 dripper at home. The barista patiently walked me through three different origins, explained the washed vs natural processing, and even calibrated the grind size. Outstanding hospitality!',
-    category: 'service',
-    likes: 19,
-    userLiked: false
-  },
-  {
-    id: 'rev-10',
-    author: 'Polina',
-    initials: 'P',
-    avatarGradient: 'linear-gradient(135deg, #e11d48, #9f1239)',
-    rating: 5,
-    date: '1 month ago',
-    dateTimestamp: Date.now() - 1000 * 60 * 60 * 720,
-    title: 'Aesthetic interior & perfect vanilla cappuccino',
-    comment: 'The interior design with red accents and ambient warm lighting creates such an inviting mood. Clean tables, friendly staff, and the vanilla cappuccino with homemade syrup was divine. My new favorite hangout spot!',
-    category: 'atmosphere',
-    likes: 42,
-    userLiked: false
-  }
-];
-
 export const REVIEW_CATEGORIES = [
   { id: 'all', label: 'All Reviews', icon: '✨' },
-  { id: 'coffee', label: 'Coffee & Drinks', icon: '☕' },
-  { id: 'desserts', label: 'Desserts & Food', icon: '🥐' },
-  { id: 'atmosphere', label: 'Atmosphere & Wi-Fi', icon: '🛋️' },
-  { id: 'service', label: 'Hospitality & Service', icon: '⭐' },
-  { id: 'delivery', label: 'Delivery & Takeout', icon: '🚀' }
+  { id: 'Delivery', label: 'Delivery', icon: '🚀' },
+  { id: 'Products', label: 'Products', icon: '☕' },
+  { id: 'Service', label: 'Service', icon: '⭐' },
+  { id: 'Staff', label: 'Staff', icon: '👥' }
 ];
+
+export const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #ef4444, #b91c1c)',
+  'linear-gradient(135deg, #f59e0b, #d97706)',
+  'linear-gradient(135deg, #ec4899, #be185d)',
+  'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+  'linear-gradient(135deg, #10b981, #047857)',
+  'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+  'linear-gradient(135deg, #06b6d4, #0e7490)',
+  'linear-gradient(135deg, #6366f1, #4338ca)'
+];
+
+export const getAvatarGradient = (idOrName) => {
+  let hash = 0;
+  const str = String(idOrName || 'user');
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % AVATAR_GRADIENTS.length;
+  return AVATAR_GRADIENTS[index];
+};
+
+export const formatTimeAgo = (dateInput) => {
+  if (!dateInput) return 'Recently';
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return 'Recently';
+
+  const diffMs = Date.now() - d.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSec < 60) return 'Just now';
+  if (diffMin < 60) return `${diffMin} min${diffMin > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};

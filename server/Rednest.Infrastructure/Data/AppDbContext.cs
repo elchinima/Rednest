@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<UserBasket> UserBaskets => Set<UserBasket>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Review> Reviews => Set<Review>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -120,6 +121,38 @@ public class AppDbContext : DbContext
             entity.HasOne<User>()
                   .WithMany()
                   .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Review>(entity =>
+        {
+            entity.ToTable("Reviews");
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OrderId).IsUnique();
+
+            entity.Property(e => e.Category)
+                  .HasConversion<string>()
+                  .HasColumnType("text");
+
+            entity.Property(e => e.ReviewData)
+                  .HasColumnName("Review")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.HasOne<User>()
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<Order>()
+                  .WithMany()
+                  .HasForeignKey(e => e.OrderId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

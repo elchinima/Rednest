@@ -1,0 +1,25 @@
+namespace Rednest.Core.Entities;
+
+public enum ReviewCategory
+{
+    Delivery = 0,
+    Products = 1,
+    Service = 2,
+    Staff = 3
+}
+
+public class ReviewDetails
+{
+    public decimal Rating { get; set; }
+    public string Comment { get; set; } = string.Empty;
+}
+
+public class Review
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public Guid OrderId { get; set; }
+    public ReviewCategory Category { get; set; }
+    public ReviewDetails ReviewData { get; set; } = new();
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
