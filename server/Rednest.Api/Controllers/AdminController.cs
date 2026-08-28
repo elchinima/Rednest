@@ -173,9 +173,7 @@ public class AdminController : ControllerBase
                 pm.ExpiryDate,
                 pm.IsDefault,
                 pm.CreatedAt,
-                last4 = !string.IsNullOrEmpty(pm.CardNumber) && pm.CardNumber.Length >= 4
-                    ? pm.CardNumber[^4..]
-                    : "****"
+                last4 = pm.Id > 0 ? pm.Id.ToString("D4") : "••••"
             }),
             session = user.Session != null ? new
             {
@@ -250,7 +248,13 @@ public class AdminController : ControllerBase
         else
         {
             if (request.IsActive.HasValue)
+            {
                 user.Session.IsActive = request.IsActive.Value;
+                if (!request.IsActive.Value && user.Session.Sessions != null)
+                {
+                    user.Session.Sessions.Clear();
+                }
+            }
             if (request.TwoFactorEnabled.HasValue)
                 user.Session.TwoFactorEnabled = request.TwoFactorEnabled.Value;
             if (request.Subscribe.HasValue)

@@ -317,6 +317,10 @@ public class AuthController : ControllerBase
             }
 
             var userSession = user.Session ?? await userRepository.GetSessionByUserIdAsync(user.Id);
+            if (userSession != null && !userSession.IsActive)
+            {
+                return Unauthorized(new { message = "Account suspended." });
+            }
 
             return Ok(new 
             { 

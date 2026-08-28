@@ -760,7 +760,7 @@ const Users = () => {
                             <span>{getInitials(userDetails.name, userDetails.email)}</span>
                           )}
                         </div>
-                        <div>
+                        <div className="admin-users__modal-meta">
                           <h2>{userDetails.name || 'Unnamed User'}</h2>
                           <p>{userDetails.email}</p>
                           <div className="admin-users__modal-chips">
@@ -904,7 +904,7 @@ const Users = () => {
                                   </div>
                                   <div className="card-item__info">
                                     <strong>
-                                      {pm.cardBrand || 'Card'} •••• {pm.last4}
+                                      {pm.cardBrand || 'Card'} •••• {pm.last4 || (pm.id > 0 ? String(pm.id).padStart(4, '0') : '••••')}
                                     </strong>
                                     <span>{pm.cardholderName || 'Cardholder'}</span>
                                     {pm.expiryDate && <span>Exp: {pm.expiryDate}</span>}
@@ -922,33 +922,23 @@ const Users = () => {
                       {detailsTab === 'orders' && (
                         <div className="admin-users__details-orders">
                           {userDetails.orders && userDetails.orders.length > 0 ? (
-                            <div className="orders-table-wrap">
-                              <table className="orders-table">
-                                <thead>
-                                  <tr>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Items</th>
-                                    <th>Method</th>
-                                    <th>Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {userDetails.orders.map((o) => (
-                                    <tr key={o.id}>
-                                      <td>{formatDate(o.createdAt)}</td>
-                                      <td>
-                                        <span className="badge badge--info">{o.status}</span>
-                                      </td>
-                                      <td>{o.itemsCount} items</td>
-                                      <td>{o.paymentMethod || '—'}</td>
-                                      <td>
-                                        <strong>{formatCurrency(o.totalAmount)}</strong>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+                            <div className="orders-list">
+                              {userDetails.orders.map((o) => (
+                                <div key={o.id} className="order-card">
+                                  <div className="order-card__header">
+                                    <span className="order-card__date">{formatDate(o.createdAt)}</span>
+                                    <span className="badge badge--info">{o.status}</span>
+                                  </div>
+                                  <div className="order-card__body">
+                                    <div className="order-card__info">
+                                      <span>{o.itemsCount} {o.itemsCount === 1 ? 'item' : 'items'}</span>
+                                      <span className="order-card__dot">•</span>
+                                      <span>{o.paymentMethod || 'Online'}</span>
+                                    </div>
+                                    <strong className="order-card__total">{formatCurrency(o.totalAmount)}</strong>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           ) : (
                             <div className="empty-subtab">No orders placed by this user yet.</div>

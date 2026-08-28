@@ -68,6 +68,11 @@ public class AuthService : IAuthService
         }
 
         var userSession = user!.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession != null && !userSession.IsActive)
+        {
+            throw new UnauthorizedAccessException("Your account has been suspended or blocked.");
+        }
+
         if (userSession == null)
         {
             userSession = new UserSession
@@ -392,7 +397,7 @@ public class AuthService : IAuthService
             }
         }
 
-        if (result == null || result.Value.Entry.IsActive == false || IsSessionExpired(result.Value.Entry, now))
+        if (result == null || result.Value.Session.IsActive == false || result.Value.Entry.IsActive == false || IsSessionExpired(result.Value.Entry, now))
         {
             throw new UnauthorizedAccessException("Invalid, terminated or expired refresh token");
         }

@@ -85,6 +85,10 @@ export async function fetchWithRefresh(url, options = {}) {
       if (response.status === 429 || (response.status >= 500 && response.status <= 599)) {
         handleBackendErrorResponse(response);
       }
+    } else {
+      localStorage.removeItem('rednest_auth');
+      localStorage.removeItem('rednest_user');
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
   }
 

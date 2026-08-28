@@ -171,6 +171,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     context.Token = context.Request.Cookies["accessToken"];
                 }
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = async context =>
+            {
+                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var userIdStr = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (Guid.TryParse(userIdStr, out var userId))
+                {
+                    var isBlocked = await dbContext.UserSessions
+                        .AsNoTracking()
+                        .AnyAsync(s => s.UserId == userId && !s.IsActive);
+                    if (isBlocked)
+                    {
+                        context.Fail("Account suspended");
+                    }
+                }
             }
         };
     });

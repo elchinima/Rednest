@@ -63,6 +63,33 @@ export const AuthProvider = ({ children }) => {
     }
   }, [login]);
 
+  const checkAuthStatus = useCallback(async () => {
+    const hasAuth = localStorage.getItem('rednest_auth') === 'true';
+    if (!hasAuth) return { ok: false };
+    const result = await fetchCurrentUser();
+    if (result && result.unauthorized) {
+      localStorage.removeItem('rednest_auth');
+      localStorage.removeItem('rednest_user');
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+    return result;
+  }, [fetchCurrentUser]);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('rednest_auth');
+      localStorage.removeItem('rednest_user');
+      setIsAuthenticated(false);
+      setUser(null);
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
+  }, []);
+
   useEffect(() => {
     const validateSession = async () => {
       const hasAuth = localStorage.getItem('rednest_auth') === 'true';
@@ -100,7 +127,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, authLoading, fetchCurrentUser }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateUser, authLoading, fetchCurrentUser, checkAuthStatus }}>
       {children}
     </AuthContext.Provider>
   );
