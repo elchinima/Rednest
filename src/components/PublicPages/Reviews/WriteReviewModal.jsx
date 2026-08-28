@@ -43,11 +43,9 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
   };
 
   const getInitials = (name) => {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
+    const trimmed = name.trim();
+    if (!trimmed) return 'U';
+    return trimmed.charAt(0).toUpperCase();
   };
 
   const handleSubmit = (e) => {
@@ -71,11 +69,12 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
     setLoading(true);
     setTimeout(() => {
       const randomGradient = AVATAR_GRADIENTS[Math.floor(Math.random() * AVATAR_GRADIENTS.length)];
+      const firstName = authorName.trim().split(/\s+/)[0];
 
       const newReview = {
         id: `rev-${Date.now()}`,
-        author: authorName.trim(),
-        initials: getInitials(authorName),
+        author: firstName,
+        initials: getInitials(firstName),
         avatarGradient: randomGradient,
         rating: Number(rating),
         date: 'Just now',
@@ -172,7 +171,7 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
               <input
                 id="rev-author"
                 type="text"
-                placeholder="e.g. Alex Morgan"
+                placeholder="e.g. Alex"
                 value={authorName}
                 onChange={(e) => {
                   setAuthorName(e.target.value);

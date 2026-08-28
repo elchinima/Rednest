@@ -170,14 +170,6 @@
   gap: 14px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
-
-  &:hover {
-    transform: translateY(-3px);
-    border-color: rgba(239, 68, 68, 0.35);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
-  }
 
   .review-card-top {
     display: flex;
@@ -230,6 +222,11 @@
       border: 1px solid rgba(251, 191, 36, 0.2);
       padding: 6px 10px;
       border-radius: 8px;
+      flex-shrink: 0;
+
+      @media (max-width: 768px) {
+        padding: 4px 8px;
+      }
     }
   }
 
@@ -322,8 +319,38 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
-.stars-row {
+.stars-wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.stars-row--desktop {
   display: inline-flex;
   gap: 3px;
   align-items: center;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.stars-compact--mobile {
+  display: none;
+  align-items: center;
+  gap: 4px;
+
+  @media (max-width: 768px) {
+    display: inline-flex;
+  }
+
+  .rating-num {
+    color: #fbbf24;
+    font-weight: 700;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
 }

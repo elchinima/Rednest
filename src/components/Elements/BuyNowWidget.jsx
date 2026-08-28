@@ -165,7 +165,7 @@ const BuyNowWidget = () => {
         isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 100;
       }
 
-      setIsScrolled(scrollY >= 10 || isReviewPage);
+      setIsScrolled(scrollY >= 10);
       setIsFooterVisible(isAtBottom);
     };
 
@@ -173,14 +173,14 @@ const BuyNowWidget = () => {
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname, isReviewPage]);
+  }, [location.pathname]);
 
   const hiddenPaths = ['/login', '/fortune', '/basket', '/profile', '/sessions', '/promos', '/order', '/orders', '/rules', '/terms', '/error'];
   if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith('/admin')) {
     return null;
   }
 
-  const isVisible = (isScrolled || isReviewPage) && !isFooterVisible;
+  const isVisible = isScrolled && !isFooterVisible;
 
   return (
     <>
