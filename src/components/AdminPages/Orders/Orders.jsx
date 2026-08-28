@@ -111,17 +111,6 @@ const getStatusBadge = (status) => {
   return { className: 'status-badge status-badge--completed', label: 'Completed', dotColor: '#22c55e' };
 };
 
-const getInitials = (name, email) => {
-  if (name && name.trim()) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  }
-  if (email && email.trim()) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return 'U';
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -661,16 +650,6 @@ const Orders = () => {
 
                         <td>
                           <div className="admin-orders__customer-cell">
-                            <div className="customer-avatar">
-                              {order.user?.profilePictureUrl ? (
-                                <img
-                                  src={order.user.profilePictureUrl}
-                                  alt={order.user.name || order.user.email}
-                                />
-                              ) : (
-                                <span>{getInitials(order.user?.name, order.user?.email)}</span>
-                              )}
-                            </div>
                             <div className="customer-info">
                               <span className="customer-name">
                                 {order.user?.name || 'Guest / Unnamed'}
@@ -814,16 +793,6 @@ const Orders = () => {
                   </div>
 
                   <div className="grid-card-customer">
-                    <div className="customer-avatar">
-                      {order.user?.profilePictureUrl ? (
-                        <img
-                          src={order.user.profilePictureUrl}
-                          alt={order.user.name || order.user.email}
-                        />
-                      ) : (
-                        <span>{getInitials(order.user?.name, order.user?.email)}</span>
-                      )}
-                    </div>
                     <div className="customer-info">
                       <h4>{order.user?.name || 'Guest / Unnamed'}</h4>
                       <span>{order.user?.email || '—'}</span>
@@ -961,16 +930,6 @@ const Orders = () => {
                     <div className="meta-card customer-card">
                       <span className="meta-label">Customer Info</span>
                       <div className="customer-preview">
-                        <div className="customer-avatar customer-avatar--sm">
-                          {selectedReceiptOrder.user?.profilePictureUrl ? (
-                            <img
-                              src={selectedReceiptOrder.user.profilePictureUrl}
-                              alt={selectedReceiptOrder.user.name || selectedReceiptOrder.user.email}
-                            />
-                          ) : (
-                            <span>{getInitials(selectedReceiptOrder.user?.name, selectedReceiptOrder.user?.email)}</span>
-                          )}
-                        </div>
                         <div className="customer-meta">
                           <strong>{selectedReceiptOrder.user?.name || 'Guest / Unnamed'}</strong>
                           <span>{selectedReceiptOrder.user?.email || '—'}</span>
