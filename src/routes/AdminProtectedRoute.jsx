@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
 
 const AdminProtectedRoute = ({ children }) => {
+  const { isAuthenticated, authLoading } = useAuth();
   const { isAdminAuth, loading, verify } = useAdminAuth();
   const location = useLocation();
   const [checking, setChecking] = useState(!isAdminAuth);
 
   useEffect(() => {
     let isMounted = true;
-    if (!isAdminAuth) {
+    if (isAuthenticated && !isAdminAuth) {
       verify().finally(() => {
         if (isMounted) setChecking(false);
       });
@@ -19,14 +21,18 @@ const AdminProtectedRoute = ({ children }) => {
     return () => {
       isMounted = false;
     };
-  }, [isAdminAuth, verify]);
+  }, [isAuthenticated, isAdminAuth, verify]);
 
-  if (loading || checking) {
+  if (authLoading || (isAuthenticated && (loading || checking))) {
     return (
       <div className="admin-loading-screen">
         <div className="admin-spinner" />
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!isAdminAuth) {

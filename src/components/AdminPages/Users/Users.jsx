@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import './Users.scss';
 
 const PAGE_SIZE = 10;
@@ -91,6 +92,8 @@ const Users = () => {
     email: '',
     balance: 0,
     isActive: true,
+    twoFactorEnabled: false,
+    subscribe: false,
   });
   const [isSavingUser, setIsSavingUser] = useState(false);
 
@@ -108,7 +111,7 @@ const Users = () => {
     setError('');
 
     try {
-      const res = await fetch(`${apiUrl}/api/admin/users`, { credentials: 'include' });
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/users`);
       if (res.ok) {
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);
@@ -131,7 +134,7 @@ const Users = () => {
     setDetailsTab('overview');
     setLoadingDetails(true);
     try {
-      const res = await fetch(`${apiUrl}/api/admin/users/${userId}`, { credentials: 'include' });
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/users/${userId}`);
       if (res.ok) {
         const data = await res.json();
         setUserDetails(data);
@@ -147,11 +150,23 @@ const Users = () => {
 
   const openEditModal = (user) => {
     setEditingUser(user);
+    const is2Fa = user.twoFactorEnabled !== undefined 
+      ? user.twoFactorEnabled 
+      : (user.session?.twoFactorEnabled ?? false);
+    const isSub = user.subscribe !== undefined 
+      ? user.subscribe 
+      : (user.session?.subscribe ?? false);
+    const isActive = user.isActive !== undefined 
+      ? user.isActive 
+      : (user.session?.isActive !== false);
+
     setEditForm({
       name: user.name || '',
       email: user.email || '',
       balance: user.balance || 0,
-      isActive: user.isActive !== false,
+      isActive: isActive !== false,
+      twoFactorEnabled: !!is2Fa,
+      subscribe: !!isSub,
     });
   };
 
@@ -161,15 +176,16 @@ const Users = () => {
 
     setIsSavingUser(true);
     try {
-      const res = await fetch(`${apiUrl}/api/admin/users/${editingUser.id}`, {
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           name: editForm.name,
           email: editForm.email,
           balance: parseFloat(editForm.balance) || 0,
           isActive: editForm.isActive,
+          twoFactorEnabled: editForm.twoFactorEnabled,
+          subscribe: editForm.subscribe,
         }),
       });
 
@@ -787,37 +803,43 @@ const Users = () => {
                       </button>
                     </div>
 
-                    <div className="admin-users__modal-tabs">
-                      <button
-                        className={`tab-btn${detailsTab === 'overview' ? ' active' : ''}`}
-                        onClick={() => setDetailsTab('overview')}
-                      >
-                        Overview
-                      </button>
-                      <button
-                        className={`tab-btn${detailsTab === 'addresses' ? ' active' : ''}`}
-                        onClick={() => setDetailsTab('addresses')}
-                      >
-                        Addresses ({userDetails.addresses?.length || 0})
-                      </button>
-                      <button
-                        className={`tab-btn${detailsTab === 'cards' ? ' active' : ''}`}
-                        onClick={() => setDetailsTab('cards')}
-                      >
-                        Cards ({userDetails.paymentMethods?.length || 0})
-                      </button>
-                      <button
-                        className={`tab-btn${detailsTab === 'orders' ? ' active' : ''}`}
-                        onClick={() => setDetailsTab('orders')}
-                      >
-                        Orders ({userDetails.orders?.length || 0})
-                      </button>
-                      <button
-                        className={`tab-btn${detailsTab === 'promos' ? ' active' : ''}`}
-                        onClick={() => setDetailsTab('promos')}
-                      >
-                        Promos ({userDetails.promos?.length || 0})
-                      </button>
+                    <div className="admin-users__modal-tabs-wrap">
+                      <div className="admin-users__modal-tabs">
+                        <button
+                          className={`tab-btn${detailsTab === 'overview' ? ' active' : ''}`}
+                          onClick={() => setDetailsTab('overview')}
+                        >
+                          <span>Overview</span>
+                        </button>
+                        <button
+                          className={`tab-btn${detailsTab === 'addresses' ? ' active' : ''}`}
+                          onClick={() => setDetailsTab('addresses')}
+                        >
+                          <span>Addresses</span>
+                          <span className="tab-badge">{userDetails.addresses?.length || 0}</span>
+                        </button>
+                        <button
+                          className={`tab-btn${detailsTab === 'cards' ? ' active' : ''}`}
+                          onClick={() => setDetailsTab('cards')}
+                        >
+                          <span>Cards</span>
+                          <span className="tab-badge">{userDetails.paymentMethods?.length || 0}</span>
+                        </button>
+                        <button
+                          className={`tab-btn${detailsTab === 'orders' ? ' active' : ''}`}
+                          onClick={() => setDetailsTab('orders')}
+                        >
+                          <span>Orders</span>
+                          <span className="tab-badge">{userDetails.orders?.length || 0}</span>
+                        </button>
+                        <button
+                          className={`tab-btn${detailsTab === 'promos' ? ' active' : ''}`}
+                          onClick={() => setDetailsTab('promos')}
+                        >
+                          <span>Promos</span>
+                          <span className="tab-badge">{userDetails.promos?.length || 0}</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="admin-users__modal-body">
@@ -835,6 +857,26 @@ const Users = () => {
                                   <span className="badge badge--success">Active</span>
                                 ) : (
                                   <span className="badge badge--danger">Blocked / Suspended</span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="info-item">
+                              <span className="label">Two-Factor Auth</span>
+                              <span className="value">
+                                {userDetails.session?.twoFactorEnabled ? (
+                                  <span className="badge badge--success">Enabled</span>
+                                ) : (
+                                  <span className="badge badge--muted">Disabled</span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="info-item">
+                              <span className="label">Newsletter</span>
+                              <span className="value">
+                                {userDetails.session?.subscribe ? (
+                                  <span className="badge badge--info">Subscribed</span>
+                                ) : (
+                                  <span className="badge badge--muted">Not Subscribed</span>
                                 )}
                               </span>
                             </div>
@@ -1010,73 +1052,39 @@ const Users = () => {
                 </div>
 
                 <form onSubmit={handleSaveUser} className="admin-users__edit-form">
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      placeholder="e.g. John Doe"
-                    />
-                  </div>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        placeholder="e.g. John Doe"
+                      />
+                    </div>
 
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={editForm.email}
-                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                      placeholder="user@example.com"
-                    />
+                    <div className="form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                        placeholder="user@example.com"
+                      />
+                    </div>
                   </div>
 
                   <div className="form-group">
                     <label>User Balance (₼)</label>
-                    <div className="balance-input-wrap">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={editForm.balance}
-                        onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
-                      />
-                      <div className="quick-balance-btns">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              balance: (parseFloat(prev.balance) || 0) + 10,
-                            }))
-                          }
-                        >
-                          +10 ₼
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              balance: (parseFloat(prev.balance) || 0) + 50,
-                            }))
-                          }
-                        >
-                          +50 ₼
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setEditForm((prev) => ({
-                              ...prev,
-                              balance: 0,
-                            }))
-                          }
-                        >
-                          Reset 0
-                        </button>
-                      </div>
-                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editForm.balance}
+                      onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
+                      placeholder="0.00"
+                    />
                   </div>
 
                   <div className="toggles-section">
@@ -1089,6 +1097,30 @@ const Users = () => {
                       <span className="toggle-label">
                         <strong>Account Active</strong>
                         <small>Uncheck to block user from logging in</small>
+                      </span>
+                    </label>
+
+                    <label className="toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={editForm.twoFactorEnabled}
+                        onChange={(e) => setEditForm({ ...editForm, twoFactorEnabled: e.target.checked })}
+                      />
+                      <span className="toggle-label">
+                        <strong>Two-Factor Authentication (2FA)</strong>
+                        <small>Require OTP verification during sign-in</small>
+                      </span>
+                    </label>
+
+                    <label className="toggle-item">
+                      <input
+                        type="checkbox"
+                        checked={editForm.subscribe}
+                        onChange={(e) => setEditForm({ ...editForm, subscribe: e.target.checked })}
+                      />
+                      <span className="toggle-label">
+                        <strong>Newsletter Subscription</strong>
+                        <small>Receive promotional emails and updates</small>
                       </span>
                     </label>
                   </div>

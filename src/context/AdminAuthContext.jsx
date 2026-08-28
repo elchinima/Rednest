@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
 const AdminAuthContext = createContext(null);
 
@@ -12,9 +13,7 @@ export const AdminAuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${apiUrl}/api/admin/verify`, {
-        credentials: 'include',
-      });
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/verify`);
       setIsAdminAuth(res.ok);
       return res.ok;
     } catch {
@@ -33,24 +32,23 @@ export const AdminAuthProvider = ({ children }) => {
 
   const adminLogin = useCallback(async (password) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const res = await fetch(`${apiUrl}/api/admin/login`, {
+    const res = await fetchWithRefresh(`${apiUrl}/api/admin/login`, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     });
     if (res.ok) {
       setIsAdminAuth(true);
-      return true;
+      return { ok: true };
     }
-    return false;
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, status: res.status, message: data.message || 'Incorrect password. Please try again.' };
   }, []);
 
   const adminLogout = useCallback(async () => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    await fetch(`${apiUrl}/api/admin/logout`, {
+    await fetchWithRefresh(`${apiUrl}/api/admin/logout`, {
       method: 'POST',
-      credentials: 'include',
     });
     setIsAdminAuth(false);
   }, []);

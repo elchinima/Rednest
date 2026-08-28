@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/icons/rednest_logo.png';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import './AdminLogin.scss';
 
 const LoaderIcon = () => (
@@ -16,22 +17,40 @@ const LoaderIcon = () => (
 );
 
 const AdminLogin = () => {
-  const { adminLogin } = useAdminAuth();
+  const { adminLogin, isAdminAuth } = useAdminAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  if (authLoading) {
+    return (
+      <div className="admin-loading-screen">
+        <div className="admin-spinner" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (isAdminAuth) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const success = await adminLogin(password);
-      if (success) {
+      const res = await adminLogin(password);
+      if (res && res.ok) {
         navigate('/admin/dashboard', { replace: true });
       } else {
-        setError('Incorrect password. Please try again.');
+        setError(res?.message || 'Incorrect password. Please try again.');
       }
     } catch {
       setError('Connection error. Please try again.');

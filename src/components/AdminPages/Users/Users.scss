@@ -892,7 +892,7 @@
     }
 
     &--details {
-      max-width: 720px;
+      max-width: 740px;
     }
   }
 
@@ -900,9 +900,10 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    padding: 20px 22px;
+    padding: 20px 24px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     gap: 12px;
+    flex-shrink: 0;
 
     @media (max-width: 640px) {
       padding: 16px;
@@ -1016,12 +1017,26 @@
     }
   }
 
+  &__modal-tabs-wrap {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(22, 12, 12, 0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 24px;
+
+    @media (max-width: 640px) {
+      padding: 0 12px;
+    }
+  }
+
   &__modal-tabs {
     display: flex;
+    align-items: center;
+    gap: 6px;
     overflow-x: auto;
-    background: rgba(0, 0, 0, 0.25);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 0 16px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
 
@@ -1029,47 +1044,95 @@
       display: none;
     }
 
-    @media (max-width: 640px) {
-      padding: 0 10px;
-    }
-
     .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 12px 14px;
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 0.82rem;
+      margin-bottom: -1px;
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 0.84rem;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
       transition: all 0.2s ease;
+      font-family: $font-family-base;
 
       @media (max-width: 640px) {
-        padding: 10px 10px;
-        font-size: 0.76rem;
+        padding: 10px 8px;
+        font-size: 0.78rem;
+        gap: 4px;
+      }
+
+      .tab-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+        transition: all 0.2s ease;
+        line-height: 1.3;
       }
 
       &:hover {
         color: #fff;
+        .tab-badge {
+          background: rgba(255, 255, 255, 0.15);
+          color: #fff;
+        }
       }
 
       &.active {
         color: #fff;
         border-bottom-color: $color-primary;
+
+        .tab-badge {
+          background: rgba($color-primary, 0.25);
+          color: #fca5a5;
+          border: 1px solid rgba($color-primary, 0.4);
+        }
       }
     }
   }
 
   &__modal-body {
-    padding: 20px 22px;
+    padding: 20px 24px;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($color-primary, 0.45) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($color-primary, 0.45);
+      border-radius: 999px;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba($color-primary, 0.8);
+      }
+    }
 
     @media (max-width: 640px) {
       padding: 14px 16px;
+      scrollbar-gutter: auto;
     }
   }
 
@@ -1337,15 +1400,51 @@
   }
 
   &__edit-form {
-    padding: 20px 22px;
+    padding: 20px 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
     overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($color-primary, 0.45) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($color-primary, 0.45);
+      border-radius: 999px;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba($color-primary, 0.8);
+      }
+    }
 
     @media (max-width: 640px) {
       padding: 16px;
-      gap: 14px;
+      scrollbar-gutter: auto;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+
+      @media (max-width: 520px) {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
     }
 
     .form-group {
@@ -1375,36 +1474,6 @@
           outline: none;
           border-color: rgba($color-primary, 0.5);
           box-shadow: 0 0 0 3px rgba($color-primary, 0.15);
-        }
-      }
-    }
-
-    .balance-input-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .quick-balance-btns {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-
-      button {
-        flex: 1;
-        min-width: 60px;
-        padding: 6px 8px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.74rem;
-        font-weight: 600;
-        cursor: pointer;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.12);
-          color: #fff;
         }
       }
     }

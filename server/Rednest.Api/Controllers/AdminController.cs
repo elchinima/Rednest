@@ -1,7 +1,9 @@
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Rednest.Core.Entities;
@@ -12,6 +14,7 @@ using SixLabors.ImageSharp.Processing;
 
 namespace Rednest.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AdminController : ControllerBase
@@ -32,6 +35,10 @@ public class AdminController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login([FromBody] AdminLoginRequest request)
     {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out _))
+            return Unauthorized(new { message = "You must be logged in with an active account to access the admin panel." });
+
         var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
         if (string.IsNullOrEmpty(adminSecret) || request.Password != adminSecret)
             return Unauthorized(new { message = "Incorrect password." });
@@ -471,6 +478,10 @@ public class AdminController : ControllerBase
 
     private bool IsAdminAuthenticated()
     {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out _))
+            return false;
+
         return Request.Cookies.TryGetValue("admin_session", out var token)
                && !string.IsNullOrEmpty(token)
                && _validSessions.Contains(token);

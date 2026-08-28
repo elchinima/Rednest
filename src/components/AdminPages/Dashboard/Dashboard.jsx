@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import './Dashboard.scss';
 
 const fadeUp = {
@@ -40,7 +41,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${apiUrl}/api/admin/files`, { credentials: 'include' });
+        const res = await fetchWithRefresh(`${apiUrl}/api/admin/files`);
         if (res.ok) {
           const files = await res.json();
           const totalKb = files.reduce((sum, f) => sum + (f.sizeKb || 0), 0);

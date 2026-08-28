@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
+import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import './Database.scss';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -73,7 +74,7 @@ const Database = () => {
 
   const fetchFiles = useCallback(async () => {
     try {
-      const res = await fetch(`${apiUrl}/api/admin/files`, { credentials: 'include' });
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/files`);
       if (res.ok) {
         const data = await res.json();
         setFiles(data);
@@ -139,9 +140,8 @@ const Database = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch(`${apiUrl}/api/admin/upload`, {
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/upload`, {
         method: 'POST',
-        credentials: 'include',
         body: formData,
       });
 
@@ -183,7 +183,7 @@ const Database = () => {
       setCopiedUrl(fileName);
       setTimeout(() => setCopiedUrl(''), 2000);
     } catch {
-      showError('Failed to copy URL.');
+      showError('Could not copy link to clipboard.');
     }
   };
 
@@ -192,9 +192,8 @@ const Database = () => {
     const fileName = fileToDelete.fileName;
     setDeletingFile(fileName);
     try {
-      const res = await fetch(`${apiUrl}/api/admin/files/${encodeURIComponent(fileName)}`, {
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/files/${encodeURIComponent(fileName)}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
       if (res.ok) {
         showSuccess(`"${fileName}" deleted.`);
