@@ -895,10 +895,11 @@ const Orders = () => {
                       <h2>Order Receipt</h2>
                     </div>
                     <p className="order-id-sub">
-                      ID: <code>{selectedReceiptOrder.id}</code>
+                      ID: <code>...{selectedReceiptOrder.id ? selectedReceiptOrder.id.slice(-7) : ''}</code>
                       <button
                         className={`copy-chip-btn${copiedId === 'modal-order-id' ? ' copied' : ''}`}
                         onClick={() => copyToClipboard(selectedReceiptOrder.id, 'modal-order-id')}
+                        title="Click to copy full Order ID"
                       >
                         {copiedId === 'modal-order-id' ? (
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -910,7 +911,7 @@ const Orders = () => {
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                           </svg>
                         )}
-                        <span>Copy ID</span>
+                        <span>Copy</span>
                       </button>
                     </p>
                   </div>
@@ -1090,11 +1091,6 @@ const Orders = () => {
                       className="admin-orders__btn-secondary"
                       onClick={() => window.print()}
                     >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="6 9 6 2 18 2 18 9" />
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                        <rect x="6" y="14" width="12" height="8" />
-                      </svg>
                       Print Receipt
                     </button>
                     <button
