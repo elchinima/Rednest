@@ -67,6 +67,13 @@ const Navbar = () => {
           >
             Menu
           </Link>
+          <Link
+            to="/review"
+            className={`nav-link ${location.pathname === '/review' || location.pathname === '/reviews' ? 'active' : ''}`}
+            onClick={handleCloseMenu}
+          >
+            Review
+          </Link>
         </nav>
         <UserNavPills onMenuClose={handleCloseMenu} />
       </div>

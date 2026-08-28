@@ -23,6 +23,7 @@ const ProtectedRoute = lazy(() => import('./ProtectedRoute'));
 const AdminProtectedRoute = lazy(() => import('./AdminProtectedRoute'));
 const ErrorPage = lazy(() => import('../components/PublicPages/ErrorPage/ErrorPage'));
 const Rules = lazy(() => import('../components/PublicPages/Rules/Rules'));
+const Reviews = lazy(() => import('../components/PublicPages/Reviews/Reviews'));
 import ScrollToTop from '../components/Elements/ScrollToTop';
 import SupportWidget from '../components/Elements/SupportWidget';
 import BuyNowWidget from '../components/Elements/BuyNowWidget';
@@ -148,6 +149,8 @@ const AnimatedRoutes = () => {
 
           <Route path="/rules" element={<Rules />} />
           <Route path="/terms" element={<Navigate to="/rules" replace />} />
+          <Route path="/review" element={<Reviews />} />
+          <Route path="/reviews" element={<Navigate to="/review" replace />} />
           <Route path="/error" element={<ErrorPage />} />
           <Route path="*" element={<ErrorPage defaultCode="404" />} />
         </Routes>

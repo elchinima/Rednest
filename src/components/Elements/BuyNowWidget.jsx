@@ -13,6 +13,7 @@ const buyNowStyles = `
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   opacity: 0;
   pointer-events: none;
@@ -29,6 +30,7 @@ body.mobile-menu-open .buynow-widget-container {
 @media (max-width: 768px) {
   .buynow-widget-container {
     bottom: 20px;
+    gap: 10px;
   }
 }
 .buynow-widget {
@@ -52,6 +54,7 @@ body.mobile-menu-open .buynow-widget-container {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  white-space: nowrap;
 }
 .buynow-widget:hover {
   transform: scale(1.08) translateY(-3px);
@@ -71,6 +74,10 @@ body.mobile-menu-open .buynow-widget-container {
   height: 19px;
   fill: currentColor;
   transform: translateX(-2px);
+}
+.review-widget-icon {
+  width: 18px;
+  height: 18px;
 }
 .cart-badge {
   position: absolute;
@@ -115,6 +122,21 @@ body.mobile-menu-open .buynow-widget-container {
     font-size: 0.48rem;
     padding: 0 2px;
   }
+
+  .buynow-widget-container.is-review-page .buynow-widget {
+    padding: 0;
+    width: 44px;
+    height: 44px !important;
+    min-height: 44px !important;
+    border-radius: 50%;
+    gap: 0;
+  }
+  .buynow-widget-container.is-review-page .buynow-widget-text {
+    display: none;
+  }
+  .buynow-widget-container.is-review-page .buynow-icon {
+    transform: none;
+  }
 }
 `;
 
@@ -124,6 +146,8 @@ const BuyNowWidget = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const { totalCount } = useBasket();
+
+  const isReviewPage = location.pathname === '/review';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -141,7 +165,7 @@ const BuyNowWidget = () => {
         isAtBottom = window.innerHeight + scrollY >= document.documentElement.scrollHeight - 100;
       }
 
-      setIsScrolled(scrollY >= 10);
+      setIsScrolled(scrollY >= 10 || isReviewPage);
       setIsFooterVisible(isAtBottom);
     };
 
@@ -149,22 +173,23 @@ const BuyNowWidget = () => {
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname]);
+  }, [location.pathname, isReviewPage]);
 
   const hiddenPaths = ['/login', '/fortune', '/basket', '/profile', '/sessions', '/promos', '/order', '/orders', '/rules', '/terms', '/error'];
   if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith('/admin')) {
     return null;
   }
 
-  const isVisible = isScrolled && !isFooterVisible;
+  const isVisible = (isScrolled || isReviewPage) && !isFooterVisible;
 
   return (
     <>
       <style>{buyNowStyles}</style>
-      <div className={`buynow-widget-container ${isVisible ? 'visible' : ''}`}>
+      <div className={`buynow-widget-container ${isVisible ? 'visible' : ''} ${isReviewPage ? 'is-review-page' : ''}`}>
         <button 
           className="buynow-widget" 
           onClick={() => navigate('/basket')}
+          aria-label="Buy Now"
         >
           <div className="buynow-icon-wrapper">
             <img src={cartAnimated} alt="Cart" className="buynow-icon" />
@@ -172,8 +197,22 @@ const BuyNowWidget = () => {
               <span key={totalCount} className="cart-badge">{totalCount}</span>
             )}
           </div>
-          Buy Now
+          <span className="buynow-widget-text">Buy Now</span>
         </button>
+
+        {isReviewPage && (
+          <button
+            className="buynow-widget review-widget-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-write-review-modal'))}
+            aria-label="Write a Review"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="review-widget-icon">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span className="buynow-widget-text">Write a Review</span>
+          </button>
+        )}
       </div>
     </>
   );
