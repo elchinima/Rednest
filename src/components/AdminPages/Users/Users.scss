@@ -66,12 +66,6 @@
     }
   }
 
-  &__header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
   &__btn-secondary {
     display: inline-flex;
     align-items: center;
@@ -102,38 +96,6 @@
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-    }
-
-    &--warn {
-      background: rgba(245, 158, 11, 0.1);
-      border-color: rgba(245, 158, 11, 0.25);
-      color: #fbbf24;
-
-      &:hover:not(:disabled) {
-        background: rgba(245, 158, 11, 0.2);
-        border-color: rgba(245, 158, 11, 0.4);
-      }
-    }
-
-    &--danger {
-      background: rgba($color-primary, 0.1);
-      border-color: rgba($color-primary, 0.25);
-      color: #fca5a5;
-
-      &:hover:not(:disabled) {
-        background: rgba($color-primary, 0.2);
-        border-color: rgba($color-primary, 0.4);
-      }
-    }
-  }
-
-  &__spin {
-    animation: spin 0.8s linear infinite;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
     }
   }
 
@@ -364,12 +326,12 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 4px;
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
     line-height: 1;
 
     &--success {
@@ -390,32 +352,10 @@
       border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
-    &--purple {
-      background: rgba(168, 85, 247, 0.15);
-      color: #c084fc;
-      border: 1px solid rgba(168, 85, 247, 0.3);
-    }
-
     &--muted {
       background: rgba(255, 255, 255, 0.08);
       color: rgba(255, 255, 255, 0.5);
       border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-  }
-
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-
-    &.online {
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-    }
-
-    &.offline {
-      background: #ef4444;
     }
   }
 
@@ -577,32 +517,6 @@
     color: #fbbf24;
   }
 
-  &__activity-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  &__sessions-count {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    font-size: 0.82rem;
-    color: #e5e7eb;
-  }
-
-  &__last-seen {
-    font-size: 0.75rem;
-    color: $color-text-muted;
-  }
-
-  &__ip-tag {
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.35);
-    font-family: monospace;
-  }
-
   &__orders-cell {
     display: flex;
     flex-direction: column;
@@ -620,8 +534,21 @@
     color: $color-text-muted;
   }
 
-  &__date-cell {
-    font-size: 0.8rem;
+  &__last-active-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__date-main {
+    font-size: 0.84rem;
+    color: $color-text;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  &__date-rel {
+    font-size: 0.74rem;
     color: $color-text-muted;
     white-space: nowrap;
   }
@@ -655,18 +582,6 @@
       background: rgba(255, 255, 255, 0.12);
       border-color: rgba(255, 255, 255, 0.2);
       transform: translateY(-1px);
-    }
-
-    &--warn:hover {
-      color: #fbbf24;
-      background: rgba(245, 158, 11, 0.15);
-      border-color: rgba(245, 158, 11, 0.3);
-    }
-
-    &--danger:hover {
-      color: #f87171;
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.3);
     }
   }
 
@@ -723,13 +638,6 @@
     text-overflow: ellipsis;
   }
 
-  &__grid-badges {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
   &__grid-metrics {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -772,7 +680,7 @@
 
     .date {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.35);
+      color: rgba(255, 255, 255, 0.4);
     }
 
     .actions {
@@ -881,66 +789,6 @@
 
     &--details {
       max-width: 760px;
-    }
-
-    &--alert {
-      max-width: 440px;
-      text-align: center;
-      padding: 30px 24px;
-      align-items: center;
-
-      h3 {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #fff;
-        margin: 12px 0 8px;
-      }
-
-      p {
-        font-size: 0.88rem;
-        color: $color-text-muted;
-        line-height: 1.5;
-        margin: 0 0 16px;
-      }
-
-      .danger-note {
-        font-size: 0.8rem;
-        color: #f87171;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-        padding: 8px 12px;
-        border-radius: 6px;
-      }
-
-      .alert-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        svg {
-          width: 26px;
-          height: 26px;
-        }
-
-        &--warn {
-          background: rgba(245, 158, 11, 0.15);
-          border: 1px solid rgba(245, 158, 11, 0.3);
-          svg {
-            stroke: #fbbf24;
-          }
-        }
-
-        &--danger {
-          background: rgba(239, 68, 68, 0.15);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          svg {
-            stroke: #f87171;
-          }
-        }
-      }
     }
   }
 
@@ -1111,15 +959,6 @@
   }
 
   &__quick-actions {
-    h4 {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.5);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin: 0 0 12px;
-    }
-
     .actions-row {
       display: flex;
       gap: 10px;
@@ -1134,7 +973,6 @@
     font-size: 0.88rem;
   }
 
-  .sessions-list,
   .addresses-list,
   .cards-list,
   .promos-list {
@@ -1143,7 +981,6 @@
     gap: 12px;
   }
 
-  .session-card,
   .address-card,
   .card-item,
   .promo-card {
@@ -1151,49 +988,6 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: $border-radius-sm;
-  }
-
-  .session-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
-
-  .session-device {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    svg {
-      width: 20px;
-      height: 20px;
-      stroke: $color-primary;
-    }
-
-    strong {
-      display: block;
-      font-size: 0.9rem;
-      color: #fff;
-    }
-
-    span {
-      font-size: 0.75rem;
-      color: $color-text-muted;
-    }
-  }
-
-  .session-details {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    font-size: 0.8rem;
-    color: $color-text-muted;
-
-    code {
-      font-family: monospace;
-      color: #fff;
-    }
   }
 
   .address-card__header {
@@ -1464,22 +1258,6 @@
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
-      }
-
-      &--warn {
-        background: linear-gradient(135deg, #d97706, #b45309);
-
-        &:hover:not(:disabled) {
-          box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35);
-        }
-      }
-
-      &--danger {
-        background: linear-gradient(135deg, #dc2626, #991b1b);
-
-        &:hover:not(:disabled) {
-          box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
-        }
       }
     }
   }
