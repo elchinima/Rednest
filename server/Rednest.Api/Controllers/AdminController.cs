@@ -318,6 +318,189 @@ public class AdminController : ControllerBase
         return Ok(new { message = "User deleted successfully." });
     }
 
+    [HttpGet("orders")]
+    public async Task<IActionResult> GetOrders()
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var orders = await _context.Orders
+            .AsNoTracking()
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+
+        var userIds = orders.Select(o => o.UserId).Distinct().ToList();
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(u => u.Id);
+
+        var productIds = orders
+            .SelectMany(o => o.Items ?? Enumerable.Empty<OrderProductItem>())
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(p => p.Id);
+
+        var result = orders.Select(o =>
+        {
+            users.TryGetValue(o.UserId, out var u);
+            var itemsEnriched = (o.Items ?? new List<OrderProductItem>()).Select(i => new
+            {
+                productId = i.ProductId,
+                quantity = i.Quantity,
+                unitPrice = i.UnitPrice,
+                name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
+                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
+            }).ToList();
+
+            return new
+            {
+                id = o.Id,
+                userId = o.UserId,
+                user = u != null ? new
+                {
+                    id = u.Id,
+                    name = u.Name,
+                    email = u.Email,
+                    profilePictureUrl = u.ProfilePictureUrl,
+                    balance = u.Balance
+                } : null,
+                status = o.Status,
+                createdAt = o.CreatedAt,
+                itemsCount = o.Items?.Count ?? 0,
+                totalUnits = o.Items?.Sum(i => i.Quantity) ?? 0,
+                items = itemsEnriched,
+                payment = o.Payment != null ? new
+                {
+                    paymentMethod = o.Payment.PaymentMethod.ToString(),
+                    originalTotal = o.Payment.OriginalTotal,
+                    discountAmount = o.Payment.DiscountAmount,
+                    totalAmount = o.Payment.TotalAmount,
+                    promoCode = o.Payment.PromoCode,
+                    promoPrizeName = o.Payment.PromoPrizeName,
+                    paymentIntentId = o.Payment.PaymentIntentId
+                } : null,
+                notes = o.Notes
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpGet("orders/{id:guid}")]
+    public async Task<IActionResult> GetOrderById(Guid id)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var order = await _context.Orders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == id);
+
+        if (order == null)
+            return NotFound(new { message = "Order not found." });
+
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == order.UserId);
+
+        var productIds = (order.Items ?? new List<OrderProductItem>())
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _context.Products
+            .Where(p => productIds.Contains(p.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(p => p.Id);
+
+        var itemsEnriched = (order.Items ?? new List<OrderProductItem>()).Select(i => new
+        {
+            productId = i.ProductId,
+            quantity = i.Quantity,
+            unitPrice = i.UnitPrice,
+            name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
+            imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+            category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
+        }).ToList();
+
+        return Ok(new
+        {
+            id = order.Id,
+            userId = order.UserId,
+            user = user != null ? new
+            {
+                id = user.Id,
+                name = user.Name,
+                email = user.Email,
+                profilePictureUrl = user.ProfilePictureUrl,
+                balance = user.Balance
+            } : null,
+            status = order.Status,
+            createdAt = order.CreatedAt,
+            itemsCount = order.Items?.Count ?? 0,
+            totalUnits = order.Items?.Sum(i => i.Quantity) ?? 0,
+            items = itemsEnriched,
+            payment = order.Payment != null ? new
+            {
+                paymentMethod = order.Payment.PaymentMethod.ToString(),
+                originalTotal = order.Payment.OriginalTotal,
+                discountAmount = order.Payment.DiscountAmount,
+                totalAmount = order.Payment.TotalAmount,
+                promoCode = order.Payment.PromoCode,
+                promoPrizeName = order.Payment.PromoPrizeName,
+                paymentIntentId = order.Payment.PaymentIntentId
+            } : null,
+            notes = order.Notes
+        });
+    }
+
+    [HttpPut("orders/{id:guid}/status")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] AdminUpdateOrderStatusRequest request)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.Status))
+            return BadRequest(new { message = "Status cannot be empty." });
+
+        var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+        if (order == null)
+            return NotFound(new { message = "Order not found." });
+
+        order.Status = request.Status.Trim();
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Order status updated successfully.",
+            id = order.Id,
+            status = order.Status
+        });
+    }
+
+    [HttpDelete("orders/{id:guid}")]
+    public async Task<IActionResult> DeleteOrder(Guid id)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+        if (order == null)
+            return NotFound(new { message = "Order not found." });
+
+        _context.Orders.Remove(order);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Order deleted successfully." });
+    }
+
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
@@ -495,6 +678,8 @@ public class AdminController : ControllerBase
 }
 
 public record AdminLoginRequest(string Password);
+
+public record AdminUpdateOrderStatusRequest(string Status);
 
 public class AdminUpdateUserRequest
 {

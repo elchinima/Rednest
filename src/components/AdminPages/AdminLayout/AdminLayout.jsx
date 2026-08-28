@@ -20,6 +20,17 @@ const NAV_ITEMS = [
     ),
   },
   {
+    to: '/admin/orders',
+    label: 'Orders',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+        <path d="M3 6h18" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
     to: '/admin/users',
     label: 'Users',
     icon: (
@@ -52,12 +63,10 @@ const AdminLayout = ({ children }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Close sidebar on route change
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
-  // Prevent background scroll when mobile sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -84,7 +93,6 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="admin-layout">
-      {/* Mobile Topbar */}
       <header className="admin-mobile-header">
         <button
           id="admin-mobile-menu-btn"
@@ -118,7 +126,6 @@ const AdminLayout = ({ children }) => {
         </button>
       </header>
 
-      {/* Backdrop for mobile */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -131,7 +138,6 @@ const AdminLayout = ({ children }) => {
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
       <aside className={`admin-sidebar${sidebarOpen ? ' admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__header">
           <div className="admin-sidebar__header-info">
