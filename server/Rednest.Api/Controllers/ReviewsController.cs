@@ -56,12 +56,13 @@ public class ReviewsController : ControllerBase
                 initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
+                status = r.Status.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
                 likes = likesList.Count,
                 userLiked = isLiked,
                 isOwner = isOwner,
-                createdAt = r.CreatedAt
+                createdAt = DateTime.SpecifyKind(r.CreatedAt, DateTimeKind.Utc)
             };
         }).ToList();
 
@@ -91,7 +92,7 @@ public class ReviewsController : ControllerBase
             .Select(o => new
             {
                 id = o.Id,
-                createdAt = o.CreatedAt,
+                createdAt = DateTime.SpecifyKind(o.CreatedAt, DateTimeKind.Utc),
                 status = o.Status,
                 totalAmount = o.Payment != null ? o.Payment.TotalAmount : 0m,
                 itemsCount = o.Items != null ? o.Items.Sum(i => i.Quantity) : 0
@@ -140,6 +141,7 @@ public class ReviewsController : ControllerBase
             UserId = userId.Value,
             OrderId = request.OrderId,
             Category = categoryEnum,
+            Status = ReviewStatus.Published,
             ReviewData = new ReviewDetails
             {
                 Rating = Math.Round(request.Rating, 2),
@@ -164,12 +166,13 @@ public class ReviewsController : ControllerBase
             initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
             avatarUrl = user?.ProfilePictureUrl,
             category = review.Category.ToString(),
+            status = review.Status.ToString(),
             rating = review.ReviewData.Rating,
             comment = review.ReviewData.Comment,
             likes = 0,
             userLiked = false,
             isOwner = true,
-            createdAt = review.CreatedAt
+            createdAt = DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc)
         });
     }
 

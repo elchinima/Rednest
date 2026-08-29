@@ -136,6 +136,11 @@ public class AppDbContext : DbContext
                   .HasConversion<string>()
                   .HasColumnType("text");
 
+            entity.Property(e => e.Status)
+                  .HasConversion<string>()
+                  .HasColumnType("text")
+                  .HasDefaultValue(ReviewStatus.Published);
+
             entity.Property(e => e.ReviewData)
                   .HasColumnName("Review")
                   .HasColumnType("jsonb")

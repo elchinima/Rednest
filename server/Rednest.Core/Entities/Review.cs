@@ -8,6 +8,13 @@ public enum ReviewCategory
     Staff = 3
 }
 
+public enum ReviewStatus
+{
+    Published = 0,
+    Verification = 1,
+    Cancelled = 2
+}
+
 public class ReviewDetails
 {
     public decimal Rating { get; set; }
@@ -20,7 +27,9 @@ public class Review
     public Guid UserId { get; set; }
     public Guid OrderId { get; set; }
     public ReviewCategory Category { get; set; }
+    public ReviewStatus Status { get; set; } = ReviewStatus.Published;
     public ReviewDetails ReviewData { get; set; } = new();
     public List<Guid> Likes { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+

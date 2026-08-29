@@ -418,6 +418,22 @@ const Profile = () => {
                   Orders
                 </button>
               </div>
+
+              <div className="profile-field-group profile-action-row">
+                <div className="profile-action-text">
+                  <div className="profile-action-title">My Reviews</div>
+                  <p className="profile-action-desc">
+                    View your submitted feedback, check likes received, and manage your reviews
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="cta-btn sm profile-action-btn"
+                  onClick={() => navigate('/review?filter=my')}
+                >
+                  My Reviews
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

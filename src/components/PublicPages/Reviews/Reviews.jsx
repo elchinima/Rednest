@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
@@ -7,22 +8,27 @@ import AuthModal from '../Auth/AuthModal';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import { REVIEW_CATEGORIES, getAvatarGradient, formatTimeAgo } from './reviewsData';
+import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime, formatTimeAgo } from './reviewsData';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Reviews.scss';
 
 const Reviews = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const initialFilter = searchParams.get('filter') === 'my' ? 'my' : (searchParams.get('filter') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(initialFilter);
+
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const [initialLikedReviews, setInitialLikedReviews] = useState(() => new Set());
-
-  const { isAuthenticated } = useAuth();
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -40,6 +46,18 @@ const Reviews = () => {
       setLoading(false);
     }
   }, []);
+
+  // Sync with searchParams
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'my') {
+      setSelectedCategory('my');
+    } else if (filterParam) {
+      setSelectedCategory(filterParam);
+    } else {
+      setSelectedCategory('all');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     document.title = 'Rednest';
@@ -65,6 +83,17 @@ const Reviews = () => {
     }, 4000);
   };
 
+  const handleSelectCategory = (catId) => {
+    setSelectedCategory(catId);
+    if (catId === 'my') {
+      setSearchParams({ filter: 'my' });
+    } else if (catId === 'all') {
+      setSearchParams({});
+    } else {
+      setSearchParams({ filter: catId.toLowerCase() });
+    }
+  };
+
   const handleToggleLike = async (review) => {
     if (!isAuthenticated) {
       setIsAuthModalOpen(true);
@@ -78,7 +107,6 @@ const Reviews = () => {
 
     if (review.userLiked) {
       if (!initialLikedReviews.has(review.id)) {
-        showToast('ℹ️ Please refresh the page to remove your like.');
         return;
       }
 
@@ -118,7 +146,7 @@ const Reviews = () => {
             return next;
           });
         } else {
-          const errData = await res.json();
+          const errData = await res.json().catch(() => ({}));
           showToast(errData.message || 'Failed to like review.');
         }
       } catch {
@@ -140,7 +168,7 @@ const Reviews = () => {
         setReviewToDelete(null);
         showToast('🗑️ Review deleted. You can now leave a new review for this order whenever you like.');
       } else {
-        const errData = await res.json();
+        const errData = await res.json().catch(() => ({}));
         showToast(errData.message || 'Failed to delete review.');
       }
     } catch {
@@ -155,10 +183,21 @@ const Reviews = () => {
     showToast('🎉 Thank you! Your review was published successfully.');
   };
 
+  const myReviewsCount = useMemo(() => {
+    return reviews.filter(
+      r => r.isOwner || (user && (r.userId === user.id || r.userId === user.Id))
+    ).length;
+  }, [reviews, user]);
+
   const filteredReviews = useMemo(() => {
+    if (selectedCategory === 'my') {
+      return reviews.filter(
+        r => r.isOwner || (user && (r.userId === user.id || r.userId === user.Id))
+      );
+    }
     if (selectedCategory === 'all') return reviews;
     return reviews.filter(r => (r.category || '').toLowerCase() === selectedCategory.toLowerCase());
-  }, [reviews, selectedCategory]);
+  }, [reviews, selectedCategory, user]);
 
   const averageRating = useMemo(() => {
     if (!reviews || reviews.length === 0) return '0.00';
@@ -231,8 +270,12 @@ const Reviews = () => {
 
         <div className="reviews-container">
           <div className="reviews-hero">
-            <h1>Review</h1>
-            <p>Discover authentic thoughts and stories from our coffee community.</p>
+            <h1>{selectedCategory === 'my' ? 'My Reviews' : 'Review'}</h1>
+            <p>
+              {selectedCategory === 'my'
+                ? 'View feedback you have submitted, check helpful likes received, and manage your reviews.'
+                : 'Discover authentic thoughts and stories from our coffee community.'}
+            </p>
 
             <div className="reviews-overall-badge">
               <div className="overall-score">
@@ -247,6 +290,18 @@ const Reviews = () => {
           </div>
 
           <div className="reviews-categories-bar">
+            {isAuthenticated && (
+              <button
+                type="button"
+                className={`reviews-category-btn reviews-category-btn--my ${selectedCategory === 'my' ? 'active' : ''}`}
+                onClick={() => handleSelectCategory('my')}
+              >
+                <span className="cat-icon">👤</span>
+                <span>My Reviews</span>
+                <span className="cat-count cat-count--my">{myReviewsCount}</span>
+              </button>
+            )}
+
             {REVIEW_CATEGORIES.map((cat) => {
               const count = cat.id === 'all'
                 ? reviews.length
@@ -256,8 +311,8 @@ const Reviews = () => {
                 <button
                   key={cat.id}
                   type="button"
-                  className={`reviews-category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`reviews-category-btn ${selectedCategory === (cat.id === 'all' ? 'all' : cat.id.toLowerCase()) || (selectedCategory === cat.id) ? 'active' : ''}`}
+                  onClick={() => handleSelectCategory(cat.id)}
                 >
                   <span className="cat-icon">{cat.icon}</span>
                   <span>{cat.label}</span>
@@ -275,22 +330,52 @@ const Reviews = () => {
           ) : filteredReviews.length === 0 ? (
             <div className="reviews-empty-state">
               <div className="reviews-empty-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
+                {selectedCategory === 'my' ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                )}
               </div>
-              <h2>No reviews found</h2>
+              <h2>{selectedCategory === 'my' ? 'No reviews written yet' : 'No reviews found'}</h2>
               <p>
-                {selectedCategory === 'all'
-                  ? 'Be the first to share your experience with Rednest after completing an order!'
-                  : 'There are currently no reviews in this category.'}
+                {selectedCategory === 'my'
+                  ? 'Share your experience with Rednest after completing an order to help fellow coffee lovers!'
+                  : selectedCategory === 'all'
+                    ? 'Be the first to share your experience with Rednest after completing an order!'
+                    : 'There are currently no reviews in this category.'}
               </p>
+              {selectedCategory === 'my' && (
+                <div className="reviews-empty-actions">
+                  <button
+                    type="button"
+                    className="cta-btn sm reviews-empty-cta"
+                    onClick={() => {
+                      if (!isAuthenticated) setIsAuthModalOpen(true);
+                      else setIsWriteModalOpen(true);
+                    }}
+                  >
+                    Write a Review
+                  </button>
+                  <button
+                    type="button"
+                    className="cta-btn sm reviews-empty-cta reviews-empty-cta--secondary"
+                    onClick={() => navigate('/orders')}
+                  >
+                    View Orders
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="reviews-grid">
               <AnimatePresence mode="popLayout">
                 {filteredReviews.map((review, index) => {
-                  const authorFirstName = (review.author || 'Customer').split(' ')[0];
+                  const isOwner = !!(review.isOwner || (user && (review.userId === user.id || review.userId === user.Id)));
+                  const authorFirstName = isOwner && user?.name ? user.name.split(' ')[0] : (review.author || 'Customer').split(' ')[0];
                   const initialLetter = review.initials || authorFirstName.charAt(0).toUpperCase() || 'C';
                   const isLiked = !!review.userLiked;
                   const likesCount = review.likes || 0;
@@ -298,7 +383,7 @@ const Reviews = () => {
                   return (
                     <motion.div
                       key={review.id}
-                      className="review-card"
+                      className={`review-card ${isOwner ? 'review-card--owner' : ''}`}
                       layout
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -320,8 +405,15 @@ const Reviews = () => {
                             )}
                           </div>
                           <div className="author-details">
-                            <span className="author-name">{authorFirstName}</span>
-                            <span className="review-date">{formatTimeAgo(review.createdAt)}</span>
+                            <div className="author-name-row">
+                              <span className="author-name">{authorFirstName}</span>
+                              {isOwner && (
+                                <span className="review-owner-tag">You</span>
+                              )}
+                            </div>
+                            <span className="review-date" title="Time in Baku (UTC+4)">
+                              {formatBakuDateTime(review.createdAt)}
+                            </span>
                           </div>
                         </div>
 
@@ -329,7 +421,7 @@ const Reviews = () => {
                           <div className="review-card-rating">
                             {renderStars(review.rating)}
                           </div>
-                          {review.isOwner && (
+                          {isOwner && (
                             <button
                               type="button"
                               className="review-card-delete-btn"
@@ -359,18 +451,43 @@ const Reviews = () => {
                       </div>
 
                       <div className="review-card-footer">
-                        <button
-                          type="button"
-                          className={`like-button ${isLiked ? 'liked' : ''} ${review.isOwner ? 'owner-disabled' : ''}`}
-                          onClick={() => handleToggleLike(review)}
-                          aria-label="Mark as helpful"
-                          title={review.isOwner ? 'You cannot like your own review' : 'Helpful'}
-                        >
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                          <span>Helpful ({likesCount})</span>
-                        </button>
+                        {isOwner ? (
+                          <div className="review-card-owner-footer">
+                            <div className="review-my-likes-badge" title="Helpful likes received from customers">
+                              <svg viewBox="0 0 24 24" width="15" height="15" fill="#ef4444" stroke="#ef4444" strokeWidth="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                              </svg>
+                              <span>
+                                {likesCount} {likesCount === 1 ? 'like received' : 'likes received'}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              className="review-card-delete-text-btn"
+                              onClick={() => setReviewToDelete(review)}
+                            >
+                              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                              <span>Delete Review</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className={`like-button ${isLiked ? 'liked' : ''}`}
+                            onClick={() => handleToggleLike(review)}
+                            aria-label="Mark as helpful"
+                            title="Helpful"
+                          >
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                            <span>Helpful ({likesCount})</span>
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -402,19 +519,21 @@ const Reviews = () => {
         loading={isDeleting}
       />
 
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            className="reviews-toast-notification"
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 20 }}
-          >
-            <span>{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="reviews-toast-container">
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div
+              className="reviews-toast-notification"
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            >
+              <span>{toastMessage}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <Footer />
     </motion.div>
@@ -422,3 +541,4 @@ const Reviews = () => {
 };
 
 export default Reviews;
+

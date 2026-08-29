@@ -150,7 +150,7 @@ const AnimatedRoutes = () => {
           <Route path="/rules" element={<Rules />} />
           <Route path="/terms" element={<Navigate to="/rules" replace />} />
           <Route path="/review" element={<Reviews />} />
-          <Route path="/reviews" element={<Navigate to="/review" replace />} />
+          <Route path="/reviews" element={<Reviews />} />
           <Route path="/error" element={<ErrorPage />} />
           <Route path="*" element={<ErrorPage defaultCode="404" />} />
         </Routes>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import { REVIEW_CATEGORIES, formatTimeAgo } from './reviewsData';
+import { REVIEW_CATEGORIES, formatBakuDateTime, formatTimeAgo } from './reviewsData';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './WriteReviewModal.scss';
@@ -194,7 +194,7 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
               >
                 {eligibleOrders.map((order) => (
                   <option key={order.id} value={order.id}>
-                    Order #{order.id.slice(0, 8).toUpperCase()} • {Number(order.totalAmount || 0).toFixed(2)} ₼ ({formatTimeAgo(order.createdAt)})
+                    Order #{order.id.slice(0, 8).toUpperCase()} • {Number(order.totalAmount || 0).toFixed(2)} ₼ ({formatBakuDateTime(order.createdAt)})
                   </option>
                 ))}
               </select>
