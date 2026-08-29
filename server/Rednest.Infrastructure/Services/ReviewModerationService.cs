@@ -6,13 +6,11 @@ public class ReviewModerationService : BackgroundService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ReviewModerationService> _logger;
 
-    private const int DailyLimit = 20;
-    private const int WindowHours = 25;
     private const int PollIntervalSeconds = 60;
     private const int DelayBetweenRequestsMs = 60000;
 
-    private static readonly string GeminiModel = "gemini-3.7-flash";
-    private static readonly string GeminiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
+    private static readonly string Model = Environment.GetEnvironmentVariable("REVIEW_AI_MODEL") ?? "gemma-4-31b-it";
+    private static readonly string BaseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
 
     private static DateTime GetBakuTime() => DateTime.UtcNow.AddHours(4);
 
@@ -35,7 +33,7 @@ public class ReviewModerationService : BackgroundService
             return;
         }
 
-        _logger.LogInformation("ReviewModerationService started.");
+        _logger.LogInformation("ReviewModerationService started with model {Model}.", Model);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -63,39 +61,9 @@ public class ReviewModerationService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var windowStart = GetBakuTime().AddHours(-WindowHours);
-        var processedCount = await db.Reviews
-            .CountAsync(r => r.Status.Status != ReviewStatus.Pending && r.Status.UpdatedAt >= windowStart, stoppingToken);
-
-        if (processedCount >= DailyLimit)
-        {
-            var lastModerated = await db.Reviews
-                .Where(r => r.Status.Status != ReviewStatus.Pending)
-                .OrderByDescending(r => r.Status.UpdatedAt)
-                .Select(r => r.Status.UpdatedAt)
-                .FirstOrDefaultAsync(stoppingToken);
-
-            if (lastModerated != default)
-            {
-                var nextRunAt = lastModerated.AddHours(WindowHours);
-                var waitTime = nextRunAt - GetBakuTime();
-                if (waitTime > TimeSpan.Zero)
-                {
-                    _logger.LogInformation(
-                        "Daily moderation limit ({Limit}) reached. Next run scheduled at {NextRun} UTC+4.",
-                        DailyLimit, nextRunAt);
-                    await Task.Delay(waitTime, stoppingToken);
-                }
-            }
-            return;
-        }
-
-        var remaining = DailyLimit - processedCount;
-
         var pendingReviews = await db.Reviews
             .Where(r => r.Status.Status == ReviewStatus.Pending)
             .OrderBy(r => r.CreatedAt)
-            .Take(remaining)
             .ToListAsync(stoppingToken);
 
         if (pendingReviews.Count == 0)
@@ -116,7 +84,7 @@ public class ReviewModerationService : BackgroundService
                 var parsedLang = ParseDetectedLanguage(detectedLanguage);
                 review.Language = parsedLang;
 
-                review.Status.Status = (isClean && parsedLang.HasValue) ? ReviewStatus.Published : ReviewStatus.Verification;
+                review.Status.Status = isClean ? ReviewStatus.Published : ReviewStatus.Verification;
                 review.Status.UpdatedAt = GetBakuTime();
 
                 await db.SaveChangesAsync(stoppingToken);
@@ -218,30 +186,33 @@ public class ReviewModerationService : BackgroundService
             generationConfig = new
             {
                 temperature = 0.1,
-                maxOutputTokens = 256
+                maxOutputTokens = 2048,
+                responseMimeType = "application/json"
             }
         };
 
         var json = JsonSerializer.Serialize(requestBody);
-        var url = $"{GeminiBaseUrl}/{GeminiModel}:generateContent?key={apiKey}";
+        var url = $"{BaseUrl}/{Model}:generateContent";
 
         var httpClient = _httpClientFactory.CreateClient();
-        using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        using var response = await httpClient.PostAsync(url, content, stoppingToken);
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+        requestMessage.Headers.Add("X-goog-api-key", apiKey);
+        requestMessage.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
+        using var response = await httpClient.SendAsync(requestMessage, stoppingToken);
         var responseBody = await response.Content.ReadAsStringAsync(stoppingToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Gemini API error for review {ReviewId}: {Status} - {Body}",
+            _logger.LogWarning("AI API error for review {ReviewId}: {Status} - {Body}",
                 review.Id, response.StatusCode, responseBody);
             return (false, "Unknown");
         }
 
-        return ParseGeminiResponse(responseBody, review.Id);
+        return ParseResponse(responseBody, review.Id);
     }
 
-    private (bool IsClean, string DetectedLanguage) ParseGeminiResponse(string responseBody, Guid reviewId)
+    private (bool IsClean, string DetectedLanguage) ParseResponse(string responseBody, Guid reviewId)
     {
         try
         {
@@ -249,7 +220,24 @@ public class ReviewModerationService : BackgroundService
             var candidates = doc.RootElement.GetProperty("candidates");
             var firstCandidate = candidates[0];
             var parts = firstCandidate.GetProperty("content").GetProperty("parts");
-            var text = parts[0].GetProperty("text").GetString() ?? string.Empty;
+
+            string text = string.Empty;
+            foreach (var part in parts.EnumerateArray())
+            {
+                if (part.TryGetProperty("thought", out var isThought) && isThought.GetBoolean())
+                {
+                    continue;
+                }
+                if (part.TryGetProperty("text", out var textProp))
+                {
+                    text = textProp.GetString() ?? string.Empty;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                text = parts[0].GetProperty("text").GetString() ?? string.Empty;
+            }
 
             text = text.Trim();
             if (text.StartsWith("```"))
@@ -275,7 +263,7 @@ public class ReviewModerationService : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to parse Gemini response for review {ReviewId}. Body: {Body}",
+            _logger.LogWarning(ex, "Failed to parse AI response for review {ReviewId}. Body: {Body}",
                 reviewId, responseBody.Length > 500 ? responseBody[..500] : responseBody);
             return (false, "Unknown");
         }
