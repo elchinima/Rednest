@@ -8,8 +8,8 @@ public class ReviewModerationService : BackgroundService
 
     private const int DailyLimit = 20;
     private const int WindowHours = 25;
-    private const int PollIntervalSeconds = 300;
-    private const int DelayBetweenRequestsMs = 3000;
+    private const int PollIntervalSeconds = 60;
+    private const int DelayBetweenRequestsMs = 60000;
 
     private static readonly string GeminiModel = "gemini-3.7-flash";
     private static readonly string GeminiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -114,13 +114,23 @@ public class ReviewModerationService : BackgroundService
                 var result = await ModerateReviewAsync(apiKey, review, stoppingToken);
 
                 review.Moderation = result;
+
+                if (Enum.TryParse<ReviewLanguage>(result.DetectedLanguage, true, out var parsedLang))
+                {
+                    review.Language = parsedLang;
+                }
+                else if (result.DetectedLanguage.Equals("Azeri", StringComparison.OrdinalIgnoreCase))
+                {
+                    review.Language = ReviewLanguage.Azerbaijani;
+                }
+
                 review.Status = result.IsClean ? ReviewStatus.Published : ReviewStatus.Verification;
 
                 await db.SaveChangesAsync(stoppingToken);
 
                 _logger.LogInformation(
-                    "Review {ReviewId} moderated: IsClean={IsClean}, Status={Status}",
-                    review.Id, result.IsClean, review.Status);
+                    "Review {ReviewId} moderated: Language={Language}, IsClean={IsClean}, Status={Status}",
+                    review.Id, review.Language, result.IsClean, review.Status);
             }
             catch (Exception ex)
             {
@@ -136,30 +146,45 @@ public class ReviewModerationService : BackgroundService
         Review review,
         CancellationToken stoppingToken)
     {
-        var language = review.Language.ToString();
         var comment = review.ReviewData.Comment;
 
         var prompt = $$"""
-            You are a content moderation assistant. Analyze the following user review and return a JSON response.
+            You are an AI content moderation and language detection assistant.
+            Analyze the following user review text for a restaurant/coffee ordering service:
 
             Review text: "{{comment}}"
-            User-selected language: "{{language}}"
 
-            Check for:
-            1. Offensive content (profanity, insults, hate speech) in any language
-            2. Advertising or promotional content
-            3. URLs, links, or social media references (@handles, domains)
-            4. Language check: the review must be written in one of the allowed languages: Russian, English, or Azerbaijani. If written in a different language, flag it.
+            Your instructions:
+            1. Language Detection:
+               - Automatically detect the primary language of the text.
+               - Allowed valid languages are: "Russian", "English", "Azerbaijani".
+               - If the text is in Russian, set detectedLanguage to "Russian" and hasWrongLanguage to false.
+               - If the text is in English, set detectedLanguage to "English" and hasWrongLanguage to false.
+               - If the text is in Azerbaijani, set detectedLanguage to "Azerbaijani" and hasWrongLanguage to false.
+               - If the text is in any other language or unrecognizable, set detectedLanguage to the actual language name (e.g. "Turkish", "Spanish", "Unknown") and hasWrongLanguage to true.
 
-            Respond ONLY with a valid JSON object (no markdown, no explanation):
+            2. Offensive Content Check:
+               - Detect profanity, curses, swear words, insults, hate speech, vulgarities, and offensive slang in any language (especially Azerbaijani, Russian, English).
+               - Notice: Azerbaijani profanities, vulgar slang (e.g. words like "pox", "səfeh", "qələt", "it", etc.) MUST be marked as hasOffensiveContent = true.
+               - Set hasOffensiveContent to true if any offensive, vulgar, or insulting language is detected; otherwise false.
+
+            3. Advertising & Links:
+               - Set hasAdvertising to true if there is promotional spam or marketing; otherwise false.
+               - Set hasLinks to true if there are URLs, domains, emails, phone numbers, or social media handles (@username); otherwise false.
+
+            4. Overall Decision:
+               - isClean must be true ONLY IF hasOffensiveContent is false, hasAdvertising is false, hasLinks is false, and hasWrongLanguage is false.
+               - If any violation is found, isClean MUST be false.
+
+            Respond ONLY with a valid JSON object:
             {
               "isClean": true or false,
               "hasOffensiveContent": true or false,
               "hasAdvertising": true or false,
               "hasLinks": true or false,
               "hasWrongLanguage": true or false,
-              "detectedLanguage": "detected language name in English",
-              "summary": "brief explanation of findings in English"
+              "detectedLanguage": "Russian" | "English" | "Azerbaijani" | "Other",
+              "summary": "Brief explanation in English"
             }
             """;
 
@@ -223,13 +248,20 @@ public class ReviewModerationService : BackgroundService
             using var resultDoc = JsonDocument.Parse(text);
             var root = resultDoc.RootElement;
 
+            var offensive = root.GetProperty("hasOffensiveContent").GetBoolean();
+            var advertising = root.GetProperty("hasAdvertising").GetBoolean();
+            var links = root.GetProperty("hasLinks").GetBoolean();
+            var wrongLang = root.GetProperty("hasWrongLanguage").GetBoolean();
+            var isCleanReported = root.GetProperty("isClean").GetBoolean();
+            var isClean = isCleanReported && !offensive && !advertising && !links && !wrongLang;
+
             return new ModerationResult
             {
-                IsClean = root.GetProperty("isClean").GetBoolean(),
-                HasOffensiveContent = root.GetProperty("hasOffensiveContent").GetBoolean(),
-                HasAdvertising = root.GetProperty("hasAdvertising").GetBoolean(),
-                HasLinks = root.GetProperty("hasLinks").GetBoolean(),
-                HasWrongLanguage = root.GetProperty("hasWrongLanguage").GetBoolean(),
+                IsClean = isClean,
+                HasOffensiveContent = offensive,
+                HasAdvertising = advertising,
+                HasLinks = links,
+                HasWrongLanguage = wrongLang,
                 DetectedLanguage = root.TryGetProperty("detectedLanguage", out var lang) ? lang.GetString() ?? "" : "",
                 Summary = root.TryGetProperty("summary", out var summary) ? summary.GetString() ?? "" : "",
                 ModeratedAt = GetBakuTime()
