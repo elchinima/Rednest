@@ -163,7 +163,11 @@ public class AuthController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message, errorType = "ALREADY_SUBSCRIBED" });
         }
         catch (ArgumentException ex)
         {
@@ -185,7 +189,11 @@ public class AuthController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message, errorType = "ALREADY_SUBSCRIBED" });
         }
         catch (UnauthorizedAccessException ex)
         {

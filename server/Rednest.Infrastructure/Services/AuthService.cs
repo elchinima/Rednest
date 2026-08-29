@@ -300,6 +300,11 @@ public class AuthService : IAuthService
             await _userRepository.AddSessionAsync(userSession);
         }
 
+        if (userSession.Subscribe)
+        {
+            throw new InvalidOperationException("This email is already subscribed to the newsletter. If you need assistance or wish to change your subscription, please contact technical support at hello@rednestcoffee.com.");
+        }
+
         if (userSession.AccountVerify == null)
         {
             userSession.AccountVerify = new List<AccountVerifyEntry>();
@@ -338,6 +343,11 @@ public class AuthService : IAuthService
         if (userSession == null || userSession.AccountVerify == null || userSession.AccountVerify.Count == 0)
         {
             throw new UnauthorizedAccessException("Invalid or expired confirmation code");
+        }
+
+        if (userSession.Subscribe)
+        {
+            throw new InvalidOperationException("This email is already subscribed to the newsletter. If you need assistance or wish to change your subscription, please contact technical support at hello@rednestcoffee.com.");
         }
 
         var now = DateTime.UtcNow;

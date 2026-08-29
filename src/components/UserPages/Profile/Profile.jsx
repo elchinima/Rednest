@@ -537,38 +537,11 @@ const Profile = () => {
             >
               {avatarDeleting ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 48 48"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <g>
-                      <animateTransform
-                        attributeName="transform"
-                        type="rotate"
-                        values="0 24 24; 360 24 24"
-                        dur="1s"
-                        repeatCount="indefinite"
-                      />
-                      <circle
-                        cx="24"
-                        cy="24"
-                        r="19.2"
-                        stroke="#ef4444"
-                        strokeOpacity="0.25"
-                        strokeWidth="4.5"
-                      />
-                      <path
-                        d="M24 4.8 A19.2 19.2 0 0 1 43.2 24"
-                        stroke="#ef4444"
-                        strokeWidth="4.5"
-                        strokeLinecap="round"
-                      />
-                    </g>
-                  </svg>
+                  <img
+                    src={loaderIcon}
+                    alt="Deleting..."
+                    style={{ width: '16px', height: '16px', flexShrink: 0 }}
+                  />
                   Deleting...
                 </span>
               ) : (

@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import WriteReviewModal from './WriteReviewModal';
-import AuthModal from '../Auth/AuthModal';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
@@ -24,7 +23,6 @@ const Reviews = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialFilter);
 
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
@@ -65,7 +63,7 @@ const Reviews = () => {
 
     const handleOpenModal = () => {
       if (!isAuthenticated) {
-        setIsAuthModalOpen(true);
+        navigate('/login');
       } else {
         setIsWriteModalOpen(true);
       }
@@ -95,7 +93,7 @@ const Reviews = () => {
 
   const handleToggleLike = async (review) => {
     if (!isAuthenticated) {
-      setIsAuthModalOpen(true);
+      navigate('/login');
       return;
     }
 
@@ -352,7 +350,7 @@ const Reviews = () => {
                     type="button"
                     className="cta-btn sm reviews-empty-cta"
                     onClick={() => {
-                      if (!isAuthenticated) setIsAuthModalOpen(true);
+                      if (!isAuthenticated) navigate('/login');
                       else setIsWriteModalOpen(true);
                     }}
                   >
@@ -500,11 +498,6 @@ const Reviews = () => {
         isOpen={isWriteModalOpen}
         onClose={() => setIsWriteModalOpen(false)}
         onSubmitReview={handleAddNewReview}
-      />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
       />
 
       <DeleteConfirmModal

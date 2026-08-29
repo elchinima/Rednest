@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import smileyAnimated from '../../assets/icons/smiley-animated.svg';
-import AuthModal from '../PublicPages/Auth/AuthModal';
 
 const supportStyles = `
 .support-widget-container {
@@ -53,9 +52,9 @@ body.mobile-menu-open .support-widget-container {
 }
 .support-widget-container:hover .support-tooltip {
   visibility: visible;
-  animation: tooltipPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: supportTooltipPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-@keyframes tooltipPop {
+@keyframes supportTooltipPop {
   0% {
     opacity: 0;
     transform: translate(15px, -50px) scale(0.9);
@@ -80,8 +79,8 @@ body.mobile-menu-open .support-widget-container {
   transition: all 0.3s ease;
 }
 .support-widget img {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 .support-widget:hover {
   transform: scale(1.15) translateY(-5px);
@@ -95,18 +94,18 @@ body.mobile-menu-open .support-widget-container {
     height: 55px;
   }
   .support-widget img {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
   }
 }
 `;
 
 const SupportWidget = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,18 +152,13 @@ const SupportWidget = () => {
           aria-label="Support chat" 
           onClick={() => {
             if (!isAuthenticated) {
-              setIsAuthModalOpen(true);
+              navigate('/login');
             }
           }}
         >
           <img src={smileyAnimated} alt="Support" />
         </button>
       </div>
-
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
     </>
   );
 };

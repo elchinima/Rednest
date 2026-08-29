@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
 import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
@@ -11,7 +11,6 @@ import aboutImage from '../../../assets/images/about_image.png';
 import SubscribeModal from './SubscribeModal';
 import SubscribeErrorModal from './SubscribeErrorModal';
 import SubscribeSuccessModal from './SubscribeSuccessModal';
-import AuthModal from '../Auth/AuthModal';
 const STORAGE_BASE_URL = 'https://tlcehlxztgewbidcvwye.supabase.co/storage/v1/object/public/admin-files/database';
 const cappuccinoImg = `${STORAGE_BASE_URL}/cappuccino_8765432354.webp`;
 const redLatteImg = `${STORAGE_BASE_URL}/red_latte_9876543221.webp`;
@@ -22,14 +21,15 @@ import Navbar from '../../Elements/Navbar';
 import './Home.scss';
 
 const Home = () => {
+  const navigate = useNavigate();
   const videoRef = useRef(null);
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [errorType, setErrorType] = useState('ACCOUNT_NOT_FOUND');
   const [successMessage, setSuccessMessage] = useState('');
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [isDesktop, setIsDesktop] = useState(() => {
@@ -141,12 +141,15 @@ const Home = () => {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'This email is not registered. Please create an account first.');
+        const err = new Error(data.message || 'Subscription request failed.');
+        err.errorType = data.errorType || (res.status === 409 || data.message?.toLowerCase().includes('already') ? 'ALREADY_SUBSCRIBED' : 'ACCOUNT_NOT_FOUND');
+        throw err;
       }
 
       setIsSubscribeModalOpen(true);
     } catch (err) {
       setErrorMessage(err.message || 'This email is not registered. Please create an account first.');
+      setErrorType(err.errorType || (err.message?.toLowerCase().includes('already') ? 'ALREADY_SUBSCRIBED' : 'ACCOUNT_NOT_FOUND'));
       setIsErrorModalOpen(true);
     } finally {
       setSubscribeLoading(false);
@@ -347,18 +350,14 @@ const Home = () => {
         isOpen={isErrorModalOpen}
         onClose={() => setIsErrorModalOpen(false)}
         message={errorMessage}
-        onOpenRegister={() => setIsAuthModalOpen(true)}
+        errorType={errorType}
+        onOpenRegister={() => navigate('/login')}
       />
 
       <SubscribeSuccessModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         message={successMessage}
-      />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
       />
 
       <Footer />

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fortuneWheel from '../../assets/icons/fortune-wheel.svg';
-import AuthModal from '../PublicPages/Auth/AuthModal';
 import { useAuth } from '../../context/AuthContext';
 
 const fortuneStyles = `
@@ -107,7 +106,6 @@ const FortuneWidget = () => {
   const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -146,7 +144,7 @@ const FortuneWidget = () => {
     if (isAuthenticated) {
       navigate('/fortune');
     } else {
-      setIsAuthModalOpen(true);
+      navigate('/login');
     }
   };
 
@@ -165,11 +163,6 @@ const FortuneWidget = () => {
           Spin the wheel for a gift!
         </span>
       </div>
-
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
     </>
   );
 };
