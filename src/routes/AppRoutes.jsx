@@ -13,6 +13,7 @@ const Order = lazy(() => import('../components/UserPages/Order/Order'));
 const Orders = lazy(() => import('../components/UserPages/Orders/Orders'));
 const Addresses = lazy(() => import('../components/UserPages/Addresses/Addresses'));
 const PaymentMethods = lazy(() => import('../components/UserPages/PaymentMethods/PaymentMethods'));
+const UserReviews = lazy(() => import('../components/UserPages/Reviews/Reviews'));
 const Basket = lazy(() => import('../components/PublicPages/Basket/Basket'));
 const AdminLogin = lazy(() => import('../components/AdminPages/AdminLogin/AdminLogin'));
 const Dashboard = lazy(() => import('../components/AdminPages/Dashboard/Dashboard'));
@@ -124,6 +125,11 @@ const AnimatedRoutes = () => {
               <Orders />
             </ProtectedRoute>
           } />
+          <Route path="/reviews" element={
+            <ProtectedRoute>
+              <UserReviews />
+            </ProtectedRoute>
+          } />
 
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={
@@ -150,7 +156,6 @@ const AnimatedRoutes = () => {
           <Route path="/rules" element={<Rules />} />
           <Route path="/terms" element={<Navigate to="/rules" replace />} />
           <Route path="/review" element={<Reviews />} />
-          <Route path="/reviews" element={<Reviews />} />
           <Route path="/error" element={<ErrorPage />} />
           <Route path="*" element={<ErrorPage defaultCode="404" />} />
         </Routes>

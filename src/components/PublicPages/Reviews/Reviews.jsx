@@ -270,11 +270,9 @@ const Reviews = () => {
 
         <div className="reviews-container">
           <div className="reviews-hero">
-            <h1>{selectedCategory === 'my' ? 'My Reviews' : 'Review'}</h1>
+            <h1>Review</h1>
             <p>
-              {selectedCategory === 'my'
-                ? 'View feedback you have submitted, check helpful likes received, and manage your reviews.'
-                : 'Discover authentic thoughts and stories from our coffee community.'}
+              Discover authentic thoughts and stories from our coffee community.
             </p>
 
             <div className="reviews-overall-badge">
@@ -293,12 +291,13 @@ const Reviews = () => {
             {isAuthenticated && (
               <button
                 type="button"
-                className={`reviews-category-btn reviews-category-btn--my ${selectedCategory === 'my' ? 'active' : ''}`}
-                onClick={() => handleSelectCategory('my')}
+                className="reviews-category-btn reviews-category-btn--my"
+                onClick={() => navigate('/reviews')}
+                title="Go to My Reviews page"
               >
                 <span className="cat-icon">👤</span>
                 <span>My Reviews</span>
-                <span className="cat-count cat-count--my">{myReviewsCount}</span>
+                {myReviewsCount > 0 && <span className="cat-count cat-count--my">{myReviewsCount}</span>}
               </button>
             )}
 

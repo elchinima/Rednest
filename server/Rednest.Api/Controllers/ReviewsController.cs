@@ -69,6 +69,47 @@ public class ReviewsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("my")]
+    [Authorize]
+    public async Task<IActionResult> GetMyReviews()
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var reviews = await _db.Reviews
+            .Where(r => r.UserId == userId.Value)
+            .OrderByDescending(r => r.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value);
+        var authorName = !string.IsNullOrWhiteSpace(user?.Name) ? user.Name.Trim().Split(' ')[0] : "Customer";
+
+        var result = reviews.Select(r =>
+        {
+            var likesList = r.Likes ?? new List<Guid>();
+            return new
+            {
+                id = r.Id,
+                userId = r.UserId,
+                orderId = r.OrderId,
+                author = authorName,
+                initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
+                avatarUrl = user?.ProfilePictureUrl,
+                category = r.Category.ToString(),
+                status = r.Status.ToString(),
+                rating = r.ReviewData.Rating,
+                comment = r.ReviewData.Comment,
+                likes = likesList.Count,
+                userLiked = false,
+                isOwner = true,
+                createdAt = DateTime.SpecifyKind(r.CreatedAt, DateTimeKind.Utc)
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
     [HttpGet("eligible-orders")]
     [Authorize]
     public async Task<IActionResult> GetEligibleOrders()

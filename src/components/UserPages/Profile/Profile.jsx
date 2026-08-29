@@ -429,7 +429,7 @@ const Profile = () => {
                 <button
                   type="button"
                   className="cta-btn sm profile-action-btn"
-                  onClick={() => navigate('/review?filter=my')}
+                  onClick={() => navigate('/reviews')}
                 >
                   My Reviews
                 </button>
