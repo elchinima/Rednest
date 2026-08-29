@@ -1274,6 +1274,10 @@
               "target": "Package",
               "version": "[10.0.10, )"
             },
+            "Microsoft.Extensions.Hosting.Abstractions": {
+              "target": "Package",
+              "version": "[10.0.11, )"
+            },
             "Microsoft.Extensions.Http": {
               "target": "Package",
               "version": "[10.0.0, )"

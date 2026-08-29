@@ -203,61 +203,30 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                 </div>
               )}
 
-              {/* 1. TOP SECTION: Rating Slider & Stars */}
               <div className="review-modal__field review-modal__field--rating-top">
                 <div className="review-modal__rating-header">
                   <span className="review-modal__label-title">
                     Your Rating <span className="review-modal__required">*</span>
                   </span>
                   <div className="review-modal__rating-pill">
-                    <span className="review-modal__rating-val">★ {Number(activeRating).toFixed(1)}</span>
+                    <span className="review-modal__rating-val">{Math.round(rating)}</span>
+                    <svg className="review-modal__rating-star" viewBox="0 0 24 24" width="14.5" height="14.5" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
                     <span className="review-modal__rating-sep">·</span>
                     <span className="review-modal__rating-text">{currentLabel}</span>
                   </div>
                 </div>
 
-                <div className="review-modal__stars-row">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const isFilled = activeRating >= star;
-                    return (
-                      <button
-                        key={star}
-                        type="button"
-                        className={`review-modal__star-btn ${isFilled ? 'active' : ''}`}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        onClick={() => {
-                          setRating(star);
-                          setHoverRating(0);
-                        }}
-                        aria-label={`${star} Stars`}
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          width="32"
-                          height="32"
-                          fill={isFilled ? '#fbbf24' : 'none'}
-                          stroke={isFilled ? '#fbbf24' : 'rgba(255,255,255,0.25)'}
-                          strokeWidth="1.5"
-                        >
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Rating Slider Track */}
                 <div className="review-modal__slider-wrapper">
                   <input
                     type="range"
                     min="1"
                     max="5"
                     step="1"
-                    value={activeRating}
+                    value={rating}
                     onChange={(e) => {
                       setRating(Number(e.target.value));
-                      setHoverRating(0);
                     }}
                     className="review-modal__slider"
                     style={{
@@ -266,16 +235,15 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                     aria-label="Slide to adjust rating"
                   />
                   <div className="review-modal__slider-ticks">
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5</span>
+                    <span className={rating >= 1 ? 'active' : ''} onClick={() => setRating(1)}>1</span>
+                    <span className={rating >= 2 ? 'active' : ''} onClick={() => setRating(2)}>2</span>
+                    <span className={rating >= 3 ? 'active' : ''} onClick={() => setRating(3)}>3</span>
+                    <span className={rating >= 4 ? 'active' : ''} onClick={() => setRating(4)}>4</span>
+                    <span className={rating >= 5 ? 'active' : ''} onClick={() => setRating(5)}>5</span>
                   </div>
                 </div>
               </div>
 
-              {/* 2. SECOND ROW: Category & Order Selection in ONE Line */}
               <div className="review-modal__row">
                 <div className="review-modal__field review-modal__col">
                   <label htmlFor="rev-category">
@@ -307,36 +275,13 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                     title="Click to choose completed order"
                   >
                     {selectedOrder ? (
-                      <div className="review-modal__order-trigger-content">
-                        <div className="review-modal__order-trigger-info">
-                          <span className="review-modal__order-trigger-id">
-                            #{selectedOrder.id.slice(0, 8).toUpperCase()}
-                          </span>
-                          <span className="review-modal__order-trigger-price">
-                            {Number(selectedOrder.totalAmount || 0).toFixed(2)} ₼
-                          </span>
-                        </div>
-                        {selectedOrder.items && selectedOrder.items.length > 0 && (
-                          <div className="review-modal__order-trigger-items">
-                            {selectedOrder.items.slice(0, 3).map((item, idx) => {
-                              const iconUrl = getProductIconUrl(item);
-                              return (
-                                <div key={idx} className="review-modal__order-trigger-icon" title={item.name}>
-                                  {iconUrl ? (
-                                    <img src={iconUrl} alt="" />
-                                  ) : (
-                                    <span>☕</span>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {selectedOrder.items.length > 3 && (
-                              <span className="review-modal__order-trigger-more">
-                                +{selectedOrder.items.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                      <div className="review-modal__order-trigger-info">
+                        <span className="review-modal__order-trigger-id">
+                          #{selectedOrder.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <span className="review-modal__order-trigger-price">
+                          {Number(selectedOrder.totalAmount || 0).toFixed(2)} ₼
+                        </span>
                       </div>
                     ) : (
                       <span className="review-modal__order-trigger-placeholder">
@@ -351,7 +296,6 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                 </div>
               </div>
 
-              {/* 3. THIRD ROW: Your Review (2x Height) */}
               <div className="review-modal__field">
                 <div className="review-modal__label-row">
                   <label htmlFor="rev-comment">

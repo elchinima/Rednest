@@ -33,7 +33,6 @@ const Reviews = () => {
     try {
       let res = await fetchWithRefresh(`${apiUrl}/api/reviews/my`);
       if (!res.ok) {
-        // Fallback: fetch all and filter owner
         res = await fetchWithRefresh(`${apiUrl}/api/reviews`);
       }
       if (!res.ok) {
@@ -41,7 +40,6 @@ const Reviews = () => {
       }
       const data = await res.json();
       const list = Array.isArray(data) ? data : [];
-      // Filter owner if returned from all
       const myReviews = list.filter(r => r.isOwner || (user && (r.userId === user.id || r.userId === user.Id)));
       setReviews(myReviews);
     } catch (err) {
@@ -91,7 +89,7 @@ const Reviews = () => {
 
   const handleAddNewReview = (newReview) => {
     setReviews(prev => [newReview, ...prev]);
-    showToast('🎉 Thank you! Your review was published successfully.');
+    showToast('🎉 Thank you! Your review has been submitted and is pending AI moderation.');
   };
 
   const filteredReviews = useMemo(() => {
@@ -153,12 +151,24 @@ const Reviews = () => {
 
   const getStatusBadge = (statusStr) => {
     const s = String(statusStr || 'Published').toLowerCase();
-    if (s === 'verification') {
+    if (s === 'pending') {
       return (
-        <span className="user-review-status-badge user-review-status-badge--verification" title="Review is pending verification">
+        <span className="user-review-status-badge user-review-status-badge--pending" title="Review is being checked by AI moderation">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
+          </svg>
+          Pending
+        </span>
+      );
+    }
+    if (s === 'verification') {
+      return (
+        <span className="user-review-status-badge user-review-status-badge--verification" title="Review is pending manual verification">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           Verification
         </span>

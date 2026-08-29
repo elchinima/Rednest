@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Rednest.Core.Entities;
@@ -13,9 +14,11 @@ using Rednest.Infrastructure.Data;
 namespace Rednest.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260829125408_AddLanguageToReviewsTable")]
+    partial class AddLanguageToReviewsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -122,10 +125,6 @@ namespace Rednest.Infrastructure.Migrations
                         .HasColumnName("Likes")
                         .HasDefaultValueSql("'[]'::jsonb");
 
-                    b.Property<ModerationResult>("Moderation")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("Moderation");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -140,7 +139,7 @@ namespace Rednest.Infrastructure.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("text")
-                        .HasDefaultValue("Pending");
+                        .HasDefaultValue("Published");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

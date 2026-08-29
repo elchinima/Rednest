@@ -139,7 +139,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .HasColumnType("text")
-                  .HasDefaultValue(ReviewStatus.Published);
+                  .HasDefaultValue(ReviewStatus.Pending);
+
+            entity.Property(e => e.Language)
+                  .HasConversion<string>()
+                  .HasColumnType("text")
+                  .HasDefaultValue(ReviewLanguage.Russian);
 
             entity.Property(e => e.ReviewData)
                   .HasColumnName("Review")
@@ -150,6 +155,10 @@ public class AppDbContext : DbContext
                   .HasColumnName("Likes")
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'[]'::jsonb");
+
+            entity.Property(e => e.Moderation)
+                  .HasColumnName("Moderation")
+                  .HasColumnType("jsonb");
 
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")

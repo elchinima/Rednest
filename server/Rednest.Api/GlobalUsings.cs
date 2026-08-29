@@ -34,3 +34,7 @@ global using Rednest.Api.Middleware;
 global using SixLabors.ImageSharp;
 global using SixLabors.ImageSharp.Formats.Webp;
 global using SixLabors.ImageSharp.Processing;
+global using Stripe;
+global using File = System.IO.File;
+global using Review = Rednest.Core.Entities.Review;
+global using CorePaymentMethod = Rednest.Core.Entities.PaymentMethod;

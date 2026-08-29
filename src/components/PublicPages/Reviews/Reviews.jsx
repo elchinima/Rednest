@@ -47,7 +47,6 @@ const Reviews = () => {
     }
   }, []);
 
-  // Sync with searchParams
   useEffect(() => {
     const filterParam = searchParams.get('filter');
     if (filterParam === 'my') {

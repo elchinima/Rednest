@@ -1,9 +1,3 @@
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
-using Microsoft.Extensions.Configuration;
-using Rednest.Application.Interfaces;
-
 namespace Rednest.Infrastructure.Services;
 
 public class BrevoEmailService : IEmailService

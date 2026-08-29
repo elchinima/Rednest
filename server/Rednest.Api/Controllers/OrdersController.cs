@@ -1,6 +1,3 @@
-using Stripe;
-using CorePaymentMethod = Rednest.Core.Entities.PaymentMethod;
-
 namespace Rednest.Api.Controllers;
 
 [ApiController]

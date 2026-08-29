@@ -19,6 +19,8 @@ public class ReviewsController : ControllerBase
         return userId;
     }
 
+    private static DateTime GetBakuTime() => DateTime.UtcNow.AddHours(4);
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()
@@ -27,6 +29,7 @@ public class ReviewsController : ControllerBase
 
         var reviews = await _db.Reviews
             .AsNoTracking()
+            .Where(r => r.Status == ReviewStatus.Published)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
@@ -57,12 +60,13 @@ public class ReviewsController : ControllerBase
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
                 status = r.Status.ToString(),
+                language = r.Language.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
                 likes = likesList.Count,
                 userLiked = isLiked,
                 isOwner = isOwner,
-                createdAt = DateTime.SpecifyKind(r.CreatedAt, DateTimeKind.Utc)
+                createdAt = r.CreatedAt
             };
         }).ToList();
 
@@ -98,12 +102,13 @@ public class ReviewsController : ControllerBase
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
                 status = r.Status.ToString(),
+                language = r.Language.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
                 likes = likesList.Count,
                 userLiked = false,
                 isOwner = true,
-                createdAt = DateTime.SpecifyKind(r.CreatedAt, DateTimeKind.Utc)
+                createdAt = r.CreatedAt
             };
         }).ToList();
 
@@ -146,7 +151,7 @@ public class ReviewsController : ControllerBase
         var result = eligibleOrders.Select(o => new
         {
             id = o.Id,
-            createdAt = DateTime.SpecifyKind(o.CreatedAt, DateTimeKind.Utc),
+            createdAt = o.CreatedAt,
             status = o.Status,
             totalAmount = o.Payment != null ? o.Payment.TotalAmount : 0m,
             itemsCount = o.Items != null ? o.Items.Sum(i => i.Quantity) : 0,
@@ -183,6 +188,12 @@ public class ReviewsController : ControllerBase
         if (!Enum.TryParse<ReviewCategory>(request.Category, true, out var categoryEnum))
             return BadRequest(new { message = "Invalid category. Allowed values: Delivery, Products, Service, Staff." });
 
+        var languageEnum = ReviewLanguage.Russian;
+        if (!string.IsNullOrWhiteSpace(request.Language) && Enum.TryParse<ReviewLanguage>(request.Language, true, out var parsedLang))
+        {
+            languageEnum = parsedLang;
+        }
+
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == request.OrderId && o.UserId == userId.Value);
         if (order == null)
             return NotFound(new { message = "Order not found or does not belong to your account." });
@@ -203,14 +214,15 @@ public class ReviewsController : ControllerBase
             UserId = userId.Value,
             OrderId = request.OrderId,
             Category = categoryEnum,
-            Status = ReviewStatus.Published,
+            Status = ReviewStatus.Pending,
+            Language = languageEnum,
             ReviewData = new ReviewDetails
             {
                 Rating = Math.Round(request.Rating, 2),
                 Comment = request.Comment.Trim()
             },
             Likes = new List<Guid>(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = GetBakuTime()
         };
 
         _db.Reviews.Add(review);
@@ -229,12 +241,13 @@ public class ReviewsController : ControllerBase
             avatarUrl = user?.ProfilePictureUrl,
             category = review.Category.ToString(),
             status = review.Status.ToString(),
+            language = review.Language.ToString(),
             rating = review.ReviewData.Rating,
             comment = review.ReviewData.Comment,
             likes = 0,
             userLiked = false,
             isOwner = true,
-            createdAt = DateTime.SpecifyKind(review.CreatedAt, DateTimeKind.Utc)
+            createdAt = review.CreatedAt
         });
     }
 
@@ -254,25 +267,25 @@ public class ReviewsController : ControllerBase
 
         review.Likes ??= new List<Guid>();
 
-        bool userLiked;
+        bool isLiked;
         if (review.Likes.Contains(userId.Value))
         {
             review.Likes.Remove(userId.Value);
-            userLiked = false;
+            isLiked = false;
         }
         else
         {
             review.Likes.Add(userId.Value);
-            userLiked = true;
+            isLiked = true;
         }
 
         await _db.SaveChangesAsync();
 
         return Ok(new
         {
-            success = true,
+            id = review.Id,
             likes = review.Likes.Count,
-            userLiked
+            userLiked = isLiked
         });
     }
 
@@ -306,6 +319,7 @@ public class CreateReviewRequest
 {
     public Guid OrderId { get; set; }
     public string Category { get; set; } = null!;
+    public string? Language { get; set; }
     public decimal Rating { get; set; }
     public string Comment { get; set; } = null!;
 }

@@ -37,6 +37,7 @@ builder.Services.AddSingleton<IGeoLocationService, GeoLocationService>();
 builder.Services.AddScoped<IEmailService, BrevoEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPaymentEncryptionService, PaymentEncryptionService>();
+builder.Services.AddHostedService<ReviewModerationService>();
 
 builder.Services.AddCors(options =>
 {
@@ -284,9 +285,6 @@ app.Use(async (context, next) =>
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        // Don't delete cookies here — the session may be valid but the token
-                        // was already rotated by a concurrent request (race condition).
-                        // The API will return 401 on actual protected endpoints if truly unauthorized.
                         break;
                     }
                     catch (Exception ex)
