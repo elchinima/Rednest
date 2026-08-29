@@ -8,6 +8,7 @@ import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import ImageCropperModal from './ImageCropperModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Profile.scss';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -536,9 +537,9 @@ const Profile = () => {
               disabled={avatarDeleting}
             >
               {avatarDeleting ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
                   <img
-                    src={loaderIcon}
+                    src={loaderIconRed}
                     alt="Deleting..."
                     style={{ width: '16px', height: '16px', flexShrink: 0 }}
                   />

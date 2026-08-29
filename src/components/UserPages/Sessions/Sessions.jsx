@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import './Sessions.scss';
@@ -340,18 +341,17 @@ const Sessions = () => {
                             disabled={isRevoking}
                           >
                             {isRevoking ? (
-                              <>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
                                 <img
-                                  src={loaderIcon}
+                                  src={loaderIconRed}
                                   alt=""
                                   style={{
                                     width: '14px',
                                     height: '14px',
-                                    filter: 'brightness(0) invert(1)',
                                   }}
                                 />
                                 <span>Terminating...</span>
-                              </>
+                              </span>
                             ) : (
                               <>
                                 <svg

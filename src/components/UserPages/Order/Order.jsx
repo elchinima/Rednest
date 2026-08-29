@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import featureCashIcon from '../../../assets/icons/feature-cash.svg';
 import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
 import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
@@ -572,7 +573,7 @@ const Order = () => {
                     >
                       {isSubmitting ? (
                         <span className="order-btn-loading">
-                          <img src={loaderIcon} alt="Loading" className="order-spinner" />
+                          <img src={loaderIconRed} alt="Loading" className="order-spinner" />
                           Placing Order...
                         </span>
                       ) : (

@@ -4,6 +4,7 @@ import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Reviews.scss';
 
 const PAGE_SIZE = 12;
@@ -1008,7 +1009,12 @@ const AdminReviews = () => {
                       className="admin-reviews__btn-primary"
                       disabled={isSavingEdit}
                     >
-                      {isSavingEdit ? 'Saving...' : 'Save Changes'}
+                      {isSavingEdit ? (
+                        <span className="btn-loader">
+                          <img src={loaderIconRed} alt="Saving..." className="btn-loader__icon" />
+                          Saving...
+                        </span>
+                      ) : 'Save Changes'}
                     </button>
                   </div>
                 </form>

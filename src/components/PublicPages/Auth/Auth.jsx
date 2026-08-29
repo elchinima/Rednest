@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 
 import logo from '../../../assets/icons/rednest_logo.png';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { ensureClientHintsHeaders } from '../../../utils/clientHints';
 import './Auth.scss';
 
 const LoaderIcon = () => (
-  <img src={loaderIcon} alt="Loading..." style={{ width: '20px', height: '20px' }} />
+  <img src={loaderIconRed} alt="Loading..." style={{ width: '20px', height: '20px' }} />
 );
 
 const Auth = () => {
@@ -337,7 +337,7 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span className="auth-btn-loader">
                       <LoaderIcon />
                       Processing...
                     </span>
@@ -383,7 +383,7 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading || twoFactorDigits.join('').length < 4}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span className="auth-btn-loader">
                       <LoaderIcon />
                       Verifying...
                     </span>
@@ -429,7 +429,7 @@ const Auth = () => {
 
                 <button type="submit" className="cta-btn auth-submit-btn" disabled={loading}>
                   {loading ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    <span className="auth-btn-loader">
                       <LoaderIcon />
                       Saving...
                     </span>

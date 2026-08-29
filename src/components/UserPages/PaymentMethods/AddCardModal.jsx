@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './AddCardModal.scss';
 
 const checkLuhn = (numStr) => {
@@ -383,8 +383,8 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
               disabled={loading || !isFormValid}
             >
               {loading ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <img src={loaderIcon} alt="Saving" style={{ width: '16px', height: '16px', filter: 'brightness(0) invert(1)' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
+                  <img src={loaderIconRed} alt="Saving" style={{ width: '16px', height: '16px' }} />
                   Saving Card...
                 </span>
               ) : 'Add Card'}

@@ -341,6 +341,14 @@
     }
   }
 
+  .auth-btn-loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: $color-primary;
+  }
+
   .two-factor-inputs {
     display: flex;
     justify-content: center;

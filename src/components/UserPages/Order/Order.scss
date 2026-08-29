@@ -469,11 +469,11 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    color: $color-primary;
 
     .order-spinner {
       width: 18px;
       height: 18px;
-      animation: spin 1s linear infinite;
     }
   }
 

@@ -534,3 +534,10 @@
     }
   }
 }
+
+.review-btn-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $color-primary;
+}

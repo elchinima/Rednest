@@ -5,6 +5,7 @@ import { REVIEW_CATEGORIES, formatBakuDateTime } from './reviewsData';
 import { getProductIconUrl } from '../../../utils/productIcons';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './WriteReviewModal.scss';
 
 const RATING_LABELS = {
@@ -335,7 +336,12 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                   className="cta-btn sm review-modal__btn review-modal__btn--submit"
                   disabled={submitting || !selectedOrderId || !comment.trim()}
                 >
-                  {submitting ? 'Submitting...' : 'Submit Review'}
+                  {submitting ? (
+                    <span className="review-btn-loader">
+                      <img src={loaderIconRed} alt="Submitting..." style={{ width: '18px', height: '18px' }} />
+                      Submitting...
+                    </span>
+                  ) : 'Submit Review'}
                 </button>
               </div>
             </form>

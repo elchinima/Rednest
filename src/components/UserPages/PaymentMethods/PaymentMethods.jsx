@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
@@ -345,11 +346,20 @@ const PaymentMethods = () => {
                                 disabled={settingDefaultId === id}
                                 title="Set as default payment method"
                               >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                  <polyline points="22 4 12 14.01 9 11.01" />
-                                </svg>
-                                <span>{settingDefaultId === id ? 'Setting...' : 'Set Default'}</span>
+                                {settingDefaultId === id ? (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
+                                    <img src={loaderIconRed} alt="" style={{ width: '14px', height: '14px' }} />
+                                    <span>Setting...</span>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                      <polyline points="22 4 12 14.01 9 11.01" />
+                                    </svg>
+                                    <span>Set Default</span>
+                                  </>
+                                )}
                               </button>
                             )}
                           </div>

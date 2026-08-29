@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 
 const CROP_BOX_SIZE = 260;
 
@@ -244,9 +244,9 @@ const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loadin
             disabled={loading || !imageLoaded}
           >
             {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
                 <img
-                  src={loaderIcon}
+                  src={loaderIconRed}
                   alt="Saving..."
                   style={{ width: '16px', height: '16px', flexShrink: 0 }}
                 />

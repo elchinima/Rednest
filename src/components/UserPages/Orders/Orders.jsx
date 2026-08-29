@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import featureCashIcon from '../../../assets/icons/feature-cash.svg';
 import featureCardIcon from '../../../assets/icons/feature-card-visa-mc.svg';
 import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
@@ -469,7 +470,10 @@ const Orders = () => {
                           disabled={isReordering}
                         >
                           {isReordering ? (
-                            <span>Adding...</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
+                              <img src={loaderIconRed} alt="" style={{ width: '15px', height: '15px' }} />
+                              Adding...
+                            </span>
                           ) : (
                             <>
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">

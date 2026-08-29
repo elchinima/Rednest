@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Users.scss';
 
 const PAGE_SIZE = 10;
@@ -1033,7 +1034,12 @@ const Users = () => {
                       className="cta-btn"
                       disabled={isSavingUser}
                     >
-                      {isSavingUser ? 'Saving Changes...' : 'Save User'}
+                      {isSavingUser ? (
+                        <span className="btn-loader">
+                          <img src={loaderIconRed} alt="Saving..." className="btn-loader__icon" />
+                          Saving Changes...
+                        </span>
+                      ) : 'Save User'}
                     </button>
                   </div>
                 </form>

@@ -3,12 +3,13 @@ import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { useAuth } from '../../../context/AuthContext';
 import './AdminLogin.scss';
 
 const LoaderIcon = () => (
-  <img src={loaderIcon} alt="Loading..." style={{ width: '20px', height: '20px' }} />
+  <img src={loaderIconRed} alt="Loading..." style={{ width: '20px', height: '20px' }} />
 );
 
 const AdminLogin = () => {
