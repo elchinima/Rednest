@@ -136,10 +136,11 @@ public class AppDbContext : DbContext
                   .HasConversion<string>()
                   .HasColumnType("text");
 
-            entity.Property(e => e.Status)
-                  .HasConversion<string>()
-                  .HasColumnType("text")
-                  .HasDefaultValue(ReviewStatus.Pending);
+            entity.OwnsOne(e => e.Status, status =>
+            {
+                status.ToJson();
+                status.Property(s => s.Status).HasConversion<string>();
+            });
 
             entity.Property(e => e.Language)
                   .HasConversion<string>()
@@ -157,10 +158,6 @@ public class AppDbContext : DbContext
                   .HasDefaultValueSql("'[]'::jsonb");
 
             entity.Property(e => e.CreatedAt)
-                  .HasColumnType("timestamp with time zone")
-                  .HasDefaultValueSql("NOW()");
-
-            entity.Property(e => e.UpdatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");
 

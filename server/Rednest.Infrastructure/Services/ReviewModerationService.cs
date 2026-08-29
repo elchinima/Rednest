@@ -65,14 +65,14 @@ public class ReviewModerationService : BackgroundService
 
         var windowStart = GetBakuTime().AddHours(-WindowHours);
         var processedCount = await db.Reviews
-            .CountAsync(r => r.Status != ReviewStatus.Pending && r.UpdatedAt >= windowStart, stoppingToken);
+            .CountAsync(r => r.Status.Status != ReviewStatus.Pending && r.Status.UpdatedAt >= windowStart, stoppingToken);
 
         if (processedCount >= DailyLimit)
         {
             var lastModerated = await db.Reviews
-                .Where(r => r.Status != ReviewStatus.Pending)
-                .OrderByDescending(r => r.UpdatedAt)
-                .Select(r => r.UpdatedAt)
+                .Where(r => r.Status.Status != ReviewStatus.Pending)
+                .OrderByDescending(r => r.Status.UpdatedAt)
+                .Select(r => r.Status.UpdatedAt)
                 .FirstOrDefaultAsync(stoppingToken);
 
             if (lastModerated != default)
@@ -93,7 +93,7 @@ public class ReviewModerationService : BackgroundService
         var remaining = DailyLimit - processedCount;
 
         var pendingReviews = await db.Reviews
-            .Where(r => r.Status == ReviewStatus.Pending)
+            .Where(r => r.Status.Status == ReviewStatus.Pending)
             .OrderBy(r => r.CreatedAt)
             .Take(remaining)
             .ToListAsync(stoppingToken);
@@ -113,27 +113,17 @@ public class ReviewModerationService : BackgroundService
             {
                 var (isClean, detectedLanguage) = await ModerateReviewAsync(apiKey, review, stoppingToken);
 
-                if (Enum.TryParse<ReviewLanguage>(detectedLanguage, true, out var parsedLang))
-                {
-                    review.Language = parsedLang;
-                }
-                else if (detectedLanguage.Equals("Azeri", StringComparison.OrdinalIgnoreCase))
-                {
-                    review.Language = ReviewLanguage.Azerbaijani;
-                }
-                else
-                {
-                    review.Language = null;
-                }
+                var parsedLang = ParseDetectedLanguage(detectedLanguage);
+                review.Language = parsedLang;
 
-                review.Status = isClean ? ReviewStatus.Published : ReviewStatus.Verification;
-                review.UpdatedAt = GetBakuTime();
+                review.Status.Status = (isClean && parsedLang.HasValue) ? ReviewStatus.Published : ReviewStatus.Verification;
+                review.Status.UpdatedAt = GetBakuTime();
 
                 await db.SaveChangesAsync(stoppingToken);
 
                 _logger.LogInformation(
                     "Review {ReviewId} moderated: Language={Language}, IsClean={IsClean}, Status={Status}",
-                    review.Id, review.Language, isClean, review.Status);
+                    review.Id, review.Language, isClean, review.Status.Status);
             }
             catch (Exception ex)
             {
@@ -142,6 +132,28 @@ public class ReviewModerationService : BackgroundService
 
             await Task.Delay(DelayBetweenRequestsMs, stoppingToken);
         }
+    }
+
+    private static ReviewLanguage? ParseDetectedLanguage(string? lang)
+    {
+        if (string.IsNullOrWhiteSpace(lang)) return null;
+
+        var lower = lang.Trim().ToLowerInvariant();
+
+        if (lower.Contains("azer") || lower.Contains("azər") || lower.Contains("az") || lower.Contains("turk") || lower.Contains("türk"))
+        {
+            return ReviewLanguage.Azerbaijani;
+        }
+        if (lower.Contains("rus") || lower.Contains("ru"))
+        {
+            return ReviewLanguage.Russian;
+        }
+        if (lower.Contains("eng") || lower.Contains("en"))
+        {
+            return ReviewLanguage.English;
+        }
+
+        return null;
     }
 
     private async Task<(bool IsClean, string DetectedLanguage)> ModerateReviewAsync(
@@ -161,14 +173,14 @@ public class ReviewModerationService : BackgroundService
             1. Language Detection:
                - Automatically detect the primary language of the text.
                - Allowed valid languages are: "Russian", "English", "Azerbaijani".
-               - If the text is in Russian, set detectedLanguage to "Russian" and hasWrongLanguage to false.
-               - If the text is in English, set detectedLanguage to "English" and hasWrongLanguage to false.
-               - If the text is in Azerbaijani, set detectedLanguage to "Azerbaijani" and hasWrongLanguage to false.
-               - If the text is in any other language or unrecognizable, set detectedLanguage to the actual language name (e.g. "Turkish", "Spanish", "Unknown") and hasWrongLanguage to true.
+               - Azerbaijani (both Latin script with special characters like 'ç, ə, ğ, ı, ö, ş, ü' AND standard ASCII/English keyboard transliteration like 'cox gozel', 'ela', 'dadlidir', 'qeseng', 'beyendim', 'pisdir', 'gec catdi', etc.) MUST ALWAYS be classified as "Azerbaijani", and hasWrongLanguage MUST be false.
+               - Russian (Cyrillic like 'Очень вкусно', 'Все отлично', 'Хуйня полная', etc.) MUST ALWAYS be classified as "Russian", and hasWrongLanguage MUST be false.
+               - English ('Great food', 'Very nice', etc.) MUST ALWAYS be classified as "English", and hasWrongLanguage MUST be false.
+               - If the text is in any other language (e.g. French, German, Spanish, Arabic, etc.), set detectedLanguage to that language name and set hasWrongLanguage to true.
 
             2. Offensive Content Check:
                - Detect profanity, curses, swear words, insults, hate speech, vulgarities, and offensive slang in any language (especially Azerbaijani, Russian, English).
-               - Notice: Azerbaijani profanities, vulgar slang (e.g. words like "pox", "səfeh", "qələt", "it", etc.) MUST be marked as hasOffensiveContent = true.
+               - Notice: Azerbaijani profanities, vulgar slang (e.g. words like "pox", "səfeh", "sefeh", "qələt", "qelet", "it", "it oğlu", "peysər", "peyser", "sik", "am", "göt", "got", "siktir", etc.) MUST be marked as hasOffensiveContent = true.
                - Set hasOffensiveContent to true if any offensive, vulgar, or insulting language is detected; otherwise false.
 
             3. Advertising & Links:
