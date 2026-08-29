@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Users.scss';
 
 const PAGE_SIZE = 10;
@@ -469,7 +470,7 @@ const Users = () => {
 
         {loading && (
           <div className="admin-users__loading">
-            <div className="admin-spinner" />
+            <img src={loaderIcon} alt="Loading..." className="admin-users__spinner" />
             <span>Loading user accounts...</span>
           </div>
         )}
@@ -656,7 +657,7 @@ const Users = () => {
               >
                 {loadingDetails ? (
                   <div className="admin-users__modal-loading">
-                    <div className="admin-spinner" />
+                    <img src={loaderIcon} alt="Loading..." className="admin-users__spinner" />
                     <span>Loading detailed user info...</span>
                   </div>
                 ) : userDetails ? (

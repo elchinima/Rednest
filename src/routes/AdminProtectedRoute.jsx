@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import loaderIcon from '../assets/icons/loader-animated.svg';
 
 const AdminProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading } = useAuth();
@@ -26,7 +27,7 @@ const AdminProtectedRoute = ({ children }) => {
   if (authLoading || (isAuthenticated && (loading || checking))) {
     return (
       <div className="admin-loading-screen">
-        <div className="admin-spinner" />
+        <img src={loaderIcon} alt="Loading..." className="admin-loading-spinner" />
       </div>
     );
   }

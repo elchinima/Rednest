@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import './ChangePasswordModal.scss';
 
 const ButtonSpinner = () => (
-  <img src={loaderIcon} alt="Loading..." className="pwd-btn-spinner" style={{ width: '18px', height: '18px' }} />
+  <img src={loaderIconRed} alt="Loading..." className="pwd-btn-spinner" style={{ width: '18px', height: '18px' }} />
 );
 
 const EyeIcon = ({ visible }) => (

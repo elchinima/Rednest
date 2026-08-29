@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Database.scss';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -377,7 +379,10 @@ const Database = () => {
         </div>
 
         {loading ? (
-          <div className="database__loading"><div className="admin-spinner" /></div>
+          <div className="database__loading">
+            <img src={loaderIcon} alt="Loading..." className="database__spinner" />
+            <span>Loading storage files...</span>
+          </div>
         ) : files.length === 0 ? (
           <motion.div className="database__empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -687,7 +692,7 @@ const Database = () => {
                 >
                   {deletingFile ? (
                     <>
-                      <span className="admin-spinner" style={{ width: 14, height: 14 }} />
+                      <img src={loaderIconRed} alt="Deleting..." style={{ width: 16, height: 16 }} />
                       Deleting...
                     </>
                   ) : (

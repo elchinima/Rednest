@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
@@ -410,7 +411,7 @@ const StripePaymentModal = ({
                 >
                   {isProcessing ? (
                     <span className="stripe-btn-loading">
-                      <img src={loaderIcon} alt="Loading" className="stripe-spinner" />
+                      <img src={loaderIconRed} alt="Loading" className="stripe-spinner" />
                       Processing...
                     </span>
                   ) : (
@@ -584,7 +585,7 @@ const StripePaymentModal = ({
                 >
                   {isProcessing ? (
                     <span className="stripe-btn-loading">
-                      <img src={loaderIcon} alt="Loading" className="stripe-spinner" />
+                      <img src={loaderIconRed} alt="Loading" className="stripe-spinner" />
                       Processing...
                     </span>
                   ) : (

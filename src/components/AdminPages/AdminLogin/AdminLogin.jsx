@@ -23,7 +23,7 @@ const AdminLogin = () => {
   if (authLoading) {
     return (
       <div className="admin-loading-screen">
-        <div className="admin-spinner" />
+        <img src={loaderIcon} alt="Loading..." className="admin-loading-spinner" />
       </div>
     );
   }

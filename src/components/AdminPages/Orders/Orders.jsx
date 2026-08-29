@@ -10,6 +10,7 @@ import featureGPayIcon from '../../../assets/icons/feature-gpay.svg';
 import cashierIcon from '../../../assets/icons/cashier-register.svg';
 import onlineIcon from '../../../assets/icons/online-card.svg';
 import logo from '../../../assets/icons/rednest_logo.png';
+import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
@@ -533,7 +534,7 @@ const Orders = () => {
 
         {loading && (
           <div className="admin-orders__loading">
-            <div className="admin-spinner" />
+            <img src={loaderIcon} alt="Loading..." className="admin-orders__spinner" />
             <span>Loading orders feed...</span>
           </div>
         )}

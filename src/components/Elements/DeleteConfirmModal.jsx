@@ -1,6 +1,6 @@
 import React from 'react';
 import AnimatedModalWrapper from './AnimatedModalWrapper';
-import loaderIcon from '../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../assets/icons/loader-animated-red.svg';
 import './RednestModal.scss';
 
 const DeleteConfirmModal = ({
@@ -52,8 +52,8 @@ const DeleteConfirmModal = ({
             disabled={loading}
           >
             {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img src={loaderIcon} alt="Loading" style={{ width: '18px', height: '18px', filter: 'brightness(0) invert(1)' }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
+                <img src={loaderIconRed} alt="Loading" style={{ width: '18px', height: '18px' }} />
                 Deleting...
               </span>
             ) : confirmLabel}
