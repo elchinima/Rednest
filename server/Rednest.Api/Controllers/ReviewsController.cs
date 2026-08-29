@@ -130,17 +130,38 @@ public class ReviewsController : ControllerBase
 
         var eligibleOrders = completedOrders
             .Where(o => !reviewedOrderIds.Contains(o.Id))
-            .Select(o => new
-            {
-                id = o.Id,
-                createdAt = DateTime.SpecifyKind(o.CreatedAt, DateTimeKind.Utc),
-                status = o.Status,
-                totalAmount = o.Payment != null ? o.Payment.TotalAmount : 0m,
-                itemsCount = o.Items != null ? o.Items.Sum(i => i.Quantity) : 0
-            })
             .ToList();
 
-        return Ok(eligibleOrders);
+        var allProductIds = eligibleOrders
+            .SelectMany(o => o.Items ?? new List<OrderProductItem>())
+            .Select(i => i.ProductId)
+            .Distinct()
+            .ToList();
+
+        var products = await _db.Products
+            .Where(p => allProductIds.Contains(p.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(p => p.Id);
+
+        var result = eligibleOrders.Select(o => new
+        {
+            id = o.Id,
+            createdAt = DateTime.SpecifyKind(o.CreatedAt, DateTimeKind.Utc),
+            status = o.Status,
+            totalAmount = o.Payment != null ? o.Payment.TotalAmount : 0m,
+            itemsCount = o.Items != null ? o.Items.Sum(i => i.Quantity) : 0,
+            items = (o.Items ?? new List<OrderProductItem>()).Select(i => new
+            {
+                productId = i.ProductId,
+                quantity = i.Quantity,
+                unitPrice = i.UnitPrice,
+                name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
+                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
+            }).ToList()
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpPost]
