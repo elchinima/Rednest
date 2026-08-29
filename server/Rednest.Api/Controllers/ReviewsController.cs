@@ -29,7 +29,7 @@ public class ReviewsController : ControllerBase
 
         var reviews = await _db.Reviews
             .AsNoTracking()
-            .Where(r => r.Status.Status == ReviewStatus.Published)
+            .Where(r => r.Status == ReviewStatus.Published)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
@@ -59,8 +59,8 @@ public class ReviewsController : ControllerBase
                 initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
-                status = r.Status.Status.ToString(),
-                language = r.Language.ToString(),
+                status = r.Status.ToString(),
+                language = r.Language?.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
                 likes = likesList.Count,
@@ -101,8 +101,8 @@ public class ReviewsController : ControllerBase
                 initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
-                status = r.Status.Status.ToString(),
-                language = r.Language.ToString(),
+                status = r.Status.ToString(),
+                language = r.Language?.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
                 likes = likesList.Count,
@@ -188,12 +188,6 @@ public class ReviewsController : ControllerBase
         if (!Enum.TryParse<ReviewCategory>(request.Category, true, out var categoryEnum))
             return BadRequest(new { message = "Invalid category. Allowed values: Delivery, Products, Service, Staff." });
 
-        var languageEnum = ReviewLanguage.Russian;
-        if (!string.IsNullOrWhiteSpace(request.Language) && Enum.TryParse<ReviewLanguage>(request.Language, true, out var parsedLang))
-        {
-            languageEnum = parsedLang;
-        }
-
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == request.OrderId && o.UserId == userId.Value);
         if (order == null)
             return NotFound(new { message = "Order not found or does not belong to your account." });
@@ -214,19 +208,16 @@ public class ReviewsController : ControllerBase
             UserId = userId.Value,
             OrderId = request.OrderId,
             Category = categoryEnum,
-            Status = new ReviewStatusInfo
-            {
-                Status = ReviewStatus.Pending,
-                UpdatedAt = GetBakuTime()
-            },
-            Language = languageEnum,
+            Status = ReviewStatus.Pending,
+            Language = null,
             ReviewData = new ReviewDetails
             {
                 Rating = Math.Round(request.Rating, 2),
                 Comment = request.Comment.Trim()
             },
             Likes = new List<Guid>(),
-            CreatedAt = GetBakuTime()
+            CreatedAt = GetBakuTime(),
+            UpdatedAt = GetBakuTime()
         };
 
         _db.Reviews.Add(review);
@@ -244,8 +235,8 @@ public class ReviewsController : ControllerBase
             initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
             avatarUrl = user?.ProfilePictureUrl,
             category = review.Category.ToString(),
-            status = review.Status.Status.ToString(),
-            language = review.Language.ToString(),
+            status = review.Status.ToString(),
+            language = review.Language?.ToString(),
             rating = review.ReviewData.Rating,
             comment = review.ReviewData.Comment,
             likes = 0,

@@ -37,7 +37,7 @@ namespace Rednest.Infrastructure.Migrations
                 type: "text",
                 nullable: false,
                 defaultValue: "Pending",
-                oldClrType: typeof(ReviewStatusInfo),
+                oldClrType: typeof(object),
                 oldType: "jsonb",
                 oldDefaultValueSql: "'{\"Status\":\"Pending\"}'::jsonb");
 

@@ -137,14 +137,14 @@ public class AppDbContext : DbContext
                   .HasColumnType("text");
 
             entity.Property(e => e.Status)
-                  .HasColumnName("Status")
-                  .HasColumnType("jsonb")
-                  .HasDefaultValueSql("'{\"Status\":\"Pending\"}'::jsonb");
+                  .HasConversion<string>()
+                  .HasColumnType("text")
+                  .HasDefaultValue(ReviewStatus.Pending);
 
             entity.Property(e => e.Language)
                   .HasConversion<string>()
                   .HasColumnType("text")
-                  .HasDefaultValue(ReviewLanguage.Russian);
+                  .IsRequired(false);
 
             entity.Property(e => e.ReviewData)
                   .HasColumnName("Review")
@@ -157,6 +157,10 @@ public class AppDbContext : DbContext
                   .HasDefaultValueSql("'[]'::jsonb");
 
             entity.Property(e => e.CreatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");
 

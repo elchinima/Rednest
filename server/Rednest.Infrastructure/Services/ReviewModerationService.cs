@@ -65,14 +65,14 @@ public class ReviewModerationService : BackgroundService
 
         var windowStart = GetBakuTime().AddHours(-WindowHours);
         var processedCount = await db.Reviews
-            .CountAsync(r => r.Status.Status != ReviewStatus.Pending && r.Status.UpdatedAt >= windowStart, stoppingToken);
+            .CountAsync(r => r.Status != ReviewStatus.Pending && r.UpdatedAt >= windowStart, stoppingToken);
 
         if (processedCount >= DailyLimit)
         {
             var lastModerated = await db.Reviews
-                .Where(r => r.Status.Status != ReviewStatus.Pending)
-                .OrderByDescending(r => r.Status.UpdatedAt)
-                .Select(r => r.Status.UpdatedAt)
+                .Where(r => r.Status != ReviewStatus.Pending)
+                .OrderByDescending(r => r.UpdatedAt)
+                .Select(r => r.UpdatedAt)
                 .FirstOrDefaultAsync(stoppingToken);
 
             if (lastModerated != default)
@@ -93,7 +93,7 @@ public class ReviewModerationService : BackgroundService
         var remaining = DailyLimit - processedCount;
 
         var pendingReviews = await db.Reviews
-            .Where(r => r.Status.Status == ReviewStatus.Pending)
+            .Where(r => r.Status == ReviewStatus.Pending)
             .OrderBy(r => r.CreatedAt)
             .Take(remaining)
             .ToListAsync(stoppingToken);
@@ -121,18 +121,19 @@ public class ReviewModerationService : BackgroundService
                 {
                     review.Language = ReviewLanguage.Azerbaijani;
                 }
-
-                review.Status = new ReviewStatusInfo
+                else
                 {
-                    Status = isClean ? ReviewStatus.Published : ReviewStatus.Verification,
-                    UpdatedAt = GetBakuTime()
-                };
+                    review.Language = null;
+                }
+
+                review.Status = isClean ? ReviewStatus.Published : ReviewStatus.Verification;
+                review.UpdatedAt = GetBakuTime();
 
                 await db.SaveChangesAsync(stoppingToken);
 
                 _logger.LogInformation(
                     "Review {ReviewId} moderated: Language={Language}, IsClean={IsClean}, Status={Status}",
-                    review.Id, review.Language, isClean, review.Status.Status);
+                    review.Id, review.Language, isClean, review.Status);
             }
             catch (Exception ex)
             {

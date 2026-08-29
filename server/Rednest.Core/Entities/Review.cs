@@ -29,22 +29,16 @@ public class ReviewDetails
     public string Comment { get; set; } = string.Empty;
 }
 
-public class ReviewStatusInfo
-{
-    [JsonConverter(typeof(JsonStringEnumConverter))]
-    public ReviewStatus Status { get; set; } = ReviewStatus.Pending;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
-}
-
 public class Review
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
     public Guid OrderId { get; set; }
     public ReviewCategory Category { get; set; }
-    public ReviewStatusInfo Status { get; set; } = new();
-    public ReviewLanguage Language { get; set; } = ReviewLanguage.Russian;
+    public ReviewStatus Status { get; set; } = ReviewStatus.Pending;
+    public ReviewLanguage? Language { get; set; } = null;
     public ReviewDetails ReviewData { get; set; } = new();
     public List<Guid> Likes { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
 }
