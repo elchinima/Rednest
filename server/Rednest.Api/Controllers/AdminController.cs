@@ -645,6 +645,236 @@ public class AdminController : ControllerBase
         return Ok(new { message = "File deleted." });
     }
 
+    [HttpGet("reviews")]
+    public async Task<IActionResult> GetReviews()
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var reviews = await _context.Reviews
+            .AsNoTracking()
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
+        var userIds = reviews.Select(r => r.UserId).Distinct().ToList();
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(u => u.Id);
+
+        var orderIds = reviews.Select(r => r.OrderId).Distinct().ToList();
+        var orders = await _context.Orders
+            .Where(o => orderIds.Contains(o.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(o => o.Id);
+
+        var result = reviews.Select(r =>
+        {
+            users.TryGetValue(r.UserId, out var u);
+            orders.TryGetValue(r.OrderId, out var o);
+
+            return new
+            {
+                id = r.Id,
+                userId = r.UserId,
+                user = u != null ? new
+                {
+                    id = u.Id,
+                    name = u.Name,
+                    email = u.Email,
+                    profilePictureUrl = u.ProfilePictureUrl
+                } : null,
+                orderId = r.OrderId,
+                order = o != null ? new
+                {
+                    id = o.Id,
+                    createdAt = o.CreatedAt,
+                    status = o.Status,
+                    totalAmount = o.Payment?.TotalAmount ?? 0m,
+                    itemsCount = o.Items?.Count ?? 0
+                } : null,
+                category = r.Category.ToString(),
+                status = r.Status.Status.ToString(),
+                statusUpdatedAt = r.Status.UpdatedAt,
+                language = r.Language?.ToString(),
+                rating = r.ReviewData.Rating,
+                comment = r.ReviewData.Comment,
+                likesCount = r.Likes?.Count ?? 0,
+                likes = r.Likes ?? new List<Guid>(),
+                createdAt = r.CreatedAt
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpGet("reviews/{id:guid}")]
+    public async Task<IActionResult> GetReviewById(Guid id)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var review = await _context.Reviews
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == review.UserId);
+
+        var order = await _context.Orders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == review.OrderId);
+
+        return Ok(new
+        {
+            id = review.Id,
+            userId = review.UserId,
+            user = user != null ? new
+            {
+                id = user.Id,
+                name = user.Name,
+                email = user.Email,
+                profilePictureUrl = user.ProfilePictureUrl
+            } : null,
+            orderId = review.OrderId,
+            order = order != null ? new
+            {
+                id = order.Id,
+                createdAt = order.CreatedAt,
+                status = order.Status,
+                totalAmount = order.Payment?.TotalAmount ?? 0m,
+                itemsCount = order.Items?.Count ?? 0
+            } : null,
+            category = review.Category.ToString(),
+            status = review.Status.Status.ToString(),
+            statusUpdatedAt = review.Status.UpdatedAt,
+            language = review.Language?.ToString(),
+            rating = review.ReviewData.Rating,
+            comment = review.ReviewData.Comment,
+            likesCount = review.Likes?.Count ?? 0,
+            likes = review.Likes ?? new List<Guid>(),
+            createdAt = review.CreatedAt
+        });
+    }
+
+    [HttpPut("reviews/{id:guid}/status")]
+    public async Task<IActionResult> UpdateReviewStatus(Guid id, [FromBody] AdminUpdateReviewStatusRequest request)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request.Status))
+            return BadRequest(new { message = "Status cannot be empty." });
+
+        if (!Enum.TryParse<ReviewStatus>(request.Status, true, out var statusEnum))
+            return BadRequest(new { message = $"Invalid review status: '{request.Status}'." });
+
+        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        review.Status.Status = statusEnum;
+        review.Status.UpdatedAt = DateTime.UtcNow.AddHours(4);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Review status updated successfully.",
+            id = review.Id,
+            status = review.Status.Status.ToString(),
+            statusUpdatedAt = review.Status.UpdatedAt
+        });
+    }
+
+    [HttpPut("reviews/{id:guid}")]
+    public async Task<IActionResult> UpdateReview(Guid id, [FromBody] AdminUpdateReviewRequest request)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        if (!string.IsNullOrWhiteSpace(request.Category))
+        {
+            if (Enum.TryParse<ReviewCategory>(request.Category, true, out var catEnum))
+                review.Category = catEnum;
+            else
+                return BadRequest(new { message = $"Invalid category: '{request.Category}'." });
+        }
+
+        if (request.Rating.HasValue)
+        {
+            if (request.Rating.Value < 1 || request.Rating.Value > 5)
+                return BadRequest(new { message = "Rating must be between 1 and 5." });
+            review.ReviewData.Rating = request.Rating.Value;
+        }
+
+        if (request.Comment != null)
+        {
+            review.ReviewData.Comment = request.Comment.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (Enum.TryParse<ReviewStatus>(request.Status, true, out var statusEnum))
+            {
+                review.Status.Status = statusEnum;
+                review.Status.UpdatedAt = DateTime.UtcNow.AddHours(4);
+            }
+            else
+                return BadRequest(new { message = $"Invalid status: '{request.Status}'." });
+        }
+
+        if (request.Language != null)
+        {
+            if (string.IsNullOrWhiteSpace(request.Language))
+                review.Language = null;
+            else if (Enum.TryParse<ReviewLanguage>(request.Language, true, out var langEnum))
+                review.Language = langEnum;
+            else
+                return BadRequest(new { message = $"Invalid language: '{request.Language}'." });
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Review updated successfully.",
+            review = new
+            {
+                id = review.Id,
+                category = review.Category.ToString(),
+                status = review.Status.Status.ToString(),
+                statusUpdatedAt = review.Status.UpdatedAt,
+                language = review.Language?.ToString(),
+                rating = review.ReviewData.Rating,
+                comment = review.ReviewData.Comment
+            }
+        });
+    }
+
+    [HttpDelete("reviews/{id:guid}")]
+    public async Task<IActionResult> DeleteReview(Guid id)
+    {
+        if (!IsAdminAuthenticated())
+            return Unauthorized();
+
+        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review == null)
+            return NotFound(new { message = "Review not found." });
+
+        _context.Reviews.Remove(review);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Review deleted successfully." });
+    }
+
     private bool IsAdminAuthenticated()
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -666,6 +896,17 @@ public class AdminController : ControllerBase
 public record AdminLoginRequest(string Password);
 
 public record AdminUpdateOrderStatusRequest(string Status);
+
+public record AdminUpdateReviewStatusRequest(string Status);
+
+public class AdminUpdateReviewRequest
+{
+    public string? Category { get; set; }
+    public decimal? Rating { get; set; }
+    public string? Comment { get; set; }
+    public string? Status { get; set; }
+    public string? Language { get; set; }
+}
 
 public class AdminUpdateUserRequest
 {
