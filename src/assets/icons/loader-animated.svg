@@ -1,7 +1,152 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g>
-    <animateTransform attributeName="transform" type="rotate" values="0 24 24; 360 24 24" dur="1s" repeatCount="indefinite" />
-    <circle cx="24" cy="24" r="19.2" stroke="#ffffff" stroke-opacity="0.25" stroke-width="4.5" />
-    <path d="M24 4.8 A19.2 19.2 0 0 1 43.2 24" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />
+  <defs>
+    <!-- 3D Neon Glow Filter -->
+    <filter id="glow-3d" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- 3D Isometric Face Gradients for Realistic Lighting -->
+    <linearGradient id="iso-top" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.8" />
+    </linearGradient>
+    
+    <linearGradient id="iso-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.4" />
+    </linearGradient>
+
+    <linearGradient id="iso-right" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.2" />
+    </linearGradient>
+
+    <linearGradient id="shadow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Scaled 1.21x (additional 10% larger) around center (24, 22.5) -->
+  <g transform="translate(24, 22.5) scale(1.21) translate(-24, -22.5)">
+    <!-- 3D Perspective Dynamic Shadow -->
+    <ellipse cx="24" cy="42.5" rx="11" ry="3" fill="url(#shadow-grad)">
+      <animate
+        attributeName="rx"
+        values="11; 15; 11"
+        keyTimes="0; 0.5; 1"
+        calcMode="spline"
+        keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
+        dur="1.8s"
+        repeatCount="indefinite"
+      />
+      <animate
+        attributeName="opacity"
+        values="0.4; 0.15; 0.4"
+        keyTimes="0; 0.5; 1"
+        dur="1.8s"
+        repeatCount="indefinite"
+      />
+    </ellipse>
+
+    <!-- Main 3D Isometric Cube Container -->
+    <g filter="url(#glow-3d)">
+      <!-- 3D Rotation Cycle -->
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        values="0 24 23; 120 24 23; 240 24 23; 360 24 23"
+        keyTimes="0; 0.333; 0.666; 1"
+        calcMode="spline"
+        keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
+        dur="2.4s"
+        repeatCount="indefinite"
+      />
+
+      <!-- Glowing 3D Inner Core -->
+      <circle cx="24" cy="23" r="3.2" fill="#ffffff">
+        <animate
+          attributeName="r"
+          values="2; 4; 2"
+          keyTimes="0; 0.5; 1"
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.5; 1; 0.5"
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+      </circle>
+
+      <!-- Top 3D Facet (Levitating along -Y) -->
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0 0; 0 -5; 0 0"
+          keyTimes="0; 0.5; 1"
+          calcMode="spline"
+          keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+        <polygon
+          points="24,9 35.5,15.6 24,22.2 12.5,15.6"
+          fill="url(#iso-top)"
+          stroke="#ffffff"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+      </g>
+
+      <!-- Left 3D Facet (Levitating along -X/+Y) -->
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0 0; -4.3 2.5; 0 0"
+          keyTimes="0; 0.5; 1"
+          calcMode="spline"
+          keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+        <polygon
+          points="12.5,16.6 23.5,23 23.5,36 12.5,29.6"
+          fill="url(#iso-left)"
+          stroke="#ffffff"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+      </g>
+
+      <!-- Right 3D Facet (Levitating along +X/+Y) -->
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0 0; 4.3 2.5; 0 0"
+          keyTimes="0; 0.5; 1"
+          calcMode="spline"
+          keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
+          dur="1.2s"
+          repeatCount="indefinite"
+        />
+        <polygon
+          points="24.5,23 35.5,16.6 35.5,29.6 24.5,36"
+          fill="url(#iso-right)"
+          stroke="#ffffff"
+          stroke-width="1.2"
+          stroke-linejoin="round"
+        />
+      </g>
+    </g>
   </g>
 </svg>
