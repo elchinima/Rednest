@@ -56,10 +56,10 @@ const formatBakuDate = (isoStr) => {
   try {
     const d = new Date(isoStr);
     if (isNaN(d.getTime())) return '—';
-    const formatter = new Intl.DateTimeFormat('en-GB', {
+    const formatter = new Intl.DateTimeFormat('ru-RU', {
       timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -85,7 +85,7 @@ const formatRelativeTime = (dateStr) => {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return '—';
   }
@@ -131,7 +131,6 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
   const [sortBy, setSortBy] = useState('latest');
-  const [viewMode, setViewMode] = useState('table');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
@@ -517,35 +516,6 @@ const Orders = () => {
                 <option value="items">Most Items</option>
               </select>
             </div>
-
-            <div className="admin-orders__view-toggle">
-              <button
-                className={`admin-orders__view-btn${viewMode === 'table' ? ' active' : ''}`}
-                onClick={() => setViewMode('table')}
-                title="Table View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="8" y1="6" x2="21" y2="6" />
-                  <line x1="8" y1="12" x2="21" y2="12" />
-                  <line x1="8" y1="18" x2="21" y2="18" />
-                  <line x1="3" y1="6" x2="3.01" y2="6" />
-                  <line x1="3" y1="12" x2="3.01" y2="12" />
-                  <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
-              </button>
-              <button
-                className={`admin-orders__view-btn${viewMode === 'grid' ? ' active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Grid View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -598,7 +568,7 @@ const Orders = () => {
           </div>
         )}
 
-        {!loading && filteredOrders.length > 0 && viewMode === 'table' && (
+        {!loading && filteredOrders.length > 0 && (
           <div className="admin-orders__table-card">
             <div className="admin-orders__table-responsive">
               <table className="admin-orders__table">
@@ -735,132 +705,6 @@ const Orders = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-
-        {!loading && filteredOrders.length > 0 && viewMode === 'grid' && (
-          <div className="admin-orders__grid">
-            {visibleOrders.map((order, i) => {
-              const badge = getStatusBadge(order.status);
-              const payInfo = getPaymentInfo(order.payment?.paymentMethod);
-              const shortId = order.id ? order.id.slice(0, 8).toUpperCase() : 'UNKNOWN';
-
-              return (
-                <motion.div
-                  key={order.id}
-                  className="admin-orders__grid-card"
-                  custom={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate="show"
-                >
-                  <div className="grid-card-top">
-                    <div className="id-date">
-                      <button
-                        className={`id-copy-tag${copiedId === `grid-${order.id}` ? ' copied' : ''}`}
-                        onClick={() => copyToClipboard(order.id, `grid-${order.id}`)}
-                        title="Click to copy full Order ID"
-                      >
-                        <code>#{shortId}</code>
-                        {copiedId === `grid-${order.id}` ? (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : (
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                          </svg>
-                        )}
-                      </button>
-                      <span className="grid-date">{formatBakuDate(order.createdAt)}</span>
-                    </div>
-
-                    <div className="grid-status-wrap">
-                      <select
-                        className={badge.className}
-                        value={order.status}
-                        disabled={updatingOrderId === order.id}
-                        onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                      >
-                        {ORDER_STATUSES.map((st) => (
-                          <option key={st} value={st}>
-                            {st}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid-card-customer">
-                    <div className="customer-info">
-                      <h4>{order.user?.name || 'Guest / Unnamed'}</h4>
-                      <span>{order.user?.email || '—'}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid-card-items">
-                    <div className="items-header">
-                      <span className="count-tag">
-                        {order.itemsCount} {order.itemsCount === 1 ? 'item' : 'items'}
-                      </span>
-                      {order.payment?.promoCode && (
-                        <span className="promo-tag">Promo: {order.payment.promoCode}</span>
-                      )}
-                    </div>
-                    <ul className="items-mini-list">
-                      {(order.items || []).slice(0, 3).map((it, idx) => (
-                        <li key={idx}>
-                          <span className="it-qty">{it.quantity}x</span>
-                          <span className="it-name">{it.name}</span>
-                          <span className="it-price">{formatCurrency(it.unitPrice * it.quantity)}</span>
-                        </li>
-                      ))}
-                      {order.items?.length > 3 && (
-                        <li className="more-items">+{order.items.length - 3} more items...</li>
-                      )}
-                    </ul>
-                  </div>
-
-                  <div className="grid-card-footer">
-                    <div className="payment-box">
-                      <div className="pay-method">
-                        <img src={payInfo.icon} alt="" className="pay-icon" />
-                        <span>{payInfo.label}</span>
-                      </div>
-                      <strong className="total-amount">
-                        {formatCurrency(order.payment?.totalAmount)}
-                      </strong>
-                    </div>
-
-                    <div className="grid-actions">
-                      <button
-                        className="admin-orders__action-btn"
-                        onClick={() => setSelectedReceiptOrder(order)}
-                        title="View Full Receipt"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                          <line x1="16" y1="13" x2="8" y2="13" />
-                          <line x1="16" y1="17" x2="8" y2="17" />
-                        </svg>
-                      </button>
-                      <button
-                        className="admin-orders__action-btn admin-orders__action-btn--delete"
-                        onClick={() => setOrderToDelete(order)}
-                        title="Delete Order"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
           </div>
         )}
 

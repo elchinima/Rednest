@@ -361,43 +361,7 @@
     }
   }
 
-  &__view-toggle {
-    display: flex;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: $border-radius-sm;
-    padding: 2px;
-    flex-shrink: 0;
-  }
 
-  &__view-btn {
-    width: 34px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-
-    svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    &:hover {
-      color: #fff;
-    }
-
-    &.active {
-      background: rgba($color-primary, 0.25);
-      color: #fff;
-      border: 1px solid rgba($color-primary, 0.35);
-    }
-  }
 
   .badge {
     display: inline-flex;
@@ -674,114 +638,7 @@
     }
   }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 14px;
 
-    @media (max-width: 640px) {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-  }
-
-  &__grid-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: $border-radius-md;
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transition: all 0.25s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.12);
-      transform: translateY(-2px);
-    }
-  }
-
-  &__grid-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  &__grid-identity {
-    flex: 1;
-    min-width: 0;
-
-    h4 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #fff;
-      margin: 0 0 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-  }
-
-  &__grid-email {
-    font-size: 0.8rem;
-    color: $color-text-muted;
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__grid-metrics {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: $border-radius-sm;
-    padding: 10px;
-    text-align: center;
-  }
-
-  &__metric {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    .label {
-      font-size: 0.68rem;
-      color: rgba(255, 255, 255, 0.4);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .value {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #fff;
-
-      &.highlight {
-        color: #fbbf24;
-      }
-    }
-  }
-
-  &__grid-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-
-    .date {
-      font-size: 0.74rem;
-      color: rgba(255, 255, 255, 0.4);
-    }
-
-    .actions {
-      display: flex;
-      gap: 6px;
-    }
-  }
 
   &__load-more {
     display: flex;

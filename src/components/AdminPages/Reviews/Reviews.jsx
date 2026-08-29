@@ -12,11 +12,11 @@ const CATEGORIES = ['All Categories', 'Products', 'Service', 'Delivery', 'Staff'
 const STATUSES = ['All Statuses', 'Published', 'Verification', 'Pending', 'Cancelled'];
 const RATINGS = [
   { value: 'all', label: 'All Ratings' },
-  { value: '5', label: '5 Stars (★★★★★)' },
-  { value: '4', label: '4 Stars (★★★★☆)' },
-  { value: '3', label: '3 Stars (★★★☆☆)' },
-  { value: '2', label: '2 Stars (★★☆☆☆)' },
-  { value: '1', label: '1 Star (★☆☆☆☆)' },
+  { value: '5', label: '5.0' },
+  { value: '4', label: '4.0' },
+  { value: '3', label: '3.0' },
+  { value: '2', label: '2.0' },
+  { value: '1', label: '1.0' },
 ];
 
 const formatDate = (isoStr) => {
@@ -24,13 +24,16 @@ const formatDate = (isoStr) => {
   try {
     const d = new Date(isoStr);
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('en-GB', {
+    const formatter = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
+    return formatter.format(d);
   } catch {
     return '—';
   }
@@ -50,22 +53,10 @@ const formatRelativeTime = (dateStr) => {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return '—';
   }
-};
-
-const getInitials = (name, email) => {
-  if (name && name.trim()) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  }
-  if (email && email.trim()) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return 'U';
 };
 
 const getStatusBadge = (status) => {
@@ -84,20 +75,6 @@ const getCategoryBadge = (cat) => {
   if (c === 'service') return { label: 'Service', className: 'badge badge--warning' };
   if (c === 'staff') return { label: 'Staff', className: 'badge badge--purple' };
   return { label: cat || 'General', className: 'badge badge--muted' };
-};
-
-const renderStars = (rating) => {
-  const num = Math.round(Number(rating) || 0);
-  return (
-    <div className="admin-reviews__stars" title={`${rating} / 5`}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <span key={star} className={`star-char ${star <= num ? 'filled' : 'empty'}`}>
-          ★
-        </span>
-      ))}
-      <span className="star-val">{Number(rating).toFixed(1)}</span>
-    </div>
-  );
 };
 
 const fadeUp = {
@@ -120,7 +97,6 @@ const AdminReviews = () => {
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [ratingFilter, setRatingFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-  const [viewMode, setViewMode] = useState('table');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const [selectedReview, setSelectedReview] = useState(null);
@@ -419,7 +395,7 @@ const AdminReviews = () => {
           <div>
             <h1 className="admin-reviews__title">Reviews</h1>
             <p className="admin-reviews__subtitle">
-              Customer feedback, star ratings, and moderation controls
+              Customer feedback, ratings, and moderation controls
             </p>
           </div>
         </motion.div>
@@ -454,16 +430,17 @@ const AdminReviews = () => {
             animate="show"
           >
             <div className="admin-reviews__stat-icon">
-              <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
               </svg>
             </div>
             <div className="admin-reviews__stat-body">
               <span className="admin-reviews__stat-value highlight">
-                {loading ? '...' : `${stats.avgRating} ★`}
+                {loading ? '...' : stats.avgRating}
               </span>
               <span className="admin-reviews__stat-label">Average Rating</span>
-              <span className="admin-reviews__stat-sub">Out of 5.0 stars</span>
+              <span className="admin-reviews__stat-sub">Out of 5.0</span>
             </div>
           </motion.div>
 
@@ -597,37 +574,6 @@ const AdminReviews = () => {
                 <option value="likes">Most Liked</option>
               </select>
             </div>
-
-            <div className="admin-reviews__view-toggle">
-              <button
-                type="button"
-                className={`admin-reviews__view-btn${viewMode === 'table' ? ' active' : ''}`}
-                onClick={() => setViewMode('table')}
-                title="Table View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="8" y1="6" x2="21" y2="6" />
-                  <line x1="8" y1="12" x2="21" y2="12" />
-                  <line x1="8" y1="18" x2="21" y2="18" />
-                  <line x1="3" y1="6" x2="3.01" y2="6" />
-                  <line x1="3" y1="12" x2="3.01" y2="12" />
-                  <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className={`admin-reviews__view-btn${viewMode === 'grid' ? ' active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Grid View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -664,7 +610,7 @@ const AdminReviews = () => {
           </div>
         )}
 
-        {!loading && filteredReviews.length > 0 && viewMode === 'table' && (
+        {!loading && filteredReviews.length > 0 && (
           <div className="admin-reviews__table-card">
             <div className="admin-reviews__table-responsive">
               <table className="admin-reviews__table">
@@ -694,21 +640,12 @@ const AdminReviews = () => {
                         animate="show"
                       >
                         <td>
-                          <div className="admin-reviews__user-cell">
-                            <div className="admin-reviews__avatar">
-                              {r.user?.profilePictureUrl ? (
-                                <img src={r.user.profilePictureUrl} alt={r.user.name || r.user.email} />
-                              ) : (
-                                <span>{getInitials(r.user?.name, r.user?.email)}</span>
-                              )}
-                            </div>
-                            <div className="admin-reviews__user-info">
-                              <span className="admin-reviews__user-name">
-                                {r.user?.name || 'Anonymous'}
+                          <div className="admin-reviews__customer-cell">
+                            <div className="customer-info">
+                              <span className="customer-name">
+                                {r.user?.name || 'Anonymous User'}
                               </span>
-                              <span className="admin-reviews__user-email">
-                                {r.user?.email || '—'}
-                              </span>
+                              <span className="customer-email">{r.user?.email || '—'}</span>
                             </div>
                           </div>
                         </td>
@@ -737,7 +674,9 @@ const AdminReviews = () => {
                         </td>
 
                         <td>
-                          {renderStars(r.rating)}
+                          <div className="admin-reviews__rating-cell">
+                            <span className="rating-num">{Number(r.rating || 0).toFixed(1)}</span>
+                          </div>
                         </td>
 
                         <td>
@@ -782,7 +721,7 @@ const AdminReviews = () => {
                               title="View Review Details"
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                               </svg>
                             </button>
@@ -821,107 +760,6 @@ const AdminReviews = () => {
           </div>
         )}
 
-        {!loading && filteredReviews.length > 0 && viewMode === 'grid' && (
-          <div className="admin-reviews__grid">
-            {visibleReviews.map((r, i) => {
-              const statusBadge = getStatusBadge(r.status);
-              const catBadge = getCategoryBadge(r.category);
-
-              return (
-                <motion.div
-                  key={r.id}
-                  className="admin-reviews__grid-card"
-                  custom={i}
-                  variants={fadeUp}
-                  initial="hidden"
-                  animate="show"
-                >
-                  <div className="admin-reviews__grid-top">
-                    <div className="admin-reviews__avatar">
-                      {r.user?.profilePictureUrl ? (
-                        <img src={r.user.profilePictureUrl} alt={r.user.name || r.user.email} />
-                      ) : (
-                        <span>{getInitials(r.user?.name, r.user?.email)}</span>
-                      )}
-                    </div>
-                    <div className="admin-reviews__grid-identity">
-                      <h4>{r.user?.name || 'Anonymous User'}</h4>
-                      <span className="email">{r.user?.email || 'No email'}</span>
-                    </div>
-
-                    <div className="admin-reviews__status-select-wrap">
-                      <select
-                        className={statusBadge.className}
-                        value={r.status || 'Pending'}
-                        disabled={updatingReviewId === r.id}
-                        onChange={(e) => handleUpdateStatus(r.id, e.target.value)}
-                      >
-                        <option value="Published">Published</option>
-                        <option value="Verification">Verification</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="admin-reviews__grid-middle">
-                    <div className="meta-chips">
-                      <span className={catBadge.className}>{catBadge.label}</span>
-                      {renderStars(r.rating)}
-                    </div>
-                    <p className="comment-body">
-                      {r.comment || <em className="text-muted">No text feedback provided.</em>}
-                    </p>
-                  </div>
-
-                  <div className="admin-reviews__grid-footer">
-                    <div className="order-info">
-                      <span className="order-tag">#{String(r.orderId || '').slice(0, 8)}</span>
-                      <span className="date-tag">{formatRelativeTime(r.createdAt)}</span>
-                    </div>
-
-                    <div className="actions">
-                      <button
-                        type="button"
-                        className="admin-reviews__action-btn"
-                        onClick={() => setSelectedReview(r)}
-                        title="View Details"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-reviews__action-btn"
-                        onClick={() => openEditModal(r)}
-                        title="Edit Review"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L16.5 3.5z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-reviews__action-btn admin-reviews__action-btn--delete"
-                        onClick={() => setReviewToDelete(r)}
-                        title="Delete Review"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
         {filteredReviews.length > visibleCount && !loading && (
           <div className="admin-reviews__load-more">
             <button
@@ -948,30 +786,17 @@ const AdminReviews = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="admin-reviews__modal-header">
-                  <div className="admin-reviews__modal-identity">
-                    <div className="admin-reviews__avatar admin-reviews__avatar--lg">
-                      {selectedReview.user?.profilePictureUrl ? (
-                        <img
-                          src={selectedReview.user.profilePictureUrl}
-                          alt={selectedReview.user.name || selectedReview.user.email}
-                        />
-                      ) : (
-                        <span>{getInitials(selectedReview.user?.name, selectedReview.user?.email)}</span>
-                      )}
-                    </div>
-                    <div className="admin-reviews__modal-meta">
-                      <h2>{selectedReview.user?.name || 'Anonymous User'}</h2>
-                      <p>{selectedReview.user?.email || 'No email registered'}</p>
-                      <div className="admin-reviews__modal-chips">
-                        <code>ID: {selectedReview.id}</code>
-                        <button
-                          type="button"
-                          className="copy-btn"
-                          onClick={() => copyToClipboard(selectedReview.id, 'modal-id')}
-                        >
-                          {copiedId === 'modal-id' ? 'Copied!' : 'Copy'}
-                        </button>
-                      </div>
+                  <div className="modal-title-wrap">
+                    <h2>Review Details</h2>
+                    <div className="admin-reviews__modal-chips">
+                      <code>ID: {selectedReview.id}</code>
+                      <button
+                        type="button"
+                        className="copy-btn"
+                        onClick={() => copyToClipboard(selectedReview.id, 'modal-id')}
+                      >
+                        {copiedId === 'modal-id' ? 'Copied!' : 'Copy'}
+                      </button>
                     </div>
                   </div>
 
@@ -990,23 +815,24 @@ const AdminReviews = () => {
                 <div className="admin-reviews__modal-body">
                   <div className="admin-reviews__detail-row">
                     <div className="admin-reviews__detail-box">
-                      <span className="label">Order Reference</span>
-                      <span className="val code-val">#{String(selectedReview.orderId || '').slice(0, 16)}</span>
+                      <span className="label">Customer</span>
+                      <span className="val">{selectedReview.user?.name || 'Anonymous User'}</span>
+                      <span className="sub-val">{selectedReview.user?.email || 'No email registered'}</span>
                     </div>
                     <div className="admin-reviews__detail-box">
-                      <span className="label">Category</span>
-                      <span className="val">{selectedReview.category}</span>
+                      <span className="label">Order Reference</span>
+                      <span className="val code-val">#{String(selectedReview.orderId || '').slice(0, 16)}</span>
                     </div>
                   </div>
 
                   <div className="admin-reviews__detail-row">
                     <div className="admin-reviews__detail-box">
-                      <span className="label">Rating</span>
-                      <span className="val highlight">{renderStars(selectedReview.rating)}</span>
+                      <span className="label">Category</span>
+                      <span className="val">{selectedReview.category}</span>
                     </div>
                     <div className="admin-reviews__detail-box">
-                      <span className="label">Current Status</span>
-                      <span className="val">{selectedReview.status}</span>
+                      <span className="label">Rating</span>
+                      <span className="val highlight">{Number(selectedReview.rating || 0).toFixed(1)}</span>
                     </div>
                   </div>
 
@@ -1021,8 +847,8 @@ const AdminReviews = () => {
                       <span className="val">{formatDate(selectedReview.createdAt)}</span>
                     </div>
                     <div className="admin-reviews__detail-box">
-                      <span className="label">Likes Received</span>
-                      <span className="val">{selectedReview.likesCount || 0}</span>
+                      <span className="label">Status</span>
+                      <span className="val">{selectedReview.status}</span>
                     </div>
                   </div>
                 </div>
@@ -1120,11 +946,11 @@ const AdminReviews = () => {
                         onChange={(e) => setEditForm({ ...editForm, rating: Number(e.target.value) })}
                         required
                       >
-                        <option value="5">5 Stars (★★★★★)</option>
-                        <option value="4">4 Stars (★★★★☆)</option>
-                        <option value="3">3 Stars (★★★☆☆)</option>
-                        <option value="2">2 Stars (★★☆☆☆)</option>
-                        <option value="1">1 Star (★☆☆☆☆)</option>
+                        <option value="5">5.0</option>
+                        <option value="4">4.0</option>
+                        <option value="3">3.0</option>
+                        <option value="2">2.0</option>
+                        <option value="1">1.0</option>
                       </select>
                     </div>
                   </div>

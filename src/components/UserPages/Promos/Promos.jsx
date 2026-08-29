@@ -32,13 +32,16 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('en-GB', {
+    const formatter = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
+    return formatter.format(d);
   } catch {
     return '—';
   }

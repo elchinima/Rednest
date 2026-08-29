@@ -16,13 +16,16 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '—';
-    return d.toLocaleDateString('en-GB', {
+    const formatter = new Intl.DateTimeFormat('ru-RU', {
+      timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     });
+    return formatter.format(d);
   } catch {
     return '—';
   }
@@ -42,7 +45,7 @@ const formatRelativeTime = (dateStr) => {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return '—';
   }
@@ -78,7 +81,6 @@ const Users = () => {
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('lastActive');
-  const [viewMode, setViewMode] = useState('table');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const [selectedUserId, setSelectedUserId] = useState(null);
@@ -450,35 +452,6 @@ const Users = () => {
                 <option value="orders">Most Orders</option>
               </select>
             </div>
-
-            <div className="admin-users__view-toggle">
-              <button
-                className={`admin-users__view-btn${viewMode === 'table' ? ' active' : ''}`}
-                onClick={() => setViewMode('table')}
-                title="Table View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="8" y1="6" x2="21" y2="6" />
-                  <line x1="8" y1="12" x2="21" y2="12" />
-                  <line x1="8" y1="18" x2="21" y2="18" />
-                  <line x1="3" y1="6" x2="3.01" y2="6" />
-                  <line x1="3" y1="12" x2="3.01" y2="12" />
-                  <line x1="3" y1="18" x2="3.01" y2="18" />
-                </svg>
-              </button>
-              <button
-                className={`admin-users__view-btn${viewMode === 'grid' ? ' active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                title="Grid View"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -531,7 +504,7 @@ const Users = () => {
           </div>
         )}
 
-        {!loading && filteredUsers.length > 0 && viewMode === 'table' && (
+        {!loading && filteredUsers.length > 0 && (
           <div className="admin-users__table-card">
             <div className="admin-users__table-responsive">
               <table className="admin-users__table">
@@ -635,7 +608,7 @@ const Users = () => {
                             title="View Full Profile"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
                               <circle cx="12" cy="12" r="3" />
                             </svg>
                           </button>
@@ -657,85 +630,6 @@ const Users = () => {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-
-        {!loading && filteredUsers.length > 0 && viewMode === 'grid' && (
-          <div className="admin-users__grid">
-            {visibleUsers.map((u, i) => (
-              <motion.div
-                key={u.id}
-                className="admin-users__grid-card"
-                custom={i}
-                variants={fadeUp}
-                initial="hidden"
-                animate="show"
-              >
-                <div className="admin-users__grid-top">
-                  <div className="admin-users__avatar">
-                    {u.profilePictureUrl ? (
-                      <img src={u.profilePictureUrl} alt={u.name || u.email} />
-                    ) : (
-                      <span>{getInitials(u.name, u.email)}</span>
-                    )}
-                  </div>
-                  <div className="admin-users__grid-identity">
-                    <h4>{u.name || 'Unnamed User'}</h4>
-                    <span className="admin-users__grid-email">{u.email}</span>
-                  </div>
-                  <div className="admin-users__grid-status">
-                    {u.isActive !== false ? (
-                      <span className="badge badge--success">Active</span>
-                    ) : (
-                      <span className="badge badge--danger">Blocked</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="admin-users__grid-metrics">
-                  <div className="admin-users__metric">
-                    <span className="label">Balance</span>
-                    <span className="value highlight">{formatCurrency(u.balance)}</span>
-                  </div>
-                  <div className="admin-users__metric">
-                    <span className="label">Orders</span>
-                    <span className="value">{u.ordersCount}</span>
-                  </div>
-                  <div className="admin-users__metric">
-                    <span className="label">Spent</span>
-                    <span className="value">{formatCurrency(u.totalSpent)}</span>
-                  </div>
-                </div>
-
-                <div className="admin-users__grid-footer">
-                  <span className="date">
-                    Active: {formatRelativeTime(u.lastActiveAt || u.createdAt)}
-                  </span>
-                  <div className="actions">
-                    <button
-                      className="admin-users__action-btn"
-                      onClick={() => loadUserDetails(u.id)}
-                      title="View Details"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                    <button
-                      className="admin-users__action-btn"
-                      onClick={() => openEditModal(u)}
-                      title="Edit"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
           </div>
         )}
 
