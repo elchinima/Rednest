@@ -137,9 +137,9 @@ public class AppDbContext : DbContext
                   .HasColumnType("text");
 
             entity.Property(e => e.Status)
-                  .HasConversion<string>()
-                  .HasColumnType("text")
-                  .HasDefaultValue(ReviewStatus.Pending);
+                  .HasColumnName("Status")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{\"Status\":\"Pending\"}'::jsonb");
 
             entity.Property(e => e.Language)
                   .HasConversion<string>()
@@ -155,10 +155,6 @@ public class AppDbContext : DbContext
                   .HasColumnName("Likes")
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'[]'::jsonb");
-
-            entity.Property(e => e.Moderation)
-                  .HasColumnName("Moderation")
-                  .HasColumnType("jsonb");
 
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")

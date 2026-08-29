@@ -122,10 +122,6 @@ namespace Rednest.Infrastructure.Migrations
                         .HasColumnName("Likes")
                         .HasDefaultValueSql("'[]'::jsonb");
 
-                    b.Property<ModerationResult>("Moderation")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("Moderation");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
 
@@ -136,11 +132,12 @@ namespace Rednest.Infrastructure.Migrations
                         .HasColumnName("Review")
                         .HasDefaultValueSql("'{}'::jsonb");
 
-                    b.Property<string>("Status")
+                    b.Property<ReviewStatusInfo>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Pending");
+                        .HasColumnType("jsonb")
+                        .HasColumnName("Status")
+                        .HasDefaultValueSql("'{\"Status\":\"Pending\"}'::jsonb");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

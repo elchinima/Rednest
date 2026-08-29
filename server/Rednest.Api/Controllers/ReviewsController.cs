@@ -29,7 +29,7 @@ public class ReviewsController : ControllerBase
 
         var reviews = await _db.Reviews
             .AsNoTracking()
-            .Where(r => r.Status == ReviewStatus.Published)
+            .Where(r => r.Status.Status == ReviewStatus.Published)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
@@ -59,7 +59,7 @@ public class ReviewsController : ControllerBase
                 initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
-                status = r.Status.ToString(),
+                status = r.Status.Status.ToString(),
                 language = r.Language.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
@@ -101,7 +101,7 @@ public class ReviewsController : ControllerBase
                 initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
-                status = r.Status.ToString(),
+                status = r.Status.Status.ToString(),
                 language = r.Language.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,
@@ -214,7 +214,11 @@ public class ReviewsController : ControllerBase
             UserId = userId.Value,
             OrderId = request.OrderId,
             Category = categoryEnum,
-            Status = ReviewStatus.Pending,
+            Status = new ReviewStatusInfo
+            {
+                Status = ReviewStatus.Pending,
+                UpdatedAt = GetBakuTime()
+            },
             Language = languageEnum,
             ReviewData = new ReviewDetails
             {
@@ -240,7 +244,7 @@ public class ReviewsController : ControllerBase
             initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
             avatarUrl = user?.ProfilePictureUrl,
             category = review.Category.ToString(),
-            status = review.Status.ToString(),
+            status = review.Status.Status.ToString(),
             language = review.Language.ToString(),
             rating = review.ReviewData.Rating,
             comment = review.ReviewData.Comment,

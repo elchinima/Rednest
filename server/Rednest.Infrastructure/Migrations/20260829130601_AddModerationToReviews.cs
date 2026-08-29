@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Rednest.Core.Entities;
 
 #nullable disable
@@ -21,7 +21,7 @@ namespace Rednest.Infrastructure.Migrations
                 oldType: "text",
                 oldDefaultValue: "Published");
 
-            migrationBuilder.AddColumn<ModerationResult>(
+            migrationBuilder.AddColumn<string>(
                 name: "Moderation",
                 table: "Reviews",
                 type: "jsonb",

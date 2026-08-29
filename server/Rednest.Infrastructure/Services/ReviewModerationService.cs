@@ -65,14 +65,14 @@ public class ReviewModerationService : BackgroundService
 
         var windowStart = GetBakuTime().AddHours(-WindowHours);
         var processedCount = await db.Reviews
-            .CountAsync(r => r.Moderation != null && r.Moderation.ModeratedAt >= windowStart, stoppingToken);
+            .CountAsync(r => r.Status.Status != ReviewStatus.Pending && r.Status.UpdatedAt >= windowStart, stoppingToken);
 
         if (processedCount >= DailyLimit)
         {
             var lastModerated = await db.Reviews
-                .Where(r => r.Moderation != null)
-                .OrderByDescending(r => r.Moderation!.ModeratedAt)
-                .Select(r => r.Moderation!.ModeratedAt)
+                .Where(r => r.Status.Status != ReviewStatus.Pending)
+                .OrderByDescending(r => r.Status.UpdatedAt)
+                .Select(r => r.Status.UpdatedAt)
                 .FirstOrDefaultAsync(stoppingToken);
 
             if (lastModerated != default)
@@ -93,7 +93,7 @@ public class ReviewModerationService : BackgroundService
         var remaining = DailyLimit - processedCount;
 
         var pendingReviews = await db.Reviews
-            .Where(r => r.Status == ReviewStatus.Pending)
+            .Where(r => r.Status.Status == ReviewStatus.Pending)
             .OrderBy(r => r.CreatedAt)
             .Take(remaining)
             .ToListAsync(stoppingToken);
@@ -111,26 +111,28 @@ public class ReviewModerationService : BackgroundService
 
             try
             {
-                var result = await ModerateReviewAsync(apiKey, review, stoppingToken);
+                var (isClean, detectedLanguage) = await ModerateReviewAsync(apiKey, review, stoppingToken);
 
-                review.Moderation = result;
-
-                if (Enum.TryParse<ReviewLanguage>(result.DetectedLanguage, true, out var parsedLang))
+                if (Enum.TryParse<ReviewLanguage>(detectedLanguage, true, out var parsedLang))
                 {
                     review.Language = parsedLang;
                 }
-                else if (result.DetectedLanguage.Equals("Azeri", StringComparison.OrdinalIgnoreCase))
+                else if (detectedLanguage.Equals("Azeri", StringComparison.OrdinalIgnoreCase))
                 {
                     review.Language = ReviewLanguage.Azerbaijani;
                 }
 
-                review.Status = result.IsClean ? ReviewStatus.Published : ReviewStatus.Verification;
+                review.Status = new ReviewStatusInfo
+                {
+                    Status = isClean ? ReviewStatus.Published : ReviewStatus.Verification,
+                    UpdatedAt = GetBakuTime()
+                };
 
                 await db.SaveChangesAsync(stoppingToken);
 
                 _logger.LogInformation(
                     "Review {ReviewId} moderated: Language={Language}, IsClean={IsClean}, Status={Status}",
-                    review.Id, review.Language, result.IsClean, review.Status);
+                    review.Id, review.Language, isClean, review.Status.Status);
             }
             catch (Exception ex)
             {
@@ -141,7 +143,7 @@ public class ReviewModerationService : BackgroundService
         }
     }
 
-    private async Task<ModerationResult> ModerateReviewAsync(
+    private async Task<(bool IsClean, string DetectedLanguage)> ModerateReviewAsync(
         string apiKey,
         Review review,
         CancellationToken stoppingToken)
@@ -220,13 +222,13 @@ public class ReviewModerationService : BackgroundService
         {
             _logger.LogWarning("Gemini API error for review {ReviewId}: {Status} - {Body}",
                 review.Id, response.StatusCode, responseBody);
-            return FallbackResult("Gemini API error");
+            return (false, "Unknown");
         }
 
         return ParseGeminiResponse(responseBody, review.Id);
     }
 
-    private ModerationResult ParseGeminiResponse(string responseBody, Guid reviewId)
+    private (bool IsClean, string DetectedLanguage) ParseGeminiResponse(string responseBody, Guid reviewId)
     {
         try
         {
@@ -254,36 +256,15 @@ public class ReviewModerationService : BackgroundService
             var wrongLang = root.GetProperty("hasWrongLanguage").GetBoolean();
             var isCleanReported = root.GetProperty("isClean").GetBoolean();
             var isClean = isCleanReported && !offensive && !advertising && !links && !wrongLang;
+            var detectedLang = root.TryGetProperty("detectedLanguage", out var lang) ? lang.GetString() ?? "Unknown" : "Unknown";
 
-            return new ModerationResult
-            {
-                IsClean = isClean,
-                HasOffensiveContent = offensive,
-                HasAdvertising = advertising,
-                HasLinks = links,
-                HasWrongLanguage = wrongLang,
-                DetectedLanguage = root.TryGetProperty("detectedLanguage", out var lang) ? lang.GetString() ?? "" : "",
-                Summary = root.TryGetProperty("summary", out var summary) ? summary.GetString() ?? "" : "",
-                ModeratedAt = GetBakuTime()
-            };
+            return (isClean, detectedLang);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse Gemini response for review {ReviewId}. Body: {Body}",
                 reviewId, responseBody.Length > 500 ? responseBody[..500] : responseBody);
-            return FallbackResult("Parse error - manual review required");
+            return (false, "Unknown");
         }
     }
-
-    private static ModerationResult FallbackResult(string reason) => new()
-    {
-        IsClean = false,
-        HasOffensiveContent = false,
-        HasAdvertising = false,
-        HasLinks = false,
-        HasWrongLanguage = false,
-        DetectedLanguage = "Unknown",
-        Summary = reason,
-        ModeratedAt = GetBakuTime()
-    };
 }
