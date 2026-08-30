@@ -1078,11 +1078,14 @@ const Users = () => {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>
-                        User Balance (₼)
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>User Balance (₼)</span>
                         {!isSuperAdmin && (
-                          <span style={{ marginLeft: 6, color: '#ef4444', fontSize: '0.78rem', fontWeight: 500 }}>
-                            (Super Admin only)
+                          <span title="Access denied (Super Admin only)" style={{ display: 'inline-flex', alignItems: 'center', color: 'rgba(255,255,255,0.45)' }}>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '13px', height: '13px' }}>
+                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
                           </span>
                         )}
                       </label>
@@ -1094,13 +1097,8 @@ const Users = () => {
                         value={editForm.balance}
                         onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
                         placeholder="0.00"
-                        title={!isSuperAdmin ? 'Only Super Admin can change user balance' : ''}
+                        title={!isSuperAdmin ? 'Access denied (Super Admin only)' : ''}
                       />
-                      {!isSuperAdmin && (
-                        <small className="admin-users__field-hint" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                          Only Super Admin can modify user balance.
-                        </small>
-                      )}
                     </div>
 
                     <div className="form-group">

@@ -87,7 +87,7 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     if (location.state?.accessDenied) {
-      setAccessDeniedToast('Доступ ограничен. У вас нет прав для просмотра этого раздела.');
+      setAccessDeniedToast('Access restricted. You do not have permission to view this section.');
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
@@ -222,20 +222,12 @@ const AdminLayout = ({ children }) => {
                 className={({ isActive }) =>
                   `admin-sidebar__link${isActive && !isLocked ? ' admin-sidebar__link--active' : ''}${isLocked ? ' admin-sidebar__link--locked' : ''}`
                 }
-                onClick={async (e) => {
+                onClick={(e) => {
                   if (isLocked) {
                     e.preventDefault();
-                    setAccessDeniedToast(`Доступ к разделу "${item.label}" ограничен (только для Admin и Super Admin).`);
+                    setAccessDeniedToast(`Access to "${item.label}" is restricted (Admin and Super Admin only).`);
                   } else {
                     setSidebarOpen(false);
-                    const res = await verify();
-                    if (res && res.role) {
-                      const updatedRole = cleanRole(res.role);
-                      if (item.requiredRoles && !item.requiredRoles.includes(updatedRole)) {
-                        e.preventDefault();
-                        setAccessDeniedToast(`Доступ к разделу "${item.label}" ограничен (только для Admin и Super Admin).`);
-                      }
-                    }
                   }
                 }}
               >
@@ -251,7 +243,7 @@ const AdminLayout = ({ children }) => {
                     <span className="admin-sidebar__link-icon">{item.icon}</span>
                     <span className="admin-sidebar__link-label">{item.label}</span>
                     {isLocked && (
-                      <span className="admin-sidebar__link-lock" title="Доступ ограничен">
+                      <span className="admin-sidebar__link-lock" title="Access restricted">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                           <path d="M7 11V7a5 5 0 0 1 10 0v4" />

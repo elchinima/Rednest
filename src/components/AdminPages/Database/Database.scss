@@ -680,6 +680,25 @@
       }
 
       &:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+      &.database__file-btn--locked {
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        cursor: not-allowed;
+
+        svg {
+          width: 13px;
+          height: 13px;
+        }
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.12);
+          color: #f87171;
+          border-color: rgba(239, 68, 68, 0.25);
+          transform: none;
+        }
+      }
     }
   }
 }
@@ -945,14 +964,22 @@
   }
 
   &--locked {
-    opacity: 0.4 !important;
+    opacity: 0.45 !important;
     cursor: not-allowed !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
 
     &:hover {
       transform: none !important;
-      background: rgba($color-primary, 0.12) !important;
-      color: #fca5a5 !important;
-      border-color: rgba($color-primary, 0.25) !important;
+      background: rgba(239, 68, 68, 0.12) !important;
+      color: #f87171 !important;
+      border-color: rgba(239, 68, 68, 0.25) !important;
     }
   }
 }

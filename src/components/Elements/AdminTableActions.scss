@@ -194,4 +194,35 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  &__item-lock {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+    }
+  }
+
+  &__item--locked {
+    opacity: 0.65;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.12) !important;
+      color: #f87171 !important;
+      transform: none !important;
+
+      .admin-table-actions__item-lock svg {
+        stroke: #f87171;
+      }
+    }
+  }
 }

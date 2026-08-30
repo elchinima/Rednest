@@ -703,8 +703,10 @@ const Orders = () => {
                                 onClick: () => setSelectedReceiptOrder(order),
                               },
                               {
-                                label: isSuperAdmin ? 'Delete Order' : 'Delete Order (Super Admin)',
+                                label: 'Delete Order',
                                 variant: 'danger',
+                                locked: !isSuperAdmin,
+                                title: isSuperAdmin ? 'Delete Order' : 'Access denied (Super Admin only)',
                                 icon: (
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <polyline points="3 6 5 6 21 6" />

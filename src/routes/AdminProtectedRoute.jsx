@@ -18,45 +18,27 @@ const AdminProtectedRoute = ({ children, requiredRoles }) => {
   const { isAuthenticated, user, authLoading } = useAuth();
   const { isAdminAuth, loading: adminLoading, verify } = useAdminAuth();
   const location = useLocation();
-  const [checkingRoute, setCheckingRoute] = useState(true);
-  const [verifiedRole, setVerifiedRole] = useState(null);
+  const [initialChecking, setInitialChecking] = useState(!isAdminAuth);
+
+  const currentUserRole = user?.role || user?.Role;
+  const hasAdminRole = isAllowedAdminRole(currentUserRole);
+  const normalizedRole = cleanRole(currentUserRole);
 
   useEffect(() => {
     let isMounted = true;
-    setCheckingRoute(true);
-
-    if (!isAuthenticated) {
-      setCheckingRoute(false);
-      return;
-    }
-
-    verify()
-      .then((res) => {
-        if (isMounted) {
-          if (res && res.role) {
-            setVerifiedRole(res.role);
-          } else {
-            setVerifiedRole(null);
-          }
-          setCheckingRoute(false);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setCheckingRoute(false);
-        }
+    if (isAuthenticated && hasAdminRole && !isAdminAuth) {
+      verify().finally(() => {
+        if (isMounted) setInitialChecking(false);
       });
-
+    } else {
+      setInitialChecking(false);
+    }
     return () => {
       isMounted = false;
     };
-  }, [location.pathname, isAuthenticated, verify]);
+  }, [isAuthenticated, hasAdminRole, isAdminAuth, verify]);
 
-  const activeRole = verifiedRole || user?.role || user?.Role;
-  const hasAdminRole = isAllowedAdminRole(activeRole);
-  const normalizedRole = cleanRole(activeRole);
-
-  if (authLoading || (isAuthenticated && (adminLoading || checkingRoute))) {
+  if (authLoading || (isAuthenticated && hasAdminRole && (adminLoading || initialChecking))) {
     return (
       <div className="admin-loading-screen">
         <img src={loaderIcon} alt="Loading..." className="admin-loading-spinner" />
