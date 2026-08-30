@@ -14,4 +14,5 @@ public class Product
     public decimal Price { get; set; }
     public ProductImages Images { get; set; } = new();
     public string Category { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
 }

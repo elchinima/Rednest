@@ -17,6 +17,7 @@ public class ProductsController : ControllerBase
     {
         var products = await _db.Products
             .AsNoTracking()
+            .Where(p => p.IsActive)
             .OrderBy(p => p.Price)
             .ToListAsync();
 

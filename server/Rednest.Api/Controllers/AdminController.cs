@@ -906,6 +906,17 @@ public class AdminController : ControllerBase
             .ThenBy(p => p.Price)
             .ToListAsync();
 
+        var orders = await _context.Orders
+            .AsNoTracking()
+            .Select(o => o.Items)
+            .ToListAsync();
+
+        var salesCountByProduct = orders
+            .Where(items => items != null)
+            .SelectMany(items => items)
+            .GroupBy(i => i.ProductId)
+            .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
+
         return Ok(products.Select(p => new
         {
             id = p.Id,
@@ -914,7 +925,9 @@ public class AdminController : ControllerBase
             price = p.Price,
             formattedPrice = p.Price.ToString("0.00"),
             images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
-            category = p.Category
+            category = p.Category,
+            isActive = p.IsActive,
+            totalSold = salesCountByProduct.TryGetValue(p.Id, out var sold) ? sold : 0
         }));
     }
 
@@ -931,6 +944,17 @@ public class AdminController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Product not found." });
 
+        var ordersWithProduct = await _context.Orders
+            .AsNoTracking()
+            .Select(o => o.Items)
+            .ToListAsync();
+
+        var totalSold = ordersWithProduct
+            .Where(items => items != null)
+            .SelectMany(items => items)
+            .Where(i => i.ProductId == id)
+            .Sum(i => i.Quantity);
+
         return Ok(new
         {
             id = product.Id,
@@ -939,7 +963,9 @@ public class AdminController : ControllerBase
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
             images = new { image = product.Images != null ? product.Images.Image : string.Empty, icon = product.Images != null ? product.Images.Icon : string.Empty },
-            category = product.Category
+            category = product.Category,
+            isActive = product.IsActive,
+            totalSold = totalSold
         });
     }
 
@@ -951,6 +977,12 @@ public class AdminController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(request.Name))
             return BadRequest(new { message = "Product name is required." });
+
+        if (request.Name.Trim().Length > 50)
+            return BadRequest(new { message = "Product name cannot exceed 50 characters." });
+
+        if (request.Description != null && request.Description.Trim().Length > 250)
+            return BadRequest(new { message = "Product description cannot exceed 250 characters." });
 
         if (!request.Price.HasValue || request.Price.Value < 0)
             return BadRequest(new { message = "A valid product price is required." });
@@ -968,7 +1000,8 @@ public class AdminController : ControllerBase
                 Image = request.ImageUrl?.Trim() ?? string.Empty,
                 Icon = request.IconUrl?.Trim() ?? string.Empty
             },
-            Category = category
+            Category = category,
+            IsActive = request.IsActive ?? true
         };
 
         _context.Products.Add(product);
@@ -983,7 +1016,8 @@ public class AdminController : ControllerBase
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
             images = new { image = product.Images.Image, icon = product.Images.Icon },
-            category = product.Category
+            category = product.Category,
+            isActive = product.IsActive
         });
     }
 
@@ -998,10 +1032,18 @@ public class AdminController : ControllerBase
             return NotFound(new { message = "Product not found." });
 
         if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            if (request.Name.Trim().Length > 50)
+                return BadRequest(new { message = "Product name cannot exceed 50 characters." });
             product.Name = request.Name.Trim();
+        }
 
         if (request.Description != null)
+        {
+            if (request.Description.Trim().Length > 250)
+                return BadRequest(new { message = "Product description cannot exceed 250 characters." });
             product.Description = request.Description.Trim();
+        }
 
         if (request.Price.HasValue && request.Price.Value >= 0)
             product.Price = request.Price.Value;
@@ -1015,6 +1057,9 @@ public class AdminController : ControllerBase
         if (!string.IsNullOrWhiteSpace(request.Category))
             product.Category = request.Category.Trim();
 
+        if (request.IsActive.HasValue)
+            product.IsActive = request.IsActive.Value;
+
         await _context.SaveChangesAsync();
 
         return Ok(new
@@ -1026,8 +1071,25 @@ public class AdminController : ControllerBase
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
             images = new { image = product.Images.Image, icon = product.Images.Icon },
-            category = product.Category
+            category = product.Category,
+            isActive = product.IsActive
         });
+    }
+
+    [HttpPatch("products/{id:guid}/toggle-active")]
+    public async Task<IActionResult> ToggleProductActive(Guid id)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Moderator, Admin and Super Admin can toggle product status." });
+
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product == null)
+            return NotFound(new { message = "Product not found." });
+
+        product.IsActive = !product.IsActive;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = $"Product status updated.", isActive = product.IsActive });
     }
 
     [HttpDelete("products/{id:guid}")]
@@ -1190,4 +1252,5 @@ public class AdminProductRequest
     public string? ImageUrl { get; set; }
     public string? IconUrl { get; set; }
     public string? Category { get; set; }
+    public bool? IsActive { get; set; }
 }

@@ -94,6 +94,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Price).HasColumnType("decimal(10,2)");
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.OwnsOne(e => e.Images, img =>
             {

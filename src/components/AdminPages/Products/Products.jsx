@@ -18,6 +18,7 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name-asc');
   const [toast, setToast] = useState({ message: '', type: 'success' });
 
@@ -35,6 +36,7 @@ const Products = () => {
     category: 'Main Drinks',
     imageUrl: '',
     iconUrl: '',
+    isActive: true,
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -107,7 +109,11 @@ const Products = () => {
         const matchesCat =
           selectedCategory === 'all' ||
           item.category?.toLowerCase() === selectedCategory.toLowerCase();
-        return matchesSearch && matchesCat;
+        const matchesStatus =
+          selectedStatus === 'all' ||
+          (selectedStatus === 'active' && item.isActive !== false) ||
+          (selectedStatus === 'inactive' && item.isActive === false);
+        return matchesSearch && matchesCat && matchesStatus;
       })
       .sort((a, b) => {
         const priceA = parseFloat(a.price) || 0;
@@ -116,6 +122,8 @@ const Products = () => {
         const nameB = (b.name || '').toLowerCase();
 
         switch (sortBy) {
+          case 'sold-desc':
+            return (b.totalSold || 0) - (a.totalSold || 0);
           case 'price-asc':
             return priceA - priceB;
           case 'price-desc':
@@ -129,7 +137,7 @@ const Products = () => {
             return nameA.localeCompare(nameB);
         }
       });
-  }, [products, searchQuery, selectedCategory, sortBy]);
+  }, [products, searchQuery, selectedCategory, selectedStatus, sortBy]);
 
   const stats = useMemo(() => {
     const total = products.length;
@@ -150,6 +158,7 @@ const Products = () => {
       category: 'Main Drinks',
       imageUrl: '',
       iconUrl: '',
+      isActive: true,
     });
     setIsEditModalOpen(true);
   };
@@ -163,8 +172,28 @@ const Products = () => {
       category: product.category || 'Main Drinks',
       imageUrl: product.images?.image || product.imageUrl || '',
       iconUrl: product.images?.icon || product.iconUrl || '',
+      isActive: product.isActive !== false,
     });
     setIsEditModalOpen(true);
+  };
+
+  const handleToggleActive = async (prod) => {
+    try {
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/products/${prod.id}/toggle-active`, {
+        method: 'PATCH',
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.message || 'Product status updated.');
+        setProducts((prev) =>
+          prev.map((p) => (p.id === prod.id ? { ...p, isActive: !p.isActive } : p))
+        );
+      } else {
+        showToast('Failed to update product status.', 'error');
+      }
+    } catch {
+      showToast('Network error while updating status.', 'error');
+    }
   };
 
   const handleOpenDetails = (product) => {
@@ -187,6 +216,14 @@ const Products = () => {
       showToast('Product name is required.', 'error');
       return;
     }
+    if (form.name.trim().length > 50) {
+      showToast('Product name cannot exceed 50 characters.', 'error');
+      return;
+    }
+    if (form.description.trim().length > 250) {
+      showToast('Product description cannot exceed 250 characters.', 'error');
+      return;
+    }
     const numPrice = parseFloat(form.price);
     if (isNaN(numPrice) || numPrice < 0) {
       showToast('Please enter a valid price.', 'error');
@@ -201,6 +238,7 @@ const Products = () => {
       category: form.category || 'Main Drinks',
       imageUrl: form.imageUrl.trim(),
       iconUrl: form.iconUrl.trim(),
+      isActive: form.isActive,
     };
 
     try {
@@ -416,11 +454,26 @@ const Products = () => {
 
             <select
               className="admin-products__select"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="all">All Status ({products.length})</option>
+              <option value="active">
+                Active ({products.filter((p) => p.isActive !== false).length})
+              </option>
+              <option value="inactive">
+                Inactive ({products.filter((p) => p.isActive === false).length})
+              </option>
+            </select>
+
+            <select
+              className="admin-products__select"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>
+              <option value="sold-desc">Units Sold (Most)</option>
               <option value="price-asc">Price (Low to High)</option>
               <option value="price-desc">Price (High to Low)</option>
               <option value="category">Category</option>
@@ -458,6 +511,8 @@ const Products = () => {
                     <th>Product</th>
                     <th>Category</th>
                     <th>Price</th>
+                    <th className="text-center">Sold</th>
+                    <th className="text-center">Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -488,6 +543,20 @@ const Products = () => {
                           </svg>
                         ),
                         onClick: () => handleOpenEdit(prod),
+                      },
+                      {
+                        label: prod.isActive !== false ? 'Deactivate' : 'Activate',
+                        icon: (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            {prod.isActive !== false ? (
+                              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                            ) : (
+                              <polyline points="9 12 11 14 15 10" />
+                            )}
+                          </svg>
+                        ),
+                        onClick: () => handleToggleActive(prod),
                       },
                       {
                         label: 'Delete Product',
@@ -525,9 +594,6 @@ const Products = () => {
                             </div>
                             <div className="admin-products__product-info">
                               <span className="admin-products__product-name">{prod.name}</span>
-                              <span className="admin-products__product-desc" title={prod.description}>
-                                {prod.description || 'No description provided'}
-                              </span>
                             </div>
                           </div>
                         </td>
@@ -540,6 +606,18 @@ const Products = () => {
                         </td>
                         <td>
                           <span className="admin-products__price-text">{priceFormatted} ₼</span>
+                        </td>
+                        <td className="text-center">
+                          <span className="admin-products__sold-pill">{prod.totalSold ?? 0}</span>
+                        </td>
+                        <td className="text-center">
+                          <span
+                            className={`admin-products__status-badge ${prod.isActive !== false ? 'admin-products__status-badge--active' : 'admin-products__status-badge--inactive'}`}
+                            onClick={() => handleToggleActive(prod)}
+                            title="Click to toggle status"
+                          >
+                            {prod.isActive !== false ? 'Active' : 'Inactive'}
+                          </span>
                         </td>
                         <td>
                           <AdminTableActions
@@ -631,8 +709,14 @@ const Products = () => {
                     )}
 
                     <div className="admin-products__mobile-bottom">
-                      <span className="admin-products__stat-label">Price</span>
-                      <span className="admin-products__price-text">{priceFormatted} ₼</span>
+                      <div className="admin-products__mobile-meta-item">
+                        <span className="admin-products__stat-label">Sold</span>
+                        <span className="admin-products__sold-pill">{prod.totalSold ?? 0}</span>
+                      </div>
+                      <div className="admin-products__mobile-meta-item" style={{ alignItems: 'flex-end' }}>
+                        <span className="admin-products__stat-label">Price</span>
+                        <span className="admin-products__price-text">{priceFormatted} ₼</span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -723,6 +807,24 @@ const Products = () => {
                   </div>
 
                   <div className="product-modal__details-box">
+                    <span>Units Sold</span>
+                    <p style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
+                      {activeProduct.totalSold ?? 0} {activeProduct.totalSold === 1 ? 'unit' : 'units'}
+                    </p>
+                  </div>
+
+                  <div className="product-modal__details-box">
+                    <span>Catalog Status</span>
+                    <div style={{ marginTop: 4 }}>
+                      <span
+                        className={`admin-products__status-badge ${activeProduct.isActive !== false ? 'admin-products__status-badge--active' : 'admin-products__status-badge--inactive'}`}
+                      >
+                        {activeProduct.isActive !== false ? 'Active (Visible in menu)' : 'Inactive (Hidden)'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="product-modal__details-box">
                     <span>Product ID</span>
                     <p style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#aaa' }}>
                       {activeProduct.id}
@@ -792,12 +894,18 @@ const Products = () => {
 
                 <form className="product-modal__form" onSubmit={handleSaveProduct}>
                   <div className="product-modal__form-group">
-                    <label>Product Name *</label>
+                    <div className="product-modal__label-row">
+                      <label>Product Name *</label>
+                      <span className={`product-modal__counter ${form.name.length >= 50 ? 'limit' : ''}`}>
+                        {form.name.length}/50
+                      </span>
+                    </div>
                     <input
                       type="text"
                       placeholder="e.g. Red Latte, Croissant"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      maxLength={50}
+                      onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 50) })}
                       required
                     />
                   </div>
@@ -833,11 +941,31 @@ const Products = () => {
 
                   <div className="product-modal__form-group">
                     <label>Description</label>
+                    <div className="product-modal__label-row">
+                      <span className={`product-modal__counter ${form.description.length >= 250 ? 'limit' : ''}`}>
+                        {form.description.length}/250
+                      </span>
+                    </div>
                     <textarea
                       placeholder="Enter product taste notes, ingredients, or story..."
                       value={form.description}
-                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      maxLength={250}
+                      onChange={(e) => setForm({ ...form, description: e.target.value.slice(0, 250) })}
                     />
+                  </div>
+
+                  <div className="product-modal__form-group">
+                    <label className="product-modal__switch-label">
+                      <input
+                        type="checkbox"
+                        checked={form.isActive}
+                        onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                      />
+                      <span className="product-modal__switch-slider" />
+                      <span className="product-modal__switch-text">
+                        {form.isActive ? 'Active (Visible in menu & catalog)' : 'Inactive (Hidden from customers)'}
+                      </span>
+                    </label>
                   </div>
 
                   <div className="product-modal__form-group">
@@ -992,12 +1120,12 @@ const Products = () => {
                       src={activeProduct.images?.icon || activeProduct.images?.image || activeProduct.imageUrl}
                       alt={activeProduct.name}
                       style={{
-                        width: 58,
-                        height: 58,
+                        width: 64,
+                        height: 64,
                         borderRadius: 12,
-                        objectFit: 'contain',
+                        objectFit: 'cover',
                         background: 'rgba(0, 0, 0, 0.45)',
-                        padding: 4,
+                        padding: 0,
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     />
