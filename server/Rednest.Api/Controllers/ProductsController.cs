@@ -34,7 +34,7 @@ public class ProductsController : ControllerBase
                         name = p.Name,
                         description = p.Description,
                         price = p.Price.ToString("0.00"),
-                        imageUrl = p.ImageUrl,
+                        images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
                         category = p.Category
                     })
                     .ToList()

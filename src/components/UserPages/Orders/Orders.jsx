@@ -19,7 +19,6 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
 const PAYMENT_METHODS = {
@@ -394,8 +393,8 @@ const Orders = () => {
                             return (
                               <div key={item.productId || iIdx} className="order-card__item-row">
                                 <div className="order-card__item-thumb">
-                                  {getProductIconUrl(item) || item.imageUrl ? (
-                                    <img src={getProductIconUrl(item) || item.imageUrl} alt={item.name || 'Product'} />
+                                  {item.images?.icon || item.images?.image || item.imageUrl ? (
+                                    <img src={item.images?.icon || item.images?.image || item.imageUrl} alt={item.name || 'Product'} />
                                   ) : (
                                     <div className="order-card__item-thumb-placeholder">☕</div>
                                   )}

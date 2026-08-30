@@ -93,8 +93,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Price).HasColumnType("decimal(10,2)");
-            entity.Property(e => e.ImageUrl).IsRequired().HasColumnType("text");
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+
+            entity.OwnsOne(e => e.Images, img =>
+            {
+                img.ToJson("Images");
+            });
         });
 
         modelBuilder.Entity<UserBasket>(entity =>

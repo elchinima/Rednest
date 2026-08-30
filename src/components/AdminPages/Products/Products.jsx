@@ -6,7 +6,6 @@ import { useAuth } from '../../../context/AuthContext';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import AdminTableActions from '../../Elements/AdminTableActions';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import './Products.scss';
 
 const DEFAULT_CATEGORIES = ['Main Drinks', 'Specialty Drinks', 'Desserts'];
@@ -35,6 +34,7 @@ const Products = () => {
     price: '',
     category: 'Main Drinks',
     imageUrl: '',
+    iconUrl: '',
   });
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -149,6 +149,7 @@ const Products = () => {
       price: '',
       category: 'Main Drinks',
       imageUrl: '',
+      iconUrl: '',
     });
     setIsEditModalOpen(true);
   };
@@ -160,7 +161,8 @@ const Products = () => {
       description: product.description || '',
       price: String(product.price ?? ''),
       category: product.category || 'Main Drinks',
-      imageUrl: product.imageUrl || '',
+      imageUrl: product.images?.image || product.imageUrl || '',
+      iconUrl: product.images?.icon || product.iconUrl || '',
     });
     setIsEditModalOpen(true);
   };
@@ -198,6 +200,7 @@ const Products = () => {
       price: numPrice,
       category: form.category || 'Main Drinks',
       imageUrl: form.imageUrl.trim(),
+      iconUrl: form.iconUrl.trim(),
     };
 
     try {
@@ -463,7 +466,7 @@ const Products = () => {
                     const priceFormatted = typeof prod.price === 'number'
                       ? prod.price.toFixed(2)
                       : parseFloat(prod.price || 0).toFixed(2);
-                    const iconUrl = getProductIconUrl(prod) || prod.imageUrl;
+                    const iconUrl = prod.images?.icon || prod.images?.image || prod.imageUrl;
 
                     const actions = [
                       {
@@ -557,7 +560,7 @@ const Products = () => {
                 const priceFormatted = typeof prod.price === 'number'
                   ? prod.price.toFixed(2)
                   : parseFloat(prod.price || 0).toFixed(2);
-                const iconUrl = getProductIconUrl(prod) || prod.imageUrl;
+                const iconUrl = prod.images?.icon || prod.images?.image || prod.imageUrl;
 
                 const actions = [
                   {
@@ -675,9 +678,9 @@ const Products = () => {
 
                 <div className="product-modal__details">
                   <div className="product-modal__details-top">
-                    {getProductIconUrl(activeProduct) || activeProduct.imageUrl ? (
+                    {activeProduct.images?.icon || activeProduct.images?.image || activeProduct.imageUrl ? (
                       <img
-                        src={getProductIconUrl(activeProduct) || activeProduct.imageUrl}
+                        src={activeProduct.images?.icon || activeProduct.images?.image || activeProduct.imageUrl}
                         alt={activeProduct.name}
                         className="product-modal__details-img"
                       />
@@ -838,12 +841,12 @@ const Products = () => {
                   </div>
 
                   <div className="product-modal__form-group">
-                    <label>Image URL</label>
+                    <label>Image URL (Photo)</label>
                     <div className="product-modal__image-preview-wrap">
-                      {form.imageUrl || getProductIconUrl(form.name) ? (
+                      {form.imageUrl ? (
                         <img
-                          src={form.imageUrl || getProductIconUrl(form.name)}
-                          alt="Preview"
+                          src={form.imageUrl}
+                          alt="Image Preview"
                           className="product-modal__image-preview"
                           onError={(e) => {
                             e.target.style.display = 'none';
@@ -866,9 +869,46 @@ const Products = () => {
                       <div className="product-modal__image-actions">
                         <input
                           type="url"
-                          placeholder="Paste image URL (https://...)"
+                          placeholder="https://... photo URL"
                           value={form.imageUrl}
                           onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="product-modal__form-group">
+                    <label>Icon URL (Transparent WebP)</label>
+                    <div className="product-modal__image-preview-wrap">
+                      {form.iconUrl ? (
+                        <img
+                          src={form.iconUrl}
+                          alt="Icon Preview"
+                          className="product-modal__image-preview"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="product-modal__image-preview"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.4rem',
+                          }}
+                        >
+                          ☕
+                        </div>
+                      )}
+
+                      <div className="product-modal__image-actions">
+                        <input
+                          type="url"
+                          placeholder="https://... icon URL"
+                          value={form.iconUrl}
+                          onChange={(e) => setForm({ ...form, iconUrl: e.target.value })}
                         />
                       </div>
                     </div>
@@ -947,9 +987,9 @@ const Products = () => {
                 </div>
 
                 <div className="product-modal__delete-box">
-                  {getProductIconUrl(activeProduct) || activeProduct.imageUrl ? (
+                  {activeProduct.images?.icon || activeProduct.images?.image || activeProduct.imageUrl ? (
                     <img
-                      src={getProductIconUrl(activeProduct) || activeProduct.imageUrl}
+                      src={activeProduct.images?.icon || activeProduct.images?.image || activeProduct.imageUrl}
                       alt={activeProduct.name}
                       style={{
                         width: 58,

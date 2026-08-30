@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-// Global cache of loaded product image IDs across component remounts and route changes
 const globalLoadedSet = new Set();
 
 export function useSequentialImageLoader(items = []) {
@@ -49,7 +48,7 @@ export function useSequentialImageLoader(items = []) {
 
       const currentList = itemsRef.current || [];
       const nextItem = currentList.find(
-        item => item && item.id && item.imageUrl && !globalLoadedSet.has(item.id)
+        item => item && item.id && (item.images?.image || item.imageUrl) && !globalLoadedSet.has(item.id)
       );
 
       if (!nextItem) {
@@ -57,6 +56,8 @@ export function useSequentialImageLoader(items = []) {
         activeImgRef.current = null;
         return;
       }
+
+      const itemImgSrc = nextItem.images?.image || nextItem.imageUrl;
 
       isRunningRef.current = true;
       const img = new Image();
@@ -69,7 +70,6 @@ export function useSequentialImageLoader(items = []) {
         globalLoadedSet.add(nextItem.id);
         if (isMounted) {
           setLoadedMap(prev => ({ ...prev, [nextItem.id]: true }));
-          // Progress to the next image after a small tick
           setTimeout(() => {
             if (isMounted) {
               processQueue();
@@ -82,7 +82,7 @@ export function useSequentialImageLoader(items = []) {
 
       img.onload = done;
       img.onerror = done;
-      img.src = nextItem.imageUrl;
+      img.src = itemImgSrc;
 
       if (img.complete) {
         done();

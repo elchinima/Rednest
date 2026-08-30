@@ -63,10 +63,10 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
         {categoryObj.items.map((item) => (
           <div key={item.id} className="catalog-card">
             <div className="card-image-container">
-              {item.imageUrl ? (
+              {(item.images?.image || item.imageUrl) ? (
                 <>
                   <img 
-                    src={item.imageUrl} 
+                    src={item.images?.image || item.imageUrl} 
                     alt={item.name} 
                     loading="lazy"
                     onLoad={() => loadedImages.markLoaded?.(item.id)}

@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import { formatBakuDateTime } from './reviewsData';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import './OrderSelectModal.scss';
 
 const OrderSelectModal = ({ isOpen, onClose, orders = [], selectedOrderId, onSelectOrder }) => {
@@ -78,7 +77,7 @@ const OrderSelectModal = ({ isOpen, onClose, orders = [], selectedOrderId, onSel
                 {items.length > 0 && (
                   <div className="order-select-card__items">
                     {items.map((item, idx) => {
-                      const iconUrl = getProductIconUrl(item);
+                      const iconUrl = item.images?.icon || item.images?.image || item.imageUrl;
                       return (
                         <div key={idx} className="order-select-card__item-chip" title={`${item.name} (x${item.quantity || 1})`}>
                           <div className="order-select-card__item-img-wrapper">

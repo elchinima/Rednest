@@ -13,7 +13,6 @@ import onlineIcon from '../../../assets/icons/online-card.svg';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import AdminTableActions from '../../Elements/AdminTableActions';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
 const PAGE_SIZE = 15;
@@ -862,7 +861,7 @@ const Orders = () => {
                         </thead>
                         <tbody>
                           {(selectedReceiptOrder.items || []).map((it, idx) => {
-                            const itemIcon = getProductIconUrl(it) || it.imageUrl;
+                            const itemIcon = it.images?.icon || it.images?.image || it.imageUrl;
                             return (
                               <tr key={idx}>
                                 <td>

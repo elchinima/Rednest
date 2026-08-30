@@ -427,7 +427,8 @@ public class AdminController : ControllerBase
                 quantity = i.Quantity,
                 unitPrice = i.UnitPrice,
                 name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
-                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.Images?.Image : null,
+                images = products.TryGetValue(i.ProductId, out var prod2b) ? new { image = prod2b.Images?.Image ?? string.Empty, icon = prod2b.Images?.Icon ?? string.Empty } : null,
                 category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
             }).ToList();
 
@@ -498,7 +499,8 @@ public class AdminController : ControllerBase
             quantity = i.Quantity,
             unitPrice = i.UnitPrice,
             name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
-            imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+            imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.Images?.Image : null,
+            images = products.TryGetValue(i.ProductId, out var prod2b) ? new { image = prod2b.Images?.Image ?? string.Empty, icon = prod2b.Images?.Icon ?? string.Empty } : null,
             category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
         }).ToList();
 
@@ -911,7 +913,7 @@ public class AdminController : ControllerBase
             description = p.Description,
             price = p.Price,
             formattedPrice = p.Price.ToString("0.00"),
-            imageUrl = p.ImageUrl,
+            images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
             category = p.Category
         }));
     }
@@ -936,7 +938,7 @@ public class AdminController : ControllerBase
             description = product.Description,
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
-            imageUrl = product.ImageUrl,
+            images = new { image = product.Images != null ? product.Images.Image : string.Empty, icon = product.Images != null ? product.Images.Icon : string.Empty },
             category = product.Category
         });
     }
@@ -961,7 +963,11 @@ public class AdminController : ControllerBase
             Name = request.Name.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
             Price = request.Price.Value,
-            ImageUrl = request.ImageUrl?.Trim() ?? string.Empty,
+            Images = new Rednest.Core.Entities.ProductImages
+            {
+                Image = request.ImageUrl?.Trim() ?? string.Empty,
+                Icon = request.IconUrl?.Trim() ?? string.Empty
+            },
             Category = category
         };
 
@@ -976,7 +982,7 @@ public class AdminController : ControllerBase
             description = product.Description,
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
-            imageUrl = product.ImageUrl,
+            images = new { image = product.Images.Image, icon = product.Images.Icon },
             category = product.Category
         });
     }
@@ -1001,7 +1007,10 @@ public class AdminController : ControllerBase
             product.Price = request.Price.Value;
 
         if (request.ImageUrl != null)
-            product.ImageUrl = request.ImageUrl.Trim();
+            product.Images.Image = request.ImageUrl.Trim();
+
+        if (request.IconUrl != null)
+            product.Images.Icon = request.IconUrl.Trim();
 
         if (!string.IsNullOrWhiteSpace(request.Category))
             product.Category = request.Category.Trim();
@@ -1016,7 +1025,7 @@ public class AdminController : ControllerBase
             description = product.Description,
             price = product.Price,
             formattedPrice = product.Price.ToString("0.00"),
-            imageUrl = product.ImageUrl,
+            images = new { image = product.Images.Image, icon = product.Images.Icon },
             category = product.Category
         });
     }
@@ -1179,5 +1188,6 @@ public class AdminProductRequest
     public string? Description { get; set; }
     public decimal? Price { get; set; }
     public string? ImageUrl { get; set; }
+    public string? IconUrl { get; set; }
     public string? Category { get; set; }
 }

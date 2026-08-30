@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import OrderSelectModal from './OrderSelectModal';
 import { REVIEW_CATEGORIES, formatBakuDateTime } from './reviewsData';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';

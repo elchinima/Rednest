@@ -161,7 +161,8 @@ public class ReviewsController : ControllerBase
                 quantity = i.Quantity,
                 unitPrice = i.UnitPrice,
                 name = products.TryGetValue(i.ProductId, out var prod) ? prod.Name : "Product",
-                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.ImageUrl : null,
+                imageUrl = products.TryGetValue(i.ProductId, out var prod2) ? prod2.Images?.Image : null,
+                images = products.TryGetValue(i.ProductId, out var prod2b) ? new { image = prod2b.Images?.Image ?? string.Empty, icon = prod2b.Images?.Icon ?? string.Empty } : null,
                 category = products.TryGetValue(i.ProductId, out var prod3) ? prod3.Category : ""
             }).ToList()
         }).ToList();

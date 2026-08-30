@@ -12,7 +12,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
-import { getProductIconUrl } from '../../../utils/productIcons';
 import './Basket.scss';
 
 const formatPrizeName = (name) => {
@@ -140,7 +139,7 @@ const Basket = () => {
   const orderedBasketItems = useMemo(() => {
     return enrichedItems.map(item => ({
       id: item.productId,
-      imageUrl: getProductIconUrl(item.product) || item.product?.imageUrl
+      imageUrl: item.product?.images?.icon || item.product?.images?.image || item.product?.imageUrl
     }));
   }, [enrichedItems]);
 
@@ -244,10 +243,10 @@ const Basket = () => {
                     layout
                   >
                     <div className="basket-item-image">
-                      {item.product.imageUrl ? (
+                      {(item.product?.images?.icon || item.product?.images?.image || item.product?.imageUrl) ? (
                         <>
                           <img
-                            src={getProductIconUrl(item.product) || item.product.imageUrl}
+                            src={item.product?.images?.icon || item.product?.images?.image || item.product?.imageUrl}
                             alt={item.product.name}
                             loading="lazy"
                             onLoad={() => loadedImages.markLoaded?.(item.productId)}
