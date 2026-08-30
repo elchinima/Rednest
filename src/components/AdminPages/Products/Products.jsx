@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
@@ -6,6 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import AdminTableActions from '../../Elements/AdminTableActions';
+import { getProductIconUrl } from '../../../utils/productIcons';
 import './Products.scss';
 
 const DEFAULT_CATEGORIES = ['Main Drinks', 'Specialty Drinks', 'Desserts'];
@@ -21,26 +22,21 @@ const Products = () => {
   const [sortBy, setSortBy] = useState('name-asc');
   const [toast, setToast] = useState({ message: '', type: 'success' });
 
-  // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  // Form state
   const [form, setForm] = useState({
     name: '',
     description: '',
     price: '',
     category: 'Main Drinks',
-    customCategory: '',
     imageUrl: '',
   });
 
-  const fileInputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const currentUserRole = cleanRole(user?.role || user?.Role);
@@ -54,13 +50,11 @@ const Products = () => {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // Try admin products endpoint first, fallback to public products if necessary
       let res = await fetchWithRefresh(`${apiUrl}/api/admin/products`);
       if (res.ok) {
         const data = await res.json();
         setProducts(Array.isArray(data) ? data : []);
       } else {
-        // Fallback to public products endpoint
         res = await fetchWithRefresh(`${apiUrl}/api/products`);
         if (res.ok) {
           const data = await res.json();
@@ -95,7 +89,6 @@ const Products = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Derived categories
   const allCategories = useMemo(() => {
     const set = new Set(DEFAULT_CATEGORIES);
     products.forEach((p) => {
@@ -104,7 +97,6 @@ const Products = () => {
     return Array.from(set);
   }, [products]);
 
-  // Filtered & Sorted products
   const filteredProducts = useMemo(() => {
     return products
       .filter((item) => {
@@ -139,7 +131,6 @@ const Products = () => {
       });
   }, [products, searchQuery, selectedCategory, sortBy]);
 
-  // Stats calculation
   const stats = useMemo(() => {
     const total = products.length;
     const catCount = allCategories.length;
@@ -150,7 +141,6 @@ const Products = () => {
     return { total, catCount, avgPrice, priceRange: `${minPrice} - ${maxPrice} ₼` };
   }, [products, allCategories]);
 
-  // Open Create Modal
   const handleOpenCreate = () => {
     setActiveProduct(null);
     setForm({
@@ -158,34 +148,28 @@ const Products = () => {
       description: '',
       price: '',
       category: 'Main Drinks',
-      customCategory: '',
       imageUrl: '',
     });
     setIsEditModalOpen(true);
   };
 
-  // Open Edit Modal
   const handleOpenEdit = (product) => {
     setActiveProduct(product);
-    const isCustom = !DEFAULT_CATEGORIES.includes(product.category);
     setForm({
       name: product.name || '',
       description: product.description || '',
       price: String(product.price ?? ''),
-      category: isCustom ? '__custom__' : product.category || 'Main Drinks',
-      customCategory: isCustom ? product.category || '' : '',
+      category: product.category || 'Main Drinks',
       imageUrl: product.imageUrl || '',
     });
     setIsEditModalOpen(true);
   };
 
-  // Open Details Modal
   const handleOpenDetails = (product) => {
     setActiveProduct(product);
     setIsDetailsModalOpen(true);
   };
 
-  // Handle Delete Click
   const handleDeleteClick = (product) => {
     if (!isSuperAdmin) {
       showToast('Access denied. Only Super Admin can delete products.', 'error');
@@ -195,47 +179,6 @@ const Products = () => {
     setIsDeleteModalOpen(true);
   };
 
-  // Image Upload Handler
-  const handleImageFileSelect = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(file.type)) {
-      showToast('Allowed image formats: PNG, JPG, JPEG, WEBP.', 'error');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('File size must not exceed 10 MB.', 'error');
-      return;
-    }
-
-    setIsUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetchWithRefresh(`${apiUrl}/api/admin/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setForm((prev) => ({ ...prev, imageUrl: data.publicUrl || data.url || '' }));
-        showToast('Image uploaded successfully.');
-      } else {
-        const data = await res.json().catch(() => ({}));
-        showToast(data.message || 'Image upload failed. You can paste an image URL instead.', 'error');
-      }
-    } catch {
-      showToast('Network error during image upload.', 'error');
-    } finally {
-      setIsUploadingImage(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  // Save Product (Create or Update)
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
@@ -248,17 +191,12 @@ const Products = () => {
       return;
     }
 
-    const finalCategory =
-      form.category === '__custom__'
-        ? (form.customCategory.trim() || 'Main Drinks')
-        : form.category;
-
     setIsSaving(true);
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
       price: numPrice,
-      category: finalCategory,
+      category: form.category || 'Main Drinks',
       imageUrl: form.imageUrl.trim(),
     };
 
@@ -290,7 +228,6 @@ const Products = () => {
     }
   };
 
-  // Confirm Delete
   const handleConfirmDelete = async () => {
     if (!activeProduct?.id) return;
     setIsDeleting(true);
@@ -326,7 +263,6 @@ const Products = () => {
   return (
     <AdminLayout>
       <div className="admin-products">
-        {/* Toast Notification */}
         <AnimatePresence>
           {toast.message && (
             <motion.div
@@ -351,7 +287,6 @@ const Products = () => {
           )}
         </AnimatePresence>
 
-        {/* Page Header */}
         <div className="admin-products__header">
           <div>
             <h1 className="admin-products__title">Products</h1>
@@ -361,18 +296,6 @@ const Products = () => {
           </div>
 
           <div className="admin-products__header-actions">
-            <button
-              type="button"
-              className="admin-products__btn-secondary"
-              onClick={fetchProducts}
-              disabled={loading}
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-              </svg>
-              Refresh
-            </button>
-
             <button
               type="button"
               className="admin-products__btn-primary"
@@ -387,7 +310,6 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Statistics Cards */}
         <div className="admin-products__stats">
           <div className="admin-products__stat-card">
             <div className="admin-products__stat-icon admin-products__stat-icon--total">
@@ -447,7 +369,6 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Filter / Search Controls */}
         <div className="admin-products__controls">
           <div className="admin-products__search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -504,7 +425,6 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
         {loading ? (
           <div className="admin-products__loading">
             <img src={loaderIcon} alt="Loading..." className="admin-products__spinner" />
@@ -528,7 +448,6 @@ const Products = () => {
           </div>
         ) : (
           <>
-            {/* Desktop Table View */}
             <div className="admin-products__table-wrapper">
               <table className="admin-products__table">
                 <thead>
@@ -544,6 +463,7 @@ const Products = () => {
                     const priceFormatted = typeof prod.price === 'number'
                       ? prod.price.toFixed(2)
                       : parseFloat(prod.price || 0).toFixed(2);
+                    const iconUrl = getProductIconUrl(prod) || prod.imageUrl;
 
                     const actions = [
                       {
@@ -586,9 +506,9 @@ const Products = () => {
                         <td>
                           <div className="admin-products__product-cell">
                             <div className="admin-products__thumb-wrap">
-                              {prod.imageUrl ? (
+                              {iconUrl ? (
                                 <img
-                                  src={prod.imageUrl}
+                                  src={iconUrl}
                                   alt={prod.name}
                                   className="admin-products__thumb-img"
                                   loading="lazy"
@@ -632,12 +552,12 @@ const Products = () => {
               </table>
             </div>
 
-            {/* Mobile Card Grid View */}
             <div className="admin-products__mobile-grid">
               {filteredProducts.map((prod, idx) => {
                 const priceFormatted = typeof prod.price === 'number'
                   ? prod.price.toFixed(2)
                   : parseFloat(prod.price || 0).toFixed(2);
+                const iconUrl = getProductIconUrl(prod) || prod.imageUrl;
 
                 const actions = [
                   {
@@ -680,9 +600,9 @@ const Products = () => {
                     <div className="admin-products__mobile-top">
                       <div className="admin-products__product-cell">
                         <div className="admin-products__thumb-wrap">
-                          {prod.imageUrl ? (
+                          {iconUrl ? (
                             <img
-                              src={prod.imageUrl}
+                              src={iconUrl}
                               alt={prod.name}
                               className="admin-products__thumb-img"
                               loading="lazy"
@@ -718,7 +638,6 @@ const Products = () => {
           </>
         )}
 
-        {/* DETAILS MODAL */}
         <AnimatePresence>
           {isDetailsModalOpen && activeProduct && (
             <div
@@ -756,9 +675,9 @@ const Products = () => {
 
                 <div className="product-modal__details">
                   <div className="product-modal__details-top">
-                    {activeProduct.imageUrl ? (
+                    {getProductIconUrl(activeProduct) || activeProduct.imageUrl ? (
                       <img
-                        src={activeProduct.imageUrl}
+                        src={getProductIconUrl(activeProduct) || activeProduct.imageUrl}
                         alt={activeProduct.name}
                         className="product-modal__details-img"
                       />
@@ -832,7 +751,6 @@ const Products = () => {
           )}
         </AnimatePresence>
 
-        {/* ADD / EDIT MODAL */}
         <AnimatePresence>
           {isEditModalOpen && (
             <div
@@ -893,14 +811,6 @@ const Products = () => {
                             {c}
                           </option>
                         ))}
-                        {allCategories
-                          .filter((c) => !DEFAULT_CATEGORIES.includes(c))
-                          .map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        <option value="__custom__">+ Custom Category...</option>
                       </select>
                     </div>
 
@@ -918,19 +828,6 @@ const Products = () => {
                     </div>
                   </div>
 
-                  {form.category === '__custom__' && (
-                    <div className="product-modal__form-group">
-                      <label>Custom Category Name *</label>
-                      <input
-                        type="text"
-                        placeholder="Enter category name..."
-                        value={form.customCategory}
-                        onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
-                        required
-                      />
-                    </div>
-                  )}
-
                   <div className="product-modal__form-group">
                     <label>Description</label>
                     <textarea
@@ -941,11 +838,11 @@ const Products = () => {
                   </div>
 
                   <div className="product-modal__form-group">
-                    <label>Product Image</label>
+                    <label>Image URL</label>
                     <div className="product-modal__image-preview-wrap">
-                      {form.imageUrl ? (
+                      {form.imageUrl || getProductIconUrl(form.name) ? (
                         <img
-                          src={form.imageUrl}
+                          src={form.imageUrl || getProductIconUrl(form.name)}
                           alt="Preview"
                           className="product-modal__image-preview"
                           onError={(e) => {
@@ -968,50 +865,10 @@ const Products = () => {
 
                       <div className="product-modal__image-actions">
                         <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                          style={{ display: 'none' }}
-                          onChange={handleImageFileSelect}
-                        />
-                        <button
-                          type="button"
-                          className="product-modal__upload-btn"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isUploadingImage}
-                        >
-                          {isUploadingImage ? (
-                            <>
-                              <img
-                                src={loaderIcon}
-                                alt="Uploading..."
-                                style={{ width: 14, height: 14 }}
-                              />
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                style={{ width: 14, height: 14 }}
-                              >
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                <polyline points="17 8 12 3 7 8" />
-                                <line x1="12" y1="3" x2="12" y2="15" />
-                              </svg>
-                              Upload File
-                            </>
-                          )}
-                        </button>
-                        <input
                           type="url"
-                          placeholder="Or paste image URL (https://...)"
+                          placeholder="Paste image URL (https://...)"
                           value={form.imageUrl}
                           onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                          style={{ fontSize: '0.78rem', padding: '6px 10px' }}
                         />
                       </div>
                     </div>
@@ -1029,7 +886,7 @@ const Products = () => {
                     <button
                       type="submit"
                       className="admin-products__btn-primary"
-                      disabled={isSaving || isUploadingImage}
+                      disabled={isSaving}
                     >
                       {isSaving ? (
                         <>
@@ -1053,7 +910,6 @@ const Products = () => {
           )}
         </AnimatePresence>
 
-        {/* DELETE CONFIRMATION MODAL */}
         <AnimatePresence>
           {isDeleteModalOpen && activeProduct && (
             <div
@@ -1091,12 +947,28 @@ const Products = () => {
                 </div>
 
                 <div className="product-modal__delete-box">
-                  <div className="product-modal__delete-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </div>
+                  {getProductIconUrl(activeProduct) || activeProduct.imageUrl ? (
+                    <img
+                      src={getProductIconUrl(activeProduct) || activeProduct.imageUrl}
+                      alt={activeProduct.name}
+                      style={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: 12,
+                        objectFit: 'contain',
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        padding: 4,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                      }}
+                    />
+                  ) : (
+                    <div className="product-modal__delete-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </div>
+                  )}
 
                   <p className="product-modal__delete-text">
                     Are you sure you want to delete <strong>"{activeProduct.name}"</strong>?
