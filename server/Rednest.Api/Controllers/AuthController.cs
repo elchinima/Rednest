@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
                     email = user.Email,
                     profilePictureUrl = user.ProfilePictureUrl,
                     balance = user.Balance,
-                    role = user.Role,
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
                     twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
                 }
             });
@@ -100,7 +100,7 @@ public class AuthController : ControllerBase
                     email = result.User.Email,
                     profilePictureUrl = result.User.ProfilePictureUrl,
                     balance = result.User.Balance,
-                    role = result.User.Role,
+                    role = result.User.Role == UserRole.SuperAdmin ? "Super Admin" : result.User.Role.ToString(),
                     twoFactorEnabled = true
                 }
             });
@@ -329,7 +329,7 @@ public class AuthController : ControllerBase
                 Email = user.Email,
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 Balance = user.Balance,
-                Role = user.Role,
+                Role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
                 TwoFactorEnabled = userSession?.TwoFactorEnabled ?? false
             });
         }

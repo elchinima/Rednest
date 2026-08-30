@@ -29,8 +29,9 @@ public class AppDbContext : DbContext
                   .HasDefaultValue(0.00m);
 
             entity.Property(e => e.Role)
+                  .HasConversion<string>()
                   .HasColumnType("text")
-                  .HasDefaultValue("Customer");
+                  .HasDefaultValue(UserRole.Customer);
 
             entity.Property(e => e.Addresses)
                   .HasColumnType("jsonb")

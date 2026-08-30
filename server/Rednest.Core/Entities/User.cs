@@ -8,7 +8,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? ProfilePictureUrl { get; set; }
     public decimal Balance { get; set; } = 0.00m;
-    public string Role { get; set; } = "Customer";
+    public UserRole Role { get; set; } = UserRole.Customer;
     public List<UserAddress> Addresses { get; set; } = new();
     public List<UserPaymentMethod> PaymentMethods { get; set; } = new();
 

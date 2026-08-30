@@ -99,7 +99,7 @@ public class AdminController : ControllerBase
                 name = u.Name,
                 profilePictureUrl = u.ProfilePictureUrl,
                 balance = u.Balance,
-                role = u.Role ?? "Customer",
+                role = u.Role == UserRole.SuperAdmin ? "Super Admin" : u.Role.ToString(),
                 isActive = u.Session?.IsActive ?? true,
                 twoFactorEnabled = u.Session?.TwoFactorEnabled ?? false,
                 subscribe = u.Session?.Subscribe ?? false,
@@ -147,7 +147,7 @@ public class AdminController : ControllerBase
             name = user.Name,
             profilePictureUrl = user.ProfilePictureUrl,
             balance = user.Balance,
-            role = user.Role ?? "User",
+            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
             addresses = user.Addresses ?? new List<UserAddress>(),
             paymentMethods = (user.PaymentMethods ?? new List<UserPaymentMethod>()).Select(pm => new
             {
@@ -199,7 +199,14 @@ public class AdminController : ControllerBase
             return Unauthorized();
 
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+        User? currentUser = null;
+        Guid currentUserId = Guid.Empty;
+        if (Guid.TryParse(currentUserIdStr, out currentUserId))
+        {
+            currentUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
+        }
+
+        if (currentUserId != Guid.Empty && currentUserId == id)
         {
             if (request.IsActive.HasValue && !request.IsActive.Value)
             {
@@ -230,7 +237,37 @@ public class AdminController : ControllerBase
             user.Balance = Math.Max(0, Math.Round(request.Balance.Value, 2));
 
         if (!string.IsNullOrWhiteSpace(request.Role))
-            user.Role = request.Role.Trim();
+        {
+            var cleanRole = request.Role.Trim().Replace(" ", "");
+            if (Enum.TryParse<UserRole>(cleanRole, true, out var parsedRole))
+            {
+                if (parsedRole != user.Role)
+                {
+                    var currentUserRole = currentUser?.Role ?? UserRole.Customer;
+
+                    if (currentUserId == id)
+                    {
+                        return BadRequest(new { message = "You cannot change your own role." });
+                    }
+
+                    if ((int)user.Role >= (int)currentUserRole)
+                    {
+                        return BadRequest(new { message = "You cannot modify the role of a user with an equal or higher role than yours." });
+                    }
+
+                    if ((int)parsedRole >= (int)currentUserRole)
+                    {
+                        return BadRequest(new { message = "You cannot assign your own role or a higher role to any user." });
+                    }
+
+                    user.Role = parsedRole;
+                }
+            }
+            else
+            {
+                return BadRequest(new { message = $"Invalid role specified: '{request.Role}'." });
+            }
+        }
 
         if (user.Session == null)
         {
@@ -269,7 +306,7 @@ public class AdminController : ControllerBase
                 user.Name,
                 user.Email,
                 user.Balance,
-                role = user.Role,
+                role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
                 isActive = user.Session.IsActive,
                 twoFactorEnabled = user.Session.TwoFactorEnabled,
                 subscribe = user.Session.Subscribe

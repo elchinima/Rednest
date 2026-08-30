@@ -67,6 +67,41 @@ const getInitials = (name, email) => {
   return 'U';
 };
 
+const ALL_ROLES = ['Customer', 'Bot', 'Support', 'Moderator', 'Admin', 'Super Admin'];
+
+const ROLE_LEVELS = {
+  Customer: 0,
+  Bot: 1,
+  Support: 2,
+  Moderator: 3,
+  Admin: 4,
+  'Super Admin': 5,
+  SuperAdmin: 5,
+};
+
+const getRoleLevel = (role) => {
+  return ROLE_LEVELS[role] ?? 0;
+};
+
+const getRoleBadgeClass = (role) => {
+  switch (role) {
+    case 'Super Admin':
+    case 'SuperAdmin':
+      return 'badge--danger';
+    case 'Admin':
+      return 'badge--primary';
+    case 'Moderator':
+      return 'badge--warning';
+    case 'Support':
+      return 'badge--info';
+    case 'Bot':
+      return 'badge--purple';
+    case 'Customer':
+    default:
+      return 'badge--muted';
+  }
+};
+
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   show: (i) => ({
@@ -98,6 +133,7 @@ const Users = () => {
     name: '',
     email: '',
     balance: 0,
+    role: 'Customer',
     isActive: true,
     twoFactorEnabled: false,
     subscribe: false,
@@ -171,6 +207,7 @@ const Users = () => {
       name: user.name || '',
       email: user.email || '',
       balance: user.balance || 0,
+      role: user.role || 'Customer',
       isActive: isActive !== false,
       twoFactorEnabled: !!is2Fa,
       subscribe: !!isSub,
@@ -185,6 +222,29 @@ const Users = () => {
      (currentUser.email && editingUser.email && currentUser.email.toLowerCase() === editingUser.email.toLowerCase()))
   );
 
+  const currentUserRole = currentUser?.role || 'Customer';
+  const currentUserLevel = getRoleLevel(currentUserRole);
+  const targetUserRole = editingUser?.role || 'Customer';
+  const targetUserLevel = getRoleLevel(targetUserRole);
+
+  const allowedRolesToAssign = ALL_ROLES.filter((r) => getRoleLevel(r) < currentUserLevel);
+
+  let isRoleDisabled = false;
+  let roleHelperText = '';
+
+  if (isEditingSelf) {
+    isRoleDisabled = true;
+    roleHelperText = 'You cannot change your own role.';
+  } else if (targetUserLevel >= currentUserLevel) {
+    isRoleDisabled = true;
+    roleHelperText = 'You cannot modify the role of a user with an equal or higher role than yours.';
+  } else if (allowedRolesToAssign.length === 0) {
+    isRoleDisabled = true;
+    roleHelperText = 'You do not have permission to assign roles.';
+  } else {
+    roleHelperText = `You can only assign roles lower than your role (${currentUserRole}).`;
+  }
+
   const handleSaveUser = async (e) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -192,6 +252,22 @@ const Users = () => {
     if (isEditingSelf && editForm.isActive === false) {
       alert('You cannot deactivate or block your own account.');
       return;
+    }
+
+    if (editForm.role !== editingUser.role) {
+      const newRoleLevel = getRoleLevel(editForm.role);
+      if (isEditingSelf) {
+        alert('You cannot change your own role.');
+        return;
+      }
+      if (targetUserLevel >= currentUserLevel) {
+        alert('You cannot modify the role of a user with an equal or higher role than yours.');
+        return;
+      }
+      if (newRoleLevel >= currentUserLevel) {
+        alert(`You cannot assign your own role (${currentUserRole}) or a higher role.`);
+        return;
+      }
     }
 
     setIsSavingUser(true);
@@ -203,6 +279,7 @@ const Users = () => {
           name: editForm.name,
           email: editForm.email,
           balance: parseFloat(editForm.balance) || 0,
+          role: editForm.role,
           isActive: editForm.isActive,
           twoFactorEnabled: editForm.twoFactorEnabled,
           subscribe: editForm.subscribe,
@@ -580,8 +657,8 @@ const Users = () => {
                       </td>
 
                       <td>
-                        <span className={`badge ${u.role === 'Admin' ? 'badge--primary' : 'badge--muted'}`}>
-                          {u.role || 'User'}
+                        <span className={`badge ${getRoleBadgeClass(u.role)}`}>
+                          {u.role || 'Customer'}
                         </span>
                       </td>
 
@@ -997,16 +1074,39 @@ const Users = () => {
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>User Balance (₼)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={editForm.balance}
-                      onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
-                      placeholder="0.00"
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>User Balance (₼)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editForm.balance}
+                        onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>User Role</label>
+                      <select
+                        value={editForm.role}
+                        disabled={isRoleDisabled}
+                        onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                      >
+                        {!allowedRolesToAssign.includes(editForm.role) && (
+                          <option value={editForm.role}>{editForm.role}</option>
+                        )}
+                        {allowedRolesToAssign.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                      {roleHelperText && (
+                        <small className="admin-users__field-hint">{roleHelperText}</small>
+                      )}
+                    </div>
                   </div>
 
                   <div className="toggles-section">
