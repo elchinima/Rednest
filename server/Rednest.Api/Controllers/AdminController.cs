@@ -19,11 +19,25 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] AdminLoginRequest request)
+    public async Task<IActionResult> Login([FromBody] AdminLoginRequest request)
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out _))
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             return Unauthorized(new { message = "You must be logged in with an active account to access the admin panel." });
+
+        var user = await _context.Users
+            .Include(u => u.Session)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            return Unauthorized(new { message = "User account not found." });
+
+        if (user.Session != null && !user.Session.IsActive)
+            return Unauthorized(new { message = "Account suspended." });
+
+        if (!IsAllowedAdminRole(user.Role))
+            return StatusCode(403, new { message = "Access denied." });
 
         var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
         if (string.IsNullOrEmpty(adminSecret) || request.Password != adminSecret)
@@ -44,19 +58,27 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("verify")]
-    public IActionResult Verify()
+    public async Task<IActionResult> Verify()
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        var (auth, user) = await GetAdminUserAsync();
+        if (!auth || user == null)
+            return Unauthorized(new { authenticated = false, message = "Admin session invalid or expired." });
 
-        return Ok(new { authenticated = true });
+        return Ok(new
+        {
+            authenticated = true,
+            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+            userId = user.Id,
+            name = user.Name,
+            email = user.Email
+        });
     }
     
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can manage users." });
 
         var users = await _context.Users
             .Include(u => u.Session)
@@ -122,8 +144,8 @@ public class AdminController : ControllerBase
     [HttpGet("users/{id:guid}")]
     public async Task<IActionResult> GetUserById(Guid id)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can access user details." });
 
         var user = await _context.Users
             .Include(u => u.Session)
@@ -195,8 +217,8 @@ public class AdminController : ControllerBase
     [HttpPut("users/{id:guid}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] AdminUpdateUserRequest request)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can update users." });
 
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         User? currentUser = null;
@@ -234,7 +256,17 @@ public class AdminController : ControllerBase
         }
 
         if (request.Balance.HasValue)
-            user.Balance = Math.Max(0, Math.Round(request.Balance.Value, 2));
+        {
+            var newBalance = Math.Max(0, Math.Round(request.Balance.Value, 2));
+            if (newBalance != user.Balance)
+            {
+                if (currentUser?.Role != UserRole.SuperAdmin)
+                {
+                    return StatusCode(403, new { message = "Only Super Admin can change user balance." });
+                }
+                user.Balance = newBalance;
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(request.Role))
         {
@@ -317,8 +349,8 @@ public class AdminController : ControllerBase
     [HttpPost("users/{id:guid}/sessions/terminate")]
     public async Task<IActionResult> TerminateUserSessions(Guid id)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can terminate user sessions." });
 
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
@@ -339,8 +371,8 @@ public class AdminController : ControllerBase
     [HttpDelete("users/{id:guid}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can delete users." });
 
         var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
@@ -361,7 +393,7 @@ public class AdminController : ControllerBase
     [HttpGet("orders")]
     public async Task<IActionResult> GetOrders()
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         var orders = await _context.Orders
@@ -436,7 +468,7 @@ public class AdminController : ControllerBase
     [HttpGet("orders/{id:guid}")]
     public async Task<IActionResult> GetOrderById(Guid id)
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         var order = await _context.Orders
@@ -504,7 +536,7 @@ public class AdminController : ControllerBase
     [HttpPut("orders/{id:guid}/status")]
     public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] AdminUpdateOrderStatusRequest request)
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(request.Status))
@@ -528,8 +560,8 @@ public class AdminController : ControllerBase
     [HttpDelete("orders/{id:guid}")]
     public async Task<IActionResult> DeleteOrder(Guid id)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can delete orders." });
 
         var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
@@ -544,8 +576,8 @@ public class AdminController : ControllerBase
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can upload files to database storage." });
 
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "File not selected." });
@@ -608,8 +640,8 @@ public class AdminController : ControllerBase
     [HttpGet("files")]
     public async Task<IActionResult> GetFiles()
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can view database files." });
 
         var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
         var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
@@ -670,8 +702,8 @@ public class AdminController : ControllerBase
     [HttpDelete("files/{fileName}")]
     public async Task<IActionResult> DeleteFile(string fileName)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can delete database files." });
 
         var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
         var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
@@ -702,7 +734,7 @@ public class AdminController : ControllerBase
     [HttpGet("reviews")]
     public async Task<IActionResult> GetReviews()
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         var reviews = await _context.Reviews
@@ -765,7 +797,7 @@ public class AdminController : ControllerBase
     [HttpGet("reviews/{id:guid}")]
     public async Task<IActionResult> GetReviewById(Guid id)
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         var review = await _context.Reviews
@@ -818,7 +850,7 @@ public class AdminController : ControllerBase
     [HttpPut("reviews/{id:guid}/status")]
     public async Task<IActionResult> UpdateReviewStatus(Guid id, [FromBody] AdminUpdateReviewStatusRequest request)
     {
-        if (!IsAdminAuthenticated())
+        if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(request.Status))
@@ -847,8 +879,8 @@ public class AdminController : ControllerBase
     [HttpDelete("reviews/{id:guid}")]
     public async Task<IActionResult> DeleteReview(Guid id)
     {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can delete reviews." });
 
         var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
         if (review == null)
@@ -860,16 +892,63 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Review deleted successfully." });
     }
 
-    private bool IsAdminAuthenticated()
+    private static bool IsAllowedAdminRole(UserRole role)
+    {
+        return role == UserRole.Moderator || role == UserRole.Admin || role == UserRole.SuperAdmin;
+    }
+
+    private static bool IsFullAdminRole(UserRole role)
+    {
+        return role == UserRole.Admin || role == UserRole.SuperAdmin;
+    }
+
+    private static bool IsSuperAdminRole(UserRole role)
+    {
+        return role == UserRole.SuperAdmin;
+    }
+
+    private async Task<(bool Authenticated, User? User)> GetAdminUserAsync()
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out _))
-            return false;
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+            return (false, null);
 
         if (!Request.Cookies.TryGetValue("admin_session", out var token) || string.IsNullOrEmpty(token))
-            return false;
+            return (false, null);
 
-        return ValidateSignedAdminToken(token, userIdStr);
+        if (!ValidateSignedAdminToken(token, userIdStr))
+            return (false, null);
+
+        var user = await _context.Users
+            .Include(u => u.Session)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || !IsAllowedAdminRole(user.Role))
+            return (false, null);
+
+        if (user.Session != null && !user.Session.IsActive)
+            return (false, null);
+
+        return (true, user);
+    }
+
+    private async Task<bool> IsAdminAuthenticatedAsync()
+    {
+        var (auth, _) = await GetAdminUserAsync();
+        return auth;
+    }
+
+    private async Task<bool> IsFullAdminAuthenticatedAsync()
+    {
+        var (auth, user) = await GetAdminUserAsync();
+        return auth && user != null && IsFullAdminRole(user.Role);
+    }
+
+    private async Task<bool> IsSuperAdminAuthenticatedAsync()
+    {
+        var (auth, user) = await GetAdminUserAsync();
+        return auth && user != null && IsSuperAdminRole(user.Role);
     }
 
     private static string GetAdminSigningKey()

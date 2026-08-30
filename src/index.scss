@@ -79,3 +79,26 @@ div:has(> iframe[src*="link.stripe.com"]) {
   top: -99999px !important;
   z-index: -99999 !important;
 }
+
+.admin-loading-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $color-bg-dark;
+  background-image:
+    radial-gradient(circle at top right, rgba($color-primary, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at bottom left, $color-bg-dark 0%, $color-bg 100%);
+  z-index: 99999;
+}
+
+.admin-loading-spinner {
+  width: 48px;
+  height: 48px;
+  display: block;
+}
+

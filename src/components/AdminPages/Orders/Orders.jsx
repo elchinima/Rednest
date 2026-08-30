@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useAuth } from '../../../context/AuthContext';
 import featureCashIcon from '../../../assets/icons/feature-cash.svg';
 import featureCardIcon from '../../../assets/icons/feature-card-visa-mc.svg';
 import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
@@ -140,7 +141,11 @@ const Orders = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
+  const { user } = useAuth();
   const [copiedId, setCopiedId] = useState(null);
+
+  const currentUserRole = (user?.role || user?.Role || '').toLowerCase().replace(/\s+/g, '');
+  const isSuperAdmin = currentUserRole === 'superadmin' || currentUserRole === 'super admin';
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -220,6 +225,11 @@ const Orders = () => {
 
   const handleDeleteOrder = async () => {
     if (!orderToDelete) return;
+    if (!isSuperAdmin) {
+      showToast('Access denied. Only Super Admin can delete orders.');
+      setOrderToDelete(null);
+      return;
+    }
     setIsDeleting(true);
     try {
       const res = await fetchWithRefresh(`${apiUrl}/api/admin/orders/${orderToDelete.id}`, {
@@ -693,7 +703,7 @@ const Orders = () => {
                                 onClick: () => setSelectedReceiptOrder(order),
                               },
                               {
-                                label: 'Delete Order',
+                                label: isSuperAdmin ? 'Delete Order' : 'Delete Order (Super Admin)',
                                 variant: 'danger',
                                 icon: (
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -701,7 +711,13 @@ const Orders = () => {
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                   </svg>
                                 ),
-                                onClick: () => setOrderToDelete(order),
+                                onClick: () => {
+                                  if (!isSuperAdmin) {
+                                    showToast('Access denied. Only Super Admin can delete orders.');
+                                  } else {
+                                    setOrderToDelete(order);
+                                  }
+                                },
                               },
                             ]}
                           />

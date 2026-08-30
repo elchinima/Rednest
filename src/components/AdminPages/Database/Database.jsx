@@ -2,9 +2,12 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useAuth } from '../../../context/AuthContext';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Database.scss';
+
+const cleanRole = (role) => (role || '').toLowerCase().replace(/\s+/g, '');
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
 const MAX_SIZE_MB = 10;
@@ -17,6 +20,7 @@ const formatSize = (kb) => {
 };
 
 const Database = () => {
+  const { user } = useAuth();
   const [files, setFiles] = useState([]);
   const [searchInput, setSearchInput] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
@@ -33,6 +37,9 @@ const Database = () => {
   const [fileToDelete, setFileToDelete] = useState(null);
   const inputRef = useRef(null);
   const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  const currentUserRole = cleanRole(user?.role || user?.Role);
+  const isSuperAdmin = currentUserRole === 'superadmin' || currentUserRole === 'super admin';
 
   const filteredFiles = useMemo(() => {
     let list = [...files];
@@ -191,6 +198,11 @@ const Database = () => {
 
   const handleConfirmDelete = async () => {
     if (!fileToDelete) return;
+    if (!isSuperAdmin) {
+      showError('Access denied. Only Super Admin can delete database files.');
+      setFileToDelete(null);
+      return;
+    }
     const fileName = fileToDelete.fileName;
     setDeletingFile(fileName);
     try {
@@ -480,10 +492,16 @@ const Database = () => {
                         </button>
                         <button
                           id={`database-delete-${i}`}
-                          className="database__file-btn database__file-btn--delete"
-                          onClick={() => setFileToDelete(file)}
+                          className={`database__file-btn database__file-btn--delete${!isSuperAdmin ? ' database__file-btn--locked' : ''}`}
+                          onClick={() => {
+                            if (!isSuperAdmin) {
+                              showError('Access denied. Only Super Admin can delete database files.');
+                            } else {
+                              setFileToDelete(file);
+                            }
+                          }}
                           disabled={deletingFile === file.fileName}
-                          title="Delete file"
+                          title={isSuperAdmin ? 'Delete file' : 'Only Super Admin can delete files'}
                         >
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <polyline points="3 6 5 6 21 6" />
@@ -608,9 +626,15 @@ const Database = () => {
                     Open Original
                   </a>
                   <button
-                    className="database-preview-btn database-preview-btn--delete"
-                    onClick={() => setFileToDelete(previewFile)}
-                    title="Delete file"
+                    className={`database-preview-btn database-preview-btn--delete${!isSuperAdmin ? ' database-preview-btn--locked' : ''}`}
+                    onClick={() => {
+                      if (!isSuperAdmin) {
+                        showError('Access denied. Only Super Admin can delete database files.');
+                      } else {
+                        setFileToDelete(previewFile);
+                      }
+                    }}
+                    title={isSuperAdmin ? 'Delete file' : 'Only Super Admin can delete files'}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <polyline points="3 6 5 6 21 6" />

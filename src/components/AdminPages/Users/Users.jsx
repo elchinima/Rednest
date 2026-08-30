@@ -227,6 +227,8 @@ const Users = () => {
   const targetUserRole = editingUser?.role || 'Customer';
   const targetUserLevel = getRoleLevel(targetUserRole);
 
+  const isSuperAdmin = currentUserLevel >= 5 || currentUserRole === 'Super Admin' || currentUserRole === 'SuperAdmin';
+
   const allowedRolesToAssign = ALL_ROLES.filter((r) => getRoleLevel(r) < currentUserLevel);
 
   let isRoleDisabled = false;
@@ -1076,15 +1078,29 @@ const Users = () => {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>User Balance (₼)</label>
+                      <label>
+                        User Balance (₼)
+                        {!isSuperAdmin && (
+                          <span style={{ marginLeft: 6, color: '#ef4444', fontSize: '0.78rem', fontWeight: 500 }}>
+                            (Super Admin only)
+                          </span>
+                        )}
+                      </label>
                       <input
                         type="number"
                         step="0.01"
                         min="0"
+                        disabled={!isSuperAdmin}
                         value={editForm.balance}
                         onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
                         placeholder="0.00"
+                        title={!isSuperAdmin ? 'Only Super Admin can change user balance' : ''}
                       />
+                      {!isSuperAdmin && (
+                        <small className="admin-users__field-hint" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                          Only Super Admin can modify user balance.
+                        </small>
+                      )}
                     </div>
 
                     <div className="form-group">

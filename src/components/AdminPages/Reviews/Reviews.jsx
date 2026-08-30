@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useAuth } from '../../../context/AuthContext';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AdminTableActions from '../../Elements/AdminTableActions';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
@@ -23,18 +24,21 @@ const RATINGS = [
 const formatDate = (isoStr) => {
   if (!isoStr) return '—';
   try {
+    if (typeof isoStr === 'string') {
+      const match = isoStr.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+      if (match) {
+        const [, year, month, day, hour, minute] = match;
+        return `${day}.${month}.${year}, ${hour}:${minute}`;
+      }
+    }
     const d = new Date(isoStr);
     if (isNaN(d.getTime())) return '—';
-    const formatter = new Intl.DateTimeFormat('ru-RU', {
-      timeZone: 'Asia/Baku',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-    return formatter.format(d);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hour = String(d.getHours()).padStart(2, '0');
+    const minute = String(d.getMinutes()).padStart(2, '0');
+    return `${day}.${month}.${year}, ${hour}:${minute}`;
   } catch {
     return '—';
   }
@@ -43,9 +47,23 @@ const formatDate = (isoStr) => {
 const formatRelativeTime = (dateStr) => {
   if (!dateStr) return 'Never';
   try {
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now - d;
+    let d;
+    if (typeof dateStr === 'string') {
+      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):?(\d{2})?/);
+      if (match) {
+        const [, year, month, day, hour, minute, second] = match;
+        d = Date.UTC(+year, +month - 1, +day, +hour, +minute, +(second || 0));
+      }
+    }
+    if (!d) {
+      const parsed = new Date(dateStr);
+      if (isNaN(parsed.getTime())) return 'Never';
+      d = parsed.getTime();
+    }
+
+    const nowUtc = Date.now();
+    const nowBaku = nowUtc + (4 * 3600000);
+    const diffMs = Math.max(0, nowBaku - d);
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
@@ -53,8 +71,9 @@ const formatRelativeTime = (dateStr) => {
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return formatDate(dateStr);
   } catch {
     return '—';
   }
@@ -104,7 +123,11 @@ const AdminReviews = () => {
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingReviewId, setUpdatingReviewId] = useState(null);
+  const { user } = useAuth();
   const [copiedId, setCopiedId] = useState(null);
+
+  const currentUserRole = (user?.role || user?.Role || '').toLowerCase().replace(/\s+/g, '');
+  const isSuperAdmin = currentUserRole === 'superadmin' || currentUserRole === 'super admin';
 
   const showToast = (msg) => {
     setSuccessToast(msg);
@@ -251,6 +274,11 @@ const AdminReviews = () => {
 
   const handleDeleteReview = async () => {
     if (!reviewToDelete) return;
+    if (!isSuperAdmin) {
+      showToast('Access denied. Only Super Admin can delete reviews.');
+      setReviewToDelete(null);
+      return;
+    }
     setIsDeleting(true);
 
     try {
@@ -639,7 +667,7 @@ const AdminReviews = () => {
                                 onClick: () => setSelectedReview(r),
                               },
                               {
-                                label: 'Delete Review',
+                                label: isSuperAdmin ? 'Delete Review' : 'Delete Review (Super Admin)',
                                 variant: 'danger',
                                 icon: (
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -647,7 +675,13 @@ const AdminReviews = () => {
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                   </svg>
                                 ),
-                                onClick: () => setReviewToDelete(r),
+                                onClick: () => {
+                                  if (!isSuperAdmin) {
+                                    showToast('Access denied. Only Super Admin can delete reviews.');
+                                  } else {
+                                    setReviewToDelete(r);
+                                  }
+                                },
                               },
                             ]}
                           />
@@ -771,14 +805,19 @@ const AdminReviews = () => {
                   <div className="footer-actions">
                     <button
                       type="button"
-                      className="admin-reviews__btn-danger"
+                      className={`admin-reviews__btn-danger${!isSuperAdmin ? ' admin-reviews__btn-danger--locked' : ''}`}
                       onClick={() => {
-                        const r = selectedReview;
-                        setSelectedReview(null);
-                        setReviewToDelete(r);
+                        if (!isSuperAdmin) {
+                          showToast('Access denied. Only Super Admin can delete reviews.');
+                        } else {
+                          const r = selectedReview;
+                          setSelectedReview(null);
+                          setReviewToDelete(r);
+                        }
                       }}
+                      title={isSuperAdmin ? 'Delete' : 'Only Super Admin can delete reviews'}
                     >
-                      Delete
+                      {isSuperAdmin ? 'Delete' : 'Delete (Super Admin)'}
                     </button>
                   </div>
                 </div>

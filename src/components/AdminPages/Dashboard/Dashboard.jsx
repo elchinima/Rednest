@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useAuth } from '../../../context/AuthContext';
 import './Dashboard.scss';
+
+const cleanRole = (role) => (role || '').toLowerCase().replace(/\s+/g, '');
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -34,11 +37,20 @@ const StatCard = ({ icon, label, value, sub, accent, index }) => (
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [stats, setStats] = useState({ fileCount: '—', totalKb: '—' });
   const [loadingStats, setLoadingStats] = useState(true);
 
+  const currentUserRole = cleanRole(user?.role || user?.Role);
+  const canAccessDatabase = currentUserRole === 'admin' || currentUserRole === 'superadmin';
+
   useEffect(() => {
     const fetchStats = async () => {
+      if (!canAccessDatabase) {
+        setStats({ fileCount: '—', totalKb: '—' });
+        setLoadingStats(false);
+        return;
+      }
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
         const res = await fetchWithRefresh(`${apiUrl}/api/admin/files`);
@@ -51,14 +63,17 @@ const Dashboard = () => {
               ? `${Math.round(totalKb)} KB`
               : `${(totalKb / 1024).toFixed(1)} MB`,
           });
+        } else {
+          setStats({ fileCount: '—', totalKb: '—' });
         }
       } catch {
+        setStats({ fileCount: '—', totalKb: '—' });
       } finally {
         setLoadingStats(false);
       }
     };
     fetchStats();
-  }, []);
+  }, [canAccessDatabase]);
 
   return (
     <AdminLayout>
@@ -73,20 +88,22 @@ const Dashboard = () => {
             <h1 className="dashboard__title">Dashboard</h1>
             <p className="dashboard__subtitle">Overview of your Rednest admin panel</p>
           </div>
-          <motion.button
-            id="dashboard-go-database"
-            className="cta-btn dashboard__cta"
-            onClick={() => navigate('/admin/database')}
-            whileHover={{ scale: 1.03, translateY: -2 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <ellipse cx="12" cy="5" rx="9" ry="3" />
-              <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-              <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
-            </svg>
-            Go to Database
-          </motion.button>
+          {canAccessDatabase && (
+            <motion.button
+              id="dashboard-go-database"
+              className="cta-btn dashboard__cta"
+              onClick={() => navigate('/admin/database')}
+              whileHover={{ scale: 1.03, translateY: -2 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+              </svg>
+              Go to Database
+            </motion.button>
+          )}
         </motion.div>
 
         <div className="dashboard__stats">

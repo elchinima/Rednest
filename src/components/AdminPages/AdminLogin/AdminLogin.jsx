@@ -12,14 +12,24 @@ const LoaderIcon = () => (
   <img src={loaderIconRed} alt="Loading..." style={{ width: '20px', height: '20px' }} />
 );
 
+const ALLOWED_ADMIN_ROLES = ['moderator', 'admin', 'super admin', 'superadmin'];
+
+const isAllowedAdminRole = (role) => {
+  if (!role) return false;
+  const clean = String(role).toLowerCase().trim();
+  return ALLOWED_ADMIN_ROLES.includes(clean);
+};
+
 const AdminLogin = () => {
   const { adminLogin, isAdminAuth, loading: adminLoading } = useAdminAuth();
-  const { isAuthenticated, authLoading } = useAuth();
+  const { isAuthenticated, user, authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const hasAdminRole = isAllowedAdminRole(currentUserRole);
 
   if (authLoading || adminLoading) {
     return (
@@ -33,13 +43,19 @@ const AdminLogin = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (isAdminAuth) {
+  if (isAdminAuth && hasAdminRole) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!hasAdminRole) {
+      setError(`Access denied.`);
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await adminLogin(password);
@@ -81,6 +97,19 @@ const AdminLogin = () => {
               <h2>Welcome back</h2>
               <p>Enter your admin password to access the panel.</p>
             </div>
+
+            {!hasAdminRole && (
+              <div className="admin-login-restricted-banner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div>
+                  <strong>Access Restricted</strong>
+                </div>
+              </div>
+            )}
 
             <form className="admin-login-form" onSubmit={handleSubmit} id="admin-login-form">
               <div className="input-group">

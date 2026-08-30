@@ -242,7 +242,7 @@
     gap: 4px;
   }
 
-  &__link {
+    &__link {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -259,6 +259,17 @@
     &:hover { color: $color-text; }
 
     &--active { color: $color-text; }
+
+    &--locked {
+      opacity: 0.55;
+      cursor: pointer;
+      user-select: none;
+
+      &:hover {
+        color: $color-text-muted;
+        background: rgba(255, 255, 255, 0.03);
+      }
+    }
   }
 
   &__link-bg {
@@ -281,6 +292,22 @@
   &__link-label {
     position: relative;
     z-index: 1;
+  }
+
+  &__link-lock {
+    margin-left: auto;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(239, 68, 68, 0.9);
+    flex-shrink: 0;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
   }
 
   &__logout {
@@ -346,4 +373,37 @@
 .admin-loading-spinner {
   width: 48px;
   height: 48px;
+}
+
+.admin-layout__toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: rgba(239, 68, 68, 0.95);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: $border-radius-md;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+
+  @media (max-width: 640px) {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    justify-content: center;
+    font-size: 0.82rem;
+    padding: 10px 16px;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
 }

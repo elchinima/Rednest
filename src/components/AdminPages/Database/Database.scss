@@ -931,7 +931,7 @@
     }
   }
 
-  &--delete {
+    &--delete {
     background: rgba($color-primary, 0.12);
     color: #fca5a5;
     border: 1px solid rgba($color-primary, 0.25);
@@ -941,6 +941,18 @@
       color: #fff;
       border-color: $color-primary;
       transform: translateY(-1px);
+    }
+  }
+
+  &--locked {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+
+    &:hover {
+      transform: none !important;
+      background: rgba($color-primary, 0.12) !important;
+      color: #fca5a5 !important;
+      border-color: rgba($color-primary, 0.25) !important;
     }
   }
 }

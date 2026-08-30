@@ -185,6 +185,45 @@
   }
 }
 
+.admin-login-restricted-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: $border-radius-md;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  line-height: 1.45;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: #f87171;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+
+    span {
+      color: #fca5a5;
+      font-weight: 600;
+    }
+  }
+}
+
 .admin-login-error {
   color: #ff4d4f;
   font-size: 0.9rem;
