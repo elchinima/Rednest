@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
-import { useAuth } from './AuthContext';
+import AuthContext from './AuthContext';
 
 const AdminAuthContext = createContext(null);
 
 export const AdminAuthProvider = ({ children }) => {
-  const { updateUser } = useAuth();
+  const authCtx = useContext(AuthContext);
+  const updateUser = authCtx?.updateUser;
   const [isAdminAuth, setIsAdminAuth] = useState(false);
   const [adminRole, setAdminRole] = useState(null);
   const [loading, setLoading] = useState(() => {

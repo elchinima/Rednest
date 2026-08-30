@@ -173,8 +173,8 @@ const AnimatedRoutes = () => {
 const AppRoutes = () => {
   return (
     <Router>
-      <AdminAuthProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <AdminAuthProvider>
           <BasketProvider>
             <ScrollToTop />
             <AnimatedRoutes />
@@ -182,8 +182,8 @@ const AppRoutes = () => {
             <BuyNowWidget />
             <FortuneWidget />
           </BasketProvider>
-        </AuthProvider>
-      </AdminAuthProvider>
+        </AdminAuthProvider>
+      </AuthProvider>
     </Router>
   );
 };
