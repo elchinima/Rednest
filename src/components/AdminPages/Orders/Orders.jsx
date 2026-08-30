@@ -11,6 +11,7 @@ import cashierIcon from '../../../assets/icons/cashier-register.svg';
 import onlineIcon from '../../../assets/icons/online-card.svg';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import AdminTableActions from '../../Elements/AdminTableActions';
 import { getProductIconUrl } from '../../../utils/productIcons';
 import './Orders.scss';
 
@@ -674,31 +675,36 @@ const Orders = () => {
                         </td>
 
                         <td className="text-right">
-                          <div className="admin-orders__actions">
-                            <button
-                              className="admin-orders__action-btn"
-                              onClick={() => setSelectedReceiptOrder(order)}
-                              title="View Full Receipt"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                                <line x1="16" y1="13" x2="8" y2="13" />
-                                <line x1="16" y1="17" x2="8" y2="17" />
-                                <polyline points="10 9 9 9 8 9" />
-                              </svg>
-                            </button>
-                            <button
-                              className="admin-orders__action-btn admin-orders__action-btn--delete"
-                              onClick={() => setOrderToDelete(order)}
-                              title="Delete Order"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
-                          </div>
+                          <AdminTableActions
+                            index={i}
+                            total={visibleOrders.length}
+                            actions={[
+                              {
+                                label: 'View Receipt',
+                                icon: (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <polyline points="10 9 9 9 8 9" />
+                                  </svg>
+                                ),
+                                onClick: () => setSelectedReceiptOrder(order),
+                              },
+                              {
+                                label: 'Delete Order',
+                                variant: 'danger',
+                                icon: (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                ),
+                                onClick: () => setOrderToDelete(order),
+                              },
+                            ]}
+                          />
                         </td>
                       </motion.tr>
                     );

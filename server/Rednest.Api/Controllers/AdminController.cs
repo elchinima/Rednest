@@ -790,75 +790,6 @@ public class AdminController : ControllerBase
         });
     }
 
-    [HttpPut("reviews/{id:guid}")]
-    public async Task<IActionResult> UpdateReview(Guid id, [FromBody] AdminUpdateReviewRequest request)
-    {
-        if (!IsAdminAuthenticated())
-            return Unauthorized();
-
-        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
-        if (review == null)
-            return NotFound(new { message = "Review not found." });
-
-        if (!string.IsNullOrWhiteSpace(request.Category))
-        {
-            if (Enum.TryParse<ReviewCategory>(request.Category, true, out var catEnum))
-                review.Category = catEnum;
-            else
-                return BadRequest(new { message = $"Invalid category: '{request.Category}'." });
-        }
-
-        if (request.Rating.HasValue)
-        {
-            if (request.Rating.Value < 1 || request.Rating.Value > 5)
-                return BadRequest(new { message = "Rating must be between 1 and 5." });
-            review.ReviewData.Rating = request.Rating.Value;
-        }
-
-        if (request.Comment != null)
-        {
-            review.ReviewData.Comment = request.Comment.Trim();
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Status))
-        {
-            if (Enum.TryParse<ReviewStatus>(request.Status, true, out var statusEnum))
-            {
-                review.Status.Status = statusEnum;
-                review.Status.UpdatedAt = DateTime.UtcNow.AddHours(4);
-            }
-            else
-                return BadRequest(new { message = $"Invalid status: '{request.Status}'." });
-        }
-
-        if (request.Language != null)
-        {
-            if (string.IsNullOrWhiteSpace(request.Language))
-                review.Language = null;
-            else if (Enum.TryParse<ReviewLanguage>(request.Language, true, out var langEnum))
-                review.Language = langEnum;
-            else
-                return BadRequest(new { message = $"Invalid language: '{request.Language}'." });
-        }
-
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            message = "Review updated successfully.",
-            review = new
-            {
-                id = review.Id,
-                category = review.Category.ToString(),
-                status = review.Status.Status.ToString(),
-                statusUpdatedAt = review.Status.UpdatedAt,
-                language = review.Language?.ToString(),
-                rating = review.ReviewData.Rating,
-                comment = review.ReviewData.Comment
-            }
-        });
-    }
-
     [HttpDelete("reviews/{id:guid}")]
     public async Task<IActionResult> DeleteReview(Guid id)
     {
@@ -898,15 +829,6 @@ public record AdminLoginRequest(string Password);
 public record AdminUpdateOrderStatusRequest(string Status);
 
 public record AdminUpdateReviewStatusRequest(string Status);
-
-public class AdminUpdateReviewRequest
-{
-    public string? Category { get; set; }
-    public decimal? Rating { get; set; }
-    public string? Comment { get; set; }
-    public string? Status { get; set; }
-    public string? Language { get; set; }
-}
 
 public class AdminUpdateUserRequest
 {

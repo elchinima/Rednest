@@ -4,6 +4,7 @@ import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
+import AdminTableActions from '../../Elements/AdminTableActions';
 import './Users.scss';
 
 const PAGE_SIZE = 10;
@@ -603,29 +604,32 @@ const Users = () => {
                       </td>
 
                       <td className="text-right">
-                        <div className="admin-users__action-buttons">
-                          <button
-                            className="admin-users__action-btn"
-                            onClick={() => loadUserDetails(u.id)}
-                            title="View Full Profile"
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </button>
-
-                          <button
-                            className="admin-users__action-btn"
-                            onClick={() => openEditModal(u)}
-                            title="Edit User & Balance"
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                        </div>
+                        <AdminTableActions
+                          index={i}
+                          total={visibleUsers.length}
+                          actions={[
+                            {
+                              label: 'View Profile',
+                              icon: (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              ),
+                              onClick: () => loadUserDetails(u.id),
+                            },
+                            {
+                              label: 'Edit User & Balance',
+                              icon: (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              ),
+                              onClick: () => openEditModal(u),
+                            },
+                          ]}
+                        />
                       </td>
                     </motion.tr>
                   ))}

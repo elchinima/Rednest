@@ -414,6 +414,7 @@
     overflow-x: auto;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+    min-height: 220px;
   }
 
   &__table {

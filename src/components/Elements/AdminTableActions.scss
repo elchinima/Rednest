@@ -1,0 +1,197 @@
+@use '../../styles/variables.scss' as *;
+
+.admin-table-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  z-index: 5;
+
+  &.is-open {
+    z-index: 60;
+  }
+
+  &__trigger {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.active {
+      background: rgba(239, 68, 68, 0.18);
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+  }
+
+  &__trigger:hover &__icon {
+    transform: scale(1.08);
+  }
+
+  &__dropdown {
+    position: absolute;
+    min-width: 175px;
+    max-width: 240px;
+    z-index: 100;
+    background: rgba(26, 14, 14, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: $border-radius-md;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px;
+    box-sizing: border-box;
+
+    &--down {
+      top: calc(100% + 6px);
+      transform-origin: top right;
+    }
+
+    &--up {
+      bottom: calc(100% + 6px);
+      transform-origin: bottom right;
+    }
+
+    &--align-right {
+      right: 0;
+    }
+
+    &--align-left {
+      left: 0;
+      &.admin-table-actions__dropdown--down {
+        transform-origin: top left;
+      }
+      &.admin-table-actions__dropdown--up {
+        transform-origin: bottom left;
+      }
+    }
+
+    @media (max-width: 640px) {
+      min-width: 165px;
+      padding: 5px;
+    }
+  }
+
+  &__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: transparent;
+    border: none;
+    border-radius: $border-radius-sm;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.84rem;
+    font-weight: 600;
+    font-family: $font-family-base;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    box-sizing: border-box;
+
+    @media (max-width: 640px) {
+      padding: 10px 12px;
+      font-size: 0.85rem;
+    }
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      transform: translateX(2px);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    &--danger {
+      color: #f87171;
+
+      &:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.16);
+        color: #fca5a5;
+      }
+
+      .admin-table-actions__item-icon svg {
+        stroke: #f87171;
+      }
+    }
+
+    &--warning {
+      color: #fbbf24;
+
+      &:hover:not(:disabled) {
+        background: rgba(245, 158, 11, 0.16);
+        color: #fde68a;
+      }
+
+      .admin-table-actions__item-icon svg {
+        stroke: #fbbf24;
+      }
+    }
+  }
+
+  &__item-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+    }
+  }
+
+  &__item-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

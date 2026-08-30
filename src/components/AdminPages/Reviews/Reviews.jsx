@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
+import AdminTableActions from '../../Elements/AdminTableActions';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
-import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './Reviews.scss';
 
 const PAGE_SIZE = 12;
@@ -101,16 +101,6 @@ const AdminReviews = () => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const [selectedReview, setSelectedReview] = useState(null);
-  const [editingReview, setEditingReview] = useState(null);
-  const [editForm, setEditForm] = useState({
-    category: 'Products',
-    rating: 5,
-    status: 'Published',
-    language: '',
-    comment: '',
-  });
-  const [isSavingEdit, setIsSavingEdit] = useState(false);
-
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [updatingReviewId, setUpdatingReviewId] = useState(null);
@@ -149,7 +139,7 @@ const AdminReviews = () => {
   }, [fetchReviews]);
 
   useEffect(() => {
-    if (selectedReview || editingReview || reviewToDelete) {
+    if (selectedReview || reviewToDelete) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -157,7 +147,7 @@ const AdminReviews = () => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selectedReview, editingReview, reviewToDelete]);
+  }, [selectedReview, reviewToDelete]);
 
   const stats = useMemo(() => {
     const total = reviews.length;
@@ -256,75 +246,6 @@ const AdminReviews = () => {
       showToast(err.message);
     } finally {
       setUpdatingReviewId(null);
-    }
-  };
-
-  const openEditModal = (review) => {
-    setEditingReview(review);
-    setEditForm({
-      category: review.category || 'Products',
-      rating: Number(review.rating) || 5,
-      status: review.status || 'Published',
-      language: review.language || '',
-      comment: review.comment || '',
-    });
-  };
-
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!editingReview) return;
-
-    setIsSavingEdit(true);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const res = await fetchWithRefresh(`${apiUrl}/api/admin/reviews/${editingReview.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          category: editForm.category,
-          rating: Number(editForm.rating),
-          status: editForm.status,
-          language: editForm.language || null,
-          comment: editForm.comment,
-        }),
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to update review.');
-      }
-
-      const data = await res.json();
-      const updatedFields = data.review || editForm;
-
-      setReviews((prev) =>
-        prev.map((r) =>
-          r.id === editingReview.id
-            ? {
-                ...r,
-                ...updatedFields,
-                statusUpdatedAt: updatedFields.statusUpdatedAt || new Date().toISOString(),
-              }
-            : r
-        )
-      );
-
-      if (selectedReview && selectedReview.id === editingReview.id) {
-        setSelectedReview((prev) => ({
-          ...prev,
-          ...updatedFields,
-          statusUpdatedAt: updatedFields.statusUpdatedAt || new Date().toISOString(),
-        }));
-      }
-
-      showToast('Review updated successfully');
-      setEditingReview(null);
-    } catch (err) {
-      console.error('Error updating review:', err);
-      showToast(err.message);
-    } finally {
-      setIsSavingEdit(false);
     }
   };
 
@@ -621,7 +542,6 @@ const AdminReviews = () => {
                     <th>Order</th>
                     <th>Category</th>
                     <th>Rating</th>
-                    <th>Review Content</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th className="text-right">Actions</th>
@@ -681,16 +601,6 @@ const AdminReviews = () => {
                         </td>
 
                         <td>
-                          <div
-                            className="admin-reviews__comment-preview"
-                            title={r.comment}
-                            onClick={() => setSelectedReview(r)}
-                          >
-                            {r.comment || <em className="text-muted">No comment text</em>}
-                          </div>
-                        </td>
-
-                        <td>
                           <div className="admin-reviews__status-select-wrap">
                             <select
                               className={statusBadge.className}
@@ -714,43 +624,33 @@ const AdminReviews = () => {
                         </td>
 
                         <td className="text-right">
-                          <div className="admin-reviews__action-buttons">
-                            <button
-                              type="button"
-                              className="admin-reviews__action-btn"
-                              onClick={() => setSelectedReview(r)}
-                              title="View Review Details"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
-                              </svg>
-                            </button>
-
-                            <button
-                              type="button"
-                              className="admin-reviews__action-btn"
-                              onClick={() => openEditModal(r)}
-                              title="Edit Review"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4L16.5 3.5z" />
-                              </svg>
-                            </button>
-
-                            <button
-                              type="button"
-                              className="admin-reviews__action-btn admin-reviews__action-btn--delete"
-                              onClick={() => setReviewToDelete(r)}
-                              title="Delete Review"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
-                          </div>
+                          <AdminTableActions
+                            index={i}
+                            total={visibleReviews.length}
+                            actions={[
+                              {
+                                label: 'View Details',
+                                icon: (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                  </svg>
+                                ),
+                                onClick: () => setSelectedReview(r),
+                              },
+                              {
+                                label: 'Delete Review',
+                                variant: 'danger',
+                                icon: (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                ),
+                                onClick: () => setReviewToDelete(r),
+                              },
+                            ]}
+                          />
                         </td>
                       </motion.tr>
                     );
@@ -871,17 +771,6 @@ const AdminReviews = () => {
                   <div className="footer-actions">
                     <button
                       type="button"
-                      className="admin-reviews__btn-secondary"
-                      onClick={() => {
-                        const r = selectedReview;
-                        setSelectedReview(null);
-                        openEditModal(r);
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
                       className="admin-reviews__btn-danger"
                       onClick={() => {
                         const r = selectedReview;
@@ -893,131 +782,6 @@ const AdminReviews = () => {
                     </button>
                   </div>
                 </div>
-              </motion.div>
-            </div>
-          )}
-
-          {editingReview && (
-            <div
-              className="admin-reviews__modal-backdrop"
-              onClick={() => !isSavingEdit && setEditingReview(null)}
-            >
-              <motion.div
-                className="admin-reviews__modal admin-reviews__modal--edit"
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="admin-reviews__modal-header">
-                  <h2>Edit Review</h2>
-                  <button
-                    type="button"
-                    className="admin-reviews__modal-close"
-                    onClick={() => !isSavingEdit && setEditingReview(null)}
-                    disabled={isSavingEdit}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
-
-                <form onSubmit={handleSaveEdit} className="admin-reviews__edit-form">
-                  <div className="form-grid-2">
-                    <div className="form-group">
-                      <label>Category</label>
-                      <select
-                        value={editForm.category}
-                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                        required
-                      >
-                        <option value="Delivery">Delivery</option>
-                        <option value="Products">Products</option>
-                        <option value="Service">Service</option>
-                        <option value="Staff">Staff</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Rating (1 - 5)</label>
-                      <select
-                        value={editForm.rating}
-                        onChange={(e) => setEditForm({ ...editForm, rating: Number(e.target.value) })}
-                        required
-                      >
-                        <option value="5">5.0</option>
-                        <option value="4">4.0</option>
-                        <option value="3">3.0</option>
-                        <option value="2">2.0</option>
-                        <option value="1">1.0</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-grid-2">
-                    <div className="form-group">
-                      <label>Status</label>
-                      <select
-                        value={editForm.status}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                        required
-                      >
-                        <option value="Published">Published</option>
-                        <option value="Verification">Verification</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Language</label>
-                      <select
-                        value={editForm.language}
-                        onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
-                      >
-                        <option value="">Auto / Unspecified</option>
-                        <option value="Russian">Russian</option>
-                        <option value="English">English</option>
-                        <option value="Azerbaijani">Azerbaijani</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Review Comment Text</label>
-                    <textarea
-                      rows={5}
-                      value={editForm.comment}
-                      onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
-                      placeholder="Customer feedback..."
-                    />
-                  </div>
-
-                  <div className="admin-reviews__modal-footer">
-                    <button
-                      type="button"
-                      className="admin-reviews__btn-secondary"
-                      onClick={() => setEditingReview(null)}
-                      disabled={isSavingEdit}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="admin-reviews__btn-primary"
-                      disabled={isSavingEdit}
-                    >
-                      {isSavingEdit ? (
-                        <span className="btn-loader">
-                          <img src={loaderIconRed} alt="Saving..." className="btn-loader__icon" />
-                          Saving...
-                        </span>
-                      ) : 'Save Changes'}
-                    </button>
-                  </div>
-                </form>
               </motion.div>
             </div>
           )}
