@@ -28,7 +28,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const currentUserRole = user?.role || user?.Role;
   const hasAdminRole = isAllowedAdminRole(currentUserRole);
 
   if (authLoading || adminLoading) {
