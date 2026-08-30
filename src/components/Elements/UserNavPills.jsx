@@ -1,17 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import LogoutModal from './LogoutModal';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 import './UserNavPills.scss';
-
-const ALLOWED_ADMIN_ROLES = ['moderator', 'admin', 'super admin', 'superadmin'];
-const cleanRole = (role) => (role || '').toLowerCase().replace(/\s+/g, '');
-const isAllowedAdminRole = (role) => {
-  if (!role) return false;
-  return ALLOWED_ADMIN_ROLES.map(cleanRole).includes(cleanRole(role));
-};
 
 const UserNavPills = ({ onMenuClose }) => {
   const { user, authLoading, logout, isAuthenticated } = useAuth();
@@ -21,9 +13,6 @@ const UserNavPills = ({ onMenuClose }) => {
 
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
-
-  const currentUserRole = user?.role || user?.Role;
-  const hasAdminRole = isAllowedAdminRole(currentUserRole);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -158,15 +147,13 @@ const UserNavPills = ({ onMenuClose }) => {
               >
                 Promos
               </Link>
-              {hasAdminRole && (
-                <Link
-                  to="/admin"
-                  className="user-nav-capsule__dropdown-item"
-                  onClick={handleProfileClick}
-                >
-                  Admin
-                </Link>
-              )}
+              <Link
+                to="/admin/dashboard"
+                className="user-nav-capsule__dropdown-item"
+                onClick={handleProfileClick}
+              >
+                Admin
+              </Link>
               <button
                 type="button"
                 className="user-nav-capsule__dropdown-item"

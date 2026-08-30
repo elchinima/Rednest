@@ -892,6 +892,151 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Review deleted successfully." });
     }
 
+    [HttpGet("products")]
+    public async Task<IActionResult> GetProducts()
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Moderator, Admin and Super Admin roles can access products." });
+
+        var products = await _context.Products
+            .AsNoTracking()
+            .OrderBy(p => p.Category)
+            .ThenBy(p => p.Price)
+            .ToListAsync();
+
+        return Ok(products.Select(p => new
+        {
+            id = p.Id,
+            name = p.Name,
+            description = p.Description,
+            price = p.Price,
+            formattedPrice = p.Price.ToString("0.00"),
+            imageUrl = p.ImageUrl,
+            category = p.Category
+        }));
+    }
+
+    [HttpGet("products/{id:guid}")]
+    public async Task<IActionResult> GetProduct(Guid id)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
+
+        var product = await _context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (product == null)
+            return NotFound(new { message = "Product not found." });
+
+        return Ok(new
+        {
+            id = product.Id,
+            name = product.Name,
+            description = product.Description,
+            price = product.Price,
+            formattedPrice = product.Price.ToString("0.00"),
+            imageUrl = product.ImageUrl,
+            category = product.Category
+        });
+    }
+
+    [HttpPost("products")]
+    public async Task<IActionResult> CreateProduct([FromBody] AdminProductRequest request)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Moderator, Admin and Super Admin can add products." });
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return BadRequest(new { message = "Product name is required." });
+
+        if (!request.Price.HasValue || request.Price.Value < 0)
+            return BadRequest(new { message = "A valid product price is required." });
+
+        var category = string.IsNullOrWhiteSpace(request.Category) ? "Main Drinks" : request.Category.Trim();
+
+        var product = new Rednest.Core.Entities.Product
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Name.Trim(),
+            Description = request.Description?.Trim() ?? string.Empty,
+            Price = request.Price.Value,
+            ImageUrl = request.ImageUrl?.Trim() ?? string.Empty,
+            Category = category
+        };
+
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Product created successfully.",
+            id = product.Id,
+            name = product.Name,
+            description = product.Description,
+            price = product.Price,
+            formattedPrice = product.Price.ToString("0.00"),
+            imageUrl = product.ImageUrl,
+            category = product.Category
+        });
+    }
+
+    [HttpPut("products/{id:guid}")]
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] AdminProductRequest request)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Moderator, Admin and Super Admin can edit products." });
+
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product == null)
+            return NotFound(new { message = "Product not found." });
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+            product.Name = request.Name.Trim();
+
+        if (request.Description != null)
+            product.Description = request.Description.Trim();
+
+        if (request.Price.HasValue && request.Price.Value >= 0)
+            product.Price = request.Price.Value;
+
+        if (request.ImageUrl != null)
+            product.ImageUrl = request.ImageUrl.Trim();
+
+        if (!string.IsNullOrWhiteSpace(request.Category))
+            product.Category = request.Category.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Product updated successfully.",
+            id = product.Id,
+            name = product.Name,
+            description = product.Description,
+            price = product.Price,
+            formattedPrice = product.Price.ToString("0.00"),
+            imageUrl = product.ImageUrl,
+            category = product.Category
+        });
+    }
+
+    [HttpDelete("products/{id:guid}")]
+    public async Task<IActionResult> DeleteProduct(Guid id)
+    {
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can delete products." });
+
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product == null)
+            return NotFound(new { message = "Product not found." });
+
+        _context.Products.Remove(product);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Product deleted successfully." });
+    }
+
     private static bool IsAllowedAdminRole(UserRole role)
     {
         return role == UserRole.Moderator || role == UserRole.Admin || role == UserRole.SuperAdmin;
@@ -911,12 +1056,6 @@ public class AdminController : ControllerBase
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
-            return (false, null);
-
-        if (!Request.Cookies.TryGetValue("admin_session", out var token) || string.IsNullOrEmpty(token))
-            return (false, null);
-
-        if (!ValidateSignedAdminToken(token, userIdStr))
             return (false, null);
 
         var user = await _context.Users
@@ -960,32 +1099,39 @@ public class AdminController : ControllerBase
 
     private static string GenerateSignedAdminToken(string userId)
     {
-        var expiresAt = DateTimeOffset.UtcNow.AddHours(AdminSessionHours).ToUnixTimeSeconds();
-        var payload = $"{userId}|{expiresAt}";
         var key = Encoding.UTF8.GetBytes(GetAdminSigningKey());
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var payload = $"{userId}:{timestamp}";
         var payloadBytes = Encoding.UTF8.GetBytes(payload);
         var hash = HMACSHA256.HashData(key, payloadBytes);
         var signature = Convert.ToBase64String(hash);
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{payload}|{signature}"));
+        return $"{payload}:{signature}";
     }
 
     private static bool ValidateSignedAdminToken(string token, string expectedUserId)
     {
         try
         {
-            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(token));
-            var parts = decoded.Split('|');
-            if (parts.Length != 3) return false;
+            var parts = token.Split(':');
+            if (parts.Length != 3)
+                return false;
 
             var userId = parts[0];
-            if (!long.TryParse(parts[1], out var expiresAt)) return false;
+            var timestampStr = parts[1];
             var signature = parts[2];
 
-            if (userId != expectedUserId) return false;
-            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expiresAt) return false;
+            if (userId != expectedUserId)
+                return false;
 
-            var payload = $"{userId}|{expiresAt}";
+            if (!long.TryParse(timestampStr, out var timestamp))
+                return false;
+
+            var tokenTime = DateTimeOffset.FromUnixTimeSeconds(timestamp);
+            if (DateTimeOffset.UtcNow - tokenTime > TimeSpan.FromHours(AdminSessionHours))
+                return false;
+
             var key = Encoding.UTF8.GetBytes(GetAdminSigningKey());
+            var payload = $"{userId}:{timestampStr}";
             var payloadBytes = Encoding.UTF8.GetBytes(payload);
             var expectedHash = HMACSHA256.HashData(key, payloadBytes);
             var expectedSignature = Convert.ToBase64String(expectedHash);
@@ -1027,3 +1173,11 @@ public class AdminUpdateUserRequest
     public bool? Subscribe { get; set; }
 }
 
+public class AdminProductRequest
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public decimal? Price { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? Category { get; set; }
+}

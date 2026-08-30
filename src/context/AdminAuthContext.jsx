@@ -1,17 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
-import AuthContext from './AuthContext';
 
 const AdminAuthContext = createContext(null);
 
 export const AdminAuthProvider = ({ children }) => {
-  const authCtx = useContext(AuthContext);
-  const updateUser = authCtx?.updateUser;
-  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [isAdminAuth, setIsAdminAuth] = useState(true);
   const [adminRole, setAdminRole] = useState(null);
-  const [loading, setLoading] = useState(() => {
-    return typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-  });
+  const [loading, setLoading] = useState(false);
 
   const verify = useCallback(async () => {
     setLoading(true);
@@ -25,52 +20,16 @@ export const AdminAuthProvider = ({ children }) => {
         setIsAdminAuth(true);
         if (data && data.role) {
           setAdminRole(data.role);
-          updateUser({ role: data.role });
         }
         return { ok: true, role: data?.role, user: data };
-      } else {
-        setIsAdminAuth(false);
-        setAdminRole(null);
-        return { ok: false, status: res.status };
       }
+      return { ok: false, status: res.status };
     } catch {
-      setIsAdminAuth(false);
-      setAdminRole(null);
       return { ok: false };
     } finally {
       setLoading(false);
     }
-  }, [updateUser]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-      verify();
-    }
-  }, [verify]);
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-        verify();
-      }
-    };
-
-    const handleAdminUnauthorized = () => {
-      verify();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', handleFocus);
-    window.addEventListener('admin:unauthorized', handleAdminUnauthorized);
-    window.addEventListener('admin:verify', handleAdminUnauthorized);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleFocus);
-      window.removeEventListener('admin:unauthorized', handleAdminUnauthorized);
-      window.removeEventListener('admin:verify', handleAdminUnauthorized);
-    };
-  }, [verify]);
+  }, []);
 
   const adminLogin = useCallback(async (password) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -82,12 +41,11 @@ export const AdminAuthProvider = ({ children }) => {
     });
     if (res.ok) {
       setIsAdminAuth(true);
-      await verify();
       return { ok: true };
     }
     const data = await res.json().catch(() => ({}));
     return { ok: false, status: res.status, message: data.message || 'Incorrect password. Please try again.' };
-  }, [verify]);
+  }, []);
 
   const adminLogout = useCallback(async () => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -115,4 +73,5 @@ export const useAdminAuth = () => {
 };
 
 export default AdminAuthContext;
+
 

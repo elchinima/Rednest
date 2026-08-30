@@ -17,6 +17,7 @@ const UserReviews = lazy(() => import('../components/UserPages/Reviews/Reviews')
 const Basket = lazy(() => import('../components/PublicPages/Basket/Basket'));
 const AdminLogin = lazy(() => import('../components/AdminPages/AdminLogin/AdminLogin'));
 const Dashboard = lazy(() => import('../components/AdminPages/Dashboard/Dashboard'));
+const AdminProducts = lazy(() => import('../components/AdminPages/Products/Products'));
 const AdminOrders = lazy(() => import('../components/AdminPages/Orders/Orders'));
 const Users = lazy(() => import('../components/AdminPages/Users/Users'));
 const Database = lazy(() => import('../components/AdminPages/Database/Database'));
@@ -132,10 +133,15 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           } />
 
-          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={
             <AdminProtectedRoute>
               <Dashboard />
+            </AdminProtectedRoute>
+          } />
+          <Route path="/admin/products" element={
+            <AdminProtectedRoute>
+              <AdminProducts />
             </AdminProtectedRoute>
           } />
           <Route path="/admin/orders" element={
@@ -144,12 +150,12 @@ const AnimatedRoutes = () => {
             </AdminProtectedRoute>
           } />
           <Route path="/admin/users" element={
-            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
+            <AdminProtectedRoute>
               <Users />
             </AdminProtectedRoute>
           } />
           <Route path="/admin/database" element={
-            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
+            <AdminProtectedRoute>
               <Database />
             </AdminProtectedRoute>
           } />
