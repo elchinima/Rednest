@@ -13,7 +13,9 @@ export const AdminAuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
-      const res = await fetchWithRefresh(`${apiUrl}/api/admin/verify`);
+      const res = await fetchWithRefresh(`${apiUrl}/api/admin/verify`, {
+        skipAuthRedirect: true,
+      });
       setIsAdminAuth(res.ok);
       return res.ok;
     } catch {
@@ -36,6 +38,7 @@ export const AdminAuthProvider = ({ children }) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
+      skipAuthRedirect: true,
     });
     if (res.ok) {
       setIsAdminAuth(true);
@@ -49,6 +52,7 @@ export const AdminAuthProvider = ({ children }) => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
     await fetchWithRefresh(`${apiUrl}/api/admin/logout`, {
       method: 'POST',
+      skipAuthRedirect: true,
     });
     setIsAdminAuth(false);
   }, []);
@@ -67,3 +71,4 @@ export const useAdminAuth = () => {
 };
 
 export default AdminAuthContext;
+

@@ -31,7 +31,8 @@ var dataSource = new NpgsqlDataSourceBuilder(connectionString)
     .EnableDynamicJson()
     .Build();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(dataSource));
+    options.UseNpgsql(dataSource)
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IGeoLocationService, GeoLocationService>();
 builder.Services.AddScoped<IEmailService, BrevoEmailService>();

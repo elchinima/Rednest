@@ -551,6 +551,50 @@
     }
   }
 
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    white-space: nowrap;
+
+    &--success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    &--danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    &--primary {
+      background: rgba($color-primary, 0.18);
+      color: #fca5a5;
+      border: 1px solid rgba($color-primary, 0.4);
+    }
+
+    &--muted {
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    &--info {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+  }
+
   &__badges {
     display: flex;
     align-items: center;
@@ -1389,6 +1433,15 @@
       align-items: flex-start;
       gap: 12px;
       cursor: pointer;
+
+      &--disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+
+        input[type='checkbox'] {
+          cursor: not-allowed;
+        }
+      }
 
       input[type='checkbox'] {
         width: 18px;

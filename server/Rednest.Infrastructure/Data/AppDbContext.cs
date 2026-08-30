@@ -28,6 +28,10 @@ public class AppDbContext : DbContext
                   .HasColumnType("decimal(10,2)")
                   .HasDefaultValue(0.00m);
 
+            entity.Property(e => e.Role)
+                  .HasColumnType("text")
+                  .HasDefaultValue("Customer");
+
             entity.Property(e => e.Addresses)
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'[]'::jsonb");

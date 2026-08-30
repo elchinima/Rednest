@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminLayout from '../AdminLayout/AdminLayout';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useAuth } from '../../../context/AuthContext';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import AdminTableActions from '../../Elements/AdminTableActions';
@@ -76,6 +77,7 @@ const fadeUp = {
 };
 
 const Users = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -175,9 +177,22 @@ const Users = () => {
     });
   };
 
+  const isEditingSelf = Boolean(
+    currentUser &&
+    editingUser &&
+    ((currentUser.id && String(currentUser.id).toLowerCase() === String(editingUser.id).toLowerCase()) ||
+     (currentUser.Id && String(currentUser.Id).toLowerCase() === String(editingUser.id).toLowerCase()) ||
+     (currentUser.email && editingUser.email && currentUser.email.toLowerCase() === editingUser.email.toLowerCase()))
+  );
+
   const handleSaveUser = async (e) => {
     e.preventDefault();
     if (!editingUser) return;
+
+    if (isEditingSelf && editForm.isActive === false) {
+      alert('You cannot deactivate or block your own account.');
+      return;
+    }
 
     setIsSavingUser(true);
     try {
@@ -514,6 +529,7 @@ const Users = () => {
                 <thead>
                   <tr>
                     <th>User</th>
+                    <th>Role</th>
                     <th>Status</th>
                     <th>Balance</th>
                     <th>Orders & Spent</th>
@@ -561,6 +577,12 @@ const Users = () => {
                             </button>
                           </div>
                         </div>
+                      </td>
+
+                      <td>
+                        <span className={`badge ${u.role === 'Admin' ? 'badge--primary' : 'badge--muted'}`}>
+                          {u.role || 'User'}
+                        </span>
                       </td>
 
                       <td>
@@ -988,15 +1010,20 @@ const Users = () => {
                   </div>
 
                   <div className="toggles-section">
-                    <label className="toggle-item">
+                    <label className={`toggle-item${isEditingSelf ? ' toggle-item--disabled' : ''}`}>
                       <input
                         type="checkbox"
-                        checked={editForm.isActive}
-                        onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                        checked={isEditingSelf ? true : editForm.isActive}
+                        disabled={isEditingSelf}
+                        onChange={(e) => !isEditingSelf && setEditForm({ ...editForm, isActive: e.target.checked })}
                       />
                       <span className="toggle-label">
                         <strong>Account Active</strong>
-                        <small>Uncheck to block user from logging in</small>
+                        <small>
+                          {isEditingSelf
+                            ? 'You cannot block or deactivate your own account'
+                            : 'Uncheck to block user from logging in'}
+                        </small>
                       </span>
                     </label>
 

@@ -13,7 +13,7 @@ const LoaderIcon = () => (
 );
 
 const AdminLogin = () => {
-  const { adminLogin, isAdminAuth } = useAdminAuth();
+  const { adminLogin, isAdminAuth, loading: adminLoading } = useAdminAuth();
   const { isAuthenticated, authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,7 +21,7 @@ const AdminLogin = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (authLoading) {
+  if (authLoading || adminLoading) {
     return (
       <div className="admin-loading-screen">
         <img src={loaderIcon} alt="Loading..." className="admin-loading-spinner" />

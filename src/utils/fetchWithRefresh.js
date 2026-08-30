@@ -30,6 +30,7 @@ async function doRefresh() {
 }
 
 export async function fetchWithRefresh(url, options = {}) {
+  const skipAuthRedirect = options.skipAuthRedirect || false;
   const clientHeaders = await ensureClientHintsHeaders();
   const opts = {
     ...options,
@@ -39,6 +40,7 @@ export async function fetchWithRefresh(url, options = {}) {
       ...(options.headers || {}),
     },
   };
+  delete opts.skipAuthRedirect;
 
   let response;
   try {
@@ -69,7 +71,7 @@ export async function fetchWithRefresh(url, options = {}) {
     }
   }
 
-  if (response.status === 401) {
+  if (response.status === 401 && !skipAuthRedirect) {
     if (!isRefreshing) {
       isRefreshing = true;
       refreshPromise = doRefresh().finally(() => {

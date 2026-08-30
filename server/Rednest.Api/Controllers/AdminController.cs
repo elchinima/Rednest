@@ -7,10 +7,10 @@ public class AdminController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AppDbContext _context;
-    private static readonly HashSet<string> _validSessions = new();
 
     private static readonly string[] AllowedExtensions = [".png", ".jpg", ".jpeg"];
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
+    private const int AdminSessionHours = 8;
 
     public AdminController(IHttpClientFactory httpClientFactory, AppDbContext context)
     {
@@ -29,16 +29,9 @@ public class AdminController : ControllerBase
         if (string.IsNullOrEmpty(adminSecret) || request.Password != adminSecret)
             return Unauthorized(new { message = "Incorrect password." });
 
-        var token = GenerateSessionToken();
-        _validSessions.Add(token);
+        var token = GenerateSignedAdminToken(userIdStr);
 
-        Response.Cookies.Append("admin_session", token, new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTimeOffset.UtcNow.AddHours(8)
-        });
+        Response.Cookies.Append("admin_session", token, AdminSessionCookieOptions());
 
         return Ok(new { message = "OK" });
     }
@@ -46,10 +39,7 @@ public class AdminController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        if (Request.Cookies.TryGetValue("admin_session", out var token))
-            _validSessions.Remove(token ?? "");
-
-        Response.Cookies.Delete("admin_session");
+        Response.Cookies.Delete("admin_session", AdminSessionCookieOptions());
         return Ok();
     }
 
@@ -109,6 +99,7 @@ public class AdminController : ControllerBase
                 name = u.Name,
                 profilePictureUrl = u.ProfilePictureUrl,
                 balance = u.Balance,
+                role = u.Role ?? "Customer",
                 isActive = u.Session?.IsActive ?? true,
                 twoFactorEnabled = u.Session?.TwoFactorEnabled ?? false,
                 subscribe = u.Session?.Subscribe ?? false,
@@ -156,6 +147,7 @@ public class AdminController : ControllerBase
             name = user.Name,
             profilePictureUrl = user.ProfilePictureUrl,
             balance = user.Balance,
+            role = user.Role ?? "User",
             addresses = user.Addresses ?? new List<UserAddress>(),
             paymentMethods = (user.PaymentMethods ?? new List<UserPaymentMethod>()).Select(pm => new
             {
@@ -206,6 +198,15 @@ public class AdminController : ControllerBase
         if (!IsAdminAuthenticated())
             return Unauthorized();
 
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+        {
+            if (request.IsActive.HasValue && !request.IsActive.Value)
+            {
+                return BadRequest(new { message = "You cannot deactivate or block your own account." });
+            }
+        }
+
         var user = await _context.Users
             .Include(u => u.Session)
             .FirstOrDefaultAsync(u => u.Id == id);
@@ -227,6 +228,9 @@ public class AdminController : ControllerBase
 
         if (request.Balance.HasValue)
             user.Balance = Math.Max(0, Math.Round(request.Balance.Value, 2));
+
+        if (!string.IsNullOrWhiteSpace(request.Role))
+            user.Role = request.Role.Trim();
 
         if (user.Session == null)
         {
@@ -265,6 +269,7 @@ public class AdminController : ControllerBase
                 user.Name,
                 user.Email,
                 user.Balance,
+                role = user.Role,
                 isActive = user.Session.IsActive,
                 twoFactorEnabled = user.Session.TwoFactorEnabled,
                 subscribe = user.Session.Subscribe
@@ -277,6 +282,12 @@ public class AdminController : ControllerBase
     {
         if (!IsAdminAuthenticated())
             return Unauthorized();
+
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+        {
+            return BadRequest(new { message = "You cannot terminate your own active sessions from the admin panel." });
+        }
 
         var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.UserId == id);
         if (session == null)
@@ -293,6 +304,12 @@ public class AdminController : ControllerBase
     {
         if (!IsAdminAuthenticated())
             return Unauthorized();
+
+        var currentUserIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+        {
+            return BadRequest(new { message = "You cannot delete your own account." });
+        }
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
@@ -812,16 +829,69 @@ public class AdminController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out _))
             return false;
 
-        return Request.Cookies.TryGetValue("admin_session", out var token)
-               && !string.IsNullOrEmpty(token)
-               && _validSessions.Contains(token);
+        if (!Request.Cookies.TryGetValue("admin_session", out var token) || string.IsNullOrEmpty(token))
+            return false;
+
+        return ValidateSignedAdminToken(token, userIdStr);
     }
 
-    private static string GenerateSessionToken()
+    private static string GetAdminSigningKey()
     {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        return Convert.ToBase64String(bytes);
+        var key = Environment.GetEnvironmentVariable("ADMIN_SECRET") ?? "";
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";
+        return $"admin_session_{key}_{jwtSecret}";
     }
+
+    private static string GenerateSignedAdminToken(string userId)
+    {
+        var expiresAt = DateTimeOffset.UtcNow.AddHours(AdminSessionHours).ToUnixTimeSeconds();
+        var payload = $"{userId}|{expiresAt}";
+        var key = Encoding.UTF8.GetBytes(GetAdminSigningKey());
+        var payloadBytes = Encoding.UTF8.GetBytes(payload);
+        var hash = HMACSHA256.HashData(key, payloadBytes);
+        var signature = Convert.ToBase64String(hash);
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes($"{payload}|{signature}"));
+    }
+
+    private static bool ValidateSignedAdminToken(string token, string expectedUserId)
+    {
+        try
+        {
+            var decoded = Encoding.UTF8.GetString(Convert.FromBase64String(token));
+            var parts = decoded.Split('|');
+            if (parts.Length != 3) return false;
+
+            var userId = parts[0];
+            if (!long.TryParse(parts[1], out var expiresAt)) return false;
+            var signature = parts[2];
+
+            if (userId != expectedUserId) return false;
+            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expiresAt) return false;
+
+            var payload = $"{userId}|{expiresAt}";
+            var key = Encoding.UTF8.GetBytes(GetAdminSigningKey());
+            var payloadBytes = Encoding.UTF8.GetBytes(payload);
+            var expectedHash = HMACSHA256.HashData(key, payloadBytes);
+            var expectedSignature = Convert.ToBase64String(expectedHash);
+
+            return CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(signature),
+                Encoding.UTF8.GetBytes(expectedSignature));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static CookieOptions AdminSessionCookieOptions() => new()
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.None,
+        Path = "/",
+        Expires = DateTimeOffset.UtcNow.AddHours(AdminSessionHours)
+    };
 }
 
 public record AdminLoginRequest(string Password);
@@ -835,6 +905,7 @@ public class AdminUpdateUserRequest
     public string? Name { get; set; }
     public string? Email { get; set; }
     public decimal? Balance { get; set; }
+    public string? Role { get; set; }
     public bool? IsActive { get; set; }
     public bool? TwoFactorEnabled { get; set; }
     public bool? Subscribe { get; set; }
