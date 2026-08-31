@@ -275,6 +275,16 @@ public class AdminController : ControllerBase
             {
                 if (parsedRole != user.Role)
                 {
+                    if (user.Role == UserRole.Bot || user.Role == UserRole.AI)
+                    {
+                        return BadRequest(new { message = "System roles 'Bot' and 'AI' can only be modified directly in the database." });
+                    }
+
+                    if (parsedRole == UserRole.Bot || parsedRole == UserRole.AI)
+                    {
+                        return BadRequest(new { message = "System roles 'Bot' and 'AI' cannot be assigned via the admin panel." });
+                    }
+
                     var currentUserRole = currentUser?.Role ?? UserRole.Customer;
 
                     if (currentUserId == id)

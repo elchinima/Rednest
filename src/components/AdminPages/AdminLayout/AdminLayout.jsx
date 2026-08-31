@@ -119,7 +119,7 @@ const AdminLayout = ({ children }) => {
 
   useEffect(() => {
     if (accessDeniedToast) {
-      const timer = setTimeout(() => setAccessDeniedToast(''), 3500);
+      const timer = setTimeout(() => setAccessDeniedToast(''), 5000);
       return () => clearTimeout(timer);
     }
   }, [accessDeniedToast]);

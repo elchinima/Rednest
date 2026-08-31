@@ -48,7 +48,7 @@ const Products = () => {
   const showToast = (message, type = 'success') => {
     const isErr = type === 'error' || /denied|failed|error|restricted/i.test(message);
     setToast({ message, type: isErr ? 'error' : 'success' });
-    setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
+    setTimeout(() => setToast({ message: '', type: 'success' }), 5000);
   };
 
   const getProductPriceInfo = (prod) => {

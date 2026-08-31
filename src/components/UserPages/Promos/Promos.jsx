@@ -126,6 +126,15 @@ const Promos = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (activationMessage) {
+      const timer = setTimeout(() => {
+        setActivationMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [activationMessage]);
+
   const handleCopy = (code) => {
     if (!code) return;
     navigator.clipboard.writeText(code);

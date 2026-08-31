@@ -138,7 +138,7 @@ const Promos = () => {
   const showToast = (message, type = 'success') => {
     const isErr = type === 'error' || /denied|failed|error|restricted/i.test(message);
     setToast({ message, type: isErr ? 'error' : 'success' });
-    setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
+    setTimeout(() => setToast({ message: '', type: 'success' }), 5000);
   };
 
   const copyToClipboard = (text, id) => {
@@ -654,8 +654,10 @@ const Promos = () => {
                         <td>
                           <div className="admin-promos__reward-cell">
                             <span className={rewardBadge.className}>{rewardBadge.label}</span>
-                            {p.prizeName && (
-                              <span className="admin-promos__reward-desc">{p.prizeName}</span>
+                            {p.prizeDescription && (
+                              <span className="admin-promos__reward-desc" title={p.prizeDescription}>
+                                {p.prizeDescription}
+                              </span>
                             )}
                           </div>
                         </td>

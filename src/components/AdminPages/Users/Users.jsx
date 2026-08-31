@@ -68,6 +68,7 @@ const getInitials = (name, email) => {
 };
 
 const ALL_ROLES = ['Customer', 'Bot', 'Support', 'Moderator', 'Admin', 'Super Admin', 'AI'];
+const ASSIGNABLE_ROLES = ['Customer', 'Support', 'Moderator', 'Admin', 'Super Admin'];
 
 const ROLE_LEVELS = {
   Customer: 0,
@@ -149,7 +150,7 @@ const Users = () => {
   const showToast = (message, type = 'success') => {
     const isErr = type === 'error' || /denied|failed|error|restricted/i.test(message);
     setToast({ message, type: isErr ? 'error' : 'success' });
-    setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
+    setTimeout(() => setToast({ message: '', type: 'success' }), 5000);
   };
 
   const fetchUsers = useCallback(async () => {
@@ -231,8 +232,9 @@ const Users = () => {
   const targetUserLevel = getRoleLevel(targetUserRole);
 
   const isSuperAdmin = currentUserLevel >= 5 || currentUserRole === 'Super Admin' || currentUserRole === 'SuperAdmin';
+  const isTargetSystemRole = targetUserRole === 'Bot' || targetUserRole === 'AI';
 
-  const allowedRolesToAssign = ALL_ROLES.filter((r) => getRoleLevel(r) < currentUserLevel);
+  const allowedRolesToAssign = ASSIGNABLE_ROLES.filter((r) => getRoleLevel(r) < currentUserLevel);
 
   let isRoleDisabled = false;
   let roleHelperText = '';
@@ -240,6 +242,9 @@ const Users = () => {
   if (isEditingSelf) {
     isRoleDisabled = true;
     roleHelperText = 'You cannot change your own role.';
+  } else if (isTargetSystemRole) {
+    isRoleDisabled = true;
+    roleHelperText = 'System roles (Bot and AI) can only be modified directly in the database.';
   } else if (targetUserLevel >= currentUserLevel) {
     isRoleDisabled = true;
     roleHelperText = 'You cannot modify the role of a user with an equal or higher role than yours.';
@@ -255,22 +260,26 @@ const Users = () => {
     if (!editingUser) return;
 
     if (isEditingSelf && editForm.isActive === false) {
-      alert('You cannot deactivate or block your own account.');
+      showToast('You cannot deactivate or block your own account.', 'error');
       return;
     }
 
     if (editForm.role !== editingUser.role) {
+      if (isTargetSystemRole || editForm.role === 'Bot' || editForm.role === 'AI') {
+        showToast('System roles (Bot and AI) can only be modified directly in the database.', 'error');
+        return;
+      }
       const newRoleLevel = getRoleLevel(editForm.role);
       if (isEditingSelf) {
-        alert('You cannot change your own role.');
+        showToast('You cannot change your own role.', 'error');
         return;
       }
       if (targetUserLevel >= currentUserLevel) {
-        alert('You cannot modify the role of a user with an equal or higher role than yours.');
+        showToast('You cannot modify the role of a user with an equal or higher role than yours.', 'error');
         return;
       }
       if (newRoleLevel >= currentUserLevel) {
-        alert(`You cannot assign your own role (${currentUserRole}) or a higher role.`);
+        showToast(`You cannot assign your own role (${currentUserRole}) or a higher role.`, 'error');
         return;
       }
     }

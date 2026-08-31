@@ -43,6 +43,7 @@ const Basket = () => {
   const [productsLoading, setProductsLoading] = useState(true);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [flashingItemIds, setFlashingItemIds] = useState({});
   const [userPromos, setUserPromos] = useState([]);
   const [selectedPromoCode, setSelectedPromoCode] = useState('');
 
