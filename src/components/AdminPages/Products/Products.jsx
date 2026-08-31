@@ -918,21 +918,23 @@ const Products = () => {
                     <p>{activeProduct.description || 'No description provided for this item.'}</p>
                   </div>
 
-                  <div className="product-modal__details-box">
-                    <span>Units Sold</span>
-                    <p style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
-                      {activeProduct.totalSold ?? 0} {activeProduct.totalSold === 1 ? 'unit' : 'units'}
-                    </p>
-                  </div>
+                  <div className="product-modal__details-row">
+                    <div className="product-modal__details-box">
+                      <span>Units Sold</span>
+                      <p style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>
+                        {activeProduct.totalSold ?? 0} {activeProduct.totalSold === 1 ? 'unit' : 'units'}
+                      </p>
+                    </div>
 
-                  <div className="product-modal__details-box">
-                    <span>Catalog Status</span>
-                    <div style={{ marginTop: 4 }}>
-                      <span
-                        className={`admin-products__status-badge ${activeProduct.isActive !== false ? 'admin-products__status-badge--active' : 'admin-products__status-badge--inactive'}`}
-                      >
-                        {activeProduct.isActive !== false ? 'Active (Visible in menu)' : 'Inactive (Hidden)'}
-                      </span>
+                    <div className="product-modal__details-box">
+                      <span>Catalog Status</span>
+                      <div style={{ marginTop: 4 }}>
+                        <span
+                          className={`admin-products__status-badge ${activeProduct.isActive !== false ? 'admin-products__status-badge--active' : 'admin-products__status-badge--inactive'}`}
+                        >
+                          {activeProduct.isActive !== false ? 'Active (Visible in menu)' : 'Inactive (Hidden)'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -1005,26 +1007,28 @@ const Products = () => {
                 </div>
 
                 <form className="product-modal__form" onSubmit={handleSaveProduct}>
-                  <div className="product-modal__form-group">
-                    <div className="product-modal__label-row">
-                      <label>Product Name *</label>
-                      <span className={`product-modal__counter ${form.name.length >= 50 ? 'limit' : ''}`}>
-                        {form.name.length}/50
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="e.g. Red Latte, Croissant"
-                      value={form.name}
-                      maxLength={50}
-                      onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 50) })}
-                      required
-                    />
-                  </div>
-
                   <div className="product-modal__form-row">
                     <div className="product-modal__form-group">
-                      <label>Category *</label>
+                      <div className="product-modal__label-row">
+                        <label>Product Name *</label>
+                        <span className={`product-modal__counter ${form.name.length >= 50 ? 'limit' : ''}`}>
+                          {form.name.length}/50
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. Red Latte, Croissant"
+                        value={form.name}
+                        maxLength={50}
+                        onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 50) })}
+                        required
+                      />
+                    </div>
+
+                    <div className="product-modal__form-group">
+                      <div className="product-modal__label-row">
+                        <label>Category *</label>
+                      </div>
                       <select
                         value={form.category}
                         onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -1036,9 +1040,13 @@ const Products = () => {
                         ))}
                       </select>
                     </div>
+                  </div>
 
+                  <div className="product-modal__form-row">
                     <div className="product-modal__form-group">
-                      <label>Regular Price (₼) *</label>
+                      <div className="product-modal__label-row">
+                        <label>Regular Price (₼) *</label>
+                      </div>
                       <input
                         type="number"
                         step="0.01"
@@ -1071,8 +1079,8 @@ const Products = () => {
                   </div>
 
                   <div className="product-modal__form-group">
-                    <label>Description</label>
                     <div className="product-modal__label-row">
+                      <label>Description</label>
                       <span className={`product-modal__counter ${form.description.length >= 250 ? 'limit' : ''}`}>
                         {form.description.length}/250
                       </span>

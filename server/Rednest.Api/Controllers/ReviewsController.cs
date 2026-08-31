@@ -80,6 +80,18 @@ public class ReviewsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        var cutoffTime = GetBakuTime().AddDays(-15);
+
+        var expired = await _db.Reviews
+            .Where(r => r.UserId == userId.Value && r.Status.Status == ReviewStatus.Cancelled && r.Status.UpdatedAt <= cutoffTime)
+            .ToListAsync();
+
+        if (expired.Count > 0)
+        {
+            _db.Reviews.RemoveRange(expired);
+            await _db.SaveChangesAsync();
+        }
+
         var reviews = await _db.Reviews
             .Where(r => r.UserId == userId.Value)
             .OrderByDescending(r => r.CreatedAt)
@@ -102,6 +114,7 @@ public class ReviewsController : ControllerBase
                 avatarUrl = user?.ProfilePictureUrl,
                 category = r.Category.ToString(),
                 status = r.Status.Status.ToString(),
+                statusUpdatedAt = r.Status.UpdatedAt,
                 language = r.Language?.ToString(),
                 rating = r.ReviewData.Rating,
                 comment = r.ReviewData.Comment,

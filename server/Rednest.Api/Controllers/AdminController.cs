@@ -739,6 +739,18 @@ public class AdminController : ControllerBase
         if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
 
+        var cutoffTime = DateTime.UtcNow.AddHours(4).AddDays(-15);
+
+        var expired = await _context.Reviews
+            .Where(r => r.Status.Status == ReviewStatus.Cancelled && r.Status.UpdatedAt <= cutoffTime)
+            .ToListAsync();
+
+        if (expired.Count > 0)
+        {
+            _context.Reviews.RemoveRange(expired);
+            await _context.SaveChangesAsync();
+        }
+
         var reviews = await _context.Reviews
             .AsNoTracking()
             .OrderByDescending(r => r.CreatedAt)

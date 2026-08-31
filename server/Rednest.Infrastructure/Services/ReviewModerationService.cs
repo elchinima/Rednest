@@ -26,20 +26,19 @@ public class ReviewModerationService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var apiKey = Environment.GetEnvironmentVariable("REVIEW_AI_API");
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            _logger.LogWarning("REVIEW_AI_API is not configured. Review moderation service is disabled.");
-            return;
-        }
-
         _logger.LogInformation("ReviewModerationService started with model {Model}.", Model);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await ProcessNextBatchAsync(apiKey, stoppingToken);
+                await CleanupExpiredCancelledReviewsAsync(stoppingToken);
+
+                var apiKey = Environment.GetEnvironmentVariable("REVIEW_AI_API");
+                if (!string.IsNullOrWhiteSpace(apiKey))
+                {
+                    await ProcessNextBatchAsync(apiKey, stoppingToken);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -54,6 +53,33 @@ public class ReviewModerationService : BackgroundService
         }
 
         _logger.LogInformation("ReviewModerationService stopped.");
+    }
+
+    private async Task CleanupExpiredCancelledReviewsAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var cutoff = GetBakuTime().AddDays(-15);
+
+            var expiredCancelledReviews = await db.Reviews
+                .Where(r => r.Status.Status == ReviewStatus.Cancelled && r.Status.UpdatedAt <= cutoff)
+                .ToListAsync(stoppingToken);
+
+            if (expiredCancelledReviews.Count > 0)
+            {
+                _logger.LogInformation("Deleting {Count} cancelled reviews older than 15 days (cutoff: {Cutoff}).",
+                    expiredCancelledReviews.Count, cutoff);
+                db.Reviews.RemoveRange(expiredCancelledReviews);
+                await db.SaveChangesAsync(stoppingToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while cleaning up expired cancelled reviews.");
+        }
     }
 
     private async Task ProcessNextBatchAsync(string apiKey, CancellationToken stoppingToken)

@@ -277,26 +277,38 @@
 
       .home-price-container {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+        align-items: center;
+        width: 100%;
+        margin-top: auto;
+        min-height: 32px;
+
+        &.has-discount {
+          justify-content: space-between;
+        }
+
+        &.no-discount {
+          justify-content: center;
+        }
       }
 
       .home-old-price-pill {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 2px 7px;
+        padding: 3px 8px;
         border-radius: $border-radius-full;
-        font-size: 0.72rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        backdrop-filter: blur(4px);
+        white-space: nowrap;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 
         .discount-tag {
           color: #ffffff;
           font-weight: 700;
+          letter-spacing: 0.02em;
         }
 
         .old-price {
@@ -304,13 +316,17 @@
           text-decoration: line-through;
           text-decoration-color: #ef4444;
           text-decoration-thickness: 1.5px;
+          font-variant-numeric: tabular-nums;
         }
       }
 
       .price {
         font-weight: 700;
         color: $color-text;
-        font-size: 1.2rem;
+        font-size: 1.25rem;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+        line-height: 1;
       }
     }
   }
