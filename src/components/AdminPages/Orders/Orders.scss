@@ -22,6 +22,10 @@
     border-radius: $border-radius-md;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
 
+    &--error {
+      background: rgba(239, 68, 68, 0.95);
+    }
+
     @media (max-width: 640px) {
       top: 16px;
       right: 16px;

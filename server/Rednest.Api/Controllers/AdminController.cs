@@ -973,18 +973,6 @@ public class AdminController : ControllerBase
         if (pixel == null)
             return StatusCode(500, new { message = "Pixel system user account is not initialized." });
 
-        var code = (request.PromoCode ?? "").Trim().ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            var randomSuffix = Convert.ToHexString(RandomNumberGenerator.GetBytes(3)).ToUpperInvariant();
-            code = $"RED-GIFT-{randomSuffix}";
-        }
-
-        if (await _context.UserPromos.AnyAsync(p => p.Codes.PromoCode.ToUpper() == code))
-        {
-            return BadRequest(new { message = $"Promo code '{code}' already exists." });
-        }
-
         var expiryDays = Math.Clamp(request.ExpiryDays, 1, 30);
         var now = DateTime.UtcNow;
 
@@ -1030,15 +1018,8 @@ public class AdminController : ControllerBase
             };
 
         var promoId = Guid.NewGuid();
-        var barCodeDigits = new string(promoId.ToString().Where(char.IsDigit).ToArray());
-        if (barCodeDigits.Length < 12)
-        {
-            barCodeDigits = barCodeDigits.PadRight(12, '7');
-        }
-        else if (barCodeDigits.Length > 16)
-        {
-            barCodeDigits = barCodeDigits[..16];
-        }
+        var barCode = new string(promoId.ToString().Where(char.IsDigit).ToArray());
+        var promoCode = promoId.ToString("N")[..8].ToUpper();
 
         var promo = new UserPromo
         {
@@ -1046,8 +1027,8 @@ public class AdminController : ControllerBase
             UserId = pixel.Id,
             Codes = new PromoCodes
             {
-                PromoCode = code,
-                BarCode = barCodeDigits
+                PromoCode = promoCode,
+                BarCode = barCode
             },
             PrizeInfo = new PrizeInfo
             {
@@ -1094,8 +1075,8 @@ public class AdminController : ControllerBase
     [HttpPatch("promos/{id:guid}/toggle-active")]
     public async Task<IActionResult> TogglePromoActive(Guid id)
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can update promos." });
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can change promo active status." });
 
         var promo = await _context.UserPromos.FirstOrDefaultAsync(p => p.Id == id);
         if (promo == null)

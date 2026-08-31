@@ -141,7 +141,7 @@ const AnimatedRoutes = () => {
             </AdminProtectedRoute>
           } />
           <Route path="/admin/products" element={
-            <AdminProtectedRoute>
+            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
               <AdminProducts />
             </AdminProtectedRoute>
           } />
@@ -151,17 +151,17 @@ const AnimatedRoutes = () => {
             </AdminProtectedRoute>
           } />
           <Route path="/admin/promos" element={
-            <AdminProtectedRoute>
+            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
               <AdminPromos />
             </AdminProtectedRoute>
           } />
           <Route path="/admin/users" element={
-            <AdminProtectedRoute>
+            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
               <Users />
             </AdminProtectedRoute>
           } />
           <Route path="/admin/database" element={
-            <AdminProtectedRoute>
+            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
               <Database />
             </AdminProtectedRoute>
           } />

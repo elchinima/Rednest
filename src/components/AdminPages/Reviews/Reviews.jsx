@@ -110,7 +110,7 @@ const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [successToast, setSuccessToast] = useState('');
+  const [toast, setToast] = useState({ message: '', type: 'success' });
 
   const [searchInput, setSearchInput] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -129,9 +129,10 @@ const AdminReviews = () => {
   const currentUserRole = (user?.role || user?.Role || '').toLowerCase().replace(/\s+/g, '');
   const isSuperAdmin = currentUserRole === 'superadmin' || currentUserRole === 'super admin';
 
-  const showToast = (msg) => {
-    setSuccessToast(msg);
-    setTimeout(() => setSuccessToast(''), 3500);
+  const showToast = (message, type = 'success') => {
+    const isErr = type === 'error' || /denied|failed|error|restricted/i.test(message);
+    setToast({ message, type: isErr ? 'error' : 'success' });
+    setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
   };
 
   const fetchReviews = useCallback(async () => {
@@ -321,17 +322,25 @@ const AdminReviews = () => {
     <AdminLayout>
       <div className="admin-reviews">
         <AnimatePresence>
-          {successToast && (
+          {toast.message && (
             <motion.div
-              className="admin-reviews__toast"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              className={`admin-reviews__toast ${toast.type === 'error' ? 'admin-reviews__toast--error' : ''}`}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span>{successToast}</span>
+              {toast.type === 'error' ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              <span>{toast.message}</span>
             </motion.div>
           )}
         </AnimatePresence>

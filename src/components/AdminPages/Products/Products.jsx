@@ -46,7 +46,8 @@ const Products = () => {
   const isSuperAdmin = currentUserRole === 'superadmin' || currentUserRole === 'super admin';
 
   const showToast = (message, type = 'success') => {
-    setToast({ message, type });
+    const isErr = type === 'error' || /denied|failed|error|restricted/i.test(message);
+    setToast({ message, type: isErr ? 'error' : 'success' });
     setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
   };
 
