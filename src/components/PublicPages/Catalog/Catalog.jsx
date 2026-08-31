@@ -89,7 +89,17 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
                 <FitText as="h3" className="item-name" maxFontSize={1.3} minFontSize={0.78}>
                   {item.name}
                 </FitText>
-                <span className="item-price">{item.price} ₼</span>
+                <div className="item-price-container">
+                  <div className="item-old-price-pill">
+                    <span className="discount-tag">
+                      {item.discount ? `-${item.discount}%` : '-20%'}
+                    </span>
+                    <span className="old-price">
+                      {item.oldPrice !== undefined ? `${item.oldPrice} ₼` : '0.00 ₼'}
+                    </span>
+                  </div>
+                  <span className="item-price">{item.price} ₼</span>
+                </div>
               </div>
               <p className="item-description">{item.description}</p>
             </div>

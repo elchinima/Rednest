@@ -144,11 +144,16 @@
   box-sizing: border-box;
 
   &__avatar-section {
+    position: sticky;
+    top: 100px;
+    align-self: start;
+    height: fit-content;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: $spacing-lg;
     padding-top: $spacing-xs;
+    z-index: 10;
   }
 
   &__info-section {
@@ -679,6 +684,9 @@
 
     &__avatar-section {
       width: 100%;
+      position: static;
+      top: auto;
+      align-self: auto;
     }
 
     &__info-section {

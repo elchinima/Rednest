@@ -974,19 +974,7 @@ const Products = () => {
                     />
                   </div>
 
-                  <div className="product-modal__form-group">
-                    <label className="product-modal__switch-label">
-                      <input
-                        type="checkbox"
-                        checked={form.isActive}
-                        onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                      />
-                      <span className="product-modal__switch-slider" />
-                      <span className="product-modal__switch-text">
-                        {form.isActive ? 'Active (Visible in menu & catalog)' : 'Inactive (Hidden from customers)'}
-                      </span>
-                    </label>
-                  </div>
+
 
                   <div className="product-modal__form-group">
                     <label>Image URL (Photo)</label>
