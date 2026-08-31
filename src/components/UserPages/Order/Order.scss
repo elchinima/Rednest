@@ -369,6 +369,60 @@
   }
 }
 
+.order-promo-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: $border-radius-md;
+
+  .order-promo-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    .count {
+      color: #4ade80;
+      font-size: 0.72rem;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+  }
+
+  .order-promo-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: $border-radius-sm;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(0, 0, 0, 0.65);
+    }
+
+    option {
+      background: #18181c;
+      color: #ffffff;
+    }
+  }
+}
+
 .order-summary-pill-row {
   display: flex;
   flex-wrap: wrap;

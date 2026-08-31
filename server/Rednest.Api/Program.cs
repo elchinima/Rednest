@@ -314,4 +314,86 @@ app.UseStaticFiles();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
+try
+{
+    await EnsurePixelUserAndSeedAsync(app.Services);
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetService<ILogger<Program>>();
+    logger?.LogError(ex, "Failed to initialize Pixel (AI) user on startup.");
+}
+
 app.Run();
+
+static async Task EnsurePixelUserAndSeedAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+
+    var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET") ?? "RednestAdmin2026";
+
+    var pixelUser = await db.Users.Include(u => u.Session).FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");
+    if (pixelUser == null)
+    {
+        pixelUser = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Pixel",
+            Email = "myrednest@gmail.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminSecret),
+            Role = UserRole.AI
+        };
+        db.Users.Add(pixelUser);
+        await db.SaveChangesAsync();
+
+        var session = new UserSession
+        {
+            UserId = pixelUser.Id,
+            TwoFactorEnabled = true,
+            IsActive = true,
+            Subscribe = false
+        };
+        db.UserSessions.Add(session);
+        await db.SaveChangesAsync();
+        logger?.LogInformation("Pixel (AI) user created with 2FA enabled.");
+    }
+    else
+    {
+        bool changed = false;
+        if (pixelUser.Role != UserRole.AI)
+        {
+            pixelUser.Role = UserRole.AI;
+            changed = true;
+        }
+        if (pixelUser.Name != "Pixel")
+        {
+            pixelUser.Name = "Pixel";
+            changed = true;
+        }
+
+        if (pixelUser.Session == null)
+        {
+            db.UserSessions.Add(new UserSession
+            {
+                UserId = pixelUser.Id,
+                TwoFactorEnabled = true,
+                IsActive = true,
+                Subscribe = false
+            });
+            changed = true;
+        }
+        else if (!pixelUser.Session.TwoFactorEnabled)
+        {
+            pixelUser.Session.TwoFactorEnabled = true;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync();
+            logger?.LogInformation("Pixel (AI) user updated with role AI and 2FA.");
+        }
+    }
+}

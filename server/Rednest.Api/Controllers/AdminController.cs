@@ -906,6 +906,228 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Review deleted successfully." });
     }
 
+    [HttpGet("promos")]
+    public async Task<IActionResult> GetPromos()
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can access promos." });
+
+        var promos = await _context.UserPromos
+            .AsNoTracking()
+            .OrderByDescending(p => p.Dates.ActivatedAt)
+            .ToListAsync();
+
+        var pixel = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");
+        var userIds = promos.Where(p => pixel == null || p.UserId != pixel.Id).Select(p => p.UserId).Distinct().ToList();
+
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .AsNoTracking()
+            .ToDictionaryAsync(u => u.Id);
+
+        var now = DateTime.UtcNow;
+
+        var result = promos.Select(p =>
+        {
+            var isUnclaimed = pixel != null && p.UserId == pixel.Id;
+            var isExpired = p.Dates.ExpiresAt < now;
+            users.TryGetValue(p.UserId, out var claimedUser);
+
+            return new
+            {
+                id = p.Id,
+                promoCode = p.Codes.PromoCode,
+                barCode = p.Codes.BarCode,
+                prizeType = p.PrizeInfo.Type.ToString(),
+                prizeName = p.PrizeInfo.PrizeName,
+                prizeDescription = p.PrizeInfo.PrizeDescription,
+                discountPercent = p.PrizeInfo.DiscountPercent,
+                cashbackPercent = p.PrizeInfo.CashbackPercent,
+                isClaimed = !isUnclaimed,
+                isActive = p.IsActive,
+                isExpired = isExpired,
+                status = !p.IsActive ? "Inactive" : isExpired ? "Expired" : isUnclaimed ? "Unclaimed" : "Claimed",
+                activatedAt = p.Dates.ActivatedAt,
+                expiresAt = p.Dates.ExpiresAt,
+                claimedBy = !isUnclaimed && claimedUser != null ? new
+                {
+                    id = claimedUser.Id,
+                    name = claimedUser.Name,
+                    email = claimedUser.Email,
+                    avatarUrl = claimedUser.ProfilePictureUrl,
+                    role = claimedUser.Role.ToString()
+                } : null
+            };
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("promos")]
+    public async Task<IActionResult> CreatePromo([FromBody] AdminCreatePromoRequest request)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can create promos." });
+
+        var pixel = await _context.Users.FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");
+        if (pixel == null)
+            return StatusCode(500, new { message = "Pixel system user account is not initialized." });
+
+        var code = (request.PromoCode ?? "").Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            var randomSuffix = Convert.ToHexString(RandomNumberGenerator.GetBytes(3)).ToUpperInvariant();
+            code = $"RED-GIFT-{randomSuffix}";
+        }
+
+        if (await _context.UserPromos.AnyAsync(p => p.Codes.PromoCode.ToUpper() == code))
+        {
+            return BadRequest(new { message = $"Promo code '{code}' already exists." });
+        }
+
+        var expiryDays = Math.Clamp(request.ExpiryDays, 1, 30);
+        var now = DateTime.UtcNow;
+
+        var typeStr = (request.PrizeType ?? "DiscountCustom").Trim();
+        PrizeType pType;
+        if (!Enum.TryParse<PrizeType>(typeStr, true, out pType))
+        {
+            pType = PrizeType.DiscountCustom;
+        }
+
+        int discountPercent = Math.Clamp(request.DiscountPercent ?? 0, 0, 100);
+        int cashbackPercent = Math.Clamp(request.CashbackPercent ?? 0, 0, 100);
+
+        if (pType == PrizeType.Discount25 && discountPercent == 0) discountPercent = 25;
+        if (pType == PrizeType.Discount50 && discountPercent == 0) discountPercent = 50;
+
+        string prizeName = !string.IsNullOrWhiteSpace(request.PrizeName)
+            ? request.PrizeName.Trim()
+            : pType switch
+            {
+                PrizeType.DiscountCustom => $"{discountPercent}% Discount",
+                PrizeType.Discount25 => "25% Discount",
+                PrizeType.Discount50 => "50% Discount",
+                PrizeType.CashbackOnPurchases => $"{cashbackPercent}% Cashback",
+                PrizeType.FreeDrink => "Free Drink",
+                PrizeType.FreeDessert => "Free Dessert",
+                PrizeType.SuperPrize => "Super Prize",
+                _ => "Special Promotion"
+            };
+
+        string prizeDescription = !string.IsNullOrWhiteSpace(request.PrizeDescription)
+            ? request.PrizeDescription.Trim()
+            : pType switch
+            {
+                PrizeType.DiscountCustom => $"Get {discountPercent}% off your entire order.",
+                PrizeType.Discount25 => "Get 25% off your next order.",
+                PrizeType.Discount50 => "Get 50% off your next order.",
+                PrizeType.CashbackOnPurchases => $"Earn {cashbackPercent}% cashback on your purchase.",
+                PrizeType.FreeDrink => "Enjoy one free drink with your next order.",
+                PrizeType.FreeDessert => "Enjoy one free dessert with your next order.",
+                PrizeType.SuperPrize => "Exclusive Super Prize bonus on your order.",
+                _ => "Exclusive reward from Rednest."
+            };
+
+        var promoId = Guid.NewGuid();
+        var barCodeDigits = new string(promoId.ToString().Where(char.IsDigit).ToArray());
+        if (barCodeDigits.Length < 12)
+        {
+            barCodeDigits = barCodeDigits.PadRight(12, '7');
+        }
+        else if (barCodeDigits.Length > 16)
+        {
+            barCodeDigits = barCodeDigits[..16];
+        }
+
+        var promo = new UserPromo
+        {
+            Id = promoId,
+            UserId = pixel.Id,
+            Codes = new PromoCodes
+            {
+                PromoCode = code,
+                BarCode = barCodeDigits
+            },
+            PrizeInfo = new PrizeInfo
+            {
+                Type = pType,
+                PrizeName = prizeName,
+                PrizeDescription = prizeDescription,
+                DiscountPercent = discountPercent,
+                CashbackPercent = cashbackPercent
+            },
+            Dates = new PromoDates
+            {
+                ActivatedAt = now,
+                ExpiresAt = now.AddDays(expiryDays)
+            },
+            IsActive = true
+        };
+
+        _context.UserPromos.Add(promo);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Promo code created successfully.",
+            promo = new
+            {
+                id = promo.Id,
+                promoCode = promo.Codes.PromoCode,
+                barCode = promo.Codes.BarCode,
+                prizeType = promo.PrizeInfo.Type.ToString(),
+                prizeName = promo.PrizeInfo.PrizeName,
+                prizeDescription = promo.PrizeInfo.PrizeDescription,
+                discountPercent = promo.PrizeInfo.DiscountPercent,
+                cashbackPercent = promo.PrizeInfo.CashbackPercent,
+                isClaimed = false,
+                isActive = promo.IsActive,
+                isExpired = false,
+                status = "Unclaimed",
+                activatedAt = promo.Dates.ActivatedAt,
+                expiresAt = promo.Dates.ExpiresAt
+            }
+        });
+    }
+
+    [HttpPatch("promos/{id:guid}/toggle-active")]
+    public async Task<IActionResult> TogglePromoActive(Guid id)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can update promos." });
+
+        var promo = await _context.UserPromos.FirstOrDefaultAsync(p => p.Id == id);
+        if (promo == null)
+            return NotFound(new { message = "Promo code not found." });
+
+        promo.IsActive = !promo.IsActive;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = promo.IsActive ? "Promo code activated." : "Promo code deactivated.",
+            id = promo.Id,
+            isActive = promo.IsActive
+        });
+    }
+
+    [HttpDelete("promos/{id:guid}")]
+    public async Task<IActionResult> DeletePromo(Guid id)
+    {
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can delete promo codes." });
+
+        var promo = await _context.UserPromos.FirstOrDefaultAsync(p => p.Id == id);
+        if (promo == null)
+            return NotFound(new { message = "Promo code not found." });
+
+        _context.UserPromos.Remove(promo);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Promo code deleted successfully." });
+    }
+
     [HttpGet("products")]
     public async Task<IActionResult> GetProducts()
     {
@@ -1317,4 +1539,15 @@ public class AdminProductRequest
     public string? IconUrl { get; set; }
     public string? Category { get; set; }
     public bool? IsActive { get; set; }
+}
+
+public class AdminCreatePromoRequest
+{
+    public string? PromoCode { get; set; }
+    public string? PrizeType { get; set; }
+    public int? DiscountPercent { get; set; }
+    public int? CashbackPercent { get; set; }
+    public string? PrizeName { get; set; }
+    public string? PrizeDescription { get; set; }
+    public int ExpiryDays { get; set; } = 7;
 }

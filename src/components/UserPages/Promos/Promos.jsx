@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import { encodeCode128 } from '../../../utils/code128';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import superPrizeIcon from '../../../assets/icons/super-prize.svg';
@@ -23,8 +24,9 @@ const PRIZE_TYPE_ICONS = {
   FreeDrink: freeDrinkIcon,
   FreeDessert: freeDessertIcon,
   Discount25: discount25Icon,
-  CashbackOnPurchases: cashbackIcon,
   Discount50: discount50Icon,
+  DiscountCustom: discount25Icon,
+  CashbackOnPurchases: cashbackIcon,
 };
 
 const formatDate = (dateStr) => {
@@ -32,10 +34,10 @@ const formatDate = (dateStr) => {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '—';
-    const formatter = new Intl.DateTimeFormat('ru-RU', {
+    const formatter = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: '2-digit',
+      month: 'short',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
@@ -95,6 +97,10 @@ const Promos = () => {
   const [filter, setFilter] = useState('all');
   const [copiedCode, setCopiedCode] = useState(null);
 
+  const [inputCode, setInputCode] = useState('');
+  const [isActivating, setIsActivating] = useState(false);
+  const [activationMessage, setActivationMessage] = useState(null);
+
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
   const fetchPromos = async () => {
@@ -120,14 +126,53 @@ const Promos = () => {
     }
   }, [user]);
 
-
   const handleCopy = (code) => {
     if (!code) return;
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => {
-      setCopiedCode(null);
-    }, 2000);
+      setCopiedCode(null), 2000;
+    });
+  };
+
+  const handleActivatePromo = async (e) => {
+    e.preventDefault();
+    if (!inputCode.trim()) return;
+
+    setIsActivating(true);
+    setActivationMessage(null);
+
+    try {
+      const res = await fetchWithRefresh(`${apiUrl}/api/auth/promos/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promoCode: inputCode.trim() }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setActivationMessage({
+          type: 'error',
+          text: data.message || 'Failed to activate promo code. Please check the code.',
+        });
+        return;
+      }
+
+      setActivationMessage({
+        type: 'success',
+        text: data.message || 'Promo code successfully activated! You can now use it on your next order.',
+      });
+      setInputCode('');
+      fetchPromos();
+    } catch (err) {
+      setActivationMessage({
+        type: 'error',
+        text: err.message || 'Network error occurred. Please try again.',
+      });
+    } finally {
+      setIsActivating(false);
+    }
   };
 
   const filteredPromos = promos.filter((p) => {
@@ -161,6 +206,99 @@ const Promos = () => {
             <p className="promos-hero-desc">
               Your exclusive rewards, discounts, and wheel spin bonuses
             </p>
+          </motion.div>
+
+          <motion.div
+            className="promos-activate-card"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <div className="promos-activate-card__content">
+              <div className="promos-activate-card__text">
+                <div className="promos-activate-card__badge">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  <span>Redeem Code</span>
+                </div>
+                <h3>Have a Promo Code?</h3>
+                <p>Enter your gift or event promo code to claim your special discount or reward.</p>
+              </div>
+
+              <form onSubmit={handleActivatePromo} className="promos-activate-card__form">
+                <div className="promos-activate-card__input-wrap">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="input-icon">
+                    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z" />
+                    <line x1="12" y1="9" x2="12" y2="15" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Enter code (e.g. RED-DISC-7X9K)"
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                    disabled={isActivating}
+                    maxLength={32}
+                  />
+                  {inputCode && (
+                    <button
+                      type="button"
+                      className="input-clear-btn"
+                      onClick={() => setInputCode('')}
+                      aria-label="Clear code"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className="promos-activate-card__btn"
+                  disabled={isActivating || !inputCode.trim()}
+                >
+                  {isActivating ? (
+                    <>
+                      <img src={loaderIconRed} alt="" className="spinner-inline" />
+                      <span>Activating...</span>
+                    </>
+                  ) : (
+                    <span>Activate</span>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            <AnimatePresence>
+              {activationMessage && (
+                <motion.div
+                  className={`promos-activate-feedback ${activationMessage.type === 'success' ? 'promos-activate-feedback--success' : 'promos-activate-feedback--error'}`}
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                >
+                  {activationMessage.type === 'success' ? (
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  )}
+                  <span>{activationMessage.text}</span>
+                  <button
+                    type="button"
+                    className="close-msg"
+                    onClick={() => setActivationMessage(null)}
+                  >
+                    ✕
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           <div className="promos-filters">

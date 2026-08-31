@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
@@ -109,9 +109,13 @@ const ONLINE_PAYMENT_SERVICES = [
 const Order = () => {
   const { user, updateUser } = useAuth();
   const { items, clearBasket } = useBasket();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
-  const [activePromo, setActivePromo] = useState(null);
+  const [userPromos, setUserPromos] = useState([]);
+  const [selectedPromoCode, setSelectedPromoCode] = useState(location.state?.selectedPromoCode || '');
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [isOnlinePaymentModalOpen, setIsOnlinePaymentModalOpen] = useState(false);
   const [isStripeModalOpen, setIsStripeModalOpen] = useState(false);
@@ -121,7 +125,6 @@ const Order = () => {
   const [orderSuccessData, setOrderSuccessData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const stepBoxRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -150,16 +153,29 @@ const Order = () => {
   useEffect(() => {
     if (!user) return;
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    fetchWithRefresh(`${apiUrl}/api/auth/promo`)
+    fetchWithRefresh(`${apiUrl}/api/auth/promos`)
       .then(r => r.json())
       .then(data => {
-        if (data && data.hasPromo && data.isActive) {
-          setActivePromo(data);
+        if (Array.isArray(data)) {
+          const actives = data.filter(p => p.isActive && !p.isExpired);
+          setUserPromos(actives);
+          if (actives.length > 0) {
+            setSelectedPromoCode(prev => {
+              if (prev && (prev === 'NONE' || actives.some(p => p.promoCode === prev))) {
+                return prev;
+              }
+              return actives[0].promoCode;
+            });
+          }
         }
       })
       .catch(() => {});
   }, [user]);
 
+  const activePromo = useMemo(() => {
+    if (!selectedPromoCode || selectedPromoCode === 'NONE') return null;
+    return userPromos.find(p => p.promoCode === selectedPromoCode) || null;
+  }, [selectedPromoCode, userPromos]);
 
   useEffect(() => {
     if (selectedMethod && stepBoxRef.current) {
@@ -198,17 +214,16 @@ const Order = () => {
 
     const pType = String(activePromo.prizeType || '').toLowerCase();
     const pName = String(activePromo.prizeName || '').toUpperCase();
+    const discPercent = activePromo.discountPercent || (pType === 'discount25' || pName.includes('25%') ? 25 : pType === 'discount50' || pName.includes('50%') ? 50 : 0);
+
+    if (discPercent > 0) {
+      return Math.round(numericTotal * discPercent) / 100;
+    }
 
     if (pType === 'cashbackonpurchases' || pType === '4' || pName.includes('CASHBACK')) {
       return 0;
     }
 
-    if (pType === 'discount25' || pType === '3' || pName.includes('25%')) {
-      return Math.round(numericTotal * 25) / 100;
-    }
-    if (pType === 'discount50' || pType === '5' || pName.includes('50%')) {
-      return Math.round(numericTotal * 50) / 100;
-    }
     if (pType === 'superprize' || pType === '0' || pName.includes('SUPER')) {
       return Math.min(numericTotal, 25.00);
     }
@@ -255,7 +270,10 @@ const Order = () => {
       const response = await fetchWithRefresh(`${apiUrl}/api/orders/cashier`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentMethod }),
+        body: JSON.stringify({
+          paymentMethod,
+          promoCode: activePromo ? activePromo.promoCode : null,
+        }),
       });
 
       const data = await response.json();
@@ -533,6 +551,27 @@ const Order = () => {
                     </button>
                   </div>
 
+                  {userPromos.length >= 2 && (
+                    <div className="order-promo-selector">
+                      <div className="order-promo-label">
+                        <span>Select Promo Code to Apply:</span>
+                        <span className="count">{userPromos.length} available</span>
+                      </div>
+                      <select
+                        value={selectedPromoCode}
+                        onChange={(e) => setSelectedPromoCode(e.target.value)}
+                        className="order-promo-select"
+                      >
+                        {userPromos.map((p) => (
+                          <option key={p.id} value={p.promoCode}>
+                            {p.promoCode} — {p.prizeName}
+                          </option>
+                        ))}
+                        <option value="NONE">Don't use any promo code</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div className="order-summary-pill-row">
                     <div className="order-summary-pill">
                       <span className="label">Items:</span>
@@ -792,6 +831,7 @@ const Order = () => {
             onClose={() => setIsStripeModalOpen(false)}
             serviceId={selectedOnlineService}
             finalAmount={finalAmount}
+            promoCode={activePromo ? activePromo.promoCode : null}
             onOrderSuccess={handleStripeOrderSuccess}
           />
         </React.Suspense>

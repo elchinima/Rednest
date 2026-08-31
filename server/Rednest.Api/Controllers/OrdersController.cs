@@ -24,7 +24,7 @@ public class OrdersController : ControllerBase
 
     private static DateTime GetBakuTime() => DateTime.UtcNow.AddHours(4);
 
-    private async Task<OrderCalculationResult?> CalculateOrderAsync(Guid userId, UserBasket basket)
+    private async Task<OrderCalculationResult?> CalculateOrderAsync(Guid userId, UserBasket basket, string? selectedPromoCode = null)
     {
         if (basket.Items == null || basket.Items.Count == 0) return null;
 
@@ -53,60 +53,84 @@ public class OrdersController : ControllerBase
         string? appliedPromoCode = null;
         string? appliedPromoName = null;
 
-        var promo = await _userRepository.GetActiveUserPromoAsync(userId);
+        UserPromo? promo = null;
+        if (!string.IsNullOrWhiteSpace(selectedPromoCode))
+        {
+            var code = selectedPromoCode.Trim().ToUpperInvariant();
+            promo = await _context.UserPromos
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.Codes.PromoCode.ToUpper() == code && p.IsActive);
+        }
+        else
+        {
+            promo = await _userRepository.GetActiveUserPromoAsync(userId);
+        }
+
         if (promo != null && promo.IsActive && promo.Dates.ExpiresAt >= DateTime.UtcNow)
         {
-            switch (promo.PrizeInfo.Type)
+            if (promo.PrizeInfo.DiscountPercent > 0)
             {
-                case PrizeType.Discount25:
-                    discount = Math.Round(originalTotal * 0.25m, 2);
-                    break;
-
-                case PrizeType.Discount50:
-                    discount = Math.Round(originalTotal * 0.50m, 2);
-                    break;
-
-                case PrizeType.SuperPrize:
-                    discount = Math.Min(originalTotal, 25.00m);
-                    break;
-
-                case PrizeType.FreeDrink:
+                discount = Math.Round(originalTotal * (promo.PrizeInfo.DiscountPercent / 100m), 2);
+            }
+            else
+            {
+                switch (promo.PrizeInfo.Type)
                 {
-                    var drinkCategories = new[] { "Main Drinks", "Specialty Drinks" };
-                    var drinks = enriched.Where(x => drinkCategories.Contains(x.Product!.Category) || 
-                                                     x.Product.Category.Contains("Drink", StringComparison.OrdinalIgnoreCase)).ToList();
-                    if (drinks.Count > 0)
+                    case PrizeType.DiscountCustom:
+                        discount = promo.PrizeInfo.DiscountPercent > 0
+                            ? Math.Round(originalTotal * (promo.PrizeInfo.DiscountPercent / 100m), 2)
+                            : 0m;
+                        break;
+
+                    case PrizeType.Discount25:
+                        discount = Math.Round(originalTotal * 0.25m, 2);
+                        break;
+
+                    case PrizeType.Discount50:
+                        discount = Math.Round(originalTotal * 0.50m, 2);
+                        break;
+
+                    case PrizeType.SuperPrize:
+                        discount = Math.Min(originalTotal, 25.00m);
+                        break;
+
+                    case PrizeType.FreeDrink:
                     {
-                        var totalDrinkQty = drinks.Sum(x => x.Item.Quantity);
-                        var totalDrinkPrice = drinks.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
-                        var avgDrinkPrice = totalDrinkPrice / totalDrinkQty;
-                        discount = Math.Round(avgDrinkPrice, 2);
+                        var drinkCategories = new[] { "Main Drinks", "Specialty Drinks" };
+                        var drinks = enriched.Where(x => drinkCategories.Contains(x.Product!.Category) || 
+                                                         x.Product.Category.Contains("Drink", StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (drinks.Count > 0)
+                        {
+                            var totalDrinkQty = drinks.Sum(x => x.Item.Quantity);
+                            var totalDrinkPrice = drinks.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
+                            var avgDrinkPrice = totalDrinkPrice / totalDrinkQty;
+                            discount = Math.Round(avgDrinkPrice, 2);
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case PrizeType.FreeDessert:
-                {
-                    var desserts = enriched.Where(x => x.Product!.Category == "Desserts" ||
-                                                       x.Product.Category.Contains("Dessert", StringComparison.OrdinalIgnoreCase)).ToList();
-                    if (desserts.Count > 0)
+                    case PrizeType.FreeDessert:
                     {
-                        var totalDessertQty = desserts.Sum(x => x.Item.Quantity);
-                        var totalDessertPrice = desserts.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
-                        var avgDessertPrice = totalDessertPrice / totalDessertQty;
-                        discount = Math.Round(avgDessertPrice, 2);
+                        var desserts = enriched.Where(x => x.Product!.Category == "Desserts" ||
+                                                           x.Product.Category.Contains("Dessert", StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (desserts.Count > 0)
+                        {
+                            var totalDessertQty = desserts.Sum(x => x.Item.Quantity);
+                            var totalDessertPrice = desserts.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
+                            var avgDessertPrice = totalDessertPrice / totalDessertQty;
+                            discount = Math.Round(avgDessertPrice, 2);
+                        }
+                        break;
                     }
-                    break;
+
+                    case PrizeType.CashbackOnPurchases:
+                        discount = 0m;
+                        cashbackPercent = promo.PrizeInfo.CashbackPercent > 0 ? promo.PrizeInfo.CashbackPercent : 10;
+                        break;
+
+                    default:
+                        discount = 0m;
+                        break;
                 }
-
-                case PrizeType.CashbackOnPurchases:
-                    discount = 0m;
-                    cashbackPercent = promo.PrizeInfo.CashbackPercent > 0 ? promo.PrizeInfo.CashbackPercent : 10;
-                    break;
-
-                default:
-                    discount = 0m;
-                    break;
             }
 
             if (discount > 0)
@@ -115,8 +139,9 @@ public class OrdersController : ControllerBase
                 appliedPromoCode = promo.Codes.PromoCode;
                 appliedPromoName = promo.PrizeInfo.PrizeName;
             }
-            else if (promo.PrizeInfo.Type == PrizeType.CashbackOnPurchases)
+            else if (promo.PrizeInfo.Type == PrizeType.CashbackOnPurchases || promo.PrizeInfo.CashbackPercent > 0)
             {
+                cashbackPercent = promo.PrizeInfo.CashbackPercent > 0 ? promo.PrizeInfo.CashbackPercent : 10;
                 var payable = Math.Max(0m, Math.Round(originalTotal - discount, 2));
                 cashbackAmount = Math.Round(payable * (cashbackPercent / 100m), 2);
                 appliedPromoCode = promo.Codes.PromoCode;
@@ -178,7 +203,7 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = "Basket is empty." });
         }
 
-        var calc = await CalculateOrderAsync(userId.Value, basket);
+        var calc = await CalculateOrderAsync(userId.Value, basket, request?.PromoCode);
         if (calc == null || calc.OrderItems.Count == 0)
         {
             return BadRequest(new { message = "Items from basket not found in catalog." });
@@ -298,7 +323,8 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = "Basket is empty." });
         }
 
-        var calc = await CalculateOrderAsync(userId.Value, basket);
+        var appliedPromo = intent.Metadata.TryGetValue("AppliedPromoCode", out var promoMeta) && !string.IsNullOrEmpty(promoMeta) ? promoMeta : request.PromoCode;
+        var calc = await CalculateOrderAsync(userId.Value, basket, appliedPromo);
         if (calc == null || calc.OrderItems.Count == 0)
         {
             return BadRequest(new { message = "Items from basket not found in catalog." });
@@ -398,7 +424,7 @@ public class OrdersController : ControllerBase
             return BadRequest(new { message = "Basket is empty." });
         }
 
-        var calc = await CalculateOrderAsync(userId.Value, basket);
+        var calc = await CalculateOrderAsync(userId.Value, basket, request?.PromoCode);
         if (calc == null || calc.OrderItems.Count == 0)
         {
             return BadRequest(new { message = "Items from basket not found in catalog." });
@@ -455,7 +481,7 @@ public class OrdersController : ControllerBase
             balanceChanged = true;
         }
 
-        if (user != null && calc.CashbackAmount > 0)
+        if (user != null && calc.CashbackAmount > 0 && paymentMethod == CorePaymentMethod.OnlineBalance)
         {
             user.Balance = Math.Round(user.Balance + calc.CashbackAmount, 2);
             balanceChanged = true;
@@ -517,7 +543,7 @@ public class OrdersController : ControllerBase
             payment = newOrder.Payment,
             notes = newOrder.Notes,
             remainingBalance,
-            cashbackEarned = calc.CashbackAmount
+            cashbackEarned = (paymentMethod == CorePaymentMethod.OnlineBalance ? calc.CashbackAmount : 0m)
         });
     }
 
@@ -637,12 +663,14 @@ public class OrderCalculationResult
 public class CashierOrderRequest
 {
     public string? PaymentMethod { get; set; }
+    public string? PromoCode { get; set; }
     public OrderNotes? Notes { get; set; }
 }
 
 public class StripeIntentRequest
 {
     public string? PaymentMethod { get; set; }
+    public string? PromoCode { get; set; }
     public OrderNotes? Notes { get; set; }
 }
 
@@ -650,6 +678,7 @@ public class ConfirmStripeOrderRequest
 {
     public string PaymentIntentId { get; set; } = string.Empty;
     public string? PaymentMethod { get; set; }
+    public string? PromoCode { get; set; }
     public OrderNotes? Notes { get; set; }
 }
 

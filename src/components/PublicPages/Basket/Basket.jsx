@@ -43,9 +43,8 @@ const Basket = () => {
   const [productsLoading, setProductsLoading] = useState(true);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [flashingItemIds, setFlashingItemIds] = useState({});
-  const [activePromo, setActivePromo] = useState(null);
-
+  const [userPromos, setUserPromos] = useState([]);
+  const [selectedPromoCode, setSelectedPromoCode] = useState('');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -71,21 +70,27 @@ const Basket = () => {
     fetchProducts();
   }, []);
 
-
   useEffect(() => {
     if (!user) return;
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    fetchWithRefresh(`${apiUrl}/api/auth/promo`)
+    fetchWithRefresh(`${apiUrl}/api/auth/promos`)
       .then(r => r.json())
       .then(data => {
-        if (data.hasPromo && data.isActive) {
-          setActivePromo(data);
+        if (Array.isArray(data)) {
+          const actives = data.filter(p => p.isActive && !p.isExpired);
+          setUserPromos(actives);
+          if (actives.length > 0) {
+            setSelectedPromoCode(actives[0].promoCode);
+          }
         }
       })
       .catch(() => { });
   }, [user]);
 
-
+  const activePromo = useMemo(() => {
+    if (!selectedPromoCode || selectedPromoCode === 'NONE') return null;
+    return userPromos.find(p => p.promoCode === selectedPromoCode) || null;
+  }, [selectedPromoCode, userPromos]);
 
   const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
@@ -156,12 +161,10 @@ const Basket = () => {
 
     const pType = String(activePromo.prizeType || '').toLowerCase();
     const pName = String(activePromo.prizeName || '').toUpperCase();
+    const discPercent = activePromo.discountPercent || (pType === 'discount25' || pName.includes('25%') ? 25 : pType === 'discount50' || pName.includes('50%') ? 50 : 0);
 
-    if (pType === 'discount25' || pType === '3' || pName.includes('25%')) {
-      return Math.round(numericTotal * 25) / 100;
-    }
-    if (pType === 'discount50' || pType === '5' || pName.includes('50%')) {
-      return Math.round(numericTotal * 50) / 100;
+    if (discPercent > 0) {
+      return Math.round(numericTotal * discPercent) / 100;
     }
     if (pType === 'superprize' || pType === '0' || pName.includes('SUPER')) {
       return Math.min(numericTotal, 25.00);
@@ -346,6 +349,27 @@ const Basket = () => {
                   </div>
                 ))}
               </div>
+              {userPromos.length >= 2 && (
+                <div className="basket-promo-selector">
+                  <div className="promo-selector-label">
+                    <span>Apply Promo Code</span>
+                    <span className="promo-count">{userPromos.length} active</span>
+                  </div>
+                  <select
+                    value={selectedPromoCode}
+                    onChange={(e) => setSelectedPromoCode(e.target.value)}
+                    className="basket-promo-select"
+                  >
+                    {userPromos.map((p) => (
+                      <option key={p.id} value={p.promoCode}>
+                        {p.promoCode} — {p.prizeName}
+                      </option>
+                    ))}
+                    <option value="NONE">Don't use any promo code</option>
+                  </select>
+                </div>
+              )}
+
               <div className="summary-divider" />
               {promoDiscountAmount > 0 && (
                 <div className="summary-subtotal">
@@ -377,7 +401,7 @@ const Basket = () => {
 
               <button
                 className="cta-btn basket-checkout-btn"
-                onClick={() => navigate('/order')}
+                onClick={() => navigate('/order', { state: { selectedPromoCode: activePromo ? activePromo.promoCode : null } })}
               >
                 Place Order
               </button>

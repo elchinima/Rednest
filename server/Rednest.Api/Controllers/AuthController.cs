@@ -678,6 +678,7 @@ public class AuthController : ControllerBase
                     prizeName = promo.PrizeInfo.PrizeName,
                     prizeDescription = promo.PrizeInfo.PrizeDescription,
                     prizeType = promo.PrizeInfo.Type.ToString(),
+                    discountPercent = promo.PrizeInfo.DiscountPercent,
                     cashbackPercent = promo.PrizeInfo.CashbackPercent,
                     isActive = promo.IsActive && !isExpired,
                     isExpired = isExpired,
@@ -691,6 +692,79 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { Message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("promos/activate")]
+    public async Task<IActionResult> ActivatePromo(
+        [FromBody] ActivatePromoRequest request,
+        [FromServices] AppDbContext db)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(request?.PromoCode))
+            {
+                return BadRequest(new { message = "Promo code cannot be empty." });
+            }
+
+            var inputCode = request.PromoCode.Trim().ToUpperInvariant();
+
+            var promo = await db.UserPromos.FirstOrDefaultAsync(p => p.Codes.PromoCode.ToUpper() == inputCode);
+            if (promo == null)
+            {
+                return NotFound(new { message = "Promo code not found. Please check the code and try again." });
+            }
+
+            var pixel = await db.Users.FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");
+
+            if (promo.UserId == userId)
+            {
+                return BadRequest(new { message = "You have already activated this promo code." });
+            }
+
+            if (pixel != null && promo.UserId != pixel.Id)
+            {
+                return BadRequest(new { message = "This promo code has already been activated by another user." });
+            }
+
+            var now = DateTime.UtcNow;
+            if (!promo.IsActive || promo.Dates.ExpiresAt < now)
+            {
+                return BadRequest(new { message = "This promo code has expired or is no longer active." });
+            }
+
+            // Switch ownership to the activating user
+            promo.UserId = userId;
+            await db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Promo code successfully activated!",
+                promo = new
+                {
+                    id = promo.Id,
+                    promoCode = promo.Codes.PromoCode,
+                    barCode = promo.Codes.BarCode,
+                    prizeName = promo.PrizeInfo.PrizeName,
+                    prizeDescription = promo.PrizeInfo.PrizeDescription,
+                    prizeType = promo.PrizeInfo.Type.ToString(),
+                    discountPercent = promo.PrizeInfo.DiscountPercent,
+                    cashbackPercent = promo.PrizeInfo.CashbackPercent,
+                    isActive = promo.IsActive,
+                    isExpired = false,
+                    activatedAt = promo.Dates.ActivatedAt,
+                    expiresAt = promo.Dates.ExpiresAt
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -847,4 +921,9 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("accessToken", accessToken, accessCookieOptions);
         Response.Cookies.Append("refreshToken", refreshToken, refreshCookieOptions);
     }
+}
+
+public class ActivatePromoRequest
+{
+    public string? PromoCode { get; set; }
 }

@@ -43,6 +43,7 @@ const StripePaymentModal = ({
   onClose,
   serviceId,
   finalAmount,
+  promoCode,
   onOrderSuccess,
 }) => {
   const [savedCards, setSavedCards] = useState([]);
@@ -116,13 +117,13 @@ const StripePaymentModal = ({
 
   const handleCardNumberChange = (e) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-    const parts = raw.match(/[\s\S]{1,4}/g) || [];
-    setCardNumber(parts.join(' '));
+    const formatted = raw.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+    setCardNumber(formatted);
   };
 
   const handleExpiryChange = (e) => {
     let raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-    if (raw.length >= 3) {
+    if (raw.length >= 2) {
       raw = `${raw.slice(0, 2)}/${raw.slice(2)}`;
     }
     setExpiryDate(raw);
@@ -147,12 +148,12 @@ const StripePaymentModal = ({
 
     if (!cleanDigits) {
       newErrors.cardNumber = 'Card number is required.';
-    } else if (cleanDigits.length < 16) {
+    } else if (cleanDigits.length !== 16) {
       newErrors.cardNumber = 'Card number must be 16 digits.';
-    } else if (!brand) {
-      newErrors.cardNumber = 'Only Visa and Mastercard cards are supported.';
     } else if (!checkLuhn(cleanDigits)) {
-      newErrors.cardNumber = 'Invalid card number checksum.';
+      newErrors.cardNumber = 'Invalid card number.';
+    } else if (!brand) {
+      newErrors.cardNumber = 'Only Visa and Mastercard are accepted.';
     }
 
     if (!expiryDate) {
@@ -160,17 +161,16 @@ const StripePaymentModal = ({
     } else if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
       newErrors.expiryDate = 'Format must be MM/YY.';
     } else {
-      const [mStr, yStr] = expiryDate.split('/');
-      const month = parseInt(mStr, 10);
-      const year = parseInt(yStr, 10) + 2000;
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth() + 1;
-
-      if (month < 1 || month > 12) {
-        newErrors.expiryDate = 'Month must be 01–12.';
-      } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
-        newErrors.expiryDate = 'Card has expired.';
+      const [m, y] = expiryDate.split('/').map((x) => parseInt(x, 10));
+      if (m < 1 || m > 12) {
+        newErrors.expiryDate = 'Invalid month.';
+      } else {
+        const now = new Date();
+        const currentYear = now.getFullYear() % 100;
+        const currentMonth = now.getMonth() + 1;
+        if (y < currentYear || (y === currentYear && m < currentMonth)) {
+          newErrors.expiryDate = 'Card has expired.';
+        }
       }
     }
 
@@ -205,6 +205,7 @@ const StripePaymentModal = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentMethod: 'OnlineCardDetails',
+          promoCode,
         }),
       });
 
@@ -282,6 +283,7 @@ const StripePaymentModal = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentMethod: 'OnlineCardDetails',
+          promoCode,
         }),
       });
 

@@ -7,7 +7,8 @@ public enum PrizeType
     FreeDessert = 2,
     Discount25 = 3,
     CashbackOnPurchases = 4,
-    Discount50 = 5
+    Discount50 = 5,
+    DiscountCustom = 6
 }
 
 public class PrizeInfo
@@ -16,6 +17,7 @@ public class PrizeInfo
     public string PrizeName { get; set; } = string.Empty;
     public string PrizeDescription { get; set; } = string.Empty;
     public int CashbackPercent { get; set; } = 0;
+    public int DiscountPercent { get; set; } = 0;
 }
 
 public class PromoCodes
