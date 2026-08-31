@@ -275,6 +275,38 @@
         flex: 1;
       }
 
+      .home-price-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .home-old-price-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 2px 7px;
+        border-radius: $border-radius-full;
+        font-size: 0.72rem;
+        font-weight: 600;
+        backdrop-filter: blur(4px);
+
+        .discount-tag {
+          color: #ffffff;
+          font-weight: 700;
+        }
+
+        .old-price {
+          color: rgba(255, 255, 255, 0.55);
+          text-decoration: line-through;
+          text-decoration-color: #ef4444;
+          text-decoration-thickness: 1.5px;
+        }
+      }
+
       .price {
         font-weight: 700;
         color: $color-text;

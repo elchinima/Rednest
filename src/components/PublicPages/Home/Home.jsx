@@ -237,23 +237,45 @@ const Home = () => {
               <p>No products currently available.</p>
             </div>
           ) : (
-            favoriteProducts.map((prod) => (
-              <div key={prod.id} className="menu-item-card">
-                <div className="favorite-badge">Favorite</div>
-                <img
-                  src={prod.images?.image || prod.images?.icon || cappuccinoImg}
-                  alt={prod.name}
-                  className="menu-img-placeholder"
-                  style={{ objectFit: 'cover' }}
-                  loading="lazy"
-                />
-                <div className="menu-info">
-                  <h4>{prod.name}</h4>
-                  <p>{prod.description || 'Delicious handcrafted drink made with premium ingredients.'}</p>
-                  <span className="price">{prod.price} ₼</span>
+            favoriteProducts.map((prod) => {
+              const rawBasePrice = prod.prices?.price ?? prod.price;
+              const basePriceNum = typeof rawBasePrice === 'number' ? rawBasePrice : parseFloat(rawBasePrice) || 0;
+              const rawDiscountPrice = prod.prices?.discountPrice;
+              const discountPriceNum = rawDiscountPrice !== undefined && rawDiscountPrice !== null && rawDiscountPrice !== ''
+                ? (typeof rawDiscountPrice === 'number' ? rawDiscountPrice : parseFloat(rawDiscountPrice))
+                : null;
+
+              const hasDiscount = discountPriceNum !== null && !isNaN(discountPriceNum) && discountPriceNum > 0 && discountPriceNum < basePriceNum;
+              const discountPercent = hasDiscount ? Math.round((1 - discountPriceNum / basePriceNum) * 100) : 0;
+              const effectivePriceFormatted = hasDiscount ? discountPriceNum.toFixed(2) : basePriceNum.toFixed(2);
+              const oldPriceFormatted = basePriceNum.toFixed(2);
+
+              return (
+                <div key={prod.id} className="menu-item-card">
+                  <div className="favorite-badge">Favorite</div>
+                  <img
+                    src={prod.images?.image || prod.images?.icon || cappuccinoImg}
+                    alt={prod.name}
+                    className="menu-img-placeholder"
+                    style={{ objectFit: 'cover' }}
+                    loading="lazy"
+                  />
+                  <div className="menu-info">
+                    <h4>{prod.name}</h4>
+                    <p>{prod.description || 'Delicious handcrafted drink made with premium ingredients.'}</p>
+                    <div className="home-price-container">
+                      {hasDiscount && (
+                        <div className="home-old-price-pill">
+                          <span className="discount-tag">-{discountPercent}%</span>
+                          <span className="old-price">{oldPriceFormatted} ₼</span>
+                        </div>
+                      )}
+                      <span className="price">{effectivePriceFormatted} ₼</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         <div className="section-actions">

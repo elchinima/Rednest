@@ -18,7 +18,6 @@ public class ProductsController : ControllerBase
         var products = await _db.Products
             .AsNoTracking()
             .Where(p => p.IsActive)
-            .OrderBy(p => p.Price)
             .ToListAsync();
 
         var categoryOrder = new[] { "Main Drinks", "Specialty Drinks", "Desserts" };
@@ -29,18 +28,23 @@ public class ProductsController : ControllerBase
                 category = cat,
                 items = products
                     .Where(p => p.Category == cat)
+                    .OrderBy(p => p.Prices != null ? (p.Prices.DiscountPrice ?? p.Prices.Price) : 0m)
                     .Select(p => new
                     {
                         id = p.Id,
                         name = p.Name,
                         description = p.Description,
-                        price = p.Price.ToString("0.00"),
+                        price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
+                        prices = new
+                        {
+                            price = p.Prices != null ? p.Prices.Price.ToString("0.00") : "0.00",
+                            discountPrice = p.Prices?.DiscountPrice != null ? p.Prices.DiscountPrice.Value.ToString("0.00") : null
+                        },
                         images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
                         category = p.Category
                     })
                     .ToList()
             })
-
             .Where(g => g.items.Count > 0)
             .ToList();
 
@@ -72,7 +76,12 @@ public class ProductsController : ControllerBase
                 id = p.Id,
                 name = p.Name,
                 description = p.Description,
-                price = p.Price.ToString("0.00"),
+                price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
+                prices = new
+                {
+                    price = p.Prices != null ? p.Prices.Price.ToString("0.00") : "0.00",
+                    discountPrice = p.Prices?.DiscountPrice != null ? p.Prices.DiscountPrice.Value.ToString("0.00") : null
+                },
                 images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
                 category = p.Category,
                 totalSold = salesCountByProduct.TryGetValue(p.Id, out var sold) ? sold : 0

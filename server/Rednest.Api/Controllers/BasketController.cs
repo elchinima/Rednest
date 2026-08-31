@@ -220,7 +220,10 @@ public class BasketController : ControllerBase
             .Where(x => x.Product != null)
             .ToList();
 
-        var grandTotal = enriched.Sum(x => x.Product!.Price * x.Item.Quantity);
+        static decimal GetEffectivePrice(Rednest.Core.Entities.Product p) =>
+            p.Prices?.DiscountPrice ?? p.Prices?.Price ?? 0m;
+
+        var grandTotal = enriched.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
 
         decimal discount = 0m;
         string message = string.Empty;
@@ -249,7 +252,7 @@ public class BasketController : ControllerBase
                 if (drinks.Count > 0)
                 {
                     var totalDrinkQty = drinks.Sum(x => x.Item.Quantity);
-                    var totalDrinkPrice = drinks.Sum(x => x.Product!.Price * x.Item.Quantity);
+                    var totalDrinkPrice = drinks.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
                     var avgDrinkPrice = totalDrinkPrice / totalDrinkQty;
                     discount = Math.Round(avgDrinkPrice, 2);
                     message = "Free drink applied";
@@ -263,7 +266,7 @@ public class BasketController : ControllerBase
                 if (desserts.Count > 0)
                 {
                     var totalDessertQty = desserts.Sum(x => x.Item.Quantity);
-                    var totalDessertPrice = desserts.Sum(x => x.Product!.Price * x.Item.Quantity);
+                    var totalDessertPrice = desserts.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
                     var avgDessertPrice = totalDessertPrice / totalDessertQty;
                     discount = Math.Round(avgDessertPrice, 2);
                     message = "Free dessert applied";

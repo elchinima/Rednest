@@ -625,11 +625,48 @@
     }
   }
 
+  &__price-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__price-strikethrough-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__old-price {
+    font-size: 0.76rem;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: line-through;
+    text-decoration-color: #ef4444;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__discount-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 1px 5px;
+    border-radius: 6px;
+    line-height: 1.2;
+  }
+
   &__price-text {
     font-weight: 700;
     font-size: 0.95rem;
     color: #fff;
     font-variant-numeric: tabular-nums;
+
+    &--sale {
+      color: #4ade80;
+    }
   }
 
   &__mobile-grid {
@@ -864,6 +901,17 @@
     &.limit {
       color: #ef4444;
     }
+  }
+
+  &__discount-badge {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 2px 7px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
   }
 
   &__switch-label {

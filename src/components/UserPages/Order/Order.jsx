@@ -178,7 +178,7 @@ const Order = () => {
       .map(item => {
         const product = products[item.productId];
         if (!product) return null;
-        const unitPrice = parseFloat(product.price);
+        const unitPrice = parseFloat(product.prices?.discountPrice || product.prices?.price || product.price || 0);
         const totalPrice = (unitPrice * item.quantity).toFixed(2);
         return { ...item, product, unitPrice, totalPrice };
       })

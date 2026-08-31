@@ -60,68 +60,80 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
     >
       <h2 className="category-title">{categoryObj.category}</h2>
       <div className="catalog-grid" ref={scrollRef} onScroll={handleScroll}>
-        {categoryObj.items.map((item) => (
-          <div key={item.id} className="catalog-card">
-            <div className="card-image-container">
-              {(item.images?.image || item.imageUrl) ? (
-                <>
-                  <img 
-                    src={item.images?.image || item.imageUrl} 
-                    alt={item.name} 
-                    loading="lazy"
-                    onLoad={() => loadedImages.markLoaded?.(item.id)}
-                    className={`item-image ${loadedImages[item.id] ? 'loaded' : ''}`} 
-                  />
-                  {!loadedImages[item.id] && (
-                    <div className="item-image-placeholder">
-                      <span className="placeholder-icon">{item.icon || '☕'}</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="item-image-placeholder">
-                  <span className="placeholder-icon">{item.icon || '☕'}</span>
-                </div>
-              )}
-            </div>
-            <div className="card-content">
-              <div className="card-header">
-                <FitText as="h3" className="item-name" maxFontSize={1.3} minFontSize={0.78}>
-                  {item.name}
-                </FitText>
-                <div className="item-price-container">
-                  <div className="item-old-price-pill">
-                    <span className="discount-tag">
-                      {item.discount ? `-${item.discount}%` : '-20%'}
-                    </span>
-                    <span className="old-price">
-                      {item.oldPrice !== undefined ? `${item.oldPrice} ₼` : '0.00 ₼'}
-                    </span>
+        {categoryObj.items.map((item) => {
+          const rawBasePrice = item.prices?.price ?? item.price;
+          const basePriceNum = typeof rawBasePrice === 'number' ? rawBasePrice : parseFloat(rawBasePrice) || 0;
+          const rawDiscountPrice = item.prices?.discountPrice;
+          const discountPriceNum = rawDiscountPrice !== undefined && rawDiscountPrice !== null && rawDiscountPrice !== ''
+            ? (typeof rawDiscountPrice === 'number' ? rawDiscountPrice : parseFloat(rawDiscountPrice))
+            : null;
+
+          const hasDiscount = discountPriceNum !== null && !isNaN(discountPriceNum) && discountPriceNum > 0 && discountPriceNum < basePriceNum;
+          const discountPercent = hasDiscount ? Math.round((1 - discountPriceNum / basePriceNum) * 100) : 0;
+          const effectivePriceFormatted = hasDiscount ? discountPriceNum.toFixed(2) : basePriceNum.toFixed(2);
+          const oldPriceFormatted = basePriceNum.toFixed(2);
+
+          return (
+            <div key={item.id} className="catalog-card">
+              <div className="card-image-container">
+                {(item.images?.image || item.imageUrl) ? (
+                  <>
+                    <img 
+                      src={item.images?.image || item.imageUrl} 
+                      alt={item.name} 
+                      loading="lazy"
+                      onLoad={() => loadedImages.markLoaded?.(item.id)}
+                      className={`item-image ${loadedImages[item.id] ? 'loaded' : ''}`} 
+                    />
+                    {!loadedImages[item.id] && (
+                      <div className="item-image-placeholder">
+                        <span className="placeholder-icon">{item.icon || '☕'}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="item-image-placeholder">
+                    <span className="placeholder-icon">{item.icon || '☕'}</span>
                   </div>
-                  <span className="item-price">{item.price} ₼</span>
-                </div>
+                )}
               </div>
-              <p className="item-description">{item.description}</p>
+              <div className="card-content">
+                <div className="card-header">
+                  <FitText as="h3" className="item-name" maxFontSize={1.3} minFontSize={0.78}>
+                    {item.name}
+                  </FitText>
+                  <div className="item-price-container">
+                    {hasDiscount && (
+                      <div className="item-old-price-pill">
+                        <span className="discount-tag">-{discountPercent}%</span>
+                        <span className="old-price">{oldPriceFormatted} ₼</span>
+                      </div>
+                    )}
+                    <span className="item-price">{effectivePriceFormatted} ₼</span>
+                  </div>
+                </div>
+                <p className="item-description">{item.description}</p>
+              </div>
+              <button 
+                className="add-to-cart-btn"
+                onClick={() => onAddItem(item.id)}
+              >
+                {addedAnimations[item.id] ? (
+                  <object 
+                    type="image/svg+xml" 
+                    data={successIcon} 
+                    aria-label="Added"
+                  />
+                ) : (
+                  <img 
+                    src={addIcon} 
+                    alt="Add" 
+                  />
+                )}
+              </button>
             </div>
-            <button 
-              className="add-to-cart-btn"
-              onClick={() => onAddItem(item.id)}
-            >
-              {addedAnimations[item.id] ? (
-                <object 
-                  type="image/svg+xml" 
-                  data={successIcon} 
-                  aria-label="Added"
-                />
-              ) : (
-                <img 
-                  src={addIcon} 
-                  alt="Add" 
-                />
-              )}
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {categoryObj.items.length > 1 && (

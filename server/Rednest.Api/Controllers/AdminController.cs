@@ -903,7 +903,7 @@ public class AdminController : ControllerBase
         var products = await _context.Products
             .AsNoTracking()
             .OrderBy(p => p.Category)
-            .ThenBy(p => p.Price)
+            .ThenBy(p => p.Prices != null ? (p.Prices.DiscountPrice ?? p.Prices.Price) : 0m)
             .ToListAsync();
 
         var orders = await _context.Orders
@@ -922,8 +922,13 @@ public class AdminController : ControllerBase
             id = p.Id,
             name = p.Name,
             description = p.Description,
-            price = p.Price,
-            formattedPrice = p.Price.ToString("0.00"),
+            price = (p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m,
+            formattedPrice = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
+            prices = new
+            {
+                price = p.Prices != null ? p.Prices.Price.ToString("0.00") : "0.00",
+                discountPrice = p.Prices?.DiscountPrice != null ? p.Prices.DiscountPrice.Value.ToString("0.00") : null
+            },
             images = new { image = p.Images != null ? p.Images.Image : string.Empty, icon = p.Images != null ? p.Images.Icon : string.Empty },
             category = p.Category,
             isActive = p.IsActive,
@@ -960,8 +965,13 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
-            price = product.Price,
-            formattedPrice = product.Price.ToString("0.00"),
+            price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
+            formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
+            prices = new
+            {
+                price = product.Prices != null ? product.Prices.Price.ToString("0.00") : "0.00",
+                discountPrice = product.Prices?.DiscountPrice != null ? product.Prices.DiscountPrice.Value.ToString("0.00") : null
+            },
             images = new { image = product.Images != null ? product.Images.Image : string.Empty, icon = product.Images != null ? product.Images.Icon : string.Empty },
             category = product.Category,
             isActive = product.IsActive,
@@ -984,8 +994,13 @@ public class AdminController : ControllerBase
         if (request.Description != null && request.Description.Trim().Length > 250)
             return BadRequest(new { message = "Product description cannot exceed 250 characters." });
 
-        if (!request.Price.HasValue || request.Price.Value < 0)
+        var basePrice = request.Prices?.Price ?? request.Price;
+        if (!basePrice.HasValue || basePrice.Value < 0)
             return BadRequest(new { message = "A valid product price is required." });
+
+        var discountPrice = request.Prices?.DiscountPrice ?? request.DiscountPrice;
+        if (discountPrice.HasValue && discountPrice.Value < 0)
+            return BadRequest(new { message = "Discount price cannot be negative." });
 
         var category = string.IsNullOrWhiteSpace(request.Category) ? "Main Drinks" : request.Category.Trim();
 
@@ -994,7 +1009,11 @@ public class AdminController : ControllerBase
             Id = Guid.NewGuid(),
             Name = request.Name.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
-            Price = request.Price.Value,
+            Prices = new Rednest.Core.Entities.ProductPrices
+            {
+                Price = basePrice.Value,
+                DiscountPrice = discountPrice
+            },
             Images = new Rednest.Core.Entities.ProductImages
             {
                 Image = request.ImageUrl?.Trim() ?? string.Empty,
@@ -1013,8 +1032,13 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
-            price = product.Price,
-            formattedPrice = product.Price.ToString("0.00"),
+            price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
+            formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
+            prices = new
+            {
+                price = product.Prices?.Price.ToString("0.00") ?? "0.00",
+                discountPrice = product.Prices?.DiscountPrice?.ToString("0.00")
+            },
             images = new { image = product.Images.Image, icon = product.Images.Icon },
             category = product.Category,
             isActive = product.IsActive
@@ -1045,8 +1069,23 @@ public class AdminController : ControllerBase
             product.Description = request.Description.Trim();
         }
 
-        if (request.Price.HasValue && request.Price.Value >= 0)
-            product.Price = request.Price.Value;
+        product.Prices ??= new Rednest.Core.Entities.ProductPrices();
+        product.Images ??= new Rednest.Core.Entities.ProductImages();
+
+        var basePrice = request.Prices?.Price ?? request.Price;
+        if (basePrice.HasValue && basePrice.Value >= 0)
+        {
+            product.Prices.Price = basePrice.Value;
+        }
+
+        if (request.Prices != null)
+        {
+            product.Prices.DiscountPrice = request.Prices.DiscountPrice;
+        }
+        else if (request.DiscountPrice.HasValue)
+        {
+            product.Prices.DiscountPrice = request.DiscountPrice.Value;
+        }
 
         if (request.ImageUrl != null)
             product.Images.Image = request.ImageUrl.Trim();
@@ -1068,8 +1107,13 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
-            price = product.Price,
-            formattedPrice = product.Price.ToString("0.00"),
+            price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
+            formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
+            prices = new
+            {
+                price = product.Prices?.Price.ToString("0.00") ?? "0.00",
+                discountPrice = product.Prices?.DiscountPrice?.ToString("0.00")
+            },
             images = new { image = product.Images.Image, icon = product.Images.Icon },
             category = product.Category,
             isActive = product.IsActive
@@ -1244,11 +1288,19 @@ public class AdminUpdateUserRequest
     public bool? Subscribe { get; set; }
 }
 
+public class AdminProductPricesRequest
+{
+    public decimal? Price { get; set; }
+    public decimal? DiscountPrice { get; set; }
+}
+
 public class AdminProductRequest
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
     public decimal? Price { get; set; }
+    public decimal? DiscountPrice { get; set; }
+    public AdminProductPricesRequest? Prices { get; set; }
     public string? ImageUrl { get; set; }
     public string? IconUrl { get; set; }
     public string? Category { get; set; }

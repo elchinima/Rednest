@@ -79,8 +79,8 @@ body.mobile-menu-open .support-widget-container {
   transition: all 0.3s ease;
 }
 .support-widget img {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
 }
 .support-widget:hover {
   transform: scale(1.15) translateY(-5px);
@@ -94,8 +94,8 @@ body.mobile-menu-open .support-widget-container {
     height: 55px;
   }
   .support-widget img {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 }
 `;

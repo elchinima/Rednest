@@ -33,6 +33,7 @@ const Products = () => {
     name: '',
     description: '',
     price: '',
+    discountPrice: '',
     category: 'Main Drinks',
     imageUrl: '',
     iconUrl: '',
@@ -47,6 +48,31 @@ const Products = () => {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast({ message: '', type: 'success' }), 3500);
+  };
+
+  const getProductPriceInfo = (prod) => {
+    if (!prod) return { basePrice: 0, discountPrice: null, hasDiscount: false, discountPercent: 0, effectivePrice: 0, formattedBasePrice: '0.00', formattedDiscountPrice: null, formattedEffectivePrice: '0.00' };
+    const rawBase = prod.prices?.price !== undefined ? prod.prices.price : prod.price;
+    const basePrice = typeof rawBase === 'number' ? rawBase : parseFloat(rawBase) || 0;
+    const rawDiscount = prod.prices?.discountPrice;
+    const discountPrice = rawDiscount !== undefined && rawDiscount !== null && rawDiscount !== ''
+      ? (typeof rawDiscount === 'number' ? rawDiscount : parseFloat(rawDiscount))
+      : null;
+
+    const hasDiscount = discountPrice !== null && !isNaN(discountPrice) && discountPrice > 0 && discountPrice < basePrice;
+    const discountPercent = hasDiscount ? Math.round((1 - discountPrice / basePrice) * 100) : 0;
+    const effectivePrice = hasDiscount ? discountPrice : basePrice;
+
+    return {
+      basePrice,
+      discountPrice,
+      hasDiscount,
+      discountPercent,
+      effectivePrice,
+      formattedBasePrice: basePrice.toFixed(2),
+      formattedDiscountPrice: discountPrice !== null && !isNaN(discountPrice) ? discountPrice.toFixed(2) : null,
+      formattedEffectivePrice: effectivePrice.toFixed(2),
+    };
   };
 
   const fetchProducts = useCallback(async () => {
@@ -68,8 +94,6 @@ const Products = () => {
                   flat.push({
                     ...item,
                     category: item.category || group.category || 'Main Drinks',
-                    price: typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0,
-                    formattedPrice: typeof item.price === 'number' ? item.price.toFixed(2) : String(item.price || '0.00'),
                   });
                 });
               }
@@ -116,8 +140,10 @@ const Products = () => {
         return matchesSearch && matchesCat && matchesStatus;
       })
       .sort((a, b) => {
-        const priceA = parseFloat(a.price) || 0;
-        const priceB = parseFloat(b.price) || 0;
+        const infoA = getProductPriceInfo(a);
+        const infoB = getProductPriceInfo(b);
+        const priceA = infoA.effectivePrice;
+        const priceB = infoB.effectivePrice;
         const nameA = (a.name || '').toLowerCase();
         const nameB = (b.name || '').toLowerCase();
 
@@ -142,7 +168,9 @@ const Products = () => {
   const stats = useMemo(() => {
     const total = products.length;
     const catCount = allCategories.length;
-    const prices = products.map((p) => parseFloat(p.price) || 0).filter((p) => p > 0);
+    const prices = products
+      .map((p) => getProductPriceInfo(p).effectivePrice)
+      .filter((p) => p > 0);
     const avgPrice = prices.length > 0 ? (prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2) : '0.00';
     const minPrice = prices.length > 0 ? Math.min(...prices).toFixed(2) : '0.00';
     const maxPrice = prices.length > 0 ? Math.max(...prices).toFixed(2) : '0.00';
@@ -155,6 +183,7 @@ const Products = () => {
       name: '',
       description: '',
       price: '',
+      discountPrice: '',
       category: 'Main Drinks',
       imageUrl: '',
       iconUrl: '',
@@ -165,10 +194,13 @@ const Products = () => {
 
   const handleOpenEdit = (product) => {
     setActiveProduct(product);
+    const rawPrice = product.prices?.price ?? product.price;
+    const rawDiscount = product.prices?.discountPrice;
     setForm({
       name: product.name || '',
       description: product.description || '',
-      price: String(product.price ?? ''),
+      price: rawPrice !== undefined && rawPrice !== null ? String(rawPrice) : '',
+      discountPrice: rawDiscount !== undefined && rawDiscount !== null ? String(rawDiscount) : '',
       category: product.category || 'Main Drinks',
       imageUrl: product.images?.image || product.imageUrl || '',
       iconUrl: product.images?.icon || product.iconUrl || '',
@@ -226,8 +258,21 @@ const Products = () => {
     }
     const numPrice = parseFloat(form.price);
     if (isNaN(numPrice) || numPrice < 0) {
-      showToast('Please enter a valid price.', 'error');
+      showToast('Please enter a valid regular price.', 'error');
       return;
+    }
+
+    let numDiscountPrice = null;
+    if (form.discountPrice && String(form.discountPrice).trim() !== '') {
+      numDiscountPrice = parseFloat(form.discountPrice);
+      if (isNaN(numDiscountPrice) || numDiscountPrice < 0) {
+        showToast('Please enter a valid discount price.', 'error');
+        return;
+      }
+      if (numDiscountPrice >= numPrice) {
+        showToast('Discount price must be less than regular price.', 'error');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -235,6 +280,11 @@ const Products = () => {
       name: form.name.trim(),
       description: form.description.trim(),
       price: numPrice,
+      discountPrice: numDiscountPrice,
+      prices: {
+        price: numPrice,
+        discountPrice: numDiscountPrice,
+      },
       category: form.category || 'Main Drinks',
       imageUrl: form.imageUrl.trim(),
       iconUrl: form.iconUrl.trim(),
@@ -518,9 +568,7 @@ const Products = () => {
                 </thead>
                 <tbody>
                   {filteredProducts.map((prod, idx) => {
-                    const priceFormatted = typeof prod.price === 'number'
-                      ? prod.price.toFixed(2)
-                      : parseFloat(prod.price || 0).toFixed(2);
+                    const priceInfo = getProductPriceInfo(prod);
                     const iconUrl = prod.images?.icon || prod.images?.image || prod.imageUrl;
 
                     const actions = [
@@ -605,7 +653,21 @@ const Products = () => {
                           </span>
                         </td>
                         <td>
-                          <span className="admin-products__price-text">{priceFormatted} ₼</span>
+                          <div className="admin-products__price-cell">
+                            {priceInfo.hasDiscount ? (
+                              <>
+                                <div className="admin-products__price-strikethrough-wrap">
+                                  <span className="admin-products__old-price">{priceInfo.formattedBasePrice} ₼</span>
+                                  <span className="admin-products__discount-tag">-{priceInfo.discountPercent}%</span>
+                                </div>
+                                <span className="admin-products__price-text admin-products__price-text--sale">
+                                  {priceInfo.formattedEffectivePrice} ₼
+                                </span>
+                              </>
+                            ) : (
+                              <span className="admin-products__price-text">{priceInfo.formattedBasePrice} ₼</span>
+                            )}
+                          </div>
                         </td>
                         <td className="text-center">
                           <span className="admin-products__sold-pill">{prod.totalSold ?? 0}</span>
@@ -635,9 +697,7 @@ const Products = () => {
 
             <div className="admin-products__mobile-grid">
               {filteredProducts.map((prod, idx) => {
-                const priceFormatted = typeof prod.price === 'number'
-                  ? prod.price.toFixed(2)
-                  : parseFloat(prod.price || 0).toFixed(2);
+                const priceInfo = getProductPriceInfo(prod);
                 const iconUrl = prod.images?.icon || prod.images?.image || prod.imageUrl;
 
                 const actions = [
@@ -711,7 +771,21 @@ const Products = () => {
                       <div className="admin-products__mobile-main">
                         <div className="admin-products__mobile-title-row">
                           <span className="admin-products__product-name">{prod.name}</span>
-                          <span className="admin-products__mobile-price">{priceFormatted} ₼</span>
+                          <div className="admin-products__mobile-price-wrap">
+                            {priceInfo.hasDiscount ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                  <span className="admin-products__old-price">{priceInfo.formattedBasePrice} ₼</span>
+                                  <span className="admin-products__discount-tag">-{priceInfo.discountPercent}%</span>
+                                </div>
+                                <span className="admin-products__mobile-price" style={{ color: '#4ade80' }}>
+                                  {priceInfo.formattedEffectivePrice} ₼
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="admin-products__mobile-price">{priceInfo.formattedBasePrice} ₼</span>
+                            )}
+                          </div>
                         </div>
                         <div className="admin-products__mobile-tags">
                           <span
@@ -812,12 +886,30 @@ const Products = () => {
                       >
                         {activeProduct.category || 'Main Drinks'}
                       </span>
-                      <div className="product-modal__details-price">
-                        {typeof activeProduct.price === 'number'
-                          ? activeProduct.price.toFixed(2)
-                          : parseFloat(activeProduct.price || 0).toFixed(2)}{' '}
-                        ₼
-                      </div>
+                      {(() => {
+                        const priceInfo = getProductPriceInfo(activeProduct);
+                        return (
+                          <div className="product-modal__details-price">
+                            {priceInfo.hasDiscount ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.45)', textDecoration: 'line-through', textDecorationColor: '#ef4444' }}>
+                                  {priceInfo.formattedBasePrice} ₼
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ color: '#4ade80', fontWeight: 700 }}>
+                                    {priceInfo.formattedEffectivePrice} ₼
+                                  </span>
+                                  <span className="admin-products__discount-tag">
+                                    -{priceInfo.discountPercent}%
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <span>{priceInfo.formattedBasePrice} ₼</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -946,7 +1038,7 @@ const Products = () => {
                     </div>
 
                     <div className="product-modal__form-group">
-                      <label>Price (₼) *</label>
+                      <label>Regular Price (₼) *</label>
                       <input
                         type="number"
                         step="0.01"
@@ -955,6 +1047,25 @@ const Products = () => {
                         value={form.price}
                         onChange={(e) => setForm({ ...form, price: e.target.value })}
                         required
+                      />
+                    </div>
+
+                    <div className="product-modal__form-group">
+                      <div className="product-modal__label-row">
+                        <label>Discount Price (₼)</label>
+                        {form.price && form.discountPrice && parseFloat(form.discountPrice) < parseFloat(form.price) && parseFloat(form.discountPrice) > 0 && (
+                          <span className="product-modal__discount-badge">
+                            -{Math.round((1 - parseFloat(form.discountPrice) / parseFloat(form.price)) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Optional sale price"
+                        value={form.discountPrice}
+                        onChange={(e) => setForm({ ...form, discountPrice: e.target.value })}
                       />
                     </div>
                   </div>

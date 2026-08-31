@@ -43,9 +43,10 @@ public class OrdersController : ControllerBase
             .Where(x => x.Product != null)
             .ToList();
 
-        if (enriched.Count == 0) return null;
+        static decimal GetEffectivePrice(Rednest.Core.Entities.Product p) =>
+            p.Prices?.DiscountPrice ?? p.Prices?.Price ?? 0m;
 
-        decimal originalTotal = Math.Round(enriched.Sum(x => x.Product!.Price * x.Item.Quantity), 2);
+        decimal originalTotal = Math.Round(enriched.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity), 2);
         decimal discount = 0m;
         decimal cashbackAmount = 0m;
         int cashbackPercent = 0;
@@ -77,7 +78,7 @@ public class OrdersController : ControllerBase
                     if (drinks.Count > 0)
                     {
                         var totalDrinkQty = drinks.Sum(x => x.Item.Quantity);
-                        var totalDrinkPrice = drinks.Sum(x => x.Product!.Price * x.Item.Quantity);
+                        var totalDrinkPrice = drinks.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
                         var avgDrinkPrice = totalDrinkPrice / totalDrinkQty;
                         discount = Math.Round(avgDrinkPrice, 2);
                     }
@@ -91,7 +92,7 @@ public class OrdersController : ControllerBase
                     if (desserts.Count > 0)
                     {
                         var totalDessertQty = desserts.Sum(x => x.Item.Quantity);
-                        var totalDessertPrice = desserts.Sum(x => x.Product!.Price * x.Item.Quantity);
+                        var totalDessertPrice = desserts.Sum(x => GetEffectivePrice(x.Product!) * x.Item.Quantity);
                         var avgDessertPrice = totalDessertPrice / totalDessertQty;
                         discount = Math.Round(avgDessertPrice, 2);
                     }
@@ -131,7 +132,7 @@ public class OrdersController : ControllerBase
         {
             ProductId = x.Product!.Id,
             Quantity = x.Item.Quantity,
-            UnitPrice = x.Product.Price
+            UnitPrice = GetEffectivePrice(x.Product!)
         }).ToList();
 
         return new OrderCalculationResult
