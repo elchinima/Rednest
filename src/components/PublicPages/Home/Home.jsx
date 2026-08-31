@@ -32,6 +32,7 @@ const Home = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
+  const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth > 768;
@@ -61,39 +62,34 @@ const Home = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const favoriteImages = useMemo(() => [
-    cappuccinoImg,
-    redLatteImg,
-    nestCappuccinoImg,
-    hotChocolateImg
-  ], []);
+  const apiUrl = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     let isMounted = true;
-    let loadedCount = 0;
-
-    favoriteImages.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-      img.onload = img.onerror = () => {
-        loadedCount++;
-        if (loadedCount >= favoriteImages.length && isMounted) {
+    const fetchFavorites = async () => {
+      setFavoritesLoading(true);
+      try {
+        const res = await fetch(`${apiUrl}/api/products/favorites?limit=4`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data)) {
+            setFavoriteProducts(data);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load favorite products:', err);
+      } finally {
+        if (isMounted) {
           setFavoritesLoading(false);
         }
-      };
-    });
+      }
+    };
 
-    const timeout = setTimeout(() => {
-      if (isMounted) setFavoritesLoading(false);
-    }, 2500);
-
+    fetchFavorites();
     return () => {
       isMounted = false;
-      clearTimeout(timeout);
     };
-  }, [favoriteImages]);
-
-  const apiUrl = import.meta.env.VITE_API_URL || '';
+  }, [apiUrl]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -236,45 +232,28 @@ const Home = () => {
                 <img src={homeCardLoader} alt="Loading product" className="skeleton-svg-img" />
               </div>
             ))
+          ) : favoriteProducts.length === 0 ? (
+            <div className="empty-favorites">
+              <p>No products currently available.</p>
+            </div>
           ) : (
-            <>
-              <div className="menu-item-card">
+            favoriteProducts.map((prod) => (
+              <div key={prod.id} className="menu-item-card">
                 <div className="favorite-badge">Favorite</div>
-                <img src={cappuccinoImg} alt="Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
+                <img
+                  src={prod.images?.image || prod.images?.icon || cappuccinoImg}
+                  alt={prod.name}
+                  className="menu-img-placeholder"
+                  style={{ objectFit: 'cover' }}
+                  loading="lazy"
+                />
                 <div className="menu-info">
-                  <h4>Cappuccino</h4>
-                  <p>The perfect balance of coffee and milk foam. The soft foam on top brings happiness with every sip.</p>
-                  <span className="price">3.49 ₼</span>
+                  <h4>{prod.name}</h4>
+                  <p>{prod.description || 'Delicious handcrafted drink made with premium ingredients.'}</p>
+                  <span className="price">{prod.price} ₼</span>
                 </div>
               </div>
-              <div className="menu-item-card">
-                <div className="favorite-badge">Favorite</div>
-                <img src={redLatteImg} alt="Red Latte" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-                <div className="menu-info">
-                  <h4>Red Latte</h4>
-                  <p>Special Rednest recipe: The harmony of latte and strawberry syrup. A sweet and romantic taste.</p>
-                  <span className="price">3.75 ₼</span>
-                </div>
-              </div>
-              <div className="menu-item-card">
-                <div className="favorite-badge">Favorite</div>
-                <img src={nestCappuccinoImg} alt="Nest Cappuccino" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-                <div className="menu-info">
-                  <h4>Nest Cappuccino</h4>
-                  <p>Cappuccino enriched with the sweetness of caramel and the aroma of hazelnut. Like a warm hug. </p>
-                  <span className="price">4.25 ₼</span>
-                </div>
-              </div>
-              <div className="menu-item-card">
-                <div className="favorite-badge">Favorite</div>
-                <img src={hotChocolateImg} alt="Hot Chocolate" className="menu-img-placeholder" style={{ objectFit: 'cover' }} />
-                <div className="menu-info">
-                  <h4>Hot Chocolate</h4>
-                  <p>A drink that warms your soul with the aroma and softness of thick chocolate. A taste that brings back childhood memories.</p>
-                  <span className="price">3.99 ₼</span>
-                </div>
-              </div>
-            </>
+            ))
           )}
         </div>
         <div className="section-actions">

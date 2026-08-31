@@ -662,6 +662,20 @@ const Products = () => {
                     onClick: () => handleOpenEdit(prod),
                   },
                   {
+                    label: prod.isActive !== false ? 'Deactivate' : 'Activate',
+                    icon: (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        {prod.isActive !== false ? (
+                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                        ) : (
+                          <polyline points="9 12 11 14 15 10" />
+                        )}
+                      </svg>
+                    ),
+                    onClick: () => handleToggleActive(prod),
+                  },
+                  {
                     label: 'Delete Product',
                     variant: 'danger',
                     locked: !isSuperAdmin,
@@ -679,43 +693,49 @@ const Products = () => {
                 return (
                   <div key={prod.id || idx} className="admin-products__mobile-card">
                     <div className="admin-products__mobile-top">
-                      <div className="admin-products__product-cell">
-                        <div className="admin-products__thumb-wrap">
-                          {iconUrl ? (
-                            <img
-                              src={iconUrl}
-                              alt={prod.name}
-                              className="admin-products__thumb-img"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <span className="admin-products__thumb-fallback">☕</span>
-                          )}
-                        </div>
-                        <div className="admin-products__product-info">
+                      <div className="admin-products__thumb-wrap">
+                        {iconUrl ? (
+                          <img
+                            src={iconUrl}
+                            alt={prod.name}
+                            className="admin-products__thumb-img"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <span className="admin-products__thumb-fallback">☕</span>
+                        )}
+                      </div>
+                      <div className="admin-products__mobile-main">
+                        <div className="admin-products__mobile-title-row">
                           <span className="admin-products__product-name">{prod.name}</span>
+                          <span className="admin-products__mobile-price">{priceFormatted} ₼</span>
+                        </div>
+                        <div className="admin-products__mobile-tags">
                           <span
                             className={`admin-products__category-badge ${getCategoryClass(prod.category)}`}
                           >
                             {prod.category || 'Main Drinks'}
                           </span>
+                          <span
+                            className={`admin-products__status-badge ${prod.isActive !== false ? 'admin-products__status-badge--active' : 'admin-products__status-badge--inactive'}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleActive(prod);
+                            }}
+                            title="Click to toggle status"
+                          >
+                            {prod.isActive !== false ? 'Active' : 'Inactive'}
+                          </span>
+                          <span className="admin-products__mobile-sold-badge">
+                            {prod.totalSold ?? 0} sold
+                          </span>
                         </div>
                       </div>
-                      <AdminTableActions actions={actions} index={idx} total={filteredProducts.length} />
-                    </div>
-
-                    {prod.description && (
-                      <div className="admin-products__mobile-desc">{prod.description}</div>
-                    )}
-
-                    <div className="admin-products__mobile-bottom">
-                      <div className="admin-products__mobile-meta-item">
-                        <span className="admin-products__stat-label">Sold</span>
-                        <span className="admin-products__sold-pill">{prod.totalSold ?? 0}</span>
-                      </div>
-                      <div className="admin-products__mobile-meta-item" style={{ alignItems: 'flex-end' }}>
-                        <span className="admin-products__stat-label">Price</span>
-                        <span className="admin-products__price-text">{priceFormatted} ₼</span>
+                      <div className="admin-products__mobile-actions">
+                        <AdminTableActions actions={actions} index={idx} total={filteredProducts.length} />
                       </div>
                     </div>
                   </div>
