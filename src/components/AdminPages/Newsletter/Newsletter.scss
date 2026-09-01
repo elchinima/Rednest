@@ -460,63 +460,6 @@
     }
   }
 
-  &__form-divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.06);
-    margin: 20px 0;
-  }
-
-  &__presets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
-
-    @media (max-width: 580px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  &__preset-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: $border-radius-sm;
-    padding: 12px 10px;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.15);
-      transform: translateY(-1px);
-    }
-
-    &.active {
-      background: rgba($color-primary, 0.12);
-      border-color: rgba($color-primary, 0.45);
-      box-shadow: 0 0 10px rgba($color-primary, 0.2);
-    }
-
-    .preset-icon {
-      font-size: 1.2rem;
-    }
-
-    .preset-name {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .preset-desc {
-      font-size: 0.68rem;
-      color: $color-text-muted;
-      line-height: 1.25;
-    }
-  }
-
   &__form-group {
     display: flex;
     flex-direction: column;
@@ -559,8 +502,8 @@
     }
 
     textarea {
-      resize: vertical;
-      min-height: 130px;
+      resize: none;
+      min-height: 140px;
       line-height: 1.6;
       font-family: monospace, sans-serif;
       font-size: 0.84rem;
@@ -656,6 +599,10 @@
     padding: 20px;
     position: sticky;
     top: 24px;
+
+    @media (max-width: 1040px) {
+      display: none;
+    }
   }
 
   &__preview-top {
@@ -1113,41 +1060,6 @@
       .spent-val {
         font-weight: 700;
         color: #34d399;
-      }
-    }
-
-    .btn-sub-toggle {
-      padding: 5px 12px;
-      border-radius: $border-radius-sm;
-      font-size: 0.76rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: 1px solid transparent;
-
-      &.unsub {
-        background: rgba(239, 68, 68, 0.15);
-        border-color: rgba(239, 68, 68, 0.25);
-        color: #f87171;
-
-        &:hover:not(:disabled) {
-          background: rgba(239, 68, 68, 0.25);
-        }
-      }
-
-      &.sub {
-        background: rgba(16, 185, 129, 0.15);
-        border-color: rgba(16, 185, 129, 0.25);
-        color: #34d399;
-
-        &:hover:not(:disabled) {
-          background: rgba(16, 185, 129, 0.25);
-        }
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
       }
     }
   }

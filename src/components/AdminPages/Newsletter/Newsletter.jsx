@@ -59,108 +59,6 @@ const getInitials = (name, email) => {
   return 'U';
 };
 
-const TEMPLATE_PRESETS = [
-  {
-    id: 'special-promo',
-    name: 'Special Promotion',
-    icon: '🎁',
-    description: 'Exclusive discount & special rewards offer',
-    data: {
-      subject: '🎁 Exclusive Rednest Club Offer: 20% Off Your Next Order!',
-      preheader: 'Unlock your special member reward this weekend only.',
-      badge: 'EXCLUSIVE OFFER',
-      heading: 'A Special Treat For You, {name}!',
-      bodyHtml: `<p>Hello <strong>{name}</strong>,</p>
-<p>As a valued member of the <strong>Rednest Club</strong>, we are thrilled to offer you an exclusive <strong>20% discount</strong> on our entire premium menu this week!</p>
-<p>Whether you're craving our handcrafted specialty coffee, signature cold brews, or artisanal sweet bites, your member discount is ready to be claimed.</p>
-<p style="padding:14px 18px;background:rgba(229,62,62,0.12);border-left:4px solid #e53e3e;border-radius:6px;margin:20px 0;">
-  Use promo code <strong style="color:#ff6b6b;letter-spacing:1px;">REDNEST20</strong> at checkout or show this email to our barista.
-</p>
-<p>Thank you for choosing Rednest. We can't wait to craft your next favorite cup!</p>`,
-      buttonText: 'Order Online Now',
-      buttonUrl: 'https://rednest.az/catalog',
-      senderName: 'Rednest Coffee',
-    },
-  },
-  {
-    id: 'new-menu',
-    name: 'New Menu & Flavors',
-    icon: '☕',
-    description: 'Announce seasonal creations and new arrivals',
-    data: {
-      subject: '☕ Introducing Our New Signature Seasonal Menu!',
-      preheader: 'Discover handcrafted blends and autumn specials designed for you.',
-      badge: 'NEW ARRIVALS',
-      heading: 'Fresh Flavors Have Arrived, {name}!',
-      bodyHtml: `<p>Hello <strong>{name}</strong>,</p>
-<p>We are delighted to introduce our brand new collection of seasonal signature beverages and desserts at Rednest!</p>
-<ul style="margin:16px 0;padding-left:20px;color:#e2e8f0;">
-  <li><strong>Velvet Pistachio Latte</strong> &mdash; Smooth espresso with rich pistachio cream & crushed nuts.</li>
-  <li><strong>Ruby Berry Cascara</strong> &mdash; Refreshing infused coffee cherry tea with wild berries.</li>
-  <li><strong>Salted Caramel Dream</strong> &mdash; Signature cold brew with handcrafted honeycomb foam.</li>
-</ul>
-<p>Drop by any Rednest lounge or order online to be among the first to experience these curated flavors.</p>`,
-      buttonText: 'Explore New Menu',
-      buttonUrl: 'https://rednest.az/catalog',
-      senderName: 'Rednest Lounge',
-    },
-  },
-  {
-    id: 'celebration',
-    name: 'Weekend Celebration',
-    icon: '🎉',
-    description: 'Warm weekend wishes and club bonuses',
-    data: {
-      subject: '🎉 Celebrate Your Weekend With Rednest!',
-      preheader: 'Double reward points and complimentary surprises for club members.',
-      badge: 'CLUB EVENT',
-      heading: 'Make Your Weekend Extraordinary',
-      bodyHtml: `<p>Hello <strong>{name}</strong>,</p>
-<p>The weekend is here, and the Rednest family is ready to welcome you with warm ambiance, exceptional coffee, and great vibes.</p>
-<p>Enjoy <strong>2x Cashback Points</strong> on all orders placed through your account this Saturday and Sunday.</p>
-<p>Relax, unwind, and treat yourself to the moments that matter most.</p>`,
-      buttonText: 'Visit Rednest Today',
-      buttonUrl: 'https://rednest.az',
-      senderName: 'Rednest Club',
-    },
-  },
-  {
-    id: 'announcement',
-    name: 'General Announcement',
-    icon: '📢',
-    description: 'System updates, store hours, and news',
-    data: {
-      subject: '📢 Important Update: New Lounge Features & Hours',
-      preheader: 'We are expanding our services to serve you better.',
-      badge: 'ANNOUNCEMENT',
-      heading: 'Exciting News From Rednest',
-      bodyHtml: `<p>Hello <strong>{name}</strong>,</p>
-<p>We are constantly striving to improve your experience at Rednest. We're excited to announce updated operating hours and expanded delivery coverage across the city!</p>
-<p>You can now order your favorite drinks even faster with our improved digital menu and quick-pickup feature.</p>
-<p>As always, thank you for being an indispensable part of our journey.</p>`,
-      buttonText: 'Learn More',
-      buttonUrl: 'https://rednest.az',
-      senderName: 'Rednest Team',
-    },
-  },
-  {
-    id: 'blank',
-    name: 'Blank Template',
-    icon: '✏️',
-    description: 'Start with an empty canvas',
-    data: {
-      subject: '',
-      preheader: '',
-      badge: 'NEWSLETTER',
-      heading: 'Dear {name},',
-      bodyHtml: '<p>Write your custom email content here...</p>',
-      buttonText: '',
-      buttonUrl: '',
-      senderName: 'Rednest',
-    },
-  },
-];
-
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
   show: (i) => ({
@@ -186,25 +84,30 @@ const Newsletter = () => {
   const [subscribersLoading, setSubscribersLoading] = useState(false);
   const [subscribersSearch, setSubscribersSearch] = useState('');
   const [subscribersFilter, setSubscribersFilter] = useState('all');
-  const [togglingUserId, setTogglingUserId] = useState(null);
 
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const baseUrl = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
+
   const [form, setForm] = useState({
-    subject: TEMPLATE_PRESETS[0].data.subject,
-    preheader: TEMPLATE_PRESETS[0].data.preheader,
-    badge: TEMPLATE_PRESETS[0].data.badge,
-    heading: TEMPLATE_PRESETS[0].data.heading,
-    bodyHtml: TEMPLATE_PRESETS[0].data.bodyHtml,
-    buttonText: TEMPLATE_PRESETS[0].data.buttonText,
-    buttonUrl: TEMPLATE_PRESETS[0].data.buttonUrl,
-    senderName: TEMPLATE_PRESETS[0].data.senderName,
+    subject: '🎁 Exclusive Rednest Club Offer: 20% Off Your Next Order!',
+    preheader: 'Unlock your special member reward this weekend only.',
+    badge: 'EXCLUSIVE OFFER',
+    heading: 'A Special Treat For You, {name}!',
+    bodyHtml: `<p>Hello <strong>{name}</strong>,</p>
+<p>As a valued member of the <strong>Rednest Club</strong>, we are thrilled to offer you an exclusive <strong>20% discount</strong> on our entire premium menu this week!</p>
+<p>Whether you're craving our handcrafted specialty coffee, signature cold brews, or artisanal sweet bites, your member discount is ready to be claimed.</p>
+<p style="padding:14px 18px;background:rgba(229,62,62,0.12);border-left:4px solid #e53e3e;border-radius:6px;margin:20px 0;">
+  Use promo code <strong style="color:#ff6b6b;letter-spacing:1px;">REDNEST20</strong> at checkout or show this email to our barista.
+</p>
+<p>Thank you for choosing Rednest. We can't wait to craft your next favorite cup!</p>`,
+    buttonText: 'Order Online Now',
+    buttonUrl: baseUrl ? `${baseUrl}/catalog` : '/catalog',
+    senderName: 'Rednest Coffee',
   });
-  const [selectedTemplateId, setSelectedTemplateId] = useState(TEMPLATE_PRESETS[0].id);
   const [previewDevice, setPreviewDevice] = useState('desktop');
 
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -290,49 +193,11 @@ const Newsletter = () => {
     }
   }, [activeTab, fetchSubscribers, fetchHistory]);
 
-  const handleSelectTemplate = (template) => {
-    setSelectedTemplateId(template.id);
-    setForm({
-      subject: template.data.subject,
-      preheader: template.data.preheader,
-      badge: template.data.badge,
-      heading: template.data.heading,
-      bodyHtml: template.data.bodyHtml,
-      buttonText: template.data.buttonText,
-      buttonUrl: template.data.buttonUrl,
-      senderName: template.data.senderName,
-    });
-  };
-
   const handleInsertTag = (tag) => {
     setForm((prev) => ({
       ...prev,
       bodyHtml: prev.bodyHtml + tag,
     }));
-  };
-
-  const handleToggleSubscriber = async (userId) => {
-    setTogglingUserId(userId);
-    try {
-      const res = await fetchWithRefresh(`${apiUrl}/api/admin/newsletter/subscribers/${userId}/toggle`, {
-        method: 'PATCH',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setSubscribers((prev) =>
-          prev.map((sub) => (sub.id === userId ? { ...sub, subscribe: data.subscribe } : sub))
-        );
-        showToast(data.message || 'Subscriber status updated.');
-        fetchStats();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        showToast(err.message || 'Failed to update subscriber.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error while updating subscriber.', 'error');
-    } finally {
-      setTogglingUserId(null);
-    }
   };
 
   const handleSendTest = async (e) => {
@@ -458,7 +323,6 @@ const Newsletter = () => {
       buttonUrl: item.buttonUrl || '',
       senderName: item.senderName || 'Rednest',
     });
-    setSelectedTemplateId('custom');
     setActiveTab('compose');
     showToast('Campaign loaded into composer.');
   };
@@ -540,23 +404,6 @@ const Newsletter = () => {
           </div>
 
           <div className="admin-newsletter__header-actions">
-            <button
-              className="admin-newsletter__btn-secondary"
-              onClick={() => {
-                fetchStats();
-                if (activeTab === 'subscribers') fetchSubscribers();
-                if (activeTab === 'history') fetchHistory();
-                showToast('Newsletter data refreshed.');
-              }}
-              title="Refresh Data"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
-              Refresh
-            </button>
-
             {activeTab !== 'compose' && (
               <button
                 className="admin-newsletter__btn-primary"
@@ -685,34 +532,6 @@ const Newsletter = () => {
             <div className="admin-newsletter__panel">
               <div className="admin-newsletter__panel-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <line x1="3" y1="9" x2="21" y2="9" />
-                  <line x1="9" y1="21" x2="9" y2="9" />
-                </svg>
-                Select Campaign Template
-              </div>
-
-              <div className="admin-newsletter__presets-grid">
-                {TEMPLATE_PRESETS.map((tmpl) => (
-                  <button
-                    key={tmpl.id}
-                    type="button"
-                    className={`admin-newsletter__preset-card ${
-                      selectedTemplateId === tmpl.id ? 'active' : ''
-                    }`}
-                    onClick={() => handleSelectTemplate(tmpl)}
-                  >
-                    <span className="preset-icon">{tmpl.icon}</span>
-                    <span className="preset-name">{tmpl.name}</span>
-                    <span className="preset-desc">{tmpl.description}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="admin-newsletter__form-divider" />
-
-              <div className="admin-newsletter__panel-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
@@ -791,7 +610,7 @@ const Newsletter = () => {
                 </div>
 
                 <textarea
-                  rows={8}
+                  rows={9}
                   value={form.bodyHtml}
                   onChange={(e) => setForm({ ...form, bodyHtml: e.target.value })}
                   placeholder="Enter HTML or plain formatted text for the email body..."
@@ -816,7 +635,7 @@ const Newsletter = () => {
                       type="text"
                       value={form.buttonUrl}
                       onChange={(e) => setForm({ ...form, buttonUrl: e.target.value })}
-                      placeholder="e.g. https://rednest.az/catalog"
+                      placeholder={`e.g. ${baseUrl ? `${baseUrl}/catalog` : 'https://rednest.onrender.com/catalog'}`}
                     />
                   </div>
                 </div>
@@ -901,7 +720,7 @@ const Newsletter = () => {
                 )}
                 <div className="meta-line">
                   <span className="meta-lbl">From:</span>
-                  <span className="meta-txt">{form.senderName || 'Rednest'} &lt;noreply@rednest.com&gt;</span>
+                  <span className="meta-txt">{form.senderName || 'Rednest'} &lt;myrednest@gmail.com&gt;</span>
                 </div>
               </div>
 
@@ -1002,8 +821,7 @@ const Newsletter = () => {
                         <th>Role</th>
                         <th>Registered</th>
                         <th>Orders & Spent</th>
-                        <th>Status</th>
-                        <th style={{ textAlign: 'right' }}>Actions</th>
+                        <th style={{ textAlign: 'right' }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1067,7 +885,7 @@ const Newsletter = () => {
                             </div>
                           </td>
 
-                          <td>
+                          <td style={{ textAlign: 'right' }}>
                             <span
                               className={`badge ${
                                 sub.subscribe ? 'badge--success' : 'badge--muted'
@@ -1075,22 +893,6 @@ const Newsletter = () => {
                             >
                               {sub.subscribe ? 'Subscribed' : 'Unsubscribed'}
                             </span>
-                          </td>
-
-                          <td style={{ textAlign: 'right' }}>
-                            <button
-                              className={`btn-sub-toggle ${sub.subscribe ? 'unsub' : 'sub'}`}
-                              disabled={togglingUserId === sub.id}
-                              onClick={() => handleToggleSubscriber(sub.id)}
-                            >
-                              {togglingUserId === sub.id ? (
-                                <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" />
-                              ) : sub.subscribe ? (
-                                'Unsubscribe'
-                              ) : (
-                                'Subscribe'
-                              )}
-                            </button>
                           </td>
                         </motion.tr>
                       ))}
@@ -1316,7 +1118,7 @@ const Newsletter = () => {
                     </div>
                     <div className="summary-row">
                       <span>Sender:</span>
-                      <strong>{form.senderName || 'Rednest'} &lt;noreply@rednest.com&gt;</strong>
+                      <strong>{form.senderName || 'Rednest'} &lt;myrednest@gmail.com&gt;</strong>
                     </div>
                   </div>
 

@@ -1498,12 +1498,12 @@ public class AdminController : ControllerBase
     [HttpGet("newsletter/stats")]
     public async Task<IActionResult> GetNewsletterStats()
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can access newsletter stats." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         var totalSubscribers = await _context.UserSessions
             .AsNoTracking()
-            .CountAsync(s => s.Subscribe && s.IsActive);
+            .CountAsync(s => s.Subscribe);
 
         var totalCampaigns = await _context.NewsletterLogs
             .AsNoTracking()
@@ -1531,8 +1531,8 @@ public class AdminController : ControllerBase
     [HttpGet("newsletter/subscribers")]
     public async Task<IActionResult> GetNewsletterSubscribers()
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can access newsletter subscribers." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         var subscribedUsers = await _context.Users
             .Include(u => u.Session)
@@ -1578,32 +1578,11 @@ public class AdminController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPatch("newsletter/subscribers/{userId:guid}/toggle")]
-    public async Task<IActionResult> ToggleSubscriberStatus(Guid userId)
-    {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can modify subscriber status." });
-
-        var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.UserId == userId);
-        if (session == null)
-            return NotFound(new { message = "User session record not found." });
-
-        session.Subscribe = !session.Subscribe;
-        await _context.SaveChangesAsync();
-
-        return Ok(new
-        {
-            message = session.Subscribe ? "User subscribed to newsletter." : "User unsubscribed from newsletter.",
-            userId = session.UserId,
-            subscribe = session.Subscribe
-        });
-    }
-
     [HttpGet("newsletter/history")]
     public async Task<IActionResult> GetNewsletterHistory()
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can view newsletter history." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         var logs = await _context.NewsletterLogs
             .AsNoTracking()
@@ -1636,8 +1615,8 @@ public class AdminController : ControllerBase
     [HttpGet("newsletter/history/{id:guid}")]
     public async Task<IActionResult> GetNewsletterHistoryById(Guid id)
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can view newsletter history." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         var log = await _context.NewsletterLogs
             .AsNoTracking()
@@ -1652,8 +1631,8 @@ public class AdminController : ControllerBase
     [HttpPost("newsletter/send-test")]
     public async Task<IActionResult> SendNewsletterTest([FromBody] AdminSendTestEmailRequest request)
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can send test emails." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         if (string.IsNullOrWhiteSpace(request.ToEmail))
             return BadRequest(new { message = "Recipient test email address is required." });
@@ -1696,8 +1675,8 @@ public class AdminController : ControllerBase
     [HttpPost("newsletter/broadcast")]
     public async Task<IActionResult> BroadcastNewsletter([FromBody] AdminSendNewsletterRequest request)
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can broadcast newsletters." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         if (string.IsNullOrWhiteSpace(request.Subject))
             return BadRequest(new { message = "Email subject is required." });
@@ -1711,7 +1690,7 @@ public class AdminController : ControllerBase
 
         var subscribers = await _context.Users
             .Include(u => u.Session)
-            .Where(u => u.Session != null && u.Session.Subscribe && u.Session.IsActive)
+            .Where(u => u.Session != null && u.Session.Subscribe)
             .AsNoTracking()
             .ToListAsync();
 
@@ -1818,8 +1797,8 @@ public class AdminController : ControllerBase
     [HttpDelete("newsletter/history/{id:guid}")]
     public async Task<IActionResult> DeleteNewsletterHistory(Guid id)
     {
-        if (!await IsFullAdminAuthenticatedAsync())
-            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin can delete broadcast logs." });
+        if (!await IsAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied." });
 
         var log = await _context.NewsletterLogs.FirstOrDefaultAsync(l => l.Id == id);
         if (log == null)
@@ -1830,6 +1809,7 @@ public class AdminController : ControllerBase
 
         return Ok(new { message = "Newsletter history record deleted successfully." });
     }
+
 
     private static bool IsAllowedAdminRole(UserRole role)
     {
