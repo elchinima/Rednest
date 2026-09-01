@@ -367,12 +367,11 @@
     justify-content: space-between;
     gap: 14px;
     margin-bottom: $spacing-lg;
-    flex-wrap: wrap;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 
     @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
       margin-bottom: $spacing-md;
     }
   }
@@ -386,6 +385,22 @@
     border-radius: $border-radius-sm;
     padding: 4px;
     overflow-x: auto;
+    max-width: 100%;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    box-sizing: border-box;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      width: 100%;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      padding: 5px;
+    }
   }
 
   &__tab {
@@ -402,10 +417,12 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    flex-shrink: 0;
 
     svg {
       width: 15px;
       height: 15px;
+      flex-shrink: 0;
     }
 
     &:hover {
@@ -1043,23 +1060,6 @@
             font-weight: 600;
           }
         }
-      }
-    }
-
-    .date-cell {
-      font-size: 0.8rem;
-      color: $color-text-muted;
-    }
-
-    .orders-summary {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      font-size: 0.78rem;
-
-      .spent-val {
-        font-weight: 700;
-        color: #34d399;
       }
     }
   }

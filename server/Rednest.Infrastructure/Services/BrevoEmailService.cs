@@ -225,30 +225,37 @@ public class BrevoEmailService : IEmailService
         string? recipientEmail = null)
     {
         var year = DateTime.UtcNow.Year.ToString();
-        var safeRecipientName = !string.IsNullOrWhiteSpace(recipientName) ? recipientName.Trim() : "Valued Member";
+        var safeRecipientName = !string.IsNullOrWhiteSpace(recipientName)
+            ? recipientName.Trim()
+            : (!string.IsNullOrWhiteSpace(recipientEmail) && recipientEmail.Contains('@')
+                ? char.ToUpper(recipientEmail.Split('@')[0][0]) + recipientEmail.Split('@')[0][1..]
+                : "Valued Member");
         var safeRecipientEmail = !string.IsNullOrWhiteSpace(recipientEmail) ? recipientEmail.Trim() : "";
 
-        var processedBody = bodyHtml
-            .Replace("{name}", safeRecipientName)
-            .Replace("{email}", safeRecipientEmail)
-            .Replace("{year}", year);
+        var processedSubject = ProcessTemplateTags(subject, safeRecipientName, safeRecipientEmail, year);
+        var processedPreheader = ProcessTemplateTags(preheader, safeRecipientName, safeRecipientEmail, year);
+        var processedBadge = ProcessTemplateTags(badge, safeRecipientName, safeRecipientEmail, year);
+        var processedHeading = ProcessTemplateTags(heading, safeRecipientName, safeRecipientEmail, year);
+        var processedBody = ProcessTemplateTags(bodyHtml, safeRecipientName, safeRecipientEmail, year);
+        var processedButtonText = ProcessTemplateTags(buttonText, safeRecipientName, safeRecipientEmail, year);
+        var processedButtonUrl = ProcessTemplateTags(buttonUrl, safeRecipientName, safeRecipientEmail, year);
 
-        var preheaderHtml = !string.IsNullOrWhiteSpace(preheader)
-            ? $@"<div style=""display:none;font-size:1px;color:#0d0d0d;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;"">{System.Net.WebUtility.HtmlEncode(preheader)}</div>"
+        var preheaderHtml = !string.IsNullOrWhiteSpace(processedPreheader)
+            ? $@"<div style=""display:none;font-size:1px;color:#0d0d0d;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;"">{System.Net.WebUtility.HtmlEncode(processedPreheader)}</div>"
             : "";
 
-        var badgeHtml = !string.IsNullOrWhiteSpace(badge)
-            ? $@"<div style=""display:inline-block;padding:5px 14px;background:rgba(229,62,62,0.15);border:1px solid #e53e3e55;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ff5a5a;margin-bottom:14px;"">{System.Net.WebUtility.HtmlEncode(badge)}</div>"
+        var badgeHtml = !string.IsNullOrWhiteSpace(processedBadge)
+            ? $@"<div style=""display:inline-block;padding:5px 14px;background:rgba(229,62,62,0.15);border:1px solid #e53e3e55;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ff5a5a;margin-bottom:14px;"">{System.Net.WebUtility.HtmlEncode(processedBadge)}</div>"
             : "";
 
-        var headingHtml = !string.IsNullOrWhiteSpace(heading)
-            ? $@"<h2 style=""margin:0 0 16px 0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3;letter-spacing:-0.3px;"">{System.Net.WebUtility.HtmlEncode(heading)}</h2>"
+        var headingHtml = !string.IsNullOrWhiteSpace(processedHeading)
+            ? $@"<h2 style=""margin:0 0 16px 0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3;letter-spacing:-0.3px;"">{System.Net.WebUtility.HtmlEncode(processedHeading)}</h2>"
             : "";
 
-        var buttonHtml = (!string.IsNullOrWhiteSpace(buttonText) && !string.IsNullOrWhiteSpace(buttonUrl))
+        var buttonHtml = (!string.IsNullOrWhiteSpace(processedButtonText) && !string.IsNullOrWhiteSpace(processedButtonUrl))
             ? $@"<div style=""margin:32px 0 16px;text-align:center;"">
-                  <a href=""{System.Net.WebUtility.HtmlEncode(buttonUrl)}"" target=""_blank"" style=""display:inline-block;padding:14px 34px;background:linear-gradient(135deg, #e53e3e 0%, #c53030 100%);color:#ffffff;font-size:15px;font-weight:700;letter-spacing:0.5px;text-decoration:none;border-radius:12px;box-shadow:0 6px 20px rgba(229,62,62,0.35);"">
-                    {System.Net.WebUtility.HtmlEncode(buttonText)}
+                  <a href=""{System.Net.WebUtility.HtmlEncode(processedButtonUrl)}"" target=""_blank"" style=""display:inline-block;padding:14px 34px;background:linear-gradient(135deg, #e53e3e 0%, #c53030 100%);color:#ffffff;font-size:15px;font-weight:700;letter-spacing:0.5px;text-decoration:none;border-radius:12px;box-shadow:0 6px 20px rgba(229,62,62,0.35);"">
+                    {System.Net.WebUtility.HtmlEncode(processedButtonText)}
                   </a>
                 </div>"
             : "";
@@ -258,7 +265,7 @@ public class BrevoEmailService : IEmailService
 <head>
   <meta charset=""utf-8"">
   <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-  <title>{System.Net.WebUtility.HtmlEncode(subject)}</title>
+  <title>{System.Net.WebUtility.HtmlEncode(processedSubject)}</title>
 </head>
 <body style=""margin:0;padding:0;background-color:#0d0d10;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#e2e8f0;"">
   {preheaderHtml}
@@ -266,14 +273,12 @@ public class BrevoEmailService : IEmailService
     <tr>
       <td align=""center"">
         <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width:580px;background:#141417;border:1px solid #23232a;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.6);"">
-          <!-- Header -->
           <tr>
             <td style=""padding:32px 28px 24px;text-align:center;background:radial-gradient(ellipse at top, #261214 0%, #141417 100%);border-bottom:1px solid #202028;"">
               <h1 style=""margin:0;font-size:28px;font-weight:900;letter-spacing:3px;color:#e53e3e;"">REDNEST</h1>
               <p style=""margin:6px 0 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8e8ea0;"">Exclusive Member Newsletter</p>
             </td>
           </tr>
-          <!-- Body Content -->
           <tr>
             <td style=""padding:36px 32px 28px;color:#cbd5e1;font-size:15px;line-height:1.7;"">
               {badgeHtml}
@@ -284,7 +289,6 @@ public class BrevoEmailService : IEmailService
               {buttonHtml}
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td style=""padding:24px 32px;background:#0d0d10;border-top:1px solid #1c1c22;text-align:center;color:#6b7280;font-size:12px;line-height:1.6;"">
               <p style=""margin:0 0 6px 0;"">You are receiving this email because you subscribed to the Rednest Club.</p>
@@ -297,5 +301,15 @@ public class BrevoEmailService : IEmailService
   </table>
 </body>
 </html>";
+    }
+
+    private static string ProcessTemplateTags(string? text, string recipientName, string recipientEmail, string year)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        return System.Text.RegularExpressions.Regex.Replace(text, @"\{name\}", recipientName, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            .Replace("{email}", recipientEmail, StringComparison.OrdinalIgnoreCase)
+            .Replace("{year}", year, StringComparison.OrdinalIgnoreCase);
     }
 }

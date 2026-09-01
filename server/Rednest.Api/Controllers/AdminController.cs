@@ -1643,6 +1643,15 @@ public class AdminController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.BodyHtml))
             return BadRequest(new { message = "Email body content is required." });
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        var targetUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == request.ToEmail.Trim().ToLower());
+        var recipientName = targetUser?.Name ?? (!string.IsNullOrWhiteSpace(adminUser?.Name) ? adminUser.Name : "Valued Member");
+        var year = DateTime.UtcNow.Year.ToString();
+
+        var processedSubject = System.Text.RegularExpressions.Regex.Replace(request.Subject.Trim(), @"\{name\}", recipientName, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            .Replace("{email}", request.ToEmail.Trim(), StringComparison.OrdinalIgnoreCase)
+            .Replace("{year}", year, StringComparison.OrdinalIgnoreCase);
+
         var htmlContent = _emailService.BuildNewsletterHtml(
             subject: request.Subject.Trim(),
             preheader: request.Preheader?.Trim(),
@@ -1651,7 +1660,7 @@ public class AdminController : ControllerBase
             bodyHtml: request.BodyHtml.Trim(),
             buttonText: request.ButtonText?.Trim(),
             buttonUrl: request.ButtonUrl?.Trim(),
-            recipientName: "Test Recipient",
+            recipientName: recipientName,
             recipientEmail: request.ToEmail.Trim()
         );
 
@@ -1659,7 +1668,7 @@ public class AdminController : ControllerBase
         {
             await _emailService.SendNewsletterEmailAsync(
                 toEmail: request.ToEmail.Trim(),
-                subject: request.Subject.Trim(),
+                subject: processedSubject,
                 htmlContent: htmlContent,
                 senderName: request.SenderName?.Trim()
             );
@@ -1745,6 +1754,11 @@ public class AdminController : ControllerBase
         {
             try
             {
+                var subName = !string.IsNullOrWhiteSpace(sub.Name) ? sub.Name.Trim() : "Valued Member";
+                var personalSubject = System.Text.RegularExpressions.Regex.Replace(request.Subject.Trim(), @"\{name\}", subName, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    .Replace("{email}", sub.Email.Trim(), StringComparison.OrdinalIgnoreCase)
+                    .Replace("{year}", DateTime.UtcNow.Year.ToString(), StringComparison.OrdinalIgnoreCase);
+
                 var personalHtml = _emailService.BuildNewsletterHtml(
                     subject: request.Subject.Trim(),
                     preheader: request.Preheader?.Trim(),
@@ -1759,7 +1773,7 @@ public class AdminController : ControllerBase
 
                 await _emailService.SendNewsletterEmailAsync(
                     toEmail: sub.Email,
-                    subject: request.Subject.Trim(),
+                    subject: personalSubject,
                     htmlContent: personalHtml,
                     senderName: senderName
                 );

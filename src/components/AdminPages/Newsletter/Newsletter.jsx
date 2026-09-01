@@ -350,19 +350,21 @@ const Newsletter = () => {
     });
   }, [subscribers, subscribersSearch, subscribersFilter]);
 
-  const previewHtml = useMemo(() => {
+  const replaceTags = useCallback((text) => {
+    if (!text) return '';
     const safeRecipientName = user?.name || user?.Name || 'Alex Rivers';
     const safeRecipientEmail = user?.email || user?.Email || 'member@rednest.com';
     const year = new Date().getFullYear().toString();
+    return text
+      .replace(/\{name\}/gi, safeRecipientName)
+      .replace(/\{email\}/gi, safeRecipientEmail)
+      .replace(/\{year\}/gi, year);
+  }, [user]);
 
+  const previewHtml = useMemo(() => {
     let body = form.bodyHtml || '<p style="color:rgba(255,255,255,0.4);">No content entered yet...</p>';
-    body = body
-      .replace(/{name}/g, safeRecipientName)
-      .replace(/{email}/g, safeRecipientEmail)
-      .replace(/{year}/g, year);
-
-    return body;
-  }, [form.bodyHtml, user]);
+    return replaceTags(body);
+  }, [form.bodyHtml, replaceTags]);
 
   return (
     <AdminLayout>
@@ -710,12 +712,12 @@ const Newsletter = () => {
               <div className="admin-newsletter__meta-box">
                 <div className="meta-line">
                   <span className="meta-lbl">Subject:</span>
-                  <span className="meta-txt subject">{form.subject || '(No subject)'}</span>
+                  <span className="meta-txt subject">{replaceTags(form.subject) || '(No subject)'}</span>
                 </div>
                 {form.preheader && (
                   <div className="meta-line">
                     <span className="meta-lbl">Snippet:</span>
-                    <span className="meta-txt snippet">{form.preheader}</span>
+                    <span className="meta-txt snippet">{replaceTags(form.preheader)}</span>
                   </div>
                 )}
                 <div className="meta-line">
@@ -732,10 +734,10 @@ const Newsletter = () => {
                   </div>
 
                   <div className="email-body-area">
-                    {form.badge && <div className="email-badge-pill">{form.badge}</div>}
+                    {form.badge && <div className="email-badge-pill">{replaceTags(form.badge)}</div>}
                     {form.heading && (
                       <h2 className="email-title">
-                        {form.heading.replace(/{name}/g, user?.name || 'Alex')}
+                        {replaceTags(form.heading)}
                       </h2>
                     )}
                     <div
@@ -744,8 +746,8 @@ const Newsletter = () => {
                     />
                     {form.buttonText && (
                       <div className="email-btn-wrap">
-                        <a href={form.buttonUrl || '#'} onClick={(e) => e.preventDefault()} className="email-btn">
-                          {form.buttonText}
+                        <a href={replaceTags(form.buttonUrl) || '#'} onClick={(e) => e.preventDefault()} className="email-btn">
+                          {replaceTags(form.buttonText)}
                         </a>
                       </div>
                     )}
@@ -819,8 +821,6 @@ const Newsletter = () => {
                       <tr>
                         <th>Subscriber</th>
                         <th>Role</th>
-                        <th>Registered</th>
-                        <th>Orders & Spent</th>
                         <th style={{ textAlign: 'right' }}>Status</th>
                       </tr>
                     </thead>
@@ -872,17 +872,6 @@ const Newsletter = () => {
                             <span className="badge badge--muted">
                               {sub.role || 'Customer'}
                             </span>
-                          </td>
-
-                          <td>
-                            <span className="date-cell">{formatDate(sub.createdAt)}</span>
-                          </td>
-
-                          <td>
-                            <div className="orders-summary">
-                              <span>{sub.ordersCount} orders</span>
-                              <span className="spent-val">₼ {sub.totalSpent.toFixed(2)}</span>
-                            </div>
                           </td>
 
                           <td style={{ textAlign: 'right' }}>
