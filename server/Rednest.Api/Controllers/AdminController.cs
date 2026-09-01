@@ -2248,8 +2248,8 @@ public class AdminController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(filterRole) && !filterRole.Equals("All", StringComparison.OrdinalIgnoreCase))
         {
-            var rLower = filterRole.Trim().ToLower();
-            query = query.Where(l => l.Role.ToLower() == rLower);
+            var rClean = filterRole.Trim().ToLower().Replace(" ", "");
+            query = query.Where(l => l.Role.ToLower().Replace(" ", "") == rClean);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -2275,7 +2275,7 @@ public class AdminController : ControllerBase
             {
                 id = l.Id,
                 userId = l.UserId,
-                role = l.Role,
+                role = l.Role == "SuperAdmin" ? "Super Admin" : l.Role,
                 page = l.Page,
                 type = l.Type,
                 description = l.Description,
@@ -2309,11 +2309,12 @@ public class AdminController : ControllerBase
     {
         try
         {
+            var roleFormatted = role == "SuperAdmin" ? "Super Admin" : role;
             var log = new AdminLog
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                Role = role,
+                Role = roleFormatted,
                 Page = page,
                 Type = type,
                 Description = JsonSerializer.Serialize(description),

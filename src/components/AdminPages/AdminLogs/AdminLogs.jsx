@@ -20,7 +20,7 @@ const PAGES_LIST = [
 
 const TYPES_LIST = ['All', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-const ROLES_LIST = ['All', 'SuperAdmin', 'Admin', 'Moderator'];
+const ROLES_LIST = ['All', 'Super Admin', 'Admin', 'Moderator'];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -39,14 +39,19 @@ const formatBakuDate = (isoStr) => {
     const formatter = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Asia/Baku',
       day: '2-digit',
-      month: 'short',
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
       hour12: false,
     });
-    return formatter.format(d);
+    const parts = formatter.formatToParts(d);
+    const day = parts.find((p) => p.type === 'day')?.value || '01';
+    const month = parts.find((p) => p.type === 'month')?.value || '01';
+    const year = parts.find((p) => p.type === 'year')?.value || '2000';
+    const hour = parts.find((p) => p.type === 'hour')?.value || '00';
+    const minute = parts.find((p) => p.type === 'minute')?.value || '00';
+    return `${day}.${month}.${year}, ${hour}:${minute}`;
   } catch {
     return '—';
   }
@@ -72,6 +77,35 @@ const formatRelativeTime = (dateStr) => {
   } catch {
     return '—';
   }
+};
+
+const formatRoleName = (role) => {
+  if (!role) return 'Admin';
+  const r = String(role).trim();
+  if (r.toLowerCase().replace(/\s+/g, '') === 'superadmin') {
+    return 'Super Admin';
+  }
+  return r;
+};
+
+const formatActionName = (name) => {
+  if (!name) return 'Action';
+  const str = String(name).trim();
+  return str
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .trim();
+};
+
+const formatFieldName = (field) => {
+  if (!field) return '';
+  const str = String(field).trim();
+  return str
+    .replace(/Id$/i, ' ID')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
 };
 
 const getTypeBadgeClass = (type) => {
@@ -134,7 +168,8 @@ const extractChanges = (data) => {
     return Object.entries(data.changes)
       .filter(([_, val]) => val !== null && typeof val === 'object')
       .map(([key, val]) => ({
-        field: key,
+        field: formatFieldName(key),
+        rawField: key,
         from: formatValueDisplay(val.from),
         to: formatValueDisplay(val.to),
       }));
@@ -143,7 +178,8 @@ const extractChanges = (data) => {
   if (data.previousStatus !== undefined && data.newStatus !== undefined) {
     return [
       {
-        field: 'status',
+        field: 'Status',
+        rawField: 'status',
         from: formatValueDisplay(data.previousStatus),
         to: formatValueDisplay(data.newStatus),
       },
@@ -158,7 +194,8 @@ const extractChanges = (data) => {
       const aVal = data.after[k];
       if (bVal !== aVal && (bVal !== undefined || aVal !== undefined)) {
         diffs.push({
-          field: k,
+          field: formatFieldName(k),
+          rawField: k,
           from: formatValueDisplay(bVal),
           to: formatValueDisplay(aVal),
         });
@@ -170,7 +207,8 @@ const extractChanges = (data) => {
   if (data.action && String(data.action).toLowerCase().includes('toggle') && data.isActive !== undefined) {
     return [
       {
-        field: 'isActive',
+        field: 'Is Active',
+        rawField: 'isActive',
         from: formatValueDisplay(!data.isActive),
         to: formatValueDisplay(data.isActive),
       },
@@ -191,7 +229,8 @@ const extractParams = (data) => {
     if (val === null || val === undefined) continue;
 
     result.push({
-      key,
+      key: formatFieldName(key),
+      rawKey: key,
       value: formatValueDisplay(val),
     });
   }
@@ -201,7 +240,7 @@ const extractParams = (data) => {
 
 const extractActionSummary = (descriptionStr, type, page) => {
   const data = parseJsonSafe(descriptionStr);
-  const actionName = data.action || type || 'Action';
+  const actionName = formatActionName(data.action || type || 'Action');
   const changes = extractChanges(data);
   const params = extractParams(data);
 
@@ -236,7 +275,6 @@ const AdminLogs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -275,9 +313,8 @@ const AdminLogs = () => {
   };
 
   const fetchLogs = useCallback(
-    async (showLoadingSpinner = true) => {
-      if (showLoadingSpinner) setIsLoading(true);
-      else setIsRefreshing(true);
+    async () => {
+      setIsLoading(true);
 
       try {
         const params = new URLSearchParams({
@@ -312,14 +349,13 @@ const AdminLogs = () => {
         showToast('Error loading logs.', 'error');
       } finally {
         setIsLoading(false);
-        setIsRefreshing(false);
       }
     },
     [currentPage, pageSize, debouncedSearch, filterPage, filterType, filterRole]
   );
 
   useEffect(() => {
-    fetchLogs(true);
+    fetchLogs();
   }, [fetchLogs]);
 
   const handleClearFilters = () => {
@@ -692,7 +728,7 @@ const AdminLogs = () => {
                           </td>
 
                           <td>
-                            <span className={roleBadgeClass}>{log.role}</span>
+                            <span className={roleBadgeClass}>{formatRoleName(log.role)}</span>
                           </td>
 
                           <td>
@@ -818,7 +854,7 @@ const AdminLogs = () => {
                                     {changes.length > 0 && (
                                       <div className="admin-logs__diff-section">
                                         <h4 className="admin-logs__diff-heading">
-                                          Changes (Было → Стало)
+                                          Value Changes (Before → After)
                                         </h4>
                                         <div className="admin-logs__diff-grid">
                                           {changes.map((ch, idx) => (
@@ -828,12 +864,12 @@ const AdminLogs = () => {
                                               </div>
                                               <div className="admin-logs__diff-card-compare">
                                                 <div className="admin-logs__diff-card-from">
-                                                  <span className="lbl">Было (Was)</span>
+                                                  <span className="lbl">Before</span>
                                                   <span className="val">{ch.from}</span>
                                                 </div>
                                                 <span className="admin-logs__diff-card-arrow">→</span>
                                                 <div className="admin-logs__diff-card-to">
-                                                  <span className="lbl">Стало (Became)</span>
+                                                  <span className="lbl">After</span>
                                                   <span className="val">{ch.to}</span>
                                                 </div>
                                               </div>
@@ -959,7 +995,7 @@ const AdminLogs = () => {
                           {selectedLog.page}
                         </span>
                         <span className={getRoleBadgeClass(selectedLog.role)}>
-                          {selectedLog.role}
+                          {formatRoleName(selectedLog.role)}
                         </span>
                       </div>
                       <h2 className="admin-logs__modal-title">{modalSummary.actionName} Details</h2>
@@ -1049,7 +1085,7 @@ const AdminLogs = () => {
                         {modalSummary.changes.length > 0 && (
                           <div className="admin-logs__diff-section">
                             <h4 className="admin-logs__diff-heading">
-                              Changes (Было → Стало)
+                              Value Changes (Before → After)
                             </h4>
                             <div className="admin-logs__diff-grid">
                               {modalSummary.changes.map((ch, idx) => (
@@ -1059,12 +1095,12 @@ const AdminLogs = () => {
                                   </div>
                                   <div className="admin-logs__diff-card-compare">
                                     <div className="admin-logs__diff-card-from">
-                                      <span className="lbl">Было (Was)</span>
+                                      <span className="lbl">Before</span>
                                       <span className="val">{ch.from}</span>
                                     </div>
                                     <span className="admin-logs__diff-card-arrow">→</span>
                                     <div className="admin-logs__diff-card-to">
-                                      <span className="lbl">Стало (Became)</span>
+                                      <span className="lbl">After</span>
                                       <span className="val">{ch.to}</span>
                                     </div>
                                   </div>

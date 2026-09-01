@@ -81,8 +81,6 @@
     }
   }
 
-
-
   &__btn-secondary {
     display: inline-flex;
     align-items: center;
@@ -499,40 +497,11 @@
     white-space: nowrap;
   }
 
-  &__user-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 170px;
-  }
-
-  &__avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, $color-primary, #b91c1c);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
   &__user-info {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 0;
+    min-width: 140px;
   }
 
   &__user-name {
@@ -542,7 +511,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 140px;
+    max-width: 160px;
   }
 
   &__user-email {
@@ -551,7 +520,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 140px;
+    max-width: 160px;
   }
 
   &__action-col {
@@ -669,6 +638,29 @@
       color: #fff;
       background: rgba(255, 255, 255, 0.12);
       border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+  }
+
+  &__btn-action-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $border-radius-sm;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: $font-family-base;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #fff;
       transform: translateY(-1px);
     }
   }
