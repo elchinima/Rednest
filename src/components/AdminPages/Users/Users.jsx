@@ -226,13 +226,14 @@ const Users = () => {
      (currentUser.email && editingUser.email && currentUser.email.toLowerCase() === editingUser.email.toLowerCase()))
   );
 
-  const currentUserRole = currentUser?.role || 'Customer';
+  const currentUserRole = currentUser?.role || currentUser?.Role || 'Customer';
   const currentUserLevel = getRoleLevel(currentUserRole);
   const targetUserRole = editingUser?.role || 'Customer';
   const targetUserLevel = getRoleLevel(targetUserRole);
 
   const isSuperAdmin = currentUserLevel >= 5 || currentUserRole === 'Super Admin' || currentUserRole === 'SuperAdmin';
   const isTargetSystemRole = targetUserRole === 'Bot' || targetUserRole === 'AI';
+  const isTargetHigherRole = !isEditingSelf && targetUserLevel > currentUserLevel;
 
   const allowedRolesToAssign = ASSIGNABLE_ROLES.filter((r) => getRoleLevel(r) < currentUserLevel);
 
@@ -242,6 +243,9 @@ const Users = () => {
   if (isEditingSelf) {
     isRoleDisabled = true;
     roleHelperText = 'You cannot change your own role.';
+  } else if (isTargetHigherRole) {
+    isRoleDisabled = true;
+    roleHelperText = `You cannot modify the role of a user with a higher role (${targetUserRole}).`;
   } else if (isTargetSystemRole) {
     isRoleDisabled = true;
     roleHelperText = 'System roles (Bot and AI) can only be modified directly in the database.';
@@ -258,6 +262,11 @@ const Users = () => {
   const handleSaveUser = async (e) => {
     e.preventDefault();
     if (!editingUser) return;
+
+    if (isTargetHigherRole) {
+      showToast(`You cannot modify data of a user with a higher role (${editingUser.role}).`, 'error');
+      return;
+    }
 
     if (isEditingSelf && editForm.isActive === false) {
       showToast('You cannot deactivate or block your own account.', 'error');
@@ -725,32 +734,54 @@ const Users = () => {
                       </td>
 
                       <td className="text-right">
-                        <AdminTableActions
-                          index={i}
-                          total={visibleUsers.length}
-                          actions={[
-                            {
-                              label: 'View Profile',
-                              icon: (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                                  <circle cx="12" cy="12" r="3" />
-                                </svg>
-                              ),
-                              onClick: () => loadUserDetails(u.id),
-                            },
-                            {
-                              label: 'Edit User & Balance',
-                              icon: (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              ),
-                              onClick: () => openEditModal(u),
-                            },
-                          ]}
-                        />
+                        {(() => {
+                          const isSelf = Boolean(
+                            currentUser && (
+                              (currentUser.id && String(currentUser.id).toLowerCase() === String(u.id).toLowerCase()) ||
+                              (currentUser.Id && String(currentUser.Id).toLowerCase() === String(u.id).toLowerCase()) ||
+                              (currentUser.email && u.email && currentUser.email.toLowerCase() === u.email.toLowerCase())
+                            )
+                          );
+                          const targetLevel = getRoleLevel(u.role);
+                          const canEdit = isSelf || currentUserLevel >= targetLevel;
+
+                          return (
+                            <AdminTableActions
+                              index={i}
+                              total={visibleUsers.length}
+                              actions={[
+                                {
+                                  label: 'View Profile',
+                                  icon: (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                  ),
+                                  onClick: () => loadUserDetails(u.id),
+                                },
+                                {
+                                  label: 'Edit User & Balance',
+                                  icon: (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                  ),
+                                  locked: !canEdit,
+                                  title: canEdit ? 'Edit User & Balance' : `Access denied (Cannot edit higher role: ${u.role})`,
+                                  onClick: () => {
+                                    if (!canEdit) {
+                                      showToast(`You cannot modify data of a user with a higher role (${u.role}).`, 'error');
+                                      return;
+                                    }
+                                    openEditModal(u);
+                                  },
+                                },
+                              ]}
+                            />
+                          );
+                        })()}
                       </td>
                     </motion.tr>
                   ))}
@@ -915,14 +946,38 @@ const Users = () => {
 
                           <div className="admin-users__quick-actions">
                             <div className="actions-row">
-                              <button
-                                className="admin-users__btn-secondary"
-                                onClick={() => {
-                                  openEditModal(userDetails);
-                                }}
-                              >
-                                Edit Profile / Balance
-                              </button>
+                              {(() => {
+                                const isSelf = Boolean(
+                                  currentUser && (
+                                    (currentUser.id && String(currentUser.id).toLowerCase() === String(userDetails.id).toLowerCase()) ||
+                                    (currentUser.Id && String(currentUser.Id).toLowerCase() === String(userDetails.id).toLowerCase()) ||
+                                    (currentUser.email && userDetails.email && currentUser.email.toLowerCase() === userDetails.email.toLowerCase())
+                                  )
+                                );
+                                const targetLevel = getRoleLevel(userDetails.role);
+                                const canEdit = isSelf || currentUserLevel >= targetLevel;
+
+                                return canEdit ? (
+                                  <button
+                                    className="admin-users__btn-secondary"
+                                    onClick={() => openEditModal(userDetails)}
+                                  >
+                                    Edit Profile / Balance
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="admin-users__btn-secondary admin-users__btn-secondary--locked"
+                                    onClick={() => showToast(`You cannot modify data of a user with a higher role (${userDetails.role}).`, 'error')}
+                                    title={`Access denied (Cannot edit higher role: ${userDetails.role})`}
+                                  >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14, marginRight: 6 }}>
+                                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                    </svg>
+                                    Edit Restricted ({userDetails.role})
+                                  </button>
+                                );
+                              })()}
                             </div>
                           </div>
                         </div>
@@ -1073,11 +1128,22 @@ const Users = () => {
                 </div>
 
                 <form onSubmit={handleSaveUser} className="admin-users__edit-form">
+                  {isTargetHigherRole && (
+                    <div className="admin-users__role-warning">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      <span>You cannot modify data of a user with a higher role ({editingUser.role}).</span>
+                    </div>
+                  )}
+
                   <div className="form-row">
                     <div className="form-group">
                       <label>Name</label>
                       <input
                         type="text"
+                        disabled={isTargetHigherRole}
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                         placeholder="e.g. John Doe"
@@ -1089,6 +1155,7 @@ const Users = () => {
                       <input
                         type="email"
                         required
+                        disabled={isTargetHigherRole}
                         value={editForm.email}
                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                         placeholder="user@example.com"
@@ -1100,8 +1167,8 @@ const Users = () => {
                     <div className="form-group">
                       <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span>User Balance (₼)</span>
-                        {!isSuperAdmin && (
-                          <span title="Access denied (Super Admin only)" style={{ display: 'inline-flex', alignItems: 'center', color: 'rgba(255,255,255,0.45)' }}>
+                        {(!isSuperAdmin || isTargetHigherRole) && (
+                          <span title={isTargetHigherRole ? 'Access denied (Higher role user)' : 'Access denied (Super Admin only)'} style={{ display: 'inline-flex', alignItems: 'center', color: 'rgba(255,255,255,0.45)' }}>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '13px', height: '13px' }}>
                               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -1113,11 +1180,11 @@ const Users = () => {
                         type="number"
                         step="0.01"
                         min="0"
-                        disabled={!isSuperAdmin}
+                        disabled={!isSuperAdmin || isTargetHigherRole}
                         value={editForm.balance}
                         onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
                         placeholder="0.00"
-                        title={!isSuperAdmin ? 'Access denied (Super Admin only)' : ''}
+                        title={isTargetHigherRole ? 'Access denied (Higher role user)' : (!isSuperAdmin ? 'Access denied (Super Admin only)' : '')}
                       />
                     </div>
 
@@ -1125,7 +1192,7 @@ const Users = () => {
                       <label>User Role</label>
                       <select
                         value={editForm.role}
-                        disabled={isRoleDisabled}
+                        disabled={isRoleDisabled || isTargetHigherRole}
                         onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                       >
                         {!allowedRolesToAssign.includes(editForm.role) && (
@@ -1144,28 +1211,31 @@ const Users = () => {
                   </div>
 
                   <div className="toggles-section">
-                    <label className={`toggle-item${isEditingSelf ? ' toggle-item--disabled' : ''}`}>
+                    <label className={`toggle-item${(isEditingSelf || isTargetHigherRole) ? ' toggle-item--disabled' : ''}`}>
                       <input
                         type="checkbox"
                         checked={isEditingSelf ? true : editForm.isActive}
-                        disabled={isEditingSelf}
-                        onChange={(e) => !isEditingSelf && setEditForm({ ...editForm, isActive: e.target.checked })}
+                        disabled={isEditingSelf || isTargetHigherRole}
+                        onChange={(e) => !isEditingSelf && !isTargetHigherRole && setEditForm({ ...editForm, isActive: e.target.checked })}
                       />
                       <span className="toggle-label">
                         <strong>Account Active</strong>
                         <small>
                           {isEditingSelf
                             ? 'You cannot block or deactivate your own account'
+                            : isTargetHigherRole
+                            ? 'You cannot change active status of a user with a higher role'
                             : 'Uncheck to block user from logging in'}
                         </small>
                       </span>
                     </label>
 
-                    <label className="toggle-item">
+                    <label className={`toggle-item${isTargetHigherRole ? ' toggle-item--disabled' : ''}`}>
                       <input
                         type="checkbox"
+                        disabled={isTargetHigherRole}
                         checked={editForm.twoFactorEnabled}
-                        onChange={(e) => setEditForm({ ...editForm, twoFactorEnabled: e.target.checked })}
+                        onChange={(e) => !isTargetHigherRole && setEditForm({ ...editForm, twoFactorEnabled: e.target.checked })}
                       />
                       <span className="toggle-label">
                         <strong>Two-Factor Authentication (2FA)</strong>
@@ -1173,11 +1243,12 @@ const Users = () => {
                       </span>
                     </label>
 
-                    <label className="toggle-item">
+                    <label className={`toggle-item${isTargetHigherRole ? ' toggle-item--disabled' : ''}`}>
                       <input
                         type="checkbox"
+                        disabled={isTargetHigherRole}
                         checked={editForm.subscribe}
-                        onChange={(e) => setEditForm({ ...editForm, subscribe: e.target.checked })}
+                        onChange={(e) => !isTargetHigherRole && setEditForm({ ...editForm, subscribe: e.target.checked })}
                       />
                       <span className="toggle-label">
                         <strong>Newsletter Subscription</strong>
@@ -1197,7 +1268,7 @@ const Users = () => {
                     <button
                       type="submit"
                       className="cta-btn"
-                      disabled={isSavingUser}
+                      disabled={isSavingUser || isTargetHigherRole}
                     >
                       {isSavingUser ? (
                         <span className="btn-loader">

@@ -69,7 +69,7 @@ const AdminProtectedRoute = ({ children, requiredRoles }) => {
   }
 
   if (!hasAdminRole || !isAdminAuth) {
-    return <Navigate to="/admin" state={{ from: location, roleForbidden: true }} replace />;
+    return <Navigate to="/" state={{ from: location, roleForbidden: true }} replace />;
   }
 
   if (requiredRoles && requiredRoles.length > 0) {

@@ -1,6 +1,5 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- 3D Neon Glow Filter -->
     <filter id="glow-3d" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="blur" />
       <feMerge>
@@ -9,7 +8,6 @@
       </feMerge>
     </filter>
 
-    <!-- 3D Isometric Face Gradients for Realistic Lighting -->
     <linearGradient id="iso-top" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0.8" />
@@ -24,39 +22,10 @@
       <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55" />
       <stop offset="100%" stop-color="#ffffff" stop-opacity="0.2" />
     </linearGradient>
-
-    <linearGradient id="shadow-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
-      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.25" />
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
-    </linearGradient>
   </defs>
 
-  <!-- Scaled 1.21x (additional 10% larger) around center (24, 22.5) -->
   <g transform="translate(24, 22.5) scale(1.21) translate(-24, -22.5)">
-    <!-- 3D Perspective Dynamic Shadow -->
-    <ellipse cx="24" cy="42.5" rx="11" ry="3" fill="url(#shadow-grad)">
-      <animate
-        attributeName="rx"
-        values="11; 15; 11"
-        keyTimes="0; 0.5; 1"
-        calcMode="spline"
-        keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
-        dur="1.8s"
-        repeatCount="indefinite"
-      />
-      <animate
-        attributeName="opacity"
-        values="0.4; 0.15; 0.4"
-        keyTimes="0; 0.5; 1"
-        dur="1.8s"
-        repeatCount="indefinite"
-      />
-    </ellipse>
-
-    <!-- Main 3D Isometric Cube Container -->
     <g filter="url(#glow-3d)">
-      <!-- 3D Rotation Cycle -->
       <animateTransform
         attributeName="transform"
         type="rotate"
@@ -68,7 +37,6 @@
         repeatCount="indefinite"
       />
 
-      <!-- Glowing 3D Inner Core -->
       <circle cx="24" cy="23" r="3.2" fill="#ffffff">
         <animate
           attributeName="r"
@@ -85,7 +53,6 @@
         />
       </circle>
 
-      <!-- Top 3D Facet (Levitating along -Y) -->
       <g>
         <animateTransform
           attributeName="transform"
@@ -106,7 +73,6 @@
         />
       </g>
 
-      <!-- Left 3D Facet (Levitating along -X/+Y) -->
       <g>
         <animateTransform
           attributeName="transform"
@@ -127,7 +93,6 @@
         />
       </g>
 
-      <!-- Right 3D Facet (Levitating along +X/+Y) -->
       <g>
         <animateTransform
           attributeName="transform"

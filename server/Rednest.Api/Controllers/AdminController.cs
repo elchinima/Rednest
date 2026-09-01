@@ -334,9 +334,7 @@ public class AdminController : ControllerBase
         User? currentUser = null;
         Guid currentUserId = Guid.Empty;
         if (Guid.TryParse(currentUserIdStr, out currentUserId))
-        {
             currentUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == currentUserId);
-        }
 
         if (currentUserId != Guid.Empty && currentUserId == id)
         {
@@ -352,6 +350,14 @@ public class AdminController : ControllerBase
 
         if (user == null)
             return NotFound(new { message = "User not found." });
+
+        var currentUserRole = currentUser?.Role ?? UserRole.Customer;
+        var currentUserLevel = GetUserRoleLevel(currentUserRole);
+        var targetUserLevel = GetUserRoleLevel(user.Role);
+
+        if (currentUserId != id && currentUserLevel < targetUserLevel)
+            return StatusCode(403, new { message = $"Access denied. You cannot modify the data of a user with a higher role ({user.Role})." });
+        
 
         if (request.Name != null)
             user.Name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
@@ -395,19 +401,19 @@ public class AdminController : ControllerBase
                         return BadRequest(new { message = "System roles 'Bot' and 'AI' cannot be assigned via the admin panel." });
                     }
 
-                    var currentUserRole = currentUser?.Role ?? UserRole.Customer;
-
                     if (currentUserId == id)
                     {
                         return BadRequest(new { message = "You cannot change your own role." });
                     }
 
-                    if ((int)user.Role >= (int)currentUserRole)
+                    var parsedRoleLevel = GetUserRoleLevel(parsedRole);
+
+                    if (targetUserLevel >= currentUserLevel)
                     {
                         return BadRequest(new { message = "You cannot modify the role of a user with an equal or higher role than yours." });
                     }
 
-                    if ((int)parsedRole >= (int)currentUserRole)
+                    if (parsedRoleLevel >= currentUserLevel)
                     {
                         return BadRequest(new { message = "You cannot assign your own role or a higher role to any user." });
                     }
@@ -1496,6 +1502,18 @@ public class AdminController : ControllerBase
     {
         return role == UserRole.Admin || role == UserRole.SuperAdmin;
     }
+
+    private static int GetUserRoleLevel(UserRole role) => role switch
+    {
+        UserRole.SuperAdmin => 5,
+        UserRole.Admin => 4,
+        UserRole.Moderator => 3,
+        UserRole.Support => 2,
+        UserRole.Bot => 1,
+        UserRole.AI => 1,
+        UserRole.Customer => 0,
+        _ => 0
+    };
 
     private static bool IsSuperAdminRole(UserRole role)
     {
