@@ -73,6 +73,120 @@ public class AdminController : ControllerBase
             email = user.Email
         });
     }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetDashboardStats()
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return Unauthorized();
+
+        var utcNow = DateTime.UtcNow;
+        var bakuNow = utcNow.AddHours(4);
+        var startOfBakuMonth = new DateTime(bakuNow.Year, bakuNow.Month, 1, 0, 0, 0, DateTimeKind.Unspecified);
+        var endOfBakuMonth = startOfBakuMonth.AddMonths(1);
+
+        var startUtc = DateTime.SpecifyKind(startOfBakuMonth.AddHours(-4), DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(endOfBakuMonth.AddHours(-4), DateTimeKind.Utc);
+
+        var monthlyOrders = await _context.Orders
+            .AsNoTracking()
+            .Where(o => o.CreatedAt >= startUtc && o.CreatedAt < endUtc)
+            .ToListAsync();
+
+        var validMonthlyOrders = monthlyOrders
+            .Where(o => string.IsNullOrWhiteSpace(o.Status) || !o.Status.Contains("Cancel", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var monthlyProductsSold = validMonthlyOrders
+            .Where(o => o.Items != null)
+            .SelectMany(o => o.Items)
+            .Sum(i => i.Quantity);
+
+        var monthlyProfit = validMonthlyOrders
+            .Sum(o => o.Payment != null ? o.Payment.TotalAmount : 0m);
+
+        var monthlyPromoDiscounts = validMonthlyOrders
+            .Sum(o => o.Payment != null ? o.Payment.DiscountAmount : 0m);
+
+        var users = await _context.Users
+            .Include(u => u.Session)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var monthlyRegistrations = users.Count(u =>
+        {
+            var regDate = u.Session?.Sessions?
+                .OrderBy(s => s.CreatedAt)
+                .Select(s => (DateTime?)s.CreatedAt)
+                .FirstOrDefault();
+
+            if (!regDate.HasValue) return false;
+            return regDate.Value >= startUtc && regDate.Value < endUtc;
+        });
+
+        var activeThreshold = utcNow.AddMinutes(-15);
+        var onlineUsersCount = users.Count(u =>
+            u.Session?.IsActive != false &&
+            (u.Session?.Sessions?.Any(s =>
+                s.IsActive != false &&
+                s.RefreshTokenExpiryTime > utcNow &&
+                (s.LastActiveAt ?? s.CreatedAt) >= activeThreshold
+            ) ?? false)
+        );
+
+        var allReviews = await _context.Reviews
+            .AsNoTracking()
+            .ToListAsync();
+
+        var monthlyReviews = allReviews.Where(r =>
+        {
+            var inBakuDirect = r.CreatedAt >= startOfBakuMonth && r.CreatedAt < endOfBakuMonth;
+            var inUtcRange = r.CreatedAt >= startUtc && r.CreatedAt < endUtc;
+            return inBakuDirect || inUtcRange;
+        }).ToList();
+
+        var monthlyReviewCount = monthlyReviews.Count;
+        var monthlyReviewersCount = monthlyReviews.Select(r => r.UserId).Distinct().Count();
+        var monthlyAverageRating = monthlyReviewCount > 0
+            ? Math.Round(monthlyReviews.Average(r => r.ReviewData != null ? r.ReviewData.Rating : 0m), 2)
+            : 0.0m;
+
+        var allPromos = await _context.UserPromos
+            .AsNoTracking()
+            .ToListAsync();
+
+        var monthlyPromosCreated = allPromos.Count(p =>
+        {
+            var created = p.Dates != null ? p.Dates.ActivatedAt : DateTime.MinValue;
+            var inBakuDirect = created >= startOfBakuMonth && created < endOfBakuMonth;
+            var inUtcRange = created >= startUtc && created < endUtc;
+            return inBakuDirect || inUtcRange;
+        });
+
+        var monthNameRu = bakuNow.ToString("MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"));
+        if (!string.IsNullOrEmpty(monthNameRu))
+        {
+            monthNameRu = char.ToUpper(monthNameRu[0]) + monthNameRu[1..];
+        }
+
+        return Ok(new
+        {
+            monthName = monthNameRu,
+            bakuCurrentTime = bakuNow.ToString("dd.MM.yyyy HH:mm"),
+            productsSold = monthlyProductsSold,
+            profit = monthlyProfit,
+            profitFormatted = $"{monthlyProfit:0.00} ₼",
+            registrations = monthlyRegistrations,
+            onlineUsers = onlineUsersCount,
+            averageRating = monthlyAverageRating,
+            averageRatingFormatted = monthlyAverageRating > 0 ? monthlyAverageRating.ToString("0.0") : "0.0",
+            ratingUsersCount = monthlyReviewersCount,
+            totalReviewsCount = monthlyReviewCount,
+            promosCreated = monthlyPromosCreated,
+            promoSpent = monthlyPromoDiscounts,
+            promoSpentFormatted = $"{monthlyPromoDiscounts:0.00} ₼"
+        });
+    }
     
     [HttpGet("users")]
     public async Task<IActionResult> GetUsers()

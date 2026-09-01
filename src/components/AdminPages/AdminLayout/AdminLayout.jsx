@@ -183,7 +183,6 @@ const AdminLayout = ({ children }) => {
         </button>
 
         <div className="admin-mobile-header__brand">
-          <img src={logo} alt="Rednest" className="admin-mobile-header__logo" />
           <span className="admin-mobile-header__title">Admin Panel</span>
         </div>
 
