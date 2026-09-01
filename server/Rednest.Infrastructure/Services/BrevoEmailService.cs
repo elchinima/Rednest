@@ -180,4 +180,139 @@ public class BrevoEmailService : IEmailService
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
     }
+
+    public async Task SendNewsletterEmailAsync(string toEmail, string subject, string htmlContent, string? senderName = null)
+    {
+        var apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") 
+                     ?? _configuration["BREVO_API_KEY"];
+
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("your-brevo-api-key"))
+        {
+            return;
+        }
+
+        var defaultSenderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") 
+                                  ?? _configuration["BREVO_SENDER_EMAIL"] 
+                                  ?? "noreply@rednest.com";
+        var defaultSenderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") 
+                                 ?? _configuration["BREVO_SENDER_NAME"] 
+                                 ?? "Rednest";
+
+        var actualSenderName = !string.IsNullOrWhiteSpace(senderName) ? senderName.Trim() : defaultSenderName;
+
+        var client = _httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Clear();
+        client.DefaultRequestHeaders.Add("api-key", apiKey);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+        var payload = new
+        {
+            sender = new { name = actualSenderName, email = defaultSenderEmail },
+            to = new[] { new { email = toEmail } },
+            subject = subject,
+            htmlContent = htmlContent
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var err = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Brevo API error: {err}");
+        }
+    }
+
+    public string BuildNewsletterHtml(
+        string subject,
+        string? preheader,
+        string? badge,
+        string? heading,
+        string bodyHtml,
+        string? buttonText = null,
+        string? buttonUrl = null,
+        string? recipientName = null,
+        string? recipientEmail = null)
+    {
+        var year = DateTime.UtcNow.Year.ToString();
+        var safeRecipientName = !string.IsNullOrWhiteSpace(recipientName) ? recipientName.Trim() : "Valued Member";
+        var safeRecipientEmail = !string.IsNullOrWhiteSpace(recipientEmail) ? recipientEmail.Trim() : "";
+
+        var processedBody = bodyHtml
+            .Replace("{name}", safeRecipientName)
+            .Replace("{email}", safeRecipientEmail)
+            .Replace("{year}", year);
+
+        var preheaderHtml = !string.IsNullOrWhiteSpace(preheader)
+            ? $@"<div style=""display:none;font-size:1px;color:#0d0d0d;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;"">{System.Net.WebUtility.HtmlEncode(preheader)}</div>"
+            : "";
+
+        var badgeHtml = !string.IsNullOrWhiteSpace(badge)
+            ? $@"<div style=""display:inline-block;padding:5px 14px;background:rgba(229,62,62,0.15);border:1px solid #e53e3e55;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ff5a5a;margin-bottom:14px;"">{System.Net.WebUtility.HtmlEncode(badge)}</div>"
+            : "";
+
+        var headingHtml = !string.IsNullOrWhiteSpace(heading)
+            ? $@"<h2 style=""margin:0 0 16px 0;font-size:22px;font-weight:700;color:#ffffff;line-height:1.3;letter-spacing:-0.3px;"">{System.Net.WebUtility.HtmlEncode(heading)}</h2>"
+            : "";
+
+        var buttonHtml = (!string.IsNullOrWhiteSpace(buttonText) && !string.IsNullOrWhiteSpace(buttonUrl))
+            ? $@"<div style=""margin:32px 0 16px;text-align:center;"">
+                  <a href=""{System.Net.WebUtility.HtmlEncode(buttonUrl)}"" target=""_blank"" style=""display:inline-block;padding:14px 34px;background:linear-gradient(135deg, #e53e3e 0%, #c53030 100%);color:#ffffff;font-size:15px;font-weight:700;letter-spacing:0.5px;text-decoration:none;border-radius:12px;box-shadow:0 6px 20px rgba(229,62,62,0.35);"">
+                    {System.Net.WebUtility.HtmlEncode(buttonText)}
+                  </a>
+                </div>"
+            : "";
+
+        return $@"<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>{System.Net.WebUtility.HtmlEncode(subject)}</title>
+</head>
+<body style=""margin:0;padding:0;background-color:#0b0b0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0;line-height:1.6;"">
+  {preheaderHtml}
+  <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#0b0b0d;padding:36px 16px;"">
+    <tr>
+      <td align=""center"">
+        <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width:560px;background:#141416;border:1px solid #242429;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,0.65);"">
+          <!-- Top Header Brand -->
+          <tr>
+            <td style=""padding:32px 32px 22px;text-align:center;background:radial-gradient(ellipse at top, #261214 0%, #141416 100%);border-bottom:1px solid #202024;"">
+              <h1 style=""margin:0;font-size:28px;font-weight:900;letter-spacing:2.5px;color:#e53e3e;font-family:'Montserrat',-apple-system,sans-serif;"">REDNEST</h1>
+              <p style=""margin:6px 0 0;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#888899;"">Exclusive Member Newsletter</p>
+            </td>
+          </tr>
+
+          <!-- Main Content Body -->
+          <tr>
+            <td style=""padding:34px 32px 28px;color:#cbd5e1;font-size:15px;line-height:1.7;"">
+              {badgeHtml}
+              {headingHtml}
+              <div style=""color:#d1d5db;font-size:15px;line-height:1.75;"">
+                {processedBody}
+              </div>
+              {buttonHtml}
+            </td>
+          </tr>
+
+          <!-- Footer Area -->
+          <tr>
+            <td style=""padding:24px 32px;background:#0e0e10;border-top:1px solid #1c1c20;text-align:center;"">
+              <p style=""margin:0 0 8px;font-size:12px;color:#71717a;"">
+                You are receiving this email because you subscribed to the Rednest Club updates.
+              </p>
+              <p style=""margin:0;font-size:11px;color:#52525b;"">
+                &copy; {year} Rednest. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>";
+    }
 }
+

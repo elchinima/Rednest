@@ -609,6 +609,12 @@
       color: #c084fc;
       border: 1px solid rgba(168, 85, 247, 0.3);
     }
+
+    &--teal {
+      background: rgba(20, 184, 166, 0.15);
+      color: #2dd4bf;
+      border: 1px solid rgba(20, 184, 166, 0.3);
+    }
   }
 
   &__badges {

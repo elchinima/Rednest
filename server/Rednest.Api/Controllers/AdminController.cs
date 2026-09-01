@@ -7,15 +7,17 @@ public class AdminController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AppDbContext _context;
+    private readonly IEmailService _emailService;
 
     private static readonly string[] AllowedExtensions = [".png", ".jpg", ".jpeg"];
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
     private const int AdminSessionHours = 8;
 
-    public AdminController(IHttpClientFactory httpClientFactory, AppDbContext context)
+    public AdminController(IHttpClientFactory httpClientFactory, AppDbContext context, IEmailService emailService)
     {
         _httpClientFactory = httpClientFactory;
         _context = context;
+        _emailService = emailService;
     }
 
     [HttpPost("login")]
@@ -1493,6 +1495,342 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Product deleted successfully." });
     }
 
+    [HttpGet("newsletter/stats")]
+    public async Task<IActionResult> GetNewsletterStats()
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can access newsletter stats." });
+
+        var totalSubscribers = await _context.UserSessions
+            .AsNoTracking()
+            .CountAsync(s => s.Subscribe && s.IsActive);
+
+        var totalCampaigns = await _context.NewsletterLogs
+            .AsNoTracking()
+            .CountAsync();
+
+        var totalDelivered = await _context.NewsletterLogs
+            .AsNoTracking()
+            .SumAsync(l => (int?)l.SuccessCount) ?? 0;
+
+        var lastBroadcast = await _context.NewsletterLogs
+            .AsNoTracking()
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => (DateTime?)l.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        return Ok(new
+        {
+            totalSubscribers,
+            totalCampaigns,
+            totalDelivered,
+            lastBroadcast
+        });
+    }
+
+    [HttpGet("newsletter/subscribers")]
+    public async Task<IActionResult> GetNewsletterSubscribers()
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can access newsletter subscribers." });
+
+        var subscribedUsers = await _context.Users
+            .Include(u => u.Session)
+            .Where(u => u.Session != null && u.Session.Subscribe)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var userIds = subscribedUsers.Select(u => u.Id).ToList();
+        var orders = await _context.Orders
+            .Where(o => userIds.Contains(o.UserId))
+            .AsNoTracking()
+            .Select(o => new { o.UserId, TotalAmount = o.Payment != null ? o.Payment.TotalAmount : 0m })
+            .ToListAsync();
+
+        var ordersGrouped = orders
+            .GroupBy(o => o.UserId)
+            .ToDictionary(g => g.Key, g => new { Count = g.Count(), TotalSpent = g.Sum(x => x.TotalAmount) });
+
+        var result = subscribedUsers.Select(u =>
+        {
+            var hasOrders = ordersGrouped.TryGetValue(u.Id, out var oStats);
+            var registeredDate = u.Session?.Sessions?
+                .OrderBy(s => s.CreatedAt)
+                .Select(s => (DateTime?)s.CreatedAt)
+                .FirstOrDefault() ?? DateTime.UtcNow;
+
+            return new
+            {
+                id = u.Id,
+                email = u.Email,
+                name = u.Name,
+                profilePictureUrl = u.ProfilePictureUrl,
+                balance = u.Balance,
+                role = u.Role == UserRole.SuperAdmin ? "Super Admin" : u.Role.ToString(),
+                isActive = u.Session?.IsActive ?? true,
+                subscribe = u.Session?.Subscribe ?? false,
+                ordersCount = hasOrders ? oStats!.Count : 0,
+                totalSpent = hasOrders ? oStats!.TotalSpent : 0m,
+                createdAt = registeredDate
+            };
+        }).OrderByDescending(u => u.createdAt).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPatch("newsletter/subscribers/{userId:guid}/toggle")]
+    public async Task<IActionResult> ToggleSubscriberStatus(Guid userId)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can modify subscriber status." });
+
+        var session = await _context.UserSessions.FirstOrDefaultAsync(s => s.UserId == userId);
+        if (session == null)
+            return NotFound(new { message = "User session record not found." });
+
+        session.Subscribe = !session.Subscribe;
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = session.Subscribe ? "User subscribed to newsletter." : "User unsubscribed from newsletter.",
+            userId = session.UserId,
+            subscribe = session.Subscribe
+        });
+    }
+
+    [HttpGet("newsletter/history")]
+    public async Task<IActionResult> GetNewsletterHistory()
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can view newsletter history." });
+
+        var logs = await _context.NewsletterLogs
+            .AsNoTracking()
+            .OrderByDescending(l => l.CreatedAt)
+            .ToListAsync();
+
+        return Ok(logs.Select(l => new
+        {
+            id = l.Id,
+            subject = l.Subject,
+            preheader = l.Preheader,
+            badge = l.Badge,
+            heading = l.Heading,
+            buttonText = l.ButtonText,
+            buttonUrl = l.ButtonUrl,
+            senderName = l.SenderName,
+            senderEmail = l.SenderEmail,
+            sentByAdminId = l.SentByAdminId,
+            sentByAdminName = l.SentByAdminName,
+            recipientCount = l.RecipientCount,
+            successCount = l.SuccessCount,
+            failedCount = l.FailedCount,
+            status = l.Status,
+            errorMessage = l.ErrorMessage,
+            recipientEmailsCount = l.RecipientEmails?.Count ?? 0,
+            createdAt = l.CreatedAt
+        }));
+    }
+
+    [HttpGet("newsletter/history/{id:guid}")]
+    public async Task<IActionResult> GetNewsletterHistoryById(Guid id)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can view newsletter history." });
+
+        var log = await _context.NewsletterLogs
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (log == null)
+            return NotFound(new { message = "Newsletter history record not found." });
+
+        return Ok(log);
+    }
+
+    [HttpPost("newsletter/send-test")]
+    public async Task<IActionResult> SendNewsletterTest([FromBody] AdminSendTestEmailRequest request)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can send test emails." });
+
+        if (string.IsNullOrWhiteSpace(request.ToEmail))
+            return BadRequest(new { message = "Recipient test email address is required." });
+
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return BadRequest(new { message = "Email subject is required." });
+
+        if (string.IsNullOrWhiteSpace(request.BodyHtml))
+            return BadRequest(new { message = "Email body content is required." });
+
+        var htmlContent = _emailService.BuildNewsletterHtml(
+            subject: request.Subject.Trim(),
+            preheader: request.Preheader?.Trim(),
+            badge: request.Badge?.Trim(),
+            heading: request.Heading?.Trim(),
+            bodyHtml: request.BodyHtml.Trim(),
+            buttonText: request.ButtonText?.Trim(),
+            buttonUrl: request.ButtonUrl?.Trim(),
+            recipientName: "Test Recipient",
+            recipientEmail: request.ToEmail.Trim()
+        );
+
+        try
+        {
+            await _emailService.SendNewsletterEmailAsync(
+                toEmail: request.ToEmail.Trim(),
+                subject: request.Subject.Trim(),
+                htmlContent: htmlContent,
+                senderName: request.SenderName?.Trim()
+            );
+
+            return Ok(new { message = $"Test newsletter sent successfully to {request.ToEmail.Trim()}." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Failed to send test email: {ex.Message}" });
+        }
+    }
+
+    [HttpPost("newsletter/broadcast")]
+    public async Task<IActionResult> BroadcastNewsletter([FromBody] AdminSendNewsletterRequest request)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Admin and Super Admin roles can broadcast newsletters." });
+
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return BadRequest(new { message = "Email subject is required." });
+
+        if (string.IsNullOrWhiteSpace(request.BodyHtml))
+            return BadRequest(new { message = "Email body content is required." });
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        if (!auth || adminUser == null)
+            return Unauthorized(new { message = "Admin session expired or invalid." });
+
+        var subscribers = await _context.Users
+            .Include(u => u.Session)
+            .Where(u => u.Session != null && u.Session.Subscribe && u.Session.IsActive)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (subscribers.Count == 0)
+        {
+            return BadRequest(new { message = "No active subscribed users found in the system." });
+        }
+
+        var senderName = !string.IsNullOrWhiteSpace(request.SenderName) ? request.SenderName.Trim() : "Rednest";
+        var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") ?? "noreply@rednest.com";
+
+        var log = new NewsletterLog
+        {
+            Id = Guid.NewGuid(),
+            Subject = request.Subject.Trim(),
+            Preheader = request.Preheader?.Trim(),
+            Badge = request.Badge?.Trim(),
+            Heading = request.Heading?.Trim(),
+            PlainText = request.BodyHtml.Trim(),
+            ButtonText = request.ButtonText?.Trim(),
+            ButtonUrl = request.ButtonUrl?.Trim(),
+            SenderName = senderName,
+            SenderEmail = senderEmail,
+            SentByAdminId = adminUser.Id,
+            SentByAdminName = adminUser.Name ?? adminUser.Email,
+            RecipientCount = subscribers.Count,
+            SuccessCount = 0,
+            FailedCount = 0,
+            Status = "Sending",
+            RecipientEmails = subscribers.Select(s => s.Email).ToList(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var genericHtml = _emailService.BuildNewsletterHtml(
+            subject: request.Subject.Trim(),
+            preheader: request.Preheader?.Trim(),
+            badge: request.Badge?.Trim(),
+            heading: request.Heading?.Trim(),
+            bodyHtml: request.BodyHtml.Trim(),
+            buttonText: request.ButtonText?.Trim(),
+            buttonUrl: request.ButtonUrl?.Trim(),
+            recipientName: null,
+            recipientEmail: null
+        );
+        log.ContentHtml = genericHtml;
+
+        var successCount = 0;
+        var failedCount = 0;
+        var errorMessages = new List<string>();
+
+        foreach (var sub in subscribers)
+        {
+            try
+            {
+                var personalHtml = _emailService.BuildNewsletterHtml(
+                    subject: request.Subject.Trim(),
+                    preheader: request.Preheader?.Trim(),
+                    badge: request.Badge?.Trim(),
+                    heading: request.Heading?.Trim(),
+                    bodyHtml: request.BodyHtml.Trim(),
+                    buttonText: request.ButtonText?.Trim(),
+                    buttonUrl: request.ButtonUrl?.Trim(),
+                    recipientName: sub.Name,
+                    recipientEmail: sub.Email
+                );
+
+                await _emailService.SendNewsletterEmailAsync(
+                    toEmail: sub.Email,
+                    subject: request.Subject.Trim(),
+                    htmlContent: personalHtml,
+                    senderName: senderName
+                );
+                successCount++;
+            }
+            catch (Exception ex)
+            {
+                failedCount++;
+                if (errorMessages.Count < 5)
+                {
+                    errorMessages.Add($"{sub.Email}: {ex.Message}");
+                }
+            }
+        }
+
+        log.SuccessCount = successCount;
+        log.FailedCount = failedCount;
+        log.Status = failedCount == 0 ? "Sent" : (successCount > 0 ? "PartiallySent" : "Failed");
+        log.ErrorMessage = errorMessages.Count > 0 ? string.Join("; ", errorMessages) : null;
+
+        _context.NewsletterLogs.Add(log);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = $"Newsletter broadcast complete. Sent to {successCount} of {subscribers.Count} subscribers.",
+            id = log.Id,
+            recipientCount = subscribers.Count,
+            successCount,
+            failedCount,
+            status = log.Status
+        });
+    }
+
+    [HttpDelete("newsletter/history/{id:guid}")]
+    public async Task<IActionResult> DeleteNewsletterHistory(Guid id)
+    {
+        if (!await IsFullAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin can delete broadcast logs." });
+
+        var log = await _context.NewsletterLogs.FirstOrDefaultAsync(l => l.Id == id);
+        if (log == null)
+            return NotFound(new { message = "Newsletter history record not found." });
+
+        _context.NewsletterLogs.Remove(log);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Newsletter history record deleted successfully." });
+    }
+
     private static bool IsAllowedAdminRole(UserRole role)
     {
         return role == UserRole.Moderator || role == UserRole.Admin || role == UserRole.SuperAdmin;
@@ -1509,8 +1847,9 @@ public class AdminController : ControllerBase
         UserRole.Admin => 4,
         UserRole.Moderator => 3,
         UserRole.Support => 2,
-        UserRole.Bot => 1,
-        UserRole.AI => 1,
+        UserRole.Staff => 1,
+        UserRole.Bot => 0,
+        UserRole.AI => 0,
         UserRole.Customer => 0,
         _ => 0
     };
@@ -1669,4 +2008,29 @@ public class AdminCreatePromoRequest
     public string? PrizeName { get; set; }
     public string? PrizeDescription { get; set; }
     public int ExpiryDays { get; set; } = 7;
+}
+
+public class AdminSendNewsletterRequest
+{
+    public string Subject { get; set; } = string.Empty;
+    public string? Preheader { get; set; }
+    public string? Badge { get; set; }
+    public string? Heading { get; set; }
+    public string BodyHtml { get; set; } = string.Empty;
+    public string? ButtonText { get; set; }
+    public string? ButtonUrl { get; set; }
+    public string? SenderName { get; set; }
+}
+
+public class AdminSendTestEmailRequest
+{
+    public string ToEmail { get; set; } = string.Empty;
+    public string Subject { get; set; } = string.Empty;
+    public string? Preheader { get; set; }
+    public string? Badge { get; set; }
+    public string? Heading { get; set; }
+    public string BodyHtml { get; set; } = string.Empty;
+    public string? ButtonText { get; set; }
+    public string? ButtonUrl { get; set; }
+    public string? SenderName { get; set; }
 }

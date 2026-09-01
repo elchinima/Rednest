@@ -23,6 +23,7 @@ const Users = lazy(() => import('../components/AdminPages/Users/Users'));
 const Database = lazy(() => import('../components/AdminPages/Database/Database'));
 const AdminReviews = lazy(() => import('../components/AdminPages/Reviews/Reviews'));
 const AdminPromos = lazy(() => import('../components/AdminPages/Promos/Promos'));
+const AdminNewsletter = lazy(() => import('../components/AdminPages/Newsletter/Newsletter'));
 import ProtectedRoute from './ProtectedRoute';
 import AdminProtectedRoute from './AdminProtectedRoute';
 const ErrorPage = lazy(() => import('../components/PublicPages/ErrorPage/ErrorPage'));
@@ -163,6 +164,11 @@ const AnimatedRoutes = () => {
           <Route path="/admin/database" element={
             <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
               <Database />
+            </AdminProtectedRoute>
+          } />
+          <Route path="/admin/newsletter" element={
+            <AdminProtectedRoute requiredRoles={['admin', 'superadmin']}>
+              <AdminNewsletter />
             </AdminProtectedRoute>
           } />
           <Route path="/admin/reviews" element={

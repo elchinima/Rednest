@@ -67,13 +67,14 @@ const getInitials = (name, email) => {
   return 'U';
 };
 
-const ALL_ROLES = ['Customer', 'Bot', 'Support', 'Moderator', 'Admin', 'Super Admin', 'AI'];
-const ASSIGNABLE_ROLES = ['Customer', 'Support', 'Moderator', 'Admin', 'Super Admin'];
+const ALL_ROLES = ['Customer', 'Bot', 'AI', 'Staff', 'Support', 'Moderator', 'Admin', 'Super Admin'];
+const ASSIGNABLE_ROLES = ['Customer', 'Staff', 'Support', 'Moderator', 'Admin', 'Super Admin'];
 
 const ROLE_LEVELS = {
   Customer: 0,
-  Bot: 1,
-  AI: 1,
+  Bot: 0,
+  AI: 0,
+  Staff: 1,
   Support: 2,
   Moderator: 3,
   Admin: 4,
@@ -96,6 +97,8 @@ const getRoleBadgeClass = (role) => {
       return 'badge--warning';
     case 'Support':
       return 'badge--info';
+    case 'Staff':
+      return 'badge--teal';
     case 'Bot':
     case 'AI':
       return 'badge--purple';

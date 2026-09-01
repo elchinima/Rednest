@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<UserBasket> UserBaskets => Set<UserBasket>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<NewsletterLog> NewsletterLogs => Set<NewsletterLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,6 +185,35 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.OrderId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<NewsletterLog>(entity =>
+        {
+            entity.ToTable("NewsletterLogs");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(250);
+            entity.Property(e => e.Preheader).HasMaxLength(250);
+            entity.Property(e => e.Badge).HasMaxLength(100);
+            entity.Property(e => e.Heading).HasMaxLength(250);
+            entity.Property(e => e.ContentHtml).HasColumnType("text").IsRequired();
+            entity.Property(e => e.PlainText).HasColumnType("text");
+            entity.Property(e => e.ButtonText).HasMaxLength(100);
+            entity.Property(e => e.ButtonUrl).HasMaxLength(500);
+            entity.Property(e => e.SenderName).HasMaxLength(100).HasDefaultValue("Rednest");
+            entity.Property(e => e.SenderEmail).HasMaxLength(150).HasDefaultValue("noreply@rednest.com");
+            entity.Property(e => e.SentByAdminName).HasMaxLength(150);
+            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Sent");
+            entity.Property(e => e.ErrorMessage).HasColumnType("text");
+
+            entity.Property(e => e.RecipientEmails)
+                  .HasColumnName("RecipientEmails")
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
         });
     }
 }
