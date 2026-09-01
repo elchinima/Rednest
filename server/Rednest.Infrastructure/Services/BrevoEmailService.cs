@@ -4,34 +4,46 @@ public class BrevoEmailService : IEmailService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<BrevoEmailService> _logger;
 
-    public BrevoEmailService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public BrevoEmailService(
+        IHttpClientFactory httpClientFactory, 
+        IConfiguration configuration,
+        ILogger<BrevoEmailService> logger)
     {
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
+        _logger = logger;
     }
 
-    public async Task SendTwoFactorCodeAsync(string toEmail, string code)
+    private (string apiKey, string senderEmail, string senderName) GetBrevoConfig(string? customSenderName = null)
     {
         var apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") 
                      ?? _configuration["BREVO_API_KEY"];
 
         if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("your-brevo-api-key"))
         {
-            return;
+            throw new InvalidOperationException("BREVO_API_KEY is not configured in secret/.env or configuration.");
         }
 
         var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") 
                           ?? _configuration["BREVO_SENDER_EMAIL"] 
-                          ?? "noreply@rednest.com";
-        var senderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") 
-                         ?? _configuration["BREVO_SENDER_NAME"] 
-                         ?? "Rednest";
+                          ?? "myrednest@gmail.com";
 
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("api-key", apiKey);
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var defaultSenderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") 
+                                 ?? _configuration["BREVO_SENDER_NAME"] 
+                                 ?? "Rednest";
+
+        var actualSenderName = !string.IsNullOrWhiteSpace(customSenderName) 
+            ? customSenderName.Trim() 
+            : defaultSenderName;
+
+        return (apiKey, senderEmail, actualSenderName);
+    }
+
+    public async Task SendTwoFactorCodeAsync(string toEmail, string code)
+    {
+        var (apiKey, senderEmail, senderName) = GetBrevoConfig();
 
         var htmlContent = $@"<!DOCTYPE html>
 <html>
@@ -86,37 +98,24 @@ public class BrevoEmailService : IEmailService
             htmlContent = htmlContent
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        var client = _httpClientFactory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
+        var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Brevo API 2FA error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
     }
 
     public async Task SendSubscriptionCodeAsync(string toEmail, string code)
     {
-        var apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") 
-                     ?? _configuration["BREVO_API_KEY"];
-
-        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("your-brevo-api-key"))
-        {
-            return;
-        }
-
-        var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") 
-                          ?? _configuration["BREVO_SENDER_EMAIL"] 
-                          ?? "noreply@rednest.com";
-        var senderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") 
-                         ?? _configuration["BREVO_SENDER_NAME"] 
-                         ?? "Rednest";
-
-        var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("api-key", apiKey);
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var (apiKey, senderEmail, senderName) = GetBrevoConfig();
 
         var htmlContent = $@"<!DOCTYPE html>
 <html>
@@ -171,54 +170,45 @@ public class BrevoEmailService : IEmailService
             htmlContent = htmlContent
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        var client = _httpClientFactory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
+        var response = await client.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Brevo API Subscription code error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
     }
 
     public async Task SendNewsletterEmailAsync(string toEmail, string subject, string htmlContent, string? senderName = null)
     {
-        var apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") 
-                     ?? _configuration["BREVO_API_KEY"];
-
-        if (string.IsNullOrWhiteSpace(apiKey) || apiKey.Contains("your-brevo-api-key"))
-        {
-            return;
-        }
-
-        var defaultSenderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") 
-                                  ?? _configuration["BREVO_SENDER_EMAIL"] 
-                                  ?? "noreply@rednest.com";
-        var defaultSenderName = Environment.GetEnvironmentVariable("BREVO_SENDER_NAME") 
-                                 ?? _configuration["BREVO_SENDER_NAME"] 
-                                 ?? "Rednest";
-
-        var actualSenderName = !string.IsNullOrWhiteSpace(senderName) ? senderName.Trim() : defaultSenderName;
+        var (apiKey, senderEmail, actualSenderName) = GetBrevoConfig(senderName);
 
         var client = _httpClientFactory.CreateClient();
-        client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("api-key", apiKey);
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
         var payload = new
         {
-            sender = new { name = actualSenderName, email = defaultSenderEmail },
+            sender = new { name = actualSenderName, email = senderEmail },
             to = new[] { new { email = toEmail } },
             subject = subject,
             htmlContent = htmlContent
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Brevo API Newsletter send error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
     }
@@ -264,47 +254,41 @@ public class BrevoEmailService : IEmailService
             : "";
 
         return $@"<!DOCTYPE html>
-<html>
+<html lang=""en"">
 <head>
   <meta charset=""utf-8"">
   <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
   <title>{System.Net.WebUtility.HtmlEncode(subject)}</title>
 </head>
-<body style=""margin:0;padding:0;background-color:#0b0b0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0;line-height:1.6;"">
+<body style=""margin:0;padding:0;background-color:#0d0d10;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#e2e8f0;"">
   {preheaderHtml}
-  <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#0b0b0d;padding:36px 16px;"">
+  <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#0d0d10;padding:40px 16px;"">
     <tr>
       <td align=""center"">
-        <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width:560px;background:#141416;border:1px solid #242429;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,0.65);"">
-          <!-- Top Header Brand -->
+        <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width:580px;background:#141417;border:1px solid #23232a;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.6);"">
+          <!-- Header -->
           <tr>
-            <td style=""padding:32px 32px 22px;text-align:center;background:radial-gradient(ellipse at top, #261214 0%, #141416 100%);border-bottom:1px solid #202024;"">
-              <h1 style=""margin:0;font-size:28px;font-weight:900;letter-spacing:2.5px;color:#e53e3e;font-family:'Montserrat',-apple-system,sans-serif;"">REDNEST</h1>
-              <p style=""margin:6px 0 0;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#888899;"">Exclusive Member Newsletter</p>
+            <td style=""padding:32px 28px 24px;text-align:center;background:radial-gradient(ellipse at top, #261214 0%, #141417 100%);border-bottom:1px solid #202028;"">
+              <h1 style=""margin:0;font-size:28px;font-weight:900;letter-spacing:3px;color:#e53e3e;"">REDNEST</h1>
+              <p style=""margin:6px 0 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8e8ea0;"">Exclusive Member Newsletter</p>
             </td>
           </tr>
-
-          <!-- Main Content Body -->
+          <!-- Body Content -->
           <tr>
-            <td style=""padding:34px 32px 28px;color:#cbd5e1;font-size:15px;line-height:1.7;"">
+            <td style=""padding:36px 32px 28px;color:#cbd5e1;font-size:15px;line-height:1.7;"">
               {badgeHtml}
               {headingHtml}
-              <div style=""color:#d1d5db;font-size:15px;line-height:1.75;"">
+              <div style=""color:#cbd5e1;font-size:15px;line-height:1.7;"">
                 {processedBody}
               </div>
               {buttonHtml}
             </td>
           </tr>
-
-          <!-- Footer Area -->
+          <!-- Footer -->
           <tr>
-            <td style=""padding:24px 32px;background:#0e0e10;border-top:1px solid #1c1c20;text-align:center;"">
-              <p style=""margin:0 0 8px;font-size:12px;color:#71717a;"">
-                You are receiving this email because you subscribed to the Rednest Club updates.
-              </p>
-              <p style=""margin:0;font-size:11px;color:#52525b;"">
-                &copy; {year} Rednest. All rights reserved.
-              </p>
+            <td style=""padding:24px 32px;background:#0d0d10;border-top:1px solid #1c1c22;text-align:center;color:#6b7280;font-size:12px;line-height:1.6;"">
+              <p style=""margin:0 0 6px 0;"">You are receiving this email because you subscribed to the Rednest Club.</p>
+              <p style=""margin:0;"">&copy; {year} Rednest Coffee & Lounge. All rights reserved.</p>
             </td>
           </tr>
         </table>
@@ -315,4 +299,3 @@ public class BrevoEmailService : IEmailService
 </html>";
     }
 }
-

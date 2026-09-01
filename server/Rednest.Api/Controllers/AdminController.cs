@@ -1721,7 +1721,7 @@ public class AdminController : ControllerBase
         }
 
         var senderName = !string.IsNullOrWhiteSpace(request.SenderName) ? request.SenderName.Trim() : "Rednest";
-        var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") ?? "noreply@rednest.com";
+        var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") ?? "myrednest@gmail.com";
 
         var log = new NewsletterLog
         {

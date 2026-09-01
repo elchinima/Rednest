@@ -346,7 +346,7 @@ static async Task EnsurePixelUserAndSeedAsync(IServiceProvider services)
                 ""ButtonText"" character varying(100),
                 ""ButtonUrl"" character varying(500),
                 ""SenderName"" character varying(100) DEFAULT 'Rednest'::character varying NOT NULL,
-                ""SenderEmail"" character varying(150) DEFAULT 'noreply@rednest.com'::character varying NOT NULL,
+                ""SenderEmail"" character varying(150) DEFAULT 'myrednest@gmail.com'::character varying NOT NULL,
                 ""SentByAdminId"" uuid NOT NULL,
                 ""SentByAdminName"" character varying(150),
                 ""RecipientCount"" integer NOT NULL DEFAULT 0,

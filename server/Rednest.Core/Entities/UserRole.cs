@@ -4,10 +4,10 @@ public enum UserRole
 {
     Customer = 0,
     Staff = 1,
-    Bot = 2,
-    Support = 3,
-    Moderator = 4,
-    Admin = 5,
-    SuperAdmin = 6,
+    Support = 2,
+    Moderator = 3,
+    Admin = 4,
+    SuperAdmin = 5,
+    Bot = 6,
     AI = 7
 }

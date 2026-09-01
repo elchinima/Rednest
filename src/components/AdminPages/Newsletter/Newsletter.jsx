@@ -5,10 +5,7 @@ import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import { useAuth } from '../../../context/AuthContext';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
-import AdminTableActions from '../../Elements/AdminTableActions';
 import './Newsletter.scss';
-
-const PAGE_SIZE = 12;
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -165,7 +162,7 @@ const TEMPLATE_PRESETS = [
 ];
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 14 },
   show: (i) => ({
     opacity: 1,
     y: 0,
@@ -175,9 +172,8 @@ const fadeUp = {
 
 const Newsletter = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('compose'); // 'compose' | 'subscribers' | 'history'
+  const [activeTab, setActiveTab] = useState('compose');
 
-  // Stats
   const [stats, setStats] = useState({
     totalSubscribers: 0,
     totalCampaigns: 0,
@@ -186,21 +182,18 @@ const Newsletter = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Subscribers
   const [subscribers, setSubscribers] = useState([]);
   const [subscribersLoading, setSubscribersLoading] = useState(false);
   const [subscribersSearch, setSubscribersSearch] = useState('');
   const [subscribersFilter, setSubscribersFilter] = useState('all');
   const [togglingUserId, setTogglingUserId] = useState(null);
 
-  // History
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Compose form state
   const [form, setForm] = useState({
     subject: TEMPLATE_PRESETS[0].data.subject,
     preheader: TEMPLATE_PRESETS[0].data.preheader,
@@ -212,19 +205,16 @@ const Newsletter = () => {
     senderName: TEMPLATE_PRESETS[0].data.senderName,
   });
   const [selectedTemplateId, setSelectedTemplateId] = useState(TEMPLATE_PRESETS[0].id);
-  const [previewDevice, setPreviewDevice] = useState('desktop'); // 'desktop' | 'mobile'
+  const [previewDevice, setPreviewDevice] = useState('desktop');
 
-  // Test Email Modal
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [testEmailInput, setTestEmailInput] = useState('');
   const [isSendingTest, setIsSendingTest] = useState(false);
 
-  // Broadcast Confirmation Modal
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [confirmedSafety, setConfirmedSafety] = useState(false);
 
-  // Toast
   const [toast, setToast] = useState({ message: '', type: 'success' });
   const [copiedId, setCopiedId] = useState(null);
 
@@ -241,7 +231,6 @@ const Newsletter = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // Fetch Stats
   const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
@@ -251,13 +240,12 @@ const Newsletter = () => {
         setStats(data);
       }
     } catch (err) {
-      console.error('Error fetching newsletter stats:', err);
+      console.error(err);
     } finally {
       setStatsLoading(false);
     }
   }, [apiUrl]);
 
-  // Fetch Subscribers
   const fetchSubscribers = useCallback(async () => {
     try {
       setSubscribersLoading(true);
@@ -267,14 +255,13 @@ const Newsletter = () => {
         setSubscribers(data || []);
       }
     } catch (err) {
-      console.error('Error fetching subscribers:', err);
+      console.error(err);
       showToast('Failed to load subscribers.', 'error');
     } finally {
       setSubscribersLoading(false);
     }
   }, [apiUrl]);
 
-  // Fetch History
   const fetchHistory = useCallback(async () => {
     try {
       setHistoryLoading(true);
@@ -284,7 +271,7 @@ const Newsletter = () => {
         setHistory(data || []);
       }
     } catch (err) {
-      console.error('Error fetching newsletter history:', err);
+      console.error(err);
       showToast('Failed to load campaign history.', 'error');
     } finally {
       setHistoryLoading(false);
@@ -303,7 +290,6 @@ const Newsletter = () => {
     }
   }, [activeTab, fetchSubscribers, fetchHistory]);
 
-  // Apply template
   const handleSelectTemplate = (template) => {
     setSelectedTemplateId(template.id);
     setForm({
@@ -318,7 +304,6 @@ const Newsletter = () => {
     });
   };
 
-  // Insert tag helper
   const handleInsertTag = (tag) => {
     setForm((prev) => ({
       ...prev,
@@ -326,7 +311,6 @@ const Newsletter = () => {
     }));
   };
 
-  // Toggle subscriber status
   const handleToggleSubscriber = async (userId) => {
     setTogglingUserId(userId);
     try {
@@ -351,7 +335,6 @@ const Newsletter = () => {
     }
   };
 
-  // Send Test Email
   const handleSendTest = async (e) => {
     e?.preventDefault();
     if (!testEmailInput.trim()) {
@@ -400,7 +383,6 @@ const Newsletter = () => {
     }
   };
 
-  // Broadcast to all subscribers
   const handleBroadcast = async () => {
     if (!confirmedSafety) {
       showToast('Please confirm before broadcasting to all subscribers.', 'error');
@@ -442,7 +424,6 @@ const Newsletter = () => {
     }
   };
 
-  // Delete history item
   const handleDeleteHistory = async () => {
     if (!itemToDelete) return;
     setIsDeleting(true);
@@ -466,7 +447,6 @@ const Newsletter = () => {
     }
   };
 
-  // Load history item into composer
   const handleLoadIntoComposer = (item) => {
     setForm({
       subject: item.subject || '',
@@ -480,17 +460,15 @@ const Newsletter = () => {
     });
     setSelectedTemplateId('custom');
     setActiveTab('compose');
-    showToast('Campaign content loaded into composer.');
+    showToast('Campaign loaded into composer.');
   };
 
-  // Copy helper
   const handleCopy = (text, id) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Filtered subscribers
   const filteredSubscribers = useMemo(() => {
     return subscribers.filter((sub) => {
       const q = subscribersSearch.toLowerCase().trim();
@@ -508,13 +486,12 @@ const Newsletter = () => {
     });
   }, [subscribers, subscribersSearch, subscribersFilter]);
 
-  // Render processed HTML preview for simulator
   const previewHtml = useMemo(() => {
     const safeRecipientName = user?.name || user?.Name || 'Alex Rivers';
     const safeRecipientEmail = user?.email || user?.Email || 'member@rednest.com';
     const year = new Date().getFullYear().toString();
 
-    let body = form.bodyHtml || '<p style="color:#64748b;">No content entered yet...</p>';
+    let body = form.bodyHtml || '<p style="color:rgba(255,255,255,0.4);">No content entered yet...</p>';
     body = body
       .replace(/{name}/g, safeRecipientName)
       .replace(/{email}/g, safeRecipientEmail)
@@ -526,7 +503,6 @@ const Newsletter = () => {
   return (
     <AdminLayout>
       <div className="admin-newsletter">
-        {/* Toast Notification */}
         <AnimatePresence>
           {toast.message && (
             <motion.div
@@ -555,21 +531,11 @@ const Newsletter = () => {
           )}
         </AnimatePresence>
 
-        {/* Page Header */}
-        <motion.div
-          className="admin-newsletter__header"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <div className="admin-newsletter__header">
           <div>
-            <div className="admin-newsletter__badge">
-              <span className="admin-newsletter__badge-dot"></span>
-              BROADCAST ENGINE
-            </div>
-            <h1 className="admin-newsletter__title">Newsletter & Campaigns</h1>
+            <h1 className="admin-newsletter__title">Newsletter</h1>
             <p className="admin-newsletter__subtitle">
-              Compose, simulate, and broadcast personalized email newsletters to all verified Rednest Club members.
+              Compose, preview, and broadcast emails to active Rednest Club subscribers.
             </p>
           </div>
 
@@ -590,13 +556,25 @@ const Newsletter = () => {
               </svg>
               Refresh
             </button>
-          </div>
-        </motion.div>
 
-        {/* Analytics / Stats Grid */}
-        <div className="admin-newsletter__stats-grid">
-          <motion.div className="admin-newsletter__stat-card" variants={fadeUp} initial="hidden" animate="show" custom={0}>
-            <div className="admin-newsletter__stat-icon admin-newsletter__stat-icon--subscribers">
+            {activeTab !== 'compose' && (
+              <button
+                className="admin-newsletter__btn-primary"
+                onClick={() => setActiveTab('compose')}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                New Campaign
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="admin-newsletter__stats">
+          <div className="admin-newsletter__stat-card">
+            <div className="admin-newsletter__stat-icon" style={{ '--accent': '#38bdf8' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />
@@ -604,473 +582,389 @@ const Newsletter = () => {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <div className="admin-newsletter__stat-content">
-              <div className="admin-newsletter__stat-label">Active Subscribers</div>
-              <div className="admin-newsletter__stat-value">
+            <div className="admin-newsletter__stat-body">
+              <span className="admin-newsletter__stat-value">
                 {statsLoading ? <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" /> : stats.totalSubscribers.toLocaleString()}
-              </div>
-              <div className="admin-newsletter__stat-sub">Users with newsletter active</div>
+              </span>
+              <span className="admin-newsletter__stat-label">Active Subscribers</span>
+              <span className="admin-newsletter__stat-sub">Users with newsletter active</span>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div className="admin-newsletter__stat-card" variants={fadeUp} initial="hidden" animate="show" custom={1}>
-            <div className="admin-newsletter__stat-icon admin-newsletter__stat-icon--campaigns">
+          <div className="admin-newsletter__stat-card">
+            <div className="admin-newsletter__stat-icon" style={{ '--accent': '#f87171' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </div>
-            <div className="admin-newsletter__stat-content">
-              <div className="admin-newsletter__stat-label">Total Broadcasts</div>
-              <div className="admin-newsletter__stat-value">
+            <div className="admin-newsletter__stat-body">
+              <span className="admin-newsletter__stat-value">
                 {statsLoading ? <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" /> : stats.totalCampaigns.toLocaleString()}
-              </div>
-              <div className="admin-newsletter__stat-sub">Campaigns sent to date</div>
+              </span>
+              <span className="admin-newsletter__stat-label">Total Broadcasts</span>
+              <span className="admin-newsletter__stat-sub">Campaigns sent</span>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div className="admin-newsletter__stat-card" variants={fadeUp} initial="hidden" animate="show" custom={2}>
-            <div className="admin-newsletter__stat-icon admin-newsletter__stat-icon--delivered">
+          <div className="admin-newsletter__stat-card">
+            <div className="admin-newsletter__stat-icon" style={{ '--accent': '#34d399' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
             </div>
-            <div className="admin-newsletter__stat-content">
-              <div className="admin-newsletter__stat-label">Emails Delivered</div>
-              <div className="admin-newsletter__stat-value">
+            <div className="admin-newsletter__stat-body">
+              <span className="admin-newsletter__stat-value">
                 {statsLoading ? <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" /> : stats.totalDelivered.toLocaleString()}
-              </div>
-              <div className="admin-newsletter__stat-sub">Total recipients reached</div>
+              </span>
+              <span className="admin-newsletter__stat-label">Delivered Emails</span>
+              <span className="admin-newsletter__stat-sub">Recipients reached</span>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div className="admin-newsletter__stat-card" variants={fadeUp} initial="hidden" animate="show" custom={3}>
-            <div className="admin-newsletter__stat-icon admin-newsletter__stat-icon--time">
+          <div className="admin-newsletter__stat-card">
+            <div className="admin-newsletter__stat-icon" style={{ '--accent': '#c084fc' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
-            <div className="admin-newsletter__stat-content">
-              <div className="admin-newsletter__stat-label">Last Broadcast</div>
-              <div className="admin-newsletter__stat-value" style={{ fontSize: stats.lastBroadcast ? '1.25rem' : '1.5rem' }}>
-                {statsLoading ? <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" /> : (stats.lastBroadcast ? formatRelativeTime(stats.lastBroadcast) : 'None yet')}
-              </div>
-              <div className="admin-newsletter__stat-sub">
-                {stats.lastBroadcast ? formatDate(stats.lastBroadcast) : 'Ready for first send'}
-              </div>
+            <div className="admin-newsletter__stat-body">
+              <span className="admin-newsletter__stat-value" style={{ fontSize: stats.lastBroadcast ? '1.15rem' : '1.35rem' }}>
+                {statsLoading ? <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" /> : (stats.lastBroadcast ? formatRelativeTime(stats.lastBroadcast) : 'None')}
+              </span>
+              <span className="admin-newsletter__stat-label">Last Broadcast</span>
+              <span className="admin-newsletter__stat-sub">
+                {stats.lastBroadcast ? formatDate(stats.lastBroadcast) : 'Ready to send'}
+              </span>
             </div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="admin-newsletter__tabs">
-          <button
-            className={`admin-newsletter__tab-btn ${activeTab === 'compose' ? 'admin-newsletter__tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('compose')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-            Compose & Broadcast
-          </button>
+        <div className="admin-newsletter__controls">
+          <div className="admin-newsletter__tabs">
+            <button
+              className={`admin-newsletter__tab ${activeTab === 'compose' ? 'active' : ''}`}
+              onClick={() => setActiveTab('compose')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+              Compose & Broadcast
+            </button>
 
-          <button
-            className={`admin-newsletter__tab-btn ${activeTab === 'subscribers' ? 'admin-newsletter__tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('subscribers')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Subscribers ({stats.totalSubscribers})
-          </button>
+            <button
+              className={`admin-newsletter__tab ${activeTab === 'subscribers' ? 'active' : ''}`}
+              onClick={() => setActiveTab('subscribers')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              Subscribers ({stats.totalSubscribers})
+            </button>
 
-          <button
-            className={`admin-newsletter__tab-btn ${activeTab === 'history' ? 'admin-newsletter__tab-btn--active' : ''}`}
-            onClick={() => setActiveTab('history')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            Broadcast History ({stats.totalCampaigns})
-          </button>
+            <button
+              className={`admin-newsletter__tab ${activeTab === 'history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              Broadcast History ({stats.totalCampaigns})
+            </button>
+          </div>
         </div>
 
-        {/* TAB 1: COMPOSE & BROADCAST */}
         {activeTab === 'compose' && (
-          <motion.div
-            className="admin-newsletter__compose-layout"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Left: Composer Form */}
-            <div className="admin-newsletter__form-column">
-              {/* Template Presets Picker */}
-              <div className="admin-newsletter__card">
-                <div className="admin-newsletter__card-title">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="3" y1="9" x2="21" y2="9" />
-                    <line x1="9" y1="21" x2="9" y2="9" />
-                  </svg>
-                  Select Campaign Preset
-                </div>
-                <div className="admin-newsletter__templates-grid">
-                  {TEMPLATE_PRESETS.map((tmpl) => (
-                    <button
-                      key={tmpl.id}
-                      type="button"
-                      className={`admin-newsletter__template-card ${
-                        selectedTemplateId === tmpl.id ? 'admin-newsletter__template-card--active' : ''
-                      }`}
-                      onClick={() => handleSelectTemplate(tmpl)}
-                    >
-                      <div className="admin-newsletter__template-icon">{tmpl.icon}</div>
-                      <div className="admin-newsletter__template-name">{tmpl.name}</div>
-                      <div className="admin-newsletter__template-desc">{tmpl.description}</div>
-                    </button>
-                  ))}
-                </div>
+          <div className="admin-newsletter__compose-grid">
+            <div className="admin-newsletter__panel">
+              <div className="admin-newsletter__panel-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+                Select Campaign Template
               </div>
 
-              {/* Message Details Form */}
-              <div className="admin-newsletter__card">
-                <div className="admin-newsletter__card-title">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                  Campaign Details & Content
-                </div>
+              <div className="admin-newsletter__presets-grid">
+                {TEMPLATE_PRESETS.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    type="button"
+                    className={`admin-newsletter__preset-card ${
+                      selectedTemplateId === tmpl.id ? 'active' : ''
+                    }`}
+                    onClick={() => handleSelectTemplate(tmpl)}
+                  >
+                    <span className="preset-icon">{tmpl.icon}</span>
+                    <span className="preset-name">{tmpl.name}</span>
+                    <span className="preset-desc">{tmpl.description}</span>
+                  </button>
+                ))}
+              </div>
 
+              <div className="admin-newsletter__form-divider" />
+
+              <div className="admin-newsletter__panel-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Email Details
+              </div>
+
+              <div className="admin-newsletter__form-group">
+                <label>Subject Line <span className="req">*</span></label>
+                <input
+                  type="text"
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                  placeholder="e.g. 🎁 Exclusive 20% Discount for Rednest Members"
+                />
+              </div>
+
+              <div className="admin-newsletter__form-row">
                 <div className="admin-newsletter__form-group">
-                  <label className="admin-newsletter__form-label">
-                    Email Subject Line <span className="admin-newsletter__required">*</span>
-                  </label>
+                  <label>Preheader Snippet</label>
                   <input
                     type="text"
-                    className="admin-newsletter__input"
-                    value={form.subject}
-                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    placeholder="e.g. 🎁 Exclusive 20% Discount for Rednest Members"
+                    value={form.preheader}
+                    onChange={(e) => setForm({ ...form, preheader: e.target.value })}
+                    placeholder="Short preview in email list"
                   />
                 </div>
 
-                <div className="admin-newsletter__form-row">
-                  <div className="admin-newsletter__form-group">
-                    <label className="admin-newsletter__form-label">Preheader Snippet</label>
-                    <input
-                      type="text"
-                      className="admin-newsletter__input"
-                      value={form.preheader}
-                      onChange={(e) => setForm({ ...form, preheader: e.target.value })}
-                      placeholder="Short preview text shown in mailbox"
-                    />
-                  </div>
-
-                  <div className="admin-newsletter__form-group">
-                    <label className="admin-newsletter__form-label">Sender Name</label>
-                    <input
-                      type="text"
-                      className="admin-newsletter__input"
-                      value={form.senderName}
-                      onChange={(e) => setForm({ ...form, senderName: e.target.value })}
-                      placeholder="e.g. Rednest Coffee"
-                    />
-                  </div>
-                </div>
-
-                <div className="admin-newsletter__form-row">
-                  <div className="admin-newsletter__form-group">
-                    <label className="admin-newsletter__form-label">Header Badge Tag</label>
-                    <input
-                      type="text"
-                      className="admin-newsletter__input"
-                      value={form.badge}
-                      onChange={(e) => setForm({ ...form, badge: e.target.value })}
-                      placeholder="e.g. SPECIAL OFFER, NEW ARRIVAL"
-                    />
-                  </div>
-
-                  <div className="admin-newsletter__form-group">
-                    <label className="admin-newsletter__form-label">Inner Title Heading</label>
-                    <input
-                      type="text"
-                      className="admin-newsletter__input"
-                      value={form.heading}
-                      onChange={(e) => setForm({ ...form, heading: e.target.value })}
-                      placeholder="e.g. A Special Treat For You, {name}!"
-                    />
-                  </div>
-                </div>
-
-                {/* Body Content with Dynamic Tag Helper */}
                 <div className="admin-newsletter__form-group">
-                  <div className="admin-newsletter__form-header-with-tags">
-                    <label className="admin-newsletter__form-label">
-                      Message Body (HTML Supported) <span className="admin-newsletter__required">*</span>
-                    </label>
-                    <div className="admin-newsletter__tag-badges">
-                      <span className="admin-newsletter__tag-label">Insert Dynamic Tag:</span>
-                      <button
-                        type="button"
-                        className="admin-newsletter__tag-pill"
-                        onClick={() => handleInsertTag('{name}')}
-                        title="Recipient First Name / Full Name"
-                      >
-                        + {'{name}'}
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-newsletter__tag-pill"
-                        onClick={() => handleInsertTag('{email}')}
-                        title="Recipient Email"
-                      >
-                        + {'{email}'}
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-newsletter__tag-pill"
-                        onClick={() => handleInsertTag('{year}')}
-                        title="Current Year"
-                      >
-                        + {'{year}'}
-                      </button>
-                    </div>
-                  </div>
+                  <label>Sender Name</label>
+                  <input
+                    type="text"
+                    value={form.senderName}
+                    onChange={(e) => setForm({ ...form, senderName: e.target.value })}
+                    placeholder="e.g. Rednest Coffee"
+                  />
+                </div>
+              </div>
 
-                  <textarea
-                    rows={8}
-                    className="admin-newsletter__textarea"
-                    value={form.bodyHtml}
-                    onChange={(e) => setForm({ ...form, bodyHtml: e.target.value })}
-                    placeholder="Enter HTML or plain formatted text for the email body..."
+              <div className="admin-newsletter__form-row">
+                <div className="admin-newsletter__form-group">
+                  <label>Header Badge Tag</label>
+                  <input
+                    type="text"
+                    value={form.badge}
+                    onChange={(e) => setForm({ ...form, badge: e.target.value })}
+                    placeholder="e.g. SPECIAL OFFER, NEW ARRIVAL"
                   />
                 </div>
 
-                {/* Call to Action Button */}
-                <div className="admin-newsletter__cta-box">
-                  <div className="admin-newsletter__card-subtitle">Call-To-Action Button (Optional)</div>
-                  <div className="admin-newsletter__form-row">
-                    <div className="admin-newsletter__form-group">
-                      <label className="admin-newsletter__form-label">Button Text</label>
-                      <input
-                        type="text"
-                        className="admin-newsletter__input"
-                        value={form.buttonText}
-                        onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
-                        placeholder="e.g. Order Online Now"
-                      />
-                    </div>
-                    <div className="admin-newsletter__form-group">
-                      <label className="admin-newsletter__form-label">Target URL</label>
-                      <input
-                        type="text"
-                        className="admin-newsletter__input"
-                        value={form.buttonUrl}
-                        onChange={(e) => setForm({ ...form, buttonUrl: e.target.value })}
-                        placeholder="e.g. https://rednest.az/catalog"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Action Buttons */}
-                <div className="admin-newsletter__form-actions">
-                  <button
-                    type="button"
-                    className="admin-newsletter__btn-outline"
-                    onClick={() => {
-                      setTestEmailInput(user?.email || user?.Email || '');
-                      setIsTestModalOpen(true);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
-                    Send Test Preview
-                  </button>
-
-                  <button
-                    type="button"
-                    className="admin-newsletter__btn-primary"
-                    onClick={() => {
-                      if (!form.subject.trim()) {
-                        showToast('Please enter an email subject line.', 'error');
-                        return;
-                      }
-                      if (!form.bodyHtml.trim()) {
-                        showToast('Please enter message body content.', 'error');
-                        return;
-                      }
-                      setConfirmedSafety(false);
-                      setIsBroadcastModalOpen(true);
-                    }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="22" y1="2" x2="11" y2="13" />
-                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Broadcast to {stats.totalSubscribers} Subscribers
-                  </button>
+                <div className="admin-newsletter__form-group">
+                  <label>Inner Title Heading</label>
+                  <input
+                    type="text"
+                    value={form.heading}
+                    onChange={(e) => setForm({ ...form, heading: e.target.value })}
+                    placeholder="e.g. A Special Treat For You, {name}!"
+                  />
                 </div>
               </div>
-            </div>
 
-            {/* Right: Live Interactive Simulator Preview */}
-            <div className="admin-newsletter__preview-column">
-              <div className="admin-newsletter__preview-card">
-                <div className="admin-newsletter__preview-header">
-                  <div className="admin-newsletter__preview-title">
-                    <span className="admin-newsletter__live-dot"></span>
-                    Live Email Simulator
-                  </div>
-
-                  <div className="admin-newsletter__device-toggle">
-                    <button
-                      type="button"
-                      className={`admin-newsletter__device-btn ${previewDevice === 'desktop' ? 'admin-newsletter__device-btn--active' : ''}`}
-                      onClick={() => setPreviewDevice('desktop')}
-                      title="Desktop View"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
-                      </svg>
-                      Desktop
+              <div className="admin-newsletter__form-group">
+                <div className="admin-newsletter__tags-header">
+                  <label>Message Body (HTML Supported) <span className="req">*</span></label>
+                  <div className="admin-newsletter__tags-list">
+                    <span className="tags-label">Tags:</span>
+                    <button type="button" className="tag-pill" onClick={() => handleInsertTag('{name}')}>
+                      +{'{name}'}
                     </button>
-                    <button
-                      type="button"
-                      className={`admin-newsletter__device-btn ${previewDevice === 'mobile' ? 'admin-newsletter__device-btn--active' : ''}`}
-                      onClick={() => setPreviewDevice('mobile')}
-                      title="Mobile View"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                        <line x1="12" y1="18" x2="12.01" y2="18" />
-                      </svg>
-                      Mobile
+                    <button type="button" className="tag-pill" onClick={() => handleInsertTag('{email}')}>
+                      +{'{email}'}
+                    </button>
+                    <button type="button" className="tag-pill" onClick={() => handleInsertTag('{year}')}>
+                      +{'{year}'}
                     </button>
                   </div>
                 </div>
 
-                {/* Email Meta Info bar */}
-                <div className="admin-newsletter__email-meta">
-                  <div className="admin-newsletter__meta-row">
-                    <span className="admin-newsletter__meta-label">Subject:</span>
-                    <span className="admin-newsletter__meta-value admin-newsletter__meta-subject">
-                      {form.subject || <span className="admin-newsletter__placeholder">(No subject)</span>}
-                    </span>
+                <textarea
+                  rows={8}
+                  value={form.bodyHtml}
+                  onChange={(e) => setForm({ ...form, bodyHtml: e.target.value })}
+                  placeholder="Enter HTML or plain formatted text for the email body..."
+                />
+              </div>
+
+              <div className="admin-newsletter__cta-fieldset">
+                <div className="cta-title">Call-To-Action Button (Optional)</div>
+                <div className="admin-newsletter__form-row">
+                  <div className="admin-newsletter__form-group">
+                    <label>Button Text</label>
+                    <input
+                      type="text"
+                      value={form.buttonText}
+                      onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
+                      placeholder="e.g. Order Online Now"
+                    />
                   </div>
-                  {form.preheader && (
-                    <div className="admin-newsletter__meta-row">
-                      <span className="admin-newsletter__meta-label">Preview:</span>
-                      <span className="admin-newsletter__meta-value admin-newsletter__meta-snippet">
-                        {form.preheader}
-                      </span>
-                    </div>
-                  )}
-                  <div className="admin-newsletter__meta-row">
-                    <span className="admin-newsletter__meta-label">From:</span>
-                    <span className="admin-newsletter__meta-value">
-                      {form.senderName || 'Rednest'} &lt;noreply@rednest.com&gt;
-                    </span>
+                  <div className="admin-newsletter__form-group">
+                    <label>Target URL</label>
+                    <input
+                      type="text"
+                      value={form.buttonUrl}
+                      onChange={(e) => setForm({ ...form, buttonUrl: e.target.value })}
+                      placeholder="e.g. https://rednest.az/catalog"
+                    />
                   </div>
                 </div>
+              </div>
 
-                {/* Simulator Device Frame */}
-                <div className={`admin-newsletter__simulator-frame admin-newsletter__simulator-frame--${previewDevice}`}>
-                  <div className="admin-newsletter__email-wrapper">
-                    {/* Header Logo */}
-                    <div className="admin-newsletter__email-header">
-                      <h1 className="admin-newsletter__email-brand">REDNEST</h1>
-                      <div className="admin-newsletter__email-subbrand">Exclusive Member Newsletter</div>
-                    </div>
+              <div className="admin-newsletter__form-bottom">
+                <button
+                  type="button"
+                  className="admin-newsletter__btn-secondary"
+                  onClick={() => {
+                    setTestEmailInput(user?.email || user?.Email || '');
+                    setIsTestModalOpen(true);
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg>
+                  Send Test Preview
+                </button>
 
-                    {/* Email Body Container */}
-                    <div className="admin-newsletter__email-body">
-                      {form.badge && (
-                        <div className="admin-newsletter__email-badge">
-                          {form.badge}
-                        </div>
-                      )}
+                <button
+                  type="button"
+                  className="admin-newsletter__btn-primary"
+                  onClick={() => {
+                    if (!form.subject.trim()) {
+                      showToast('Please enter an email subject line.', 'error');
+                      return;
+                    }
+                    if (!form.bodyHtml.trim()) {
+                      showToast('Please enter message body content.', 'error');
+                      return;
+                    }
+                    setConfirmedSafety(false);
+                    setIsBroadcastModalOpen(true);
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                  Broadcast to {stats.totalSubscribers} Subscribers
+                </button>
+              </div>
+            </div>
 
-                      {form.heading && (
-                        <h2 className="admin-newsletter__email-heading">
-                          {form.heading.replace(/{name}/g, user?.name || 'Alex')}
-                        </h2>
-                      )}
+            <div className="admin-newsletter__preview-panel">
+              <div className="admin-newsletter__preview-top">
+                <div className="preview-heading">
+                  <span className="live-indicator" />
+                  Live Email Simulator
+                </div>
 
-                      <div
-                        className="admin-newsletter__email-html-content"
-                        dangerouslySetInnerHTML={{ __html: previewHtml }}
-                      />
+                <div className="preview-toggle">
+                  <button
+                    type="button"
+                    className={`toggle-btn ${previewDevice === 'desktop' ? 'active' : ''}`}
+                    onClick={() => setPreviewDevice('desktop')}
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    className={`toggle-btn ${previewDevice === 'mobile' ? 'active' : ''}`}
+                    onClick={() => setPreviewDevice('mobile')}
+                  >
+                    Mobile
+                  </button>
+                </div>
+              </div>
 
-                      {form.buttonText && (
-                        <div className="admin-newsletter__email-cta-wrap">
-                          <a
-                            href={form.buttonUrl || '#'}
-                            onClick={(e) => e.preventDefault()}
-                            className="admin-newsletter__email-btn"
-                          >
-                            {form.buttonText}
-                          </a>
-                        </div>
-                      )}
-                    </div>
+              <div className="admin-newsletter__meta-box">
+                <div className="meta-line">
+                  <span className="meta-lbl">Subject:</span>
+                  <span className="meta-txt subject">{form.subject || '(No subject)'}</span>
+                </div>
+                {form.preheader && (
+                  <div className="meta-line">
+                    <span className="meta-lbl">Snippet:</span>
+                    <span className="meta-txt snippet">{form.preheader}</span>
+                  </div>
+                )}
+                <div className="meta-line">
+                  <span className="meta-lbl">From:</span>
+                  <span className="meta-txt">{form.senderName || 'Rednest'} &lt;noreply@rednest.com&gt;</span>
+                </div>
+              </div>
 
-                    {/* Footer */}
-                    <div className="admin-newsletter__email-footer">
-                      <p>You are receiving this email because you subscribed to the Rednest Club updates.</p>
-                      <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
-                    </div>
+              <div className={`admin-newsletter__frame admin-newsletter__frame--${previewDevice}`}>
+                <div className="email-canvas">
+                  <div className="email-header-art">
+                    <h1 className="email-logo">REDNEST</h1>
+                    <div className="email-sublogo">Exclusive Member Newsletter</div>
+                  </div>
+
+                  <div className="email-body-area">
+                    {form.badge && <div className="email-badge-pill">{form.badge}</div>}
+                    {form.heading && (
+                      <h2 className="email-title">
+                        {form.heading.replace(/{name}/g, user?.name || 'Alex')}
+                      </h2>
+                    )}
+                    <div
+                      className="email-content-rendered"
+                      dangerouslySetInnerHTML={{ __html: previewHtml }}
+                    />
+                    {form.buttonText && (
+                      <div className="email-btn-wrap">
+                        <a href={form.buttonUrl || '#'} onClick={(e) => e.preventDefault()} className="email-btn">
+                          {form.buttonText}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="email-foot-area">
+                    <p>You are receiving this email because you subscribed to Rednest Club updates.</p>
+                    <p>&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
                   </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* TAB 2: SUBSCRIBERS LIST */}
         {activeTab === 'subscribers' && (
-          <motion.div
-            className="admin-newsletter__subscribers-view"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {/* Search & Filter Controls */}
-            <div className="admin-newsletter__controls-card">
-              <div className="admin-newsletter__search-wrap">
+          <div className="admin-newsletter__subscribers-wrapper">
+            <div className="admin-newsletter__sub-filter-bar">
+              <div className="admin-newsletter__search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
                   type="text"
-                  className="admin-newsletter__search-input"
                   placeholder="Search subscribers by name or email..."
                   value={subscribersSearch}
                   onChange={(e) => setSubscribersSearch(e.target.value)}
                 />
                 {subscribersSearch && (
-                  <button className="admin-newsletter__clear-btn" onClick={() => setSubscribersSearch('')}>
+                  <button className="search-clear" onClick={() => setSubscribersSearch('')}>
                     &times;
                   </button>
                 )}
               </div>
 
-              <div className="admin-newsletter__filter-group">
+              <div className="admin-newsletter__select-box">
                 <select
-                  className="admin-newsletter__select"
                   value={subscribersFilter}
                   onChange={(e) => setSubscribersFilter(e.target.value)}
                 >
@@ -1082,15 +976,14 @@ const Newsletter = () => {
               </div>
             </div>
 
-            {/* Subscribers Table */}
-            <div className="admin-newsletter__table-container">
+            <div className="admin-newsletter__table-card">
               {subscribersLoading ? (
-                <div className="admin-newsletter__empty-state">
+                <div className="admin-newsletter__empty-box">
                   <img src={loaderIconRed} alt="Loading..." className="admin-newsletter__loader-large" />
                   <p>Loading subscriber list...</p>
                 </div>
               ) : filteredSubscribers.length === 0 ? (
-                <div className="admin-newsletter__empty-state">
+                <div className="admin-newsletter__empty-box">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />
@@ -1098,140 +991,131 @@ const Newsletter = () => {
                     <line x1="23" y1="8" x2="18" y2="13" />
                   </svg>
                   <h3>No subscribers found</h3>
-                  <p>No user accounts matched your current search or filter criteria.</p>
+                  <p>No user accounts match your current filter or search query.</p>
                 </div>
               ) : (
-                <table className="admin-newsletter__table">
-                  <thead>
-                    <tr>
-                      <th>Subscriber</th>
-                      <th>Role</th>
-                      <th>Registered</th>
-                      <th>Orders & Spent</th>
-                      <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSubscribers.map((sub, idx) => (
-                      <motion.tr
-                        key={sub.id}
-                        variants={fadeUp}
-                        initial="hidden"
-                        animate="show"
-                        custom={idx}
-                      >
-                        <td>
-                          <div className="admin-newsletter__user-cell">
-                            {sub.profilePictureUrl ? (
-                              <img
-                                src={sub.profilePictureUrl}
-                                alt={sub.name || 'User'}
-                                className="admin-newsletter__user-avatar"
-                              />
-                            ) : (
-                              <div className="admin-newsletter__user-avatar-initials">
-                                {getInitials(sub.name, sub.email)}
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Subscriber</th>
+                        <th>Role</th>
+                        <th>Registered</th>
+                        <th>Orders & Spent</th>
+                        <th>Status</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSubscribers.map((sub, idx) => (
+                        <motion.tr
+                          key={sub.id}
+                          variants={fadeUp}
+                          initial="hidden"
+                          animate="show"
+                          custom={idx}
+                        >
+                          <td>
+                            <div className="user-cell">
+                              {sub.profilePictureUrl ? (
+                                <img
+                                  src={sub.profilePictureUrl}
+                                  alt={sub.name || 'User'}
+                                  className="user-avatar"
+                                />
+                              ) : (
+                                <div className="user-initials">
+                                  {getInitials(sub.name, sub.email)}
+                                </div>
+                              )}
+                              <div className="user-details">
+                                <span className="name">{sub.name || 'Anonymous User'}</span>
+                                <span className="email">{sub.email}</span>
+                                <button
+                                  className="copy-btn"
+                                  onClick={() => handleCopy(sub.id, sub.id)}
+                                  title="Copy User ID"
+                                >
+                                  <code>{sub.id.slice(0, 8)}...</code>
+                                  {copiedId === sub.id ? (
+                                    <span className="copied-text">Copied!</span>
+                                  ) : (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                  )}
+                                </button>
                               </div>
-                            )}
-                            <div className="admin-newsletter__user-info">
-                              <span className="admin-newsletter__user-name">{sub.name || 'Anonymous User'}</span>
-                              <span className="admin-newsletter__user-email">{sub.email}</span>
-                              <button
-                                className="admin-newsletter__copy-id"
-                                onClick={() => handleCopy(sub.id, sub.id)}
-                                title="Copy ID"
-                              >
-                                <code>{sub.id.slice(0, 8)}...</code>
-                                {copiedId === sub.id ? (
-                                  <span className="copied-tag">Copied!</span>
-                                ) : (
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                  </svg>
-                                )}
-                              </button>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>
-                          <span className="admin-newsletter__role-badge">
-                            {sub.role || 'Customer'}
-                          </span>
-                        </td>
+                          <td>
+                            <span className="badge badge--muted">
+                              {sub.role || 'Customer'}
+                            </span>
+                          </td>
 
-                        <td>
-                          <span className="admin-newsletter__date">{formatDate(sub.createdAt)}</span>
-                        </td>
+                          <td>
+                            <span className="date-cell">{formatDate(sub.createdAt)}</span>
+                          </td>
 
-                        <td>
-                          <div className="admin-newsletter__orders-stat">
-                            <span>{sub.ordersCount} orders</span>
-                            <span className="admin-newsletter__spent-tag">₼ {sub.totalSpent.toFixed(2)}</span>
-                          </div>
-                        </td>
+                          <td>
+                            <div className="orders-summary">
+                              <span>{sub.ordersCount} orders</span>
+                              <span className="spent-val">₼ {sub.totalSpent.toFixed(2)}</span>
+                            </div>
+                          </td>
 
-                        <td>
-                          <span
-                            className={`admin-newsletter__status-badge ${
-                              sub.subscribe
-                                ? 'admin-newsletter__status-badge--success'
-                                : 'admin-newsletter__status-badge--muted'
-                            }`}
-                          >
-                            {sub.subscribe ? 'Subscribed' : 'Unsubscribed'}
-                          </span>
-                        </td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                sub.subscribe ? 'badge--success' : 'badge--muted'
+                              }`}
+                            >
+                              {sub.subscribe ? 'Subscribed' : 'Unsubscribed'}
+                            </span>
+                          </td>
 
-                        <td style={{ textAlign: 'right' }}>
-                          <button
-                            className={`admin-newsletter__toggle-btn ${
-                              sub.subscribe ? 'admin-newsletter__toggle-btn--unsubscribe' : 'admin-newsletter__toggle-btn--subscribe'
-                            }`}
-                            disabled={togglingUserId === sub.id}
-                            onClick={() => handleToggleSubscriber(sub.id)}
-                            title={sub.subscribe ? 'Unsubscribe user' : 'Subscribe user'}
-                          >
-                            {togglingUserId === sub.id ? (
-                              <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" />
-                            ) : sub.subscribe ? (
-                              'Unsubscribe'
-                            ) : (
-                              'Subscribe'
-                            )}
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <td style={{ textAlign: 'right' }}>
+                            <button
+                              className={`btn-sub-toggle ${sub.subscribe ? 'unsub' : 'sub'}`}
+                              disabled={togglingUserId === sub.id}
+                              onClick={() => handleToggleSubscriber(sub.id)}
+                            >
+                              {togglingUserId === sub.id ? (
+                                <img src={loaderIcon} alt="Loading..." className="admin-newsletter__loader-mini" />
+                              ) : sub.subscribe ? (
+                                'Unsubscribe'
+                              ) : (
+                                'Subscribe'
+                              )}
+                            </button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* TAB 3: BROADCAST HISTORY */}
         {activeTab === 'history' && (
-          <motion.div
-            className="admin-newsletter__history-view"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+          <div className="admin-newsletter__history-wrapper">
             {historyLoading ? (
-              <div className="admin-newsletter__empty-state">
+              <div className="admin-newsletter__empty-box">
                 <img src={loaderIconRed} alt="Loading..." className="admin-newsletter__loader-large" />
-                <p>Loading broadcast logs...</p>
+                <p>Loading campaign history...</p>
               </div>
             ) : history.length === 0 ? (
-              <div className="admin-newsletter__empty-state">
+              <div className="admin-newsletter__empty-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
                 <h3>No broadcasts yet</h3>
-                <p>You haven't sent any email newsletters yet. Compose your first campaign to get started!</p>
+                <p>You haven't sent any email newsletters yet. Compose your first campaign to get started.</p>
                 <button
                   className="admin-newsletter__btn-primary"
                   onClick={() => setActiveTab('compose')}
@@ -1241,71 +1125,63 @@ const Newsletter = () => {
                 </button>
               </div>
             ) : (
-              <div className="admin-newsletter__history-list">
+              <div className="admin-newsletter__history-cards">
                 {history.map((item, idx) => (
                   <motion.div
                     key={item.id}
-                    className="admin-newsletter__history-card"
+                    className="admin-newsletter__history-item"
                     variants={fadeUp}
                     initial="hidden"
                     animate="show"
                     custom={idx}
                   >
-                    <div className="admin-newsletter__history-main">
-                      <div className="admin-newsletter__history-top">
-                        {item.badge && (
-                          <span className="admin-newsletter__history-badge-tag">{item.badge}</span>
-                        )}
+                    <div className="item-main">
+                      <div className="item-meta-top">
+                        {item.badge && <span className="item-badge">{item.badge}</span>}
                         <span
-                          className={`admin-newsletter__status-badge ${
+                          className={`badge ${
                             item.status === 'Sent'
-                              ? 'admin-newsletter__status-badge--success'
+                              ? 'badge--success'
                               : item.status === 'PartiallySent'
-                              ? 'admin-newsletter__status-badge--warning'
-                              : 'admin-newsletter__status-badge--danger'
+                              ? 'badge--warning'
+                              : 'badge--danger'
                           }`}
                         >
                           {item.status}
                         </span>
-                        <span className="admin-newsletter__history-date">
+                        <span className="item-date">
                           {formatDate(item.createdAt)} ({formatRelativeTime(item.createdAt)})
                         </span>
                       </div>
 
-                      <h3 className="admin-newsletter__history-subject">{item.subject}</h3>
-                      {item.preheader && (
-                        <p className="admin-newsletter__history-snippet">{item.preheader}</p>
-                      )}
+                      <h3 className="item-subject">{item.subject}</h3>
+                      {item.preheader && <p className="item-snippet">{item.preheader}</p>}
 
-                      <div className="admin-newsletter__history-stats-bar">
-                        <div className="admin-newsletter__stat-pill">
-                          <span className="admin-newsletter__stat-pill-label">Recipients:</span>
-                          <span className="admin-newsletter__stat-pill-val">{item.recipientCount}</span>
+                      <div className="item-pills-bar">
+                        <div className="pill">
+                          <span className="lbl">Recipients:</span>
+                          <span className="val">{item.recipientCount}</span>
                         </div>
-                        <div className="admin-newsletter__stat-pill">
-                          <span className="admin-newsletter__stat-pill-label">Delivered:</span>
-                          <span className="admin-newsletter__stat-pill-val" style={{ color: '#34d399' }}>
-                            {item.successCount}
-                          </span>
+                        <div className="pill">
+                          <span className="lbl">Delivered:</span>
+                          <span className="val success">{item.successCount}</span>
                         </div>
                         {item.failedCount > 0 && (
-                          <div className="admin-newsletter__stat-pill">
-                            <span className="admin-newsletter__stat-pill-label">Failed:</span>
-                            <span className="admin-newsletter__stat-pill-val" style={{ color: '#f87171' }}>
-                              {item.failedCount}
-                            </span>
+                          <div className="pill">
+                            <span className="lbl">Failed:</span>
+                            <span className="val danger">{item.failedCount}</span>
                           </div>
                         )}
-                        <div className="admin-newsletter__stat-pill">
-                          <span className="admin-newsletter__stat-pill-label">Sent By:</span>
-                          <span className="admin-newsletter__stat-pill-val">{item.sentByAdminName || 'Admin'}</span>
+                        <div className="pill">
+                          <span className="lbl">Sent By:</span>
+                          <span className="val">{item.sentByAdminName || 'Admin'}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="admin-newsletter__history-actions">
+                    <div className="item-actions">
                       <button
-                        className="admin-newsletter__btn-outline-sm"
+                        className="admin-newsletter__btn-secondary-sm"
                         onClick={() => handleLoadIntoComposer(item)}
                         title="Load into Composer"
                       >
@@ -1319,7 +1195,7 @@ const Newsletter = () => {
                       <button
                         className="admin-newsletter__btn-danger-sm"
                         onClick={() => setItemToDelete(item)}
-                        title="Delete Broadcast Log"
+                        title="Delete Record"
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polyline points="3 6 5 6 21 6" />
@@ -1332,10 +1208,9 @@ const Newsletter = () => {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
-        {/* MODAL 1: SEND TEST PREVIEW */}
         <AnimatePresence>
           {isTestModalOpen && (
             <div className="admin-newsletter__modal-overlay" onClick={() => setIsTestModalOpen(false)}>
@@ -1347,30 +1222,29 @@ const Newsletter = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="admin-newsletter__modal-header">
-                  <h3>Send Test Email Preview</h3>
+                  <h3 className="admin-newsletter__modal-title">Send Test Preview</h3>
                   <button className="admin-newsletter__modal-close" onClick={() => setIsTestModalOpen(false)}>
                     &times;
                   </button>
                 </div>
 
                 <form onSubmit={handleSendTest} className="admin-newsletter__modal-body">
-                  <p className="admin-newsletter__modal-desc">
-                    Send a real rendered test preview to your personal inbox to inspect formatting, images, and responsiveness before sending to customers.
+                  <p className="modal-description">
+                    Send a real rendered test email to your inbox to inspect visual styling, typography, and buttons before broadcasting.
                   </p>
 
                   <div className="admin-newsletter__form-group">
-                    <label className="admin-newsletter__form-label">Recipient Test Email</label>
+                    <label>Recipient Test Email</label>
                     <input
                       type="email"
                       required
-                      className="admin-newsletter__input"
                       value={testEmailInput}
                       onChange={(e) => setTestEmailInput(e.target.value)}
                       placeholder="e.g. your-email@example.com"
                     />
                   </div>
 
-                  <div className="admin-newsletter__modal-actions">
+                  <div className="admin-newsletter__modal-footer">
                     <button
                       type="button"
                       className="admin-newsletter__btn-secondary"
@@ -1387,7 +1261,7 @@ const Newsletter = () => {
                       {isSendingTest ? (
                         <>
                           <img src={loaderIcon} alt="Sending..." className="admin-newsletter__loader-mini" />
-                          Sending Test...
+                          Sending...
                         </>
                       ) : (
                         'Send Test Email'
@@ -1400,7 +1274,6 @@ const Newsletter = () => {
           )}
         </AnimatePresence>
 
-        {/* MODAL 2: CONFIRM BROADCAST */}
         <AnimatePresence>
           {isBroadcastModalOpen && (
             <div className="admin-newsletter__modal-overlay" onClick={() => !isBroadcasting && setIsBroadcastModalOpen(false)}>
@@ -1412,14 +1285,14 @@ const Newsletter = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="admin-newsletter__modal-header">
-                  <div className="admin-newsletter__danger-header-title">
+                  <h3 className="admin-newsletter__modal-title danger-title">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                       <line x1="12" y1="9" x2="12" y2="13" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
-                    Confirm Newsletter Broadcast
-                  </div>
+                    Confirm Broadcast
+                  </h3>
                   {!isBroadcasting && (
                     <button className="admin-newsletter__modal-close" onClick={() => setIsBroadcastModalOpen(false)}>
                       &times;
@@ -1428,27 +1301,27 @@ const Newsletter = () => {
                 </div>
 
                 <div className="admin-newsletter__modal-body">
-                  <p className="admin-newsletter__modal-desc">
-                    You are about to broadcast this email newsletter to all <strong>{stats.totalSubscribers} active subscribed members</strong>.
+                  <p className="modal-description">
+                    You are about to broadcast this email newsletter to all <strong>{stats.totalSubscribers} active members</strong>.
                   </p>
 
-                  <div className="admin-newsletter__confirm-summary">
-                    <div className="admin-newsletter__confirm-row">
+                  <div className="admin-newsletter__summary-card">
+                    <div className="summary-row">
                       <span>Subject:</span>
                       <strong>{form.subject}</strong>
                     </div>
-                    <div className="admin-newsletter__confirm-row">
-                      <span>Recipients:</span>
-                      <strong>{stats.totalSubscribers} active subscribers</strong>
+                    <div className="summary-row">
+                      <span>Subscribers:</span>
+                      <strong>{stats.totalSubscribers} members</strong>
                     </div>
-                    <div className="admin-newsletter__confirm-row">
+                    <div className="summary-row">
                       <span>Sender:</span>
                       <strong>{form.senderName || 'Rednest'} &lt;noreply@rednest.com&gt;</strong>
                     </div>
                   </div>
 
-                  <div className="admin-newsletter__safety-check">
-                    <label className="admin-newsletter__checkbox-label">
+                  <div className="admin-newsletter__safety-card">
+                    <label className="checkbox-label">
                       <input
                         type="checkbox"
                         checked={confirmedSafety}
@@ -1459,7 +1332,7 @@ const Newsletter = () => {
                     </label>
                   </div>
 
-                  <div className="admin-newsletter__modal-actions">
+                  <div className="admin-newsletter__modal-footer">
                     <button
                       type="button"
                       className="admin-newsletter__btn-secondary"
@@ -1490,7 +1363,6 @@ const Newsletter = () => {
           )}
         </AnimatePresence>
 
-        {/* MODAL 3: DELETE CONFIRMATION */}
         <AnimatePresence>
           {itemToDelete && (
             <div className="admin-newsletter__modal-overlay" onClick={() => !isDeleting && setItemToDelete(null)}>
@@ -1502,18 +1374,18 @@ const Newsletter = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="admin-newsletter__modal-header">
-                  <h3>Delete Broadcast Record</h3>
+                  <h3 className="admin-newsletter__modal-title">Delete Broadcast Record</h3>
                   <button className="admin-newsletter__modal-close" onClick={() => setItemToDelete(null)}>
                     &times;
                   </button>
                 </div>
 
                 <div className="admin-newsletter__modal-body">
-                  <p className="admin-newsletter__modal-desc">
+                  <p className="modal-description">
                     Are you sure you want to delete the broadcast log for "<strong>{itemToDelete.subject}</strong>"? This log entry will be permanently removed.
                   </p>
 
-                  <div className="admin-newsletter__modal-actions">
+                  <div className="admin-newsletter__modal-footer">
                     <button
                       type="button"
                       className="admin-newsletter__btn-secondary"
