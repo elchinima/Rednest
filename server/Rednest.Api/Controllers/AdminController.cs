@@ -355,8 +355,8 @@ public class AdminController : ControllerBase
         var currentUserLevel = GetUserRoleLevel(currentUserRole);
         var targetUserLevel = GetUserRoleLevel(user.Role);
 
-        if (currentUserId != id && currentUserLevel < targetUserLevel)
-            return StatusCode(403, new { message = $"Access denied. You cannot modify the data of a user with a higher role ({user.Role})." });
+        if (currentUserId != id && currentUserLevel <= targetUserLevel)
+            return StatusCode(403, new { message = $"Access denied. You cannot modify the data of a user with an equal or higher role ({user.Role})." });
         
 
         if (request.Name != null)
