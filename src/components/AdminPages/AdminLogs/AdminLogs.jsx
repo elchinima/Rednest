@@ -276,8 +276,8 @@ const AdminLogs = () => {
   const [pageSize, setPageSize] = useState(25);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
   const [filterPage, setFilterPage] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [filterRole, setFilterRole] = useState('All');
@@ -288,14 +288,6 @@ const AdminLogs = () => {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [rowViewModes, setRowViewModes] = useState({});
   const [modalViewMode, setModalViewMode] = useState('visual');
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-      setCurrentPage(1);
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   const showToast = (msg, type = 'success') => {
     setToastMessage(msg);
@@ -322,8 +314,8 @@ const AdminLogs = () => {
           pageSize: pageSize.toString(),
         });
 
-        if (debouncedSearch.trim()) {
-          params.append('search', debouncedSearch.trim());
+        if (activeSearch.trim()) {
+          params.append('search', activeSearch.trim());
         }
         if (filterPage && filterPage !== 'All') {
           params.append('filterPage', filterPage);
@@ -351,16 +343,34 @@ const AdminLogs = () => {
         setIsLoading(false);
       }
     },
-    [currentPage, pageSize, debouncedSearch, filterPage, filterType, filterRole]
+    [currentPage, pageSize, activeSearch, filterPage, filterType, filterRole]
   );
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setActiveSearch(searchInput.trim());
+    setCurrentPage(1);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(e);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setActiveSearch('');
+    setCurrentPage(1);
+  };
+
   const handleClearFilters = () => {
-    setSearchQuery('');
-    setDebouncedSearch('');
+    setSearchInput('');
+    setActiveSearch('');
     setFilterPage('All');
     setFilterType('All');
     setFilterRole('All');
@@ -368,7 +378,7 @@ const AdminLogs = () => {
   };
 
   const isFiltered =
-    debouncedSearch.trim() !== '' ||
+    activeSearch.trim() !== '' ||
     filterPage !== 'All' ||
     filterType !== 'All' ||
     filterRole !== 'All';
@@ -529,22 +539,23 @@ const AdminLogs = () => {
         </div>
 
         <div className="admin-logs__controls">
-          <div className="admin-logs__search-wrap">
+          <form onSubmit={handleSearchSubmit} className="admin-logs__search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
               type="text"
-              placeholder="Search by action, user, email, ID, or payload..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search and press Enter..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
             />
-            {searchQuery && (
+            {searchInput && (
               <button
                 type="button"
                 className="admin-logs__search-clear"
-                onClick={() => setSearchQuery('')}
+                onClick={handleClearSearch}
                 aria-label="Clear search"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -553,7 +564,7 @@ const AdminLogs = () => {
                 </svg>
               </button>
             )}
-          </div>
+          </form>
 
           <div className="admin-logs__filters">
             <div className="admin-logs__select-wrap">

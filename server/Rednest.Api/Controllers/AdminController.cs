@@ -2217,87 +2217,99 @@ public class AdminController : ControllerBase
     [HttpGet("logs")]
     public async Task<IActionResult> GetAdminLogs(
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int pageSize = 25,
         [FromQuery] string? search = null,
         [FromQuery] string? filterPage = null,
         [FromQuery] string? filterType = null,
         [FromQuery] string? filterRole = null)
     {
         if (!await IsAdminAuthenticatedAsync())
-            return Unauthorized(new { message = "Access denied." });
+            return Unauthorized();
 
         if (page < 1) page = 1;
-        if (pageSize < 1 || pageSize > 200) pageSize = 50;
+        if (pageSize < 1 || pageSize > 200) pageSize = 25;
 
-        var query = _context.AdminLogs
-            .Include(l => l.User)
-            .AsNoTracking()
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(filterPage) && !filterPage.Equals("All", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            var pLower = filterPage.Trim().ToLower();
-            query = query.Where(l => l.Page.ToLower() == pLower);
-        }
+            var query = _context.AdminLogs
+                .Include(l => l.User)
+                .AsNoTracking()
+                .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(filterType) && !filterType.Equals("All", StringComparison.OrdinalIgnoreCase))
-        {
-            var tLower = filterType.Trim().ToLower();
-            query = query.Where(l => l.Type.ToLower() == tLower);
-        }
-
-        if (!string.IsNullOrWhiteSpace(filterRole) && !filterRole.Equals("All", StringComparison.OrdinalIgnoreCase))
-        {
-            var rClean = filterRole.Trim().ToLower().Replace(" ", "");
-            query = query.Where(l => l.Role.ToLower().Replace(" ", "") == rClean);
-        }
-
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var sLower = search.Trim().ToLower();
-            query = query.Where(l =>
-                l.Description.ToLower().Contains(sLower) ||
-                l.Page.ToLower().Contains(sLower) ||
-                l.Role.ToLower().Contains(sLower) ||
-                (l.User != null && (
-                    (l.User.Name != null && l.User.Name.ToLower().Contains(sLower)) ||
-                    l.User.Email.ToLower().Contains(sLower)
-                )));
-        }
-
-        var totalCount = await query.CountAsync();
-
-        var logs = await query
-            .OrderByDescending(l => l.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(l => new
+            if (!string.IsNullOrWhiteSpace(filterPage) && !filterPage.Equals("All", StringComparison.OrdinalIgnoreCase))
             {
-                id = l.Id,
-                userId = l.UserId,
-                role = l.Role == "SuperAdmin" ? "Super Admin" : l.Role,
-                page = l.Page,
-                type = l.Type,
-                description = l.Description,
-                createdAt = l.CreatedAt,
-                user = l.User != null ? new
-                {
-                    id = l.User.Id,
-                    name = l.User.Name,
-                    email = l.User.Email,
-                    profilePictureUrl = l.User.ProfilePictureUrl
-                } : null
-            })
-            .ToListAsync();
+                var p = filterPage.Trim();
+                query = query.Where(l => EF.Functions.ILike(l.Page, p));
+            }
 
-        return Ok(new
+            if (!string.IsNullOrWhiteSpace(filterType) && !filterType.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                var t = filterType.Trim();
+                query = query.Where(l => EF.Functions.ILike(l.Type, t));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterRole) && !filterRole.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                var rClean = filterRole.Trim().Replace(" ", "");
+                query = query.Where(l => l.Role.Replace(" ", "").ToLower() == rClean.ToLower());
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim();
+                var isGuid = Guid.TryParse(s, out var searchGuid);
+
+                query = query.Where(l =>
+                    (isGuid && (l.Id == searchGuid || l.UserId == searchGuid)) ||
+                    EF.Functions.ILike(l.Page, $"%{s}%") ||
+                    EF.Functions.ILike(l.Role, $"%{s}%") ||
+                    EF.Functions.ILike(l.Type, $"%{s}%") ||
+                    EF.Functions.ILike(l.Description, $"%{s}%") ||
+                    (l.User != null && (
+                        (l.User.Name != null && EF.Functions.ILike(l.User.Name, $"%{s}%")) ||
+                        EF.Functions.ILike(l.User.Email, $"%{s}%")
+                    )));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var logs = await query
+                .OrderByDescending(l => l.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(l => new
+                {
+                    id = l.Id,
+                    userId = l.UserId,
+                    role = l.Role == "SuperAdmin" ? "Super Admin" : l.Role,
+                    page = l.Page,
+                    type = l.Type,
+                    description = l.Description,
+                    createdAt = l.CreatedAt,
+                    user = l.User != null ? new
+                    {
+                        id = l.User.Id,
+                        name = l.User.Name,
+                        email = l.User.Email,
+                        profilePictureUrl = l.User.ProfilePictureUrl
+                    } : null
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount,
+                page,
+                pageSize,
+                totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                logs
+            });
+        }
+        catch (Exception ex)
         {
-            totalCount,
-            page,
-            pageSize,
-            totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-            logs
-        });
+            Console.WriteLine($"[AdminLogs Error] {ex.Message}");
+            return StatusCode(500, new { message = "Error querying admin logs", error = ex.Message });
+        }
     }
 
     private async Task LogAdminActionAsync(
@@ -2318,7 +2330,7 @@ public class AdminController : ControllerBase
                 Page = page,
                 Type = type,
                 Description = JsonSerializer.Serialize(description),
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow.AddHours(4)
             };
             _context.AdminLogs.Add(log);
             await _context.SaveChangesAsync();

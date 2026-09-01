@@ -8,7 +8,7 @@ public class AdminLog
     public string Page { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public string Description { get; set; } = "{}";
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
 
     public User? User { get; set; }
 }
