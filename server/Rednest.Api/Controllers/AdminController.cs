@@ -163,15 +163,11 @@ public class AdminController : ControllerBase
             return inBakuDirect || inUtcRange;
         });
 
-        var monthNameRu = bakuNow.ToString("MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"));
-        if (!string.IsNullOrEmpty(monthNameRu))
-        {
-            monthNameRu = char.ToUpper(monthNameRu[0]) + monthNameRu[1..];
-        }
+        var monthNameEn = bakuNow.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
 
         return Ok(new
         {
-            monthName = monthNameRu,
+            monthName = monthNameEn,
             bakuCurrentTime = bakuNow.ToString("dd.MM.yyyy HH:mm"),
             productsSold = monthlyProductsSold,
             profit = monthlyProfit,

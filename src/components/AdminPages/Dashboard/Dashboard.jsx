@@ -59,17 +59,12 @@ const Dashboard = () => {
 
   const [storageStats, setStorageStats] = useState({ fileCount: '—', totalKb: '—' });
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   const currentUserRole = cleanRole(user?.role || user?.Role);
   const canAccessDatabase = currentUserRole === 'admin' || currentUserRole === 'superadmin';
 
-  const loadData = useCallback(async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
+  const loadData = useCallback(async () => {
+    setLoading(true);
 
     const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -110,7 +105,6 @@ const Dashboard = () => {
       console.error('Error fetching dashboard stats:', err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [canAccessDatabase]);
 
@@ -132,38 +126,22 @@ const Dashboard = () => {
             <p className="dashboard__subtitle">Overview of your Rednest admin panel</p>
           </div>
 
-          <div className="dashboard__header-actions">
+          {canAccessDatabase && (
             <motion.button
-              id="dashboard-refresh-btn"
-              className={`dashboard__refresh-btn ${refreshing ? 'dashboard__refresh-btn--spinning' : ''}`}
-              onClick={() => loadData(true)}
-              disabled={refreshing || loading}
-              title="Refresh statistics"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              id="dashboard-go-database"
+              className="cta-btn dashboard__cta"
+              onClick={() => navigate('/admin/database')}
+              whileHover={{ scale: 1.03, translateY: -2 }}
+              whileTap={{ scale: 0.97 }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
               </svg>
+              Go to Database
             </motion.button>
-
-            {canAccessDatabase && (
-              <motion.button
-                id="dashboard-go-database"
-                className="cta-btn dashboard__cta"
-                onClick={() => navigate('/admin/database')}
-                whileHover={{ scale: 1.03, translateY: -2 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <ellipse cx="12" cy="5" rx="9" ry="3" />
-                  <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
-                  <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
-                </svg>
-                Go to Database
-              </motion.button>
-            )}
-          </div>
+          )}
         </motion.div>
 
         {/* Section 1: Monthly business and operational metrics (Baku UTC+4) */}
@@ -171,7 +149,7 @@ const Dashboard = () => {
           <div className="dashboard__section-header">
             <div className="dashboard__section-title-wrap">
               <span className="dashboard__section-dot" />
-              <h2 className="dashboard__section-title">Статистика за текущий месяц</h2>
+              <h2 className="dashboard__section-title">Current Month Statistics</h2>
             </div>
             <div className="dashboard__badges">
               {monthlyStats.monthName && (
@@ -180,13 +158,13 @@ const Dashboard = () => {
                 </span>
               )}
               <span className="dashboard__badge dashboard__badge--timezone">
-                UTC+4 (Баку)
+                UTC+4 (Baku)
               </span>
             </div>
           </div>
 
           <div className="dashboard__stats dashboard__stats--grid-4">
-            {/* 1. Сколько продуктов продано за месяц */}
+            {/* 1. Products sold this month */}
             <StatCard
               index={0}
               accent="#f59e0b"
@@ -197,12 +175,12 @@ const Dashboard = () => {
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
               }
-              label="Продано продуктов"
+              label="Products Sold"
               value={loading ? '...' : monthlyStats.productsSold}
-              sub="Без учета отмененных заказов"
+              sub="Excluding cancelled orders"
             />
 
-            {/* 2. Прибыль за месяц */}
+            {/* 2. Monthly Revenue / Profit */}
             <StatCard
               index={1}
               accent="#10b981"
@@ -212,12 +190,12 @@ const Dashboard = () => {
                   <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
               }
-              label="Прибыль за месяц"
+              label="Monthly Revenue"
               value={loading ? '...' : monthlyStats.profitFormatted}
-              sub="Выручка с активных заказов"
+              sub="Total from active orders"
             />
 
-            {/* 3. Сколько людей зарегистрировались за месяц */}
+            {/* 3. New Registrations */}
             <StatCard
               index={2}
               accent="#6366f1"
@@ -229,12 +207,12 @@ const Dashboard = () => {
                   <line x1="23" y1="11" x2="17" y2="11" />
                 </svg>
               }
-              label="Новые пользователи"
+              label="New Registrations"
               value={loading ? '...' : monthlyStats.registrations}
-              sub="Регистраций с 1 числа"
+              sub="Users registered this month"
             />
 
-            {/* 4. Сколько людей сейчас онлайн */}
+            {/* 4. Online Now */}
             <StatCard
               index={3}
               accent="#22c55e"
@@ -244,12 +222,12 @@ const Dashboard = () => {
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
               }
-              label="Сейчас онлайн"
+              label="Online Now"
               value={loading ? '...' : monthlyStats.onlineUsers}
-              sub="Активны за 15 минут"
+              sub="Active in last 15 minutes"
             />
 
-            {/* 5. Средняя оценка за месяц */}
+            {/* 5. Average Rating */}
             <StatCard
               index={4}
               accent="#eab308"
@@ -258,12 +236,12 @@ const Dashboard = () => {
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
               }
-              label="Средняя оценка"
+              label="Average Rating"
               value={loading ? '...' : `${monthlyStats.averageRatingFormatted} ★`}
-              sub="На основе отзывов за месяц"
+              sub="Based on reviews this month"
             />
 
-            {/* 6. Сколько людей поставили оценку за месяц */}
+            {/* 6. Users Rated */}
             <StatCard
               index={5}
               accent="#06b6d4"
@@ -275,12 +253,12 @@ const Dashboard = () => {
                   <path d="M12 10h.01" />
                 </svg>
               }
-              label="Поставили оценку"
+              label="Users Rated"
               value={loading ? '...' : monthlyStats.ratingUsersCount}
-              sub="Пользователей с отзывами"
+              sub="Unique reviewers this month"
             />
 
-            {/* 7. Сколько промокодов было создано за месяц */}
+            {/* 7. Promos Created */}
             <StatCard
               index={6}
               accent="#a855f7"
@@ -290,12 +268,12 @@ const Dashboard = () => {
                   <line x1="12" y1="9" x2="12" y2="15" />
                 </svg>
               }
-              label="Создано промокодов"
+              label="Promos Created"
               value={loading ? '...' : monthlyStats.promosCreated}
-              sub="За текущий месяц"
+              sub="Created this month"
             />
 
-            {/* 8. Сколько денег ушло на промокоды за этот месяц */}
+            {/* 8. Promo Discounts */}
             <StatCard
               index={7}
               accent="#f43f5e"
@@ -306,9 +284,9 @@ const Dashboard = () => {
                   <circle cx="17.5" cy="17.5" r="2.5" />
                 </svg>
               }
-              label="Расход на промокоды"
+              label="Promo Discounts"
               value={loading ? '...' : monthlyStats.promoSpentFormatted}
-              sub="Сумма скидок по заказам"
+              sub="Total discounts applied"
             />
           </div>
         </div>
@@ -319,7 +297,7 @@ const Dashboard = () => {
             <div className="dashboard__section-header">
               <div className="dashboard__section-title-wrap">
                 <span className="dashboard__section-dot dashboard__section-dot--storage" />
-                <h2 className="dashboard__section-title">Хранилище медиафайлов</h2>
+                <h2 className="dashboard__section-title">Media Storage</h2>
               </div>
               <span className="dashboard__badge dashboard__badge--storage">
                 Supabase Storage
