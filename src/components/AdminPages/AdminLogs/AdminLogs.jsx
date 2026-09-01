@@ -22,6 +22,15 @@ const TYPES_LIST = ['All', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
 const ROLES_LIST = ['All', 'SuperAdmin', 'Admin', 'Moderator'];
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
+
 const formatBakuDate = (isoStr) => {
   if (!isoStr) return '—';
   try {
@@ -65,56 +74,34 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
-const getTypeBadge = (type) => {
+const getTypeBadgeClass = (type) => {
   const t = String(type || '').toUpperCase();
   switch (t) {
     case 'POST':
-      return { className: 'log-badge log-badge--post', label: 'POST' };
+      return 'badge badge--success';
     case 'PUT':
-      return { className: 'log-badge log-badge--put', label: 'PUT' };
+      return 'badge badge--info';
     case 'PATCH':
-      return { className: 'log-badge log-badge--patch', label: 'PATCH' };
+      return 'badge badge--purple';
     case 'DELETE':
-      return { className: 'log-badge log-badge--delete', label: 'DELETE' };
+      return 'badge badge--danger';
     default:
-      return { className: 'log-badge log-badge--default', label: t || 'ACTION' };
+      return 'badge badge--muted';
   }
 };
 
-const getPageBadge = (page) => {
-  const p = String(page || '').toLowerCase();
-  switch (p) {
-    case 'users':
-      return { className: 'page-badge page-badge--users', label: 'Users' };
-    case 'products':
-      return { className: 'page-badge page-badge--products', label: 'Products' };
-    case 'orders':
-      return { className: 'page-badge page-badge--orders', label: 'Orders' };
-    case 'promos':
-      return { className: 'page-badge page-badge--promos', label: 'Promos' };
-    case 'reviews':
-      return { className: 'page-badge page-badge--reviews', label: 'Reviews' };
-    case 'newsletter':
-      return { className: 'page-badge page-badge--newsletter', label: 'Newsletter' };
-    case 'database':
-      return { className: 'page-badge page-badge--database', label: 'Database' };
-    default:
-      return { className: 'page-badge page-badge--default', label: page || 'Admin' };
-  }
-};
-
-const getRoleBadge = (role) => {
+const getRoleBadgeClass = (role) => {
   const r = String(role || '').toLowerCase();
   if (r.includes('super')) {
-    return { className: 'role-badge role-badge--superadmin', label: 'Super Admin' };
+    return 'badge badge--warning';
   }
   if (r.includes('admin')) {
-    return { className: 'role-badge role-badge--admin', label: 'Admin' };
+    return 'badge badge--danger';
   }
   if (r.includes('moderator')) {
-    return { className: 'role-badge role-badge--moderator', label: 'Moderator' };
+    return 'badge badge--info';
   }
-  return { className: 'role-badge role-badge--default', label: role || 'Staff' };
+  return 'badge badge--muted';
 };
 
 const parseJsonSafe = (str) => {
@@ -127,9 +114,96 @@ const parseJsonSafe = (str) => {
   }
 };
 
+const formatValueDisplay = (val) => {
+  if (val === null || val === undefined) return 'null';
+  if (typeof val === 'boolean') return val ? 'True' : 'False';
+  if (typeof val === 'object') {
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return String(val);
+    }
+  }
+  return String(val);
+};
+
+const extractChanges = (data) => {
+  if (!data || typeof data !== 'object') return [];
+
+  if (data.changes && typeof data.changes === 'object') {
+    return Object.entries(data.changes)
+      .filter(([_, val]) => val !== null && typeof val === 'object')
+      .map(([key, val]) => ({
+        field: key,
+        from: formatValueDisplay(val.from),
+        to: formatValueDisplay(val.to),
+      }));
+  }
+
+  if (data.previousStatus !== undefined && data.newStatus !== undefined) {
+    return [
+      {
+        field: 'status',
+        from: formatValueDisplay(data.previousStatus),
+        to: formatValueDisplay(data.newStatus),
+      },
+    ];
+  }
+
+  if (data.before && data.after && typeof data.before === 'object' && typeof data.after === 'object') {
+    const allKeys = Array.from(new Set([...Object.keys(data.before), ...Object.keys(data.after)]));
+    const diffs = [];
+    for (const k of allKeys) {
+      const bVal = data.before[k];
+      const aVal = data.after[k];
+      if (bVal !== aVal && (bVal !== undefined || aVal !== undefined)) {
+        diffs.push({
+          field: k,
+          from: formatValueDisplay(bVal),
+          to: formatValueDisplay(aVal),
+        });
+      }
+    }
+    if (diffs.length > 0) return diffs;
+  }
+
+  if (data.action && String(data.action).toLowerCase().includes('toggle') && data.isActive !== undefined) {
+    return [
+      {
+        field: 'isActive',
+        from: formatValueDisplay(!data.isActive),
+        to: formatValueDisplay(data.isActive),
+      },
+    ];
+  }
+
+  return [];
+};
+
+const extractParams = (data) => {
+  if (!data || typeof data !== 'object') return [];
+
+  const skipKeys = new Set(['action', 'changes', 'before', 'after', 'previousStatus', 'newStatus']);
+  const result = [];
+
+  for (const [key, val] of Object.entries(data)) {
+    if (skipKeys.has(key)) continue;
+    if (val === null || val === undefined) continue;
+
+    result.push({
+      key,
+      value: formatValueDisplay(val),
+    });
+  }
+
+  return result;
+};
+
 const extractActionSummary = (descriptionStr, type, page) => {
   const data = parseJsonSafe(descriptionStr);
   const actionName = data.action || type || 'Action';
+  const changes = extractChanges(data);
+  const params = extractParams(data);
 
   let targetPreview = '';
   if (data.targetEmail) {
@@ -147,12 +221,12 @@ const extractActionSummary = (descriptionStr, type, page) => {
   } else if (data.toEmail) {
     targetPreview = `To: ${data.toEmail}`;
   } else if (data.targetUserId) {
-    targetPreview = `User ID: ${String(data.targetUserId).substring(0, 8)}...`;
+    targetPreview = `User: ${String(data.targetUserId).substring(0, 8)}...`;
   } else if (data.reviewId) {
-    targetPreview = `Review ID: ${String(data.reviewId).substring(0, 8)}...`;
+    targetPreview = `Review: ${String(data.reviewId).substring(0, 8)}...`;
   }
 
-  return { actionName, targetPreview, data };
+  return { actionName, targetPreview, data, changes, params };
 };
 
 const AdminLogs = () => {
@@ -163,7 +237,6 @@ const AdminLogs = () => {
   const [pageSize, setPageSize] = useState(25);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -173,7 +246,10 @@ const AdminLogs = () => {
 
   const [selectedLog, setSelectedLog] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [rowViewModes, setRowViewModes] = useState({});
+  const [modalViewMode, setModalViewMode] = useState('visual');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -183,17 +259,18 @@ const AdminLogs = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToastMessage(msg);
+    setToastType(type);
     setTimeout(() => setToastMessage(''), 4000);
   };
 
   const copyToClipboard = async (text, label = 'Copied') => {
     try {
       await navigator.clipboard.writeText(text);
-      showToast(`${label} copied to clipboard!`);
+      showToast(`${label} copied to clipboard!`, 'success');
     } catch {
-      showToast('Could not copy to clipboard');
+      showToast('Could not copy to clipboard', 'error');
     }
   };
 
@@ -228,11 +305,11 @@ const AdminLogs = () => {
           setTotalCount(data.totalCount || 0);
           setTotalPages(data.totalPages || 1);
         } else {
-          showToast('Failed to load audit logs.');
+          showToast('Failed to load audit logs.', 'error');
         }
       } catch (err) {
         console.error('Error fetching admin logs:', err);
-        showToast('Error loading logs.');
+        showToast('Error loading logs.', 'error');
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -244,14 +321,6 @@ const AdminLogs = () => {
   useEffect(() => {
     fetchLogs(true);
   }, [fetchLogs]);
-
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = setInterval(() => {
-      fetchLogs(false);
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [autoRefresh, fetchLogs]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -277,6 +346,13 @@ const AdminLogs = () => {
     });
   };
 
+  const setRowMode = (id, mode) => {
+    setRowViewModes((prev) => ({
+      ...prev,
+      [id]: mode,
+    }));
+  };
+
   const statsSummary = useMemo(() => {
     const postCount = logs.filter((l) => l.type?.toUpperCase() === 'POST').length;
     const putPatchCount = logs.filter((l) => ['PUT', 'PATCH'].includes(l.type?.toUpperCase())).length;
@@ -290,66 +366,51 @@ const AdminLogs = () => {
         <AnimatePresence>
           {toastMessage && (
             <motion.div
-              className="admin-logs__toast"
+              className={`admin-logs__toast ${toastType === 'error' ? 'admin-logs__toast--error' : ''}`}
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -20, scale: 0.95 }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
+              {toastType === 'error' ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
               <span>{toastMessage}</span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <header className="admin-logs__header">
-          <div className="admin-logs__header-left">
-            <div className="admin-logs__title-row">
-              <h1 className="admin-logs__title">Audit Logs</h1>
-              <span className="admin-logs__count-badge">{totalCount} total actions</span>
-            </div>
+        <motion.div
+          className="admin-logs__header"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div>
+            <h1 className="admin-logs__title">Audit Logs</h1>
             <p className="admin-logs__subtitle">
-              Comprehensive log of all administrative actions, data changes, and operations
+              Comprehensive activity history, data changes, and system operations
             </p>
           </div>
+        </motion.div>
 
-          <div className="admin-logs__header-right">
-            <button
-              id="admin-logs-auto-refresh-btn"
-              type="button"
-              className={`admin-logs__auto-refresh${autoRefresh ? ' admin-logs__auto-refresh--active' : ''}`}
-              onClick={() => setAutoRefresh((prev) => !prev)}
-              title={autoRefresh ? 'Disable live polling (15s)' : 'Enable live polling (15s)'}
-            >
-              <span className="admin-logs__auto-refresh-dot" />
-              <span>{autoRefresh ? 'Live (15s)' : 'Live Off'}</span>
-            </button>
-
-            <button
-              id="admin-logs-refresh-btn"
-              type="button"
-              className="admin-logs__btn-secondary"
-              onClick={() => fetchLogs(false)}
-              disabled={isRefreshing || isLoading}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={isRefreshing ? 'admin-logs__spin' : ''}
-              >
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-              </svg>
-              <span>Refresh</span>
-            </button>
-          </div>
-        </header>
-
-        <div className="admin-logs__stats-grid">
-          <div className="admin-logs__stat-card">
-            <div className="admin-logs__stat-icon admin-logs__stat-icon--total">
+        <div className="admin-logs__stats">
+          <motion.div
+            className="admin-logs__stat-card"
+            style={{ '--accent': '#ef4444' }}
+            custom={0}
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+          >
+            <div className="admin-logs__stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -358,40 +419,64 @@ const AdminLogs = () => {
                 <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
-            <div className="admin-logs__stat-info">
-              <span className="admin-logs__stat-val">{totalCount}</span>
-              <span className="admin-logs__stat-label">Total Logged Actions</span>
+            <div className="admin-logs__stat-body">
+              <span className="admin-logs__stat-value">{isLoading ? '...' : totalCount}</span>
+              <span className="admin-logs__stat-label">Total Actions</span>
+              <span className="admin-logs__stat-sub">Recorded in database</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="admin-logs__stat-card">
-            <div className="admin-logs__stat-icon admin-logs__stat-icon--post">
+          <motion.div
+            className="admin-logs__stat-card"
+            style={{ '--accent': '#10b981' }}
+            custom={1}
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+          >
+            <div className="admin-logs__stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
             </div>
-            <div className="admin-logs__stat-info">
-              <span className="admin-logs__stat-val">{statsSummary.postCount}</span>
-              <span className="admin-logs__stat-label">Created on Current View (POST)</span>
+            <div className="admin-logs__stat-body">
+              <span className="admin-logs__stat-value">{isLoading ? '...' : statsSummary.postCount}</span>
+              <span className="admin-logs__stat-label">Created (POST)</span>
+              <span className="admin-logs__stat-sub">Current view entries</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="admin-logs__stat-card">
-            <div className="admin-logs__stat-icon admin-logs__stat-icon--put">
+          <motion.div
+            className="admin-logs__stat-card"
+            style={{ '--accent': '#3b82f6' }}
+            custom={2}
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+          >
+            <div className="admin-logs__stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </div>
-            <div className="admin-logs__stat-info">
-              <span className="admin-logs__stat-val">{statsSummary.putPatchCount}</span>
-              <span className="admin-logs__stat-label">Modifications (PUT / PATCH)</span>
+            <div className="admin-logs__stat-body">
+              <span className="admin-logs__stat-value">{isLoading ? '...' : statsSummary.putPatchCount}</span>
+              <span className="admin-logs__stat-label">Modifications</span>
+              <span className="admin-logs__stat-sub">PUT / PATCH actions</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="admin-logs__stat-card">
-            <div className="admin-logs__stat-icon admin-logs__stat-icon--delete">
+          <motion.div
+            className="admin-logs__stat-card"
+            style={{ '--accent': '#f43f5e' }}
+            custom={3}
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+          >
+            <div className="admin-logs__stat-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -399,21 +484,21 @@ const AdminLogs = () => {
                 <line x1="14" y1="11" x2="14" y2="17" />
               </svg>
             </div>
-            <div className="admin-logs__stat-info">
-              <span className="admin-logs__stat-val">{statsSummary.deleteCount}</span>
-              <span className="admin-logs__stat-label">Deletions (DELETE)</span>
+            <div className="admin-logs__stat-body">
+              <span className="admin-logs__stat-value">{isLoading ? '...' : statsSummary.deleteCount}</span>
+              <span className="admin-logs__stat-label">Deletions</span>
+              <span className="admin-logs__stat-sub">DELETE operations</span>
             </div>
-          </div>
+          </motion.div>
         </div>
 
-        <div className="admin-logs__toolbar">
-          <div className="admin-logs__search-box">
+        <div className="admin-logs__controls">
+          <div className="admin-logs__search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
-              id="admin-logs-search-input"
               type="text"
               placeholder="Search by action, user, email, ID, or payload..."
               value={searchQuery}
@@ -426,16 +511,17 @@ const AdminLogs = () => {
                 onClick={() => setSearchQuery('')}
                 aria-label="Clear search"
               >
-                ✕
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             )}
           </div>
 
-          <div className="admin-logs__filters-row">
-            <div className="admin-logs__filter-item">
-              <label htmlFor="admin-logs-page-filter">Page:</label>
+          <div className="admin-logs__filters">
+            <div className="admin-logs__select-wrap">
               <select
-                id="admin-logs-page-filter"
                 value={filterPage}
                 onChange={(e) => {
                   setFilterPage(e.target.value);
@@ -450,10 +536,8 @@ const AdminLogs = () => {
               </select>
             </div>
 
-            <div className="admin-logs__filter-item">
-              <label htmlFor="admin-logs-type-filter">Method:</label>
+            <div className="admin-logs__select-wrap">
               <select
-                id="admin-logs-type-filter"
                 value={filterType}
                 onChange={(e) => {
                   setFilterType(e.target.value);
@@ -462,16 +546,14 @@ const AdminLogs = () => {
               >
                 {TYPES_LIST.map((t) => (
                   <option key={t} value={t}>
-                    {t === 'All' ? 'All Types' : t}
+                    {t === 'All' ? 'All Methods' : t}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="admin-logs__filter-item">
-              <label htmlFor="admin-logs-role-filter">Role:</label>
+            <div className="admin-logs__select-wrap">
               <select
-                id="admin-logs-role-filter"
                 value={filterRole}
                 onChange={(e) => {
                   setFilterRole(e.target.value);
@@ -486,10 +568,8 @@ const AdminLogs = () => {
               </select>
             </div>
 
-            <div className="admin-logs__filter-item">
-              <label htmlFor="admin-logs-pagesize-filter">Show:</label>
+            <div className="admin-logs__select-wrap">
               <select
-                id="admin-logs-pagesize-filter"
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(Number(e.target.value));
@@ -498,7 +578,7 @@ const AdminLogs = () => {
               >
                 {PAGE_SIZE_OPTIONS.map((sz) => (
                   <option key={sz} value={sz}>
-                    {sz} rows
+                    {sz} / page
                   </option>
                 ))}
               </select>
@@ -507,28 +587,28 @@ const AdminLogs = () => {
             {isFiltered && (
               <button
                 type="button"
-                className="admin-logs__btn-clear-filters"
+                className="admin-logs__btn-clear"
                 onClick={handleClearFilters}
               >
-                Reset Filters
+                Clear
               </button>
             )}
           </div>
         </div>
 
-        <div className="admin-logs__table-container">
+        <div className="admin-logs__table-card">
           {isLoading ? (
             <div className="admin-logs__loading">
-              <img src={loaderIcon} alt="Loading..." />
-              <span>Loading audit logs...</span>
+              <img src={loaderIcon} alt="Loading..." className="admin-logs__spinner" />
+              <span>Loading activity logs...</span>
             </div>
           ) : logs.length === 0 ? (
             <div className="admin-logs__empty">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
-                <circle cx="12" cy="14" r="3" />
-                <line x1="12" y1="17" x2="12" y2="19" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
               </svg>
               <h3>No activity logs found</h3>
               <p>
@@ -547,72 +627,61 @@ const AdminLogs = () => {
               )}
             </div>
           ) : (
-            <table className="admin-logs__table">
-              <thead>
-                <tr>
-                  <th style={{ width: '40px' }} />
-                  <th>Timestamp</th>
-                  <th>Admin User</th>
-                  <th>Role</th>
-                  <th>Page</th>
-                  <th>Method</th>
-                  <th>Action & Target</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => {
-                  const typeBadge = getTypeBadge(log.type);
-                  const pageBadge = getPageBadge(log.page);
-                  const roleBadge = getRoleBadge(log.role);
-                  const { actionName, targetPreview, data } = extractActionSummary(
-                    log.description,
-                    log.type,
-                    log.page
-                  );
-                  const isExpanded = expandedRows.has(log.id);
+            <div className="admin-logs__table-responsive">
+              <table className="admin-logs__table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '32px' }} />
+                    <th>Timestamp</th>
+                    <th>Admin User</th>
+                    <th>Role</th>
+                    <th>Page</th>
+                    <th>Method</th>
+                    <th>Action, Target & Changes</th>
+                    <th className="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log) => {
+                    const typeBadgeClass = getTypeBadgeClass(log.type);
+                    const roleBadgeClass = getRoleBadgeClass(log.role);
+                    const { actionName, targetPreview, data, changes, params } = extractActionSummary(
+                      log.description,
+                      log.type,
+                      log.page
+                    );
+                    const isExpanded = expandedRows.has(log.id);
+                    const rowMode = rowViewModes[log.id] || 'visual';
 
-                  return (
-                    <React.Fragment key={log.id}>
-                      <tr
-                        className={`admin-logs__row${isExpanded ? ' admin-logs__row--expanded' : ''}`}
-                        onClick={() => toggleRowExpand(log.id)}
-                      >
-                        <td className="admin-logs__expand-cell">
-                          <button
-                            type="button"
-                            className={`admin-logs__chevron-btn${isExpanded ? ' admin-logs__chevron-btn--open' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleRowExpand(log.id);
-                            }}
-                            aria-label="Toggle details"
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                          </button>
-                        </td>
+                    return (
+                      <React.Fragment key={log.id}>
+                        <tr
+                          className={`admin-logs__row${isExpanded ? ' admin-logs__row--expanded' : ''}`}
+                          onClick={() => toggleRowExpand(log.id)}
+                        >
+                          <td className="admin-logs__expand-cell">
+                            <button
+                              type="button"
+                              className={`admin-logs__chevron-btn${isExpanded ? ' admin-logs__chevron-btn--open' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleRowExpand(log.id);
+                              }}
+                              aria-label="Toggle details"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="9 18 15 12 9 6" />
+                              </svg>
+                            </button>
+                          </td>
 
-                        <td className="admin-logs__time-cell">
-                          <span className="admin-logs__time-main">{formatBakuDate(log.createdAt)}</span>
-                          <span className="admin-logs__time-sub">{formatRelativeTime(log.createdAt)}</span>
-                        </td>
+                          <td>
+                            <span className="admin-logs__time-main">{formatBakuDate(log.createdAt)}</span>
+                            <span className="admin-logs__time-sub">{formatRelativeTime(log.createdAt)}</span>
+                          </td>
 
-                        <td className="admin-logs__user-cell">
-                          <div className="admin-logs__user-wrapper">
-                            {log.user?.profilePictureUrl ? (
-                              <img
-                                src={log.user.profilePictureUrl}
-                                alt={log.user.name || 'Admin'}
-                                className="admin-logs__user-avatar"
-                              />
-                            ) : (
-                              <div className="admin-logs__user-avatar-fallback">
-                                {(log.user?.name || log.user?.email || 'A')[0].toUpperCase()}
-                              </div>
-                            )}
-                            <div className="admin-logs__user-meta">
+                          <td>
+                            <div className="admin-logs__user-info">
                               <span className="admin-logs__user-name">
                                 {log.user?.name || 'Administrator'}
                               </span>
@@ -620,244 +689,353 @@ const AdminLogs = () => {
                                 {log.user?.email || log.userId || '—'}
                               </span>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>
-                          <span className={roleBadge.className}>{roleBadge.label}</span>
-                        </td>
+                          <td>
+                            <span className={roleBadgeClass}>{log.role}</span>
+                          </td>
 
-                        <td>
-                          <span className={pageBadge.className}>{pageBadge.label}</span>
-                        </td>
+                          <td>
+                            <span className="badge badge--muted">{log.page}</span>
+                          </td>
 
-                        <td>
-                          <span className={typeBadge.className}>{typeBadge.label}</span>
-                        </td>
+                          <td>
+                            <span className={typeBadgeClass}>{log.type}</span>
+                          </td>
 
-                        <td className="admin-logs__action-cell">
-                          <div className="admin-logs__action-title">{actionName}</div>
-                          {targetPreview && (
-                            <div className="admin-logs__action-target" title={targetPreview}>
-                              {targetPreview}
-                            </div>
-                          )}
-                        </td>
-
-                        <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                          <div className="admin-logs__row-actions">
-                            <button
-                              type="button"
-                              className="admin-logs__action-btn"
-                              onClick={() => setSelectedLog(log)}
-                              title="Inspect Full Log Entry"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="16" x2="12" y2="12" />
-                                <line x1="12" y1="8" x2="12.01" y2="8" />
-                              </svg>
-                              <span>Details</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-logs__action-btn admin-logs__action-btn--icon"
-                              onClick={() => copyToClipboard(log.description, 'JSON Payload')}
-                              title="Copy JSON Payload"
-                            >
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      {isExpanded && (
-                        <tr className="admin-logs__expanded-tr">
-                          <td colSpan="8">
-                            <motion.div
-                              className="admin-logs__expanded-content"
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <div className="admin-logs__expanded-header">
-                                <span className="admin-logs__expanded-label">
-                                  Payload Details (JSON) — Log ID: <code>{log.id}</code>
-                                </span>
-                                <div className="admin-logs__expanded-actions">
-                                  <button
-                                    type="button"
-                                    className="admin-logs__copy-btn"
-                                    onClick={() => copyToClipboard(JSON.stringify(data, null, 2), 'JSON')}
-                                  >
-                                    Copy Formatted JSON
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="admin-logs__copy-btn"
-                                    onClick={() => setSelectedLog(log)}
-                                  >
-                                    Open in Modal
-                                  </button>
+                          <td>
+                            <div className="admin-logs__action-col">
+                              <div className="admin-logs__action-title">{actionName}</div>
+                              {targetPreview && (
+                                <div className="admin-logs__action-target" title={targetPreview}>
+                                  {targetPreview}
                                 </div>
-                              </div>
-                              <pre className="admin-logs__json-view">
-                                {JSON.stringify(data, null, 2)}
-                              </pre>
-                            </motion.div>
+                              )}
+                              {changes.length > 0 && (
+                                <div className="admin-logs__diff-pill-list">
+                                  {changes.slice(0, 3).map((ch, idx) => (
+                                    <div key={idx} className="admin-logs__diff-pill" title={`${ch.field}: ${ch.from} → ${ch.to}`}>
+                                      <span className="diff-label">{ch.field}:</span>
+                                      <span className="diff-was">{ch.from}</span>
+                                      <span className="diff-arrow">→</span>
+                                      <span className="diff-now">{ch.to}</span>
+                                    </div>
+                                  ))}
+                                  {changes.length > 3 && (
+                                    <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.45)' }}>
+                                      +{changes.length - 3} more changes
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <div className="admin-logs__action-buttons">
+                              <button
+                                type="button"
+                                className="admin-logs__action-btn"
+                                onClick={() => setSelectedLog(log)}
+                                title="Inspect Details"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="12" y1="16" x2="12" y2="12" />
+                                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-logs__action-btn"
+                                onClick={() => copyToClipboard(log.description, 'Payload')}
+                                title="Copy JSON"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                              </button>
+                            </div>
                           </td>
                         </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+
+                        {isExpanded && (
+                          <tr className="admin-logs__expanded-tr">
+                            <td colSpan="8">
+                              <motion.div
+                                className="admin-logs__expanded-card"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <div className="admin-logs__expanded-top">
+                                  <div className="admin-logs__expanded-title-wrap">
+                                    <span className="admin-logs__expanded-badge">{actionName}</span>
+                                    <span className="admin-logs__expanded-id">
+                                      Record ID: <code>{log.id}</code>
+                                    </span>
+                                  </div>
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div className="admin-logs__view-tabs">
+                                      <button
+                                        type="button"
+                                        className={`admin-logs__tab-btn${rowMode === 'visual' ? ' admin-logs__tab-btn--active' : ''}`}
+                                        onClick={() => setRowMode(log.id, 'visual')}
+                                      >
+                                        Visual Overview
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className={`admin-logs__tab-btn${rowMode === 'json' ? ' admin-logs__tab-btn--active' : ''}`}
+                                        onClick={() => setRowMode(log.id, 'json')}
+                                      >
+                                        Raw JSON
+                                      </button>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      className="admin-logs__btn-action-small"
+                                      onClick={() => copyToClipboard(JSON.stringify(data, null, 2), 'JSON')}
+                                    >
+                                      Copy JSON
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="admin-logs__btn-action-small"
+                                      onClick={() => setSelectedLog(log)}
+                                    >
+                                      Modal View
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {rowMode === 'visual' ? (
+                                  <>
+                                    {changes.length > 0 && (
+                                      <div className="admin-logs__diff-section">
+                                        <h4 className="admin-logs__diff-heading">
+                                          Changes (Было → Стало)
+                                        </h4>
+                                        <div className="admin-logs__diff-grid">
+                                          {changes.map((ch, idx) => (
+                                            <div key={idx} className="admin-logs__diff-card">
+                                              <div className="admin-logs__diff-card-header">
+                                                {ch.field}
+                                              </div>
+                                              <div className="admin-logs__diff-card-compare">
+                                                <div className="admin-logs__diff-card-from">
+                                                  <span className="lbl">Было (Was)</span>
+                                                  <span className="val">{ch.from}</span>
+                                                </div>
+                                                <span className="admin-logs__diff-card-arrow">→</span>
+                                                <div className="admin-logs__diff-card-to">
+                                                  <span className="lbl">Стало (Became)</span>
+                                                  <span className="val">{ch.to}</span>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {params.length > 0 && (
+                                      <div className="admin-logs__params-section">
+                                        <h4 className="admin-logs__diff-heading">
+                                          Operation Parameters
+                                        </h4>
+                                        <div className="admin-logs__params-grid">
+                                          {params.map((pm, idx) => (
+                                            <div key={idx} className="admin-logs__param-item">
+                                              <span className="admin-logs__param-item-label">{pm.key}</span>
+                                              <span className="admin-logs__param-item-value">{pm.value}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <pre className="admin-logs__json-view">
+                                    {JSON.stringify(data, null, 2)}
+                                  </pre>
+                                )}
+                              </motion.div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!isLoading && totalPages > 1 && (
+            <div className="admin-logs__pagination">
+              <div className="admin-logs__pagination-info">
+                Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalCount)} of {totalCount} logs
+              </div>
+
+              <div className="admin-logs__pagination-controls">
+                <button
+                  type="button"
+                  className="admin-logs__page-btn"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  title="First page"
+                >
+                  «
+                </button>
+                <button
+                  type="button"
+                  className="admin-logs__page-btn"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  title="Previous page"
+                >
+                  ‹ Prev
+                </button>
+
+                <span className="admin-logs__page-current">
+                  Page {currentPage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  className="admin-logs__page-btn"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  title="Next page"
+                >
+                  Next ›
+                </button>
+                <button
+                  type="button"
+                  className="admin-logs__page-btn"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  title="Last page"
+                >
+                  »
+                </button>
+              </div>
+            </div>
           )}
         </div>
 
-        {!isLoading && totalPages > 1 && (
-          <div className="admin-logs__pagination">
-            <div className="admin-logs__pagination-info">
-              Showing {(currentPage - 1) * pageSize + 1} –{' '}
-              {Math.min(currentPage * pageSize, totalCount)} of {totalCount} logs
-            </div>
-
-            <div className="admin-logs__pagination-controls">
-              <button
-                type="button"
-                className="admin-logs__page-btn"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                title="First page"
-              >
-                «
-              </button>
-              <button
-                type="button"
-                className="admin-logs__page-btn"
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                title="Previous page"
-              >
-                ‹ Prev
-              </button>
-
-              <span className="admin-logs__page-current">
-                Page {currentPage} of {totalPages}
-              </span>
-
-              <button
-                type="button"
-                className="admin-logs__page-btn"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                title="Next page"
-              >
-                Next ›
-              </button>
-              <button
-                type="button"
-                className="admin-logs__page-btn"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                title="Last page"
-              >
-                »
-              </button>
-            </div>
-          </div>
-        )}
-
         <AnimatePresence>
-          {selectedLog && (
-            <div
-              className="admin-logs__modal-backdrop"
-              onClick={() => setSelectedLog(null)}
-            >
-              <motion.div
-                className="admin-logs__modal"
-                initial={{ opacity: 0, scale: 0.94, y: 15 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 15 }}
-                onClick={(e) => e.stopPropagation()}
+          {selectedLog && (() => {
+            const modalSummary = extractActionSummary(
+              selectedLog.description,
+              selectedLog.type,
+              selectedLog.page
+            );
+
+            return (
+              <div
+                className="admin-logs__modal-backdrop"
+                onClick={() => setSelectedLog(null)}
               >
-                <div className="admin-logs__modal-header">
-                  <div className="admin-logs__modal-title-wrap">
-                    <div className="admin-logs__modal-badges">
-                      <span className={getTypeBadge(selectedLog.type).className}>
-                        {selectedLog.type}
-                      </span>
-                      <span className={getPageBadge(selectedLog.page).className}>
-                        {selectedLog.page}
-                      </span>
-                      <span className={getRoleBadge(selectedLog.role).className}>
-                        {selectedLog.role}
-                      </span>
+                <motion.div
+                  className="admin-logs__modal"
+                  initial={{ opacity: 0, scale: 0.94, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.94, y: 15 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="admin-logs__modal-header">
+                    <div>
+                      <div className="admin-logs__modal-badges">
+                        <span className={getTypeBadgeClass(selectedLog.type)}>
+                          {selectedLog.type}
+                        </span>
+                        <span className="badge badge--muted">
+                          {selectedLog.page}
+                        </span>
+                        <span className={getRoleBadgeClass(selectedLog.role)}>
+                          {selectedLog.role}
+                        </span>
+                      </div>
+                      <h2 className="admin-logs__modal-title">{modalSummary.actionName} Details</h2>
                     </div>
-                    <h2 className="admin-logs__modal-title">Log Entry Details</h2>
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-logs__modal-close"
-                    onClick={() => setSelectedLog(null)}
-                    aria-label="Close"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="admin-logs__modal-body">
-                  <div className="admin-logs__modal-grid">
-                    <div className="admin-logs__modal-item">
-                      <span className="admin-logs__modal-item-label">Timestamp (UTC+4 Baku)</span>
-                      <span className="admin-logs__modal-item-value">
-                        {formatBakuDate(selectedLog.createdAt)}
-                      </span>
-                    </div>
-
-                    <div className="admin-logs__modal-item">
-                      <span className="admin-logs__modal-item-label">Relative Time</span>
-                      <span className="admin-logs__modal-item-value">
-                        {formatRelativeTime(selectedLog.createdAt)}
-                      </span>
-                    </div>
-
-                    <div className="admin-logs__modal-item">
-                      <span className="admin-logs__modal-item-label">Admin User</span>
-                      <span className="admin-logs__modal-item-value">
-                        {selectedLog.user?.name || 'Administrator'} ({selectedLog.user?.email || selectedLog.userId || '—'})
-                      </span>
-                    </div>
-
-                    <div className="admin-logs__modal-item">
-                      <span className="admin-logs__modal-item-label">Admin User ID</span>
-                      <span className="admin-logs__modal-item-value">
-                        <code>{selectedLog.userId || 'System'}</code>
-                      </span>
-                    </div>
-
-                    <div className="admin-logs__modal-item admin-logs__modal-item--full">
-                      <span className="admin-logs__modal-item-label">Log Record ID</span>
-                      <span className="admin-logs__modal-item-value">
-                        <code>{selectedLog.id}</code>
-                      </span>
-                    </div>
+                    <button
+                      type="button"
+                      className="admin-logs__modal-close"
+                      onClick={() => setSelectedLog(null)}
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
                   </div>
 
-                  <div className="admin-logs__modal-payload-section">
-                    <div className="admin-logs__modal-payload-header">
-                      <span>Action Description & Database Payload:</span>
+                  <div className="admin-logs__modal-body">
+                    <div className="admin-logs__modal-grid">
+                      <div className="admin-logs__modal-item">
+                        <span className="admin-logs__modal-item-label">Timestamp (UTC+4 Baku)</span>
+                        <span className="admin-logs__modal-item-value">
+                          {formatBakuDate(selectedLog.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="admin-logs__modal-item">
+                        <span className="admin-logs__modal-item-label">Relative Time</span>
+                        <span className="admin-logs__modal-item-value">
+                          {formatRelativeTime(selectedLog.createdAt)}
+                        </span>
+                      </div>
+
+                      <div className="admin-logs__modal-item">
+                        <span className="admin-logs__modal-item-label">Admin User</span>
+                        <span className="admin-logs__modal-item-value">
+                          {selectedLog.user?.name || 'Administrator'} ({selectedLog.user?.email || selectedLog.userId || '—'})
+                        </span>
+                      </div>
+
+                      <div className="admin-logs__modal-item">
+                        <span className="admin-logs__modal-item-label">Admin User ID</span>
+                        <span className="admin-logs__modal-item-value">
+                          <code>{selectedLog.userId || 'System'}</code>
+                        </span>
+                      </div>
+
+                      <div className="admin-logs__modal-item admin-logs__modal-item--full">
+                        <span className="admin-logs__modal-item-label">Log Record ID</span>
+                        <span className="admin-logs__modal-item-value">
+                          <code>{selectedLog.id}</code>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div className="admin-logs__view-tabs">
+                        <button
+                          type="button"
+                          className={`admin-logs__tab-btn${modalViewMode === 'visual' ? ' admin-logs__tab-btn--active' : ''}`}
+                          onClick={() => setModalViewMode('visual')}
+                        >
+                          Visual Overview
+                        </button>
+                        <button
+                          type="button"
+                          className={`admin-logs__tab-btn${modalViewMode === 'json' ? ' admin-logs__tab-btn--active' : ''}`}
+                          onClick={() => setModalViewMode('json')}
+                        >
+                          Raw JSON
+                        </button>
+                      </div>
+
                       <button
                         type="button"
-                        className="admin-logs__copy-btn"
+                        className="admin-logs__btn-action-small"
                         onClick={() =>
                           copyToClipboard(
-                            JSON.stringify(parseJsonSafe(selectedLog.description), null, 2),
+                            JSON.stringify(modalSummary.data, null, 2),
                             'Full Payload'
                           )
                         }
@@ -865,24 +1043,73 @@ const AdminLogs = () => {
                         Copy JSON
                       </button>
                     </div>
-                    <pre className="admin-logs__modal-json">
-                      {JSON.stringify(parseJsonSafe(selectedLog.description), null, 2)}
-                    </pre>
-                  </div>
-                </div>
 
-                <div className="admin-logs__modal-footer">
-                  <button
-                    type="button"
-                    className="admin-logs__btn-secondary"
-                    onClick={() => setSelectedLog(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
+                    {modalViewMode === 'visual' ? (
+                      <>
+                        {modalSummary.changes.length > 0 && (
+                          <div className="admin-logs__diff-section">
+                            <h4 className="admin-logs__diff-heading">
+                              Changes (Было → Стало)
+                            </h4>
+                            <div className="admin-logs__diff-grid">
+                              {modalSummary.changes.map((ch, idx) => (
+                                <div key={idx} className="admin-logs__diff-card">
+                                  <div className="admin-logs__diff-card-header">
+                                    {ch.field}
+                                  </div>
+                                  <div className="admin-logs__diff-card-compare">
+                                    <div className="admin-logs__diff-card-from">
+                                      <span className="lbl">Было (Was)</span>
+                                      <span className="val">{ch.from}</span>
+                                    </div>
+                                    <span className="admin-logs__diff-card-arrow">→</span>
+                                    <div className="admin-logs__diff-card-to">
+                                      <span className="lbl">Стало (Became)</span>
+                                      <span className="val">{ch.to}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {modalSummary.params.length > 0 && (
+                          <div className="admin-logs__params-section">
+                            <h4 className="admin-logs__diff-heading">
+                              Operation Parameters & Entity Info
+                            </h4>
+                            <div className="admin-logs__params-grid">
+                              {modalSummary.params.map((pm, idx) => (
+                                <div key={idx} className="admin-logs__param-item">
+                                  <span className="admin-logs__param-item-label">{pm.key}</span>
+                                  <span className="admin-logs__param-item-value">{pm.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <pre className="admin-logs__modal-json">
+                        {JSON.stringify(modalSummary.data, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+
+                  <div className="admin-logs__modal-footer">
+                    <button
+                      type="button"
+                      className="admin-logs__btn-secondary"
+                      onClick={() => setSelectedLog(null)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            );
+          })()}
         </AnimatePresence>
       </div>
     </AdminLayout>

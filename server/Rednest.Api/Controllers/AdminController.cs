@@ -359,7 +359,13 @@ public class AdminController : ControllerBase
 
         if (currentUserId != id && currentUserLevel <= targetUserLevel)
             return StatusCode(403, new { message = $"Access denied. You cannot modify the data of a user with an equal or higher role ({user.Role})." });
-        
+
+        var oldName = user.Name;
+        var oldBalance = user.Balance;
+        var oldRole = user.Role.ToString();
+        var oldIsActive = user.Session?.IsActive;
+        var oldTwoFactor = user.Session?.TwoFactorEnabled;
+        var oldSubscribe = user.Session?.Subscribe;
 
         if (request.Name != null)
             user.Name = string.IsNullOrWhiteSpace(request.Name) ? null : request.Name.Trim();
@@ -388,33 +394,28 @@ public class AdminController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(request.Role))
         {
-            var cleanRole = request.Role.Trim().Replace(" ", "");
-            if (Enum.TryParse<UserRole>(cleanRole, true, out var parsedRole))
+            if (Enum.TryParse<UserRole>(request.Role, true, out var parsedRole))
             {
-                if (parsedRole != user.Role)
+                if (user.Role != parsedRole)
                 {
-                    if (user.Role == UserRole.Bot || user.Role == UserRole.AI)
-                    {
-                        return BadRequest(new { message = "System roles 'Bot' and 'AI' can only be modified directly in the database." });
-                    }
+                    var isEditingSelf = currentUserId == id;
 
                     if (parsedRole == UserRole.Bot || parsedRole == UserRole.AI)
                     {
                         return BadRequest(new { message = "System roles 'Bot' and 'AI' cannot be assigned via the admin panel." });
                     }
 
-                    if (currentUserId == id)
+                    if (isEditingSelf)
                     {
                         return BadRequest(new { message = "You cannot change your own role." });
                     }
-
-                    var parsedRoleLevel = GetUserRoleLevel(parsedRole);
 
                     if (targetUserLevel >= currentUserLevel)
                     {
                         return BadRequest(new { message = "You cannot modify the role of a user with an equal or higher role than yours." });
                     }
 
+                    var parsedRoleLevel = GetUserRoleLevel(parsedRole);
                     if (parsedRoleLevel >= currentUserLevel)
                     {
                         return BadRequest(new { message = "You cannot assign your own role or a higher role to any user." });
@@ -457,6 +458,14 @@ public class AdminController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        var changes = new Dictionary<string, object>();
+        if (oldName != user.Name) changes["name"] = new { from = oldName, to = user.Name };
+        if (oldBalance != user.Balance) changes["balance"] = new { from = oldBalance, to = user.Balance };
+        if (oldRole != user.Role.ToString()) changes["role"] = new { from = oldRole, to = user.Role.ToString() };
+        if (oldIsActive != user.Session?.IsActive) changes["isActive"] = new { from = oldIsActive, to = user.Session?.IsActive };
+        if (oldTwoFactor != user.Session?.TwoFactorEnabled) changes["twoFactor"] = new { from = oldTwoFactor, to = user.Session?.TwoFactorEnabled };
+        if (oldSubscribe != user.Session?.Subscribe) changes["subscribe"] = new { from = oldSubscribe, to = user.Session?.Subscribe };
+
         var (auth, adminUser) = await GetAdminUserAsync();
         await LogAdminActionAsync(
             adminUser?.Id,
@@ -469,9 +478,9 @@ public class AdminController : ControllerBase
                 targetUserId = id,
                 targetEmail = user.Email,
                 targetName = user.Name,
-                targetRole = user.Role.ToString(),
-                isActive = user.Session?.IsActive,
-                balance = user.Balance
+                changes = changes.Count > 0 ? changes : null,
+                before = new { name = oldName, balance = oldBalance, role = oldRole, isActive = oldIsActive },
+                after = new { name = user.Name, balance = user.Balance, role = user.Role.ToString(), isActive = user.Session?.IsActive }
             });
 
         return Ok(new
@@ -739,8 +748,9 @@ public class AdminController : ControllerBase
                 action = "UpdateOrderStatus",
                 orderId = id,
                 userId = order.UserId,
-                previousStatus = prevStatus,
-                newStatus = order.Status
+                changes = new { status = new { from = prevStatus, to = order.Status } },
+                before = new { status = prevStatus },
+                after = new { status = order.Status }
             });
 
         return Ok(new
@@ -1133,8 +1143,9 @@ public class AdminController : ControllerBase
                 reviewId = id,
                 userId = review.UserId,
                 orderId = review.OrderId,
-                previousStatus = prevStatus,
-                newStatus = statusEnum.ToString()
+                changes = new { status = new { from = prevStatus, to = statusEnum.ToString() } },
+                before = new { status = prevStatus },
+                after = new { status = statusEnum.ToString() }
             });
 
         return Ok(new
@@ -1387,7 +1398,9 @@ public class AdminController : ControllerBase
                 action = "TogglePromoActive",
                 promoId = id,
                 promoCode = promo.Codes.PromoCode,
-                isActive = promo.IsActive
+                changes = new { isActive = new { from = !promo.IsActive, to = promo.IsActive } },
+                before = new { isActive = !promo.IsActive },
+                after = new { isActive = promo.IsActive }
             });
 
         return Ok(new
@@ -1607,6 +1620,12 @@ public class AdminController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Product not found." });
 
+        var oldName = product.Name;
+        var oldCategory = product.Category;
+        var oldPrice = product.Prices?.Price;
+        var oldDiscountPrice = product.Prices?.DiscountPrice;
+        var oldIsActive = product.IsActive;
+
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             if (request.Name.Trim().Length > 50)
@@ -1653,6 +1672,13 @@ public class AdminController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        var changes = new Dictionary<string, object>();
+        if (oldName != product.Name) changes["name"] = new { from = oldName, to = product.Name };
+        if (oldCategory != product.Category) changes["category"] = new { from = oldCategory, to = product.Category };
+        if (oldPrice != product.Prices?.Price) changes["price"] = new { from = oldPrice, to = product.Prices?.Price };
+        if (oldDiscountPrice != product.Prices?.DiscountPrice) changes["discountPrice"] = new { from = oldDiscountPrice, to = product.Prices?.DiscountPrice };
+        if (oldIsActive != product.IsActive) changes["isActive"] = new { from = oldIsActive, to = product.IsActive };
+
         var (auth, adminUser) = await GetAdminUserAsync();
         await LogAdminActionAsync(
             adminUser?.Id,
@@ -1664,10 +1690,9 @@ public class AdminController : ControllerBase
                 action = "UpdateProduct",
                 productId = id,
                 productName = product.Name,
-                category = product.Category,
-                price = product.Prices?.Price,
-                discountPrice = product.Prices?.DiscountPrice,
-                isActive = product.IsActive
+                changes = changes.Count > 0 ? changes : null,
+                before = new { name = oldName, category = oldCategory, price = oldPrice, discountPrice = oldDiscountPrice, isActive = oldIsActive },
+                after = new { name = product.Name, category = product.Category, price = product.Prices?.Price, discountPrice = product.Prices?.DiscountPrice, isActive = product.IsActive }
             });
 
         return Ok(new
@@ -1713,7 +1738,9 @@ public class AdminController : ControllerBase
                 action = "ToggleProductActive",
                 productId = id,
                 productName = product.Name,
-                isActive = product.IsActive
+                changes = new { isActive = new { from = !product.IsActive, to = product.IsActive } },
+                before = new { isActive = !product.IsActive },
+                after = new { isActive = product.IsActive }
             });
 
         return Ok(new { message = $"Product status updated.", isActive = product.IsActive });
