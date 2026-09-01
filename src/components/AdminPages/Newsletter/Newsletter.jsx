@@ -47,18 +47,6 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
-const getInitials = (name, email) => {
-  if (name && name.trim()) {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  }
-  if (email && email.trim()) {
-    return email.slice(0, 2).toUpperCase();
-  }
-  return 'U';
-};
-
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
   show: (i) => ({
@@ -835,17 +823,6 @@ const Newsletter = () => {
                         >
                           <td>
                             <div className="user-cell">
-                              {sub.profilePictureUrl ? (
-                                <img
-                                  src={sub.profilePictureUrl}
-                                  alt={sub.name || 'User'}
-                                  className="user-avatar"
-                                />
-                              ) : (
-                                <div className="user-initials">
-                                  {getInitials(sub.name, sub.email)}
-                                </div>
-                              )}
                               <div className="user-details">
                                 <span className="name">{sub.name || 'Anonymous User'}</span>
                                 <span className="email">{sub.email}</span>
