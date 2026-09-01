@@ -140,9 +140,10 @@ const AdminLayout = ({ children }) => {
     try {
       await adminLogout();
       setIsLogoutModalOpen(false);
-      navigate('/admin', { replace: true });
+      navigate('/', { replace: true });
     } catch (err) {
       console.error('Admin logout failed:', err);
+      navigate('/', { replace: true });
     } finally {
       setIsLoggingOut(false);
     }
@@ -189,8 +190,8 @@ const AdminLayout = ({ children }) => {
         <button
           className="admin-mobile-header__logout"
           onClick={() => setIsLogoutModalOpen(true)}
-          aria-label="Sign out"
-          title="Sign Out"
+          aria-label="Exit Admin"
+          title="Exit Admin"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -290,6 +291,21 @@ const AdminLayout = ({ children }) => {
         </nav>
 
         <button
+          id="admin-audit-log-btn"
+          className="admin-sidebar__audit-btn"
+          type="button"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          Audit Log
+        </button>
+
+        <button
           id="admin-logout-btn"
           className="admin-sidebar__logout"
           onClick={() => setIsLogoutModalOpen(true)}
@@ -299,7 +315,7 @@ const AdminLayout = ({ children }) => {
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Sign Out
+          Exit Admin
         </button>
       </aside>
 
@@ -312,9 +328,9 @@ const AdminLayout = ({ children }) => {
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleLogout}
         loading={isLoggingOut}
-        title="Sign Out"
-        text="Are you sure you want to sign out of the Admin Panel?"
-        confirmText="Sign Out"
+        title="Exit Admin Panel"
+        text="Are you sure you want to exit the Admin Panel and return to the Home page?"
+        confirmText="Exit Admin"
       />
     </div>
   );
