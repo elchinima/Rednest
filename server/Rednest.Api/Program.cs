@@ -332,38 +332,6 @@ static async Task EnsurePixelUserAndSeedAsync(IServiceProvider services)
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
 
-    try
-    {
-        await db.Database.ExecuteSqlRawAsync(@"
-            CREATE TABLE IF NOT EXISTS ""NewsletterLogs"" (
-                ""Id"" uuid NOT NULL PRIMARY KEY,
-                ""Subject"" character varying(250) NOT NULL,
-                ""Preheader"" character varying(250),
-                ""Badge"" character varying(100),
-                ""Heading"" character varying(250),
-                ""ContentHtml"" text NOT NULL,
-                ""PlainText"" text,
-                ""ButtonText"" character varying(100),
-                ""ButtonUrl"" character varying(500),
-                ""SenderName"" character varying(100) DEFAULT 'Rednest'::character varying NOT NULL,
-                ""SenderEmail"" character varying(150) DEFAULT 'myrednest@gmail.com'::character varying NOT NULL,
-                ""SentByAdminId"" uuid NOT NULL,
-                ""SentByAdminName"" character varying(150),
-                ""RecipientCount"" integer NOT NULL DEFAULT 0,
-                ""SuccessCount"" integer NOT NULL DEFAULT 0,
-                ""FailedCount"" integer NOT NULL DEFAULT 0,
-                ""Status"" character varying(50) DEFAULT 'Sent'::character varying NOT NULL,
-                ""ErrorMessage"" text,
-                ""RecipientEmails"" jsonb DEFAULT '[]'::jsonb,
-                ""CreatedAt"" timestamp with time zone DEFAULT NOW() NOT NULL
-            );
-        ");
-    }
-    catch (Exception ex)
-    {
-        logger?.LogWarning(ex, "Could not ensure NewsletterLogs table directly via raw SQL.");
-    }
-
     var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET") ?? "RednestAdmin2026";
 
     var pixelUser = await db.Users.Include(u => u.Session).FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");

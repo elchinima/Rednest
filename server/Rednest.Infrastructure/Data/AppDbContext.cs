@@ -11,7 +11,7 @@ public class AppDbContext : DbContext
     public DbSet<UserBasket> UserBaskets => Set<UserBasket>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Review> Reviews => Set<Review>();
-    public DbSet<NewsletterLog> NewsletterLogs => Set<NewsletterLog>();
+    public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -187,33 +187,27 @@ public class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<NewsletterLog>(entity =>
+        modelBuilder.Entity<AdminLog>(entity =>
         {
-            entity.ToTable("NewsletterLogs");
+            entity.ToTable("AdminLogs");
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.Subject).IsRequired().HasMaxLength(250);
-            entity.Property(e => e.Preheader).HasMaxLength(250);
-            entity.Property(e => e.Badge).HasMaxLength(100);
-            entity.Property(e => e.Heading).HasMaxLength(250);
-            entity.Property(e => e.ContentHtml).HasColumnType("text").IsRequired();
-            entity.Property(e => e.PlainText).HasColumnType("text");
-            entity.Property(e => e.ButtonText).HasMaxLength(100);
-            entity.Property(e => e.ButtonUrl).HasMaxLength(500);
-            entity.Property(e => e.SenderName).HasMaxLength(100).HasDefaultValue("Rednest");
-            entity.Property(e => e.SenderEmail).HasMaxLength(150).HasDefaultValue("noreply@rednest.com");
-            entity.Property(e => e.SentByAdminName).HasMaxLength(150);
-            entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Sent");
-            entity.Property(e => e.ErrorMessage).HasColumnType("text");
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Page).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
 
-            entity.Property(e => e.RecipientEmails)
-                  .HasColumnName("RecipientEmails")
+            entity.Property(e => e.Description)
                   .HasColumnType("jsonb")
-                  .HasDefaultValueSql("'[]'::jsonb");
+                  .HasDefaultValueSql("'{}'::jsonb");
 
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

@@ -338,6 +338,13 @@
       background: rgba(255, 255, 255, 0.04);
       transform: translateY(-1px);
     }
+
+    &--active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba($color-primary, 0.18) 0%, rgba($color-bg-dark, 0.12) 100%);
+      border-color: rgba($color-primary, 0.3);
+      font-weight: 600;
+    }
   }
 
   &__logout {

@@ -457,6 +457,23 @@ public class AdminController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Users",
+            "PUT",
+            new
+            {
+                action = "UpdateUser",
+                targetUserId = id,
+                targetEmail = user.Email,
+                targetName = user.Name,
+                targetRole = user.Role.ToString(),
+                isActive = user.Session?.IsActive,
+                balance = user.Balance
+            });
+
         return Ok(new
         {
             message = "User updated successfully.",
@@ -493,6 +510,18 @@ public class AdminController : ControllerBase
         session.Sessions.Clear();
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Users",
+            "POST",
+            new
+            {
+                action = "TerminateUserSessions",
+                targetUserId = id
+            });
+
         return Ok(new { message = "All active sessions have been terminated." });
     }
 
@@ -512,8 +541,27 @@ public class AdminController : ControllerBase
         if (user == null)
             return NotFound(new { message = "User not found." });
 
+        var targetEmail = user.Email;
+        var targetName = user.Name;
+        var targetRole = user.Role.ToString();
+
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Users",
+            "DELETE",
+            new
+            {
+                action = "DeleteUser",
+                targetUserId = id,
+                targetEmail = targetEmail,
+                targetName = targetName,
+                targetRole = targetRole
+            });
 
         return Ok(new { message = "User deleted successfully." });
     }
@@ -676,8 +724,24 @@ public class AdminController : ControllerBase
         if (order == null)
             return NotFound(new { message = "Order not found." });
 
+        var prevStatus = order.Status;
         order.Status = request.Status.Trim();
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Orders",
+            "PUT",
+            new
+            {
+                action = "UpdateOrderStatus",
+                orderId = id,
+                userId = order.UserId,
+                previousStatus = prevStatus,
+                newStatus = order.Status
+            });
 
         return Ok(new
         {
@@ -697,8 +761,27 @@ public class AdminController : ControllerBase
         if (order == null)
             return NotFound(new { message = "Order not found." });
 
+        var orderUserId = order.UserId;
+        var orderStatus = order.Status;
+        var totalAmount = order.Payment?.TotalAmount ?? 0m;
+
         _context.Orders.Remove(order);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Orders",
+            "DELETE",
+            new
+            {
+                action = "DeleteOrder",
+                orderId = id,
+                userId = orderUserId,
+                status = orderStatus,
+                totalAmount = totalAmount
+            });
 
         return Ok(new { message = "Order deleted successfully." });
     }
@@ -756,6 +839,21 @@ public class AdminController : ControllerBase
 
         var publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{storagePath}";
         var sizeKb = Math.Round(outputStream.Length / 1024.0, 1);
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Database",
+            "POST",
+            new
+            {
+                action = "UploadFile",
+                fileName = uniqueName,
+                storagePath = storagePath,
+                publicUrl = publicUrl,
+                sizeKb = sizeKb
+            });
 
         return Ok(new
         {
@@ -857,6 +955,19 @@ public class AdminController : ControllerBase
             var err = await response.Content.ReadAsStringAsync();
             return StatusCode(500, new { message = $"Delete error: {err}" });
         }
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Database",
+            "DELETE",
+            new
+            {
+                action = "DeleteFile",
+                fileName = fileName,
+                storagePath = storagePath
+            });
 
         return Ok(new { message = "File deleted." });
     }
@@ -1005,9 +1116,26 @@ public class AdminController : ControllerBase
         if (review == null)
             return NotFound(new { message = "Review not found." });
 
+        var prevStatus = review.Status.Status.ToString();
         review.Status.Status = statusEnum;
         review.Status.UpdatedAt = DateTime.UtcNow.AddHours(4);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Reviews",
+            "PUT",
+            new
+            {
+                action = "UpdateReviewStatus",
+                reviewId = id,
+                userId = review.UserId,
+                orderId = review.OrderId,
+                previousStatus = prevStatus,
+                newStatus = statusEnum.ToString()
+            });
 
         return Ok(new
         {
@@ -1028,8 +1156,25 @@ public class AdminController : ControllerBase
         if (review == null)
             return NotFound(new { message = "Review not found." });
 
+        var targetUserId = review.UserId;
+        var targetOrderId = review.OrderId;
+
         _context.Reviews.Remove(review);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Reviews",
+            "DELETE",
+            new
+            {
+                action = "DeleteReview",
+                reviewId = id,
+                userId = targetUserId,
+                orderId = targetOrderId
+            });
 
         return Ok(new { message = "Review deleted successfully." });
     }
@@ -1177,6 +1322,24 @@ public class AdminController : ControllerBase
         _context.UserPromos.Add(promo);
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Promos",
+            "POST",
+            new
+            {
+                action = "CreatePromo",
+                promoId = promo.Id,
+                promoCode = promo.Codes.PromoCode,
+                prizeType = promo.PrizeInfo.Type.ToString(),
+                prizeName = promo.PrizeInfo.PrizeName,
+                discountPercent = promo.PrizeInfo.DiscountPercent,
+                cashbackPercent = promo.PrizeInfo.CashbackPercent,
+                expiryDays = expiryDays
+            });
+
         return Ok(new
         {
             message = "Promo code created successfully.",
@@ -1213,6 +1376,20 @@ public class AdminController : ControllerBase
         promo.IsActive = !promo.IsActive;
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Promos",
+            "PATCH",
+            new
+            {
+                action = "TogglePromoActive",
+                promoId = id,
+                promoCode = promo.Codes.PromoCode,
+                isActive = promo.IsActive
+            });
+
         return Ok(new
         {
             message = promo.IsActive ? "Promo code activated." : "Promo code deactivated.",
@@ -1231,8 +1408,23 @@ public class AdminController : ControllerBase
         if (promo == null)
             return NotFound(new { message = "Promo code not found." });
 
+        var promoCode = promo.Codes.PromoCode;
+
         _context.UserPromos.Remove(promo);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Promos",
+            "DELETE",
+            new
+            {
+                action = "DeletePromo",
+                promoId = id,
+                promoCode = promoCode
+            });
 
         return Ok(new { message = "Promo code deleted successfully." });
     }
@@ -1369,6 +1561,23 @@ public class AdminController : ControllerBase
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Products",
+            "POST",
+            new
+            {
+                action = "CreateProduct",
+                productId = product.Id,
+                productName = product.Name,
+                category = product.Category,
+                price = product.Prices.Price,
+                discountPrice = product.Prices.DiscountPrice,
+                isActive = product.IsActive
+            });
+
         return Ok(new
         {
             message = "Product created successfully.",
@@ -1444,6 +1653,23 @@ public class AdminController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Products",
+            "PUT",
+            new
+            {
+                action = "UpdateProduct",
+                productId = id,
+                productName = product.Name,
+                category = product.Category,
+                price = product.Prices?.Price,
+                discountPrice = product.Prices?.DiscountPrice,
+                isActive = product.IsActive
+            });
+
         return Ok(new
         {
             message = "Product updated successfully.",
@@ -1476,6 +1702,20 @@ public class AdminController : ControllerBase
         product.IsActive = !product.IsActive;
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Products",
+            "PATCH",
+            new
+            {
+                action = "ToggleProductActive",
+                productId = id,
+                productName = product.Name,
+                isActive = product.IsActive
+            });
+
         return Ok(new { message = $"Product status updated.", isActive = product.IsActive });
     }
 
@@ -1489,8 +1729,25 @@ public class AdminController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Product not found." });
 
+        var prodName = product.Name;
+        var prodCategory = product.Category;
+
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Products",
+            "DELETE",
+            new
+            {
+                action = "DeleteProduct",
+                productId = id,
+                productName = prodName,
+                category = prodCategory
+            });
 
         return Ok(new { message = "Product deleted successfully." });
     }
@@ -1505,19 +1762,30 @@ public class AdminController : ControllerBase
             .AsNoTracking()
             .CountAsync(s => s.Subscribe);
 
-        var totalCampaigns = await _context.NewsletterLogs
+        var newsletterLogs = await _context.AdminLogs
             .AsNoTracking()
-            .CountAsync();
+            .Where(l => l.Page == "Newsletter" && l.Type == "POST")
+            .ToListAsync();
 
-        var totalDelivered = await _context.NewsletterLogs
-            .AsNoTracking()
-            .SumAsync(l => (int?)l.SuccessCount) ?? 0;
+        var totalCampaigns = newsletterLogs.Count;
+        var totalDelivered = 0;
+        foreach (var l in newsletterLogs)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(l.Description);
+                if (doc.RootElement.TryGetProperty("successCount", out var sc) && sc.TryGetInt32(out var count))
+                {
+                    totalDelivered += count;
+                }
+            }
+            catch { }
+        }
 
-        var lastBroadcast = await _context.NewsletterLogs
-            .AsNoTracking()
+        var lastBroadcast = newsletterLogs
             .OrderByDescending(l => l.CreatedAt)
             .Select(l => (DateTime?)l.CreatedAt)
-            .FirstOrDefaultAsync();
+            .FirstOrDefault();
 
         return Ok(new
         {
@@ -1559,32 +1827,76 @@ public class AdminController : ControllerBase
         if (!await IsFullAdminAuthenticatedAsync())
             return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can view newsletter history." });
 
-        var logs = await _context.NewsletterLogs
+        var logs = await _context.AdminLogs
+            .Include(l => l.User)
             .AsNoTracking()
+            .Where(l => l.Page == "Newsletter" && l.Type == "POST")
             .OrderByDescending(l => l.CreatedAt)
             .ToListAsync();
 
-        return Ok(logs.Select(l => new
+        var result = logs.Select(l =>
         {
-            id = l.Id,
-            subject = l.Subject,
-            preheader = l.Preheader,
-            badge = l.Badge,
-            heading = l.Heading,
-            buttonText = l.ButtonText,
-            buttonUrl = l.ButtonUrl,
-            senderName = l.SenderName,
-            senderEmail = l.SenderEmail,
-            sentByAdminId = l.SentByAdminId,
-            sentByAdminName = l.SentByAdminName,
-            recipientCount = l.RecipientCount,
-            successCount = l.SuccessCount,
-            failedCount = l.FailedCount,
-            status = l.Status,
-            errorMessage = l.ErrorMessage,
-            recipientEmailsCount = l.RecipientEmails?.Count ?? 0,
-            createdAt = l.CreatedAt
-        }));
+            string subject = "";
+            string? preheader = null;
+            string? badge = null;
+            string? heading = null;
+            string? bodyHtml = null;
+            string? buttonText = null;
+            string? buttonUrl = null;
+            string senderName = "Rednest";
+            string senderEmail = "noreply@rednest.com";
+            int recipientCount = 0;
+            int successCount = 0;
+            int failedCount = 0;
+            string status = "Sent";
+            string? errorMessage = null;
+
+            try
+            {
+                using var doc = JsonDocument.Parse(l.Description);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("subject", out var pSubject)) subject = pSubject.GetString() ?? "";
+                if (root.TryGetProperty("preheader", out var pPreheader)) preheader = pPreheader.GetString();
+                if (root.TryGetProperty("badge", out var pBadge)) badge = pBadge.GetString();
+                if (root.TryGetProperty("heading", out var pHeading)) heading = pHeading.GetString();
+                if (root.TryGetProperty("bodyHtml", out var pBodyHtml)) bodyHtml = pBodyHtml.GetString();
+                if (root.TryGetProperty("buttonText", out var pBtnText)) buttonText = pBtnText.GetString();
+                if (root.TryGetProperty("buttonUrl", out var pBtnUrl)) buttonUrl = pBtnUrl.GetString();
+                if (root.TryGetProperty("senderName", out var pSenderName)) senderName = pSenderName.GetString() ?? "Rednest";
+                if (root.TryGetProperty("senderEmail", out var pSenderEmail)) senderEmail = pSenderEmail.GetString() ?? "noreply@rednest.com";
+                if (root.TryGetProperty("recipientCount", out var pRc) && pRc.TryGetInt32(out var rc)) recipientCount = rc;
+                if (root.TryGetProperty("successCount", out var pSc) && pSc.TryGetInt32(out var sc)) successCount = sc;
+                if (root.TryGetProperty("failedCount", out var pFc) && pFc.TryGetInt32(out var fc)) failedCount = fc;
+                if (root.TryGetProperty("status", out var pSt)) status = pSt.GetString() ?? "Sent";
+                if (root.TryGetProperty("errorMessage", out var pErr)) errorMessage = pErr.GetString();
+            }
+            catch { }
+
+            return new
+            {
+                id = l.Id,
+                subject,
+                preheader,
+                badge,
+                heading,
+                contentHtml = bodyHtml,
+                plainText = bodyHtml,
+                buttonText,
+                buttonUrl,
+                senderName,
+                senderEmail,
+                sentByAdminId = l.UserId,
+                sentByAdminName = l.User?.Name ?? l.User?.Email ?? "Admin",
+                recipientCount,
+                successCount,
+                failedCount,
+                status,
+                errorMessage,
+                createdAt = l.CreatedAt
+            };
+        }).ToList();
+
+        return Ok(result);
     }
 
     [HttpGet("newsletter/history/{id:guid}")]
@@ -1593,14 +1905,72 @@ public class AdminController : ControllerBase
         if (!await IsFullAdminAuthenticatedAsync())
             return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can view newsletter details." });
 
-        var log = await _context.NewsletterLogs
+        var l = await _context.AdminLogs
+            .Include(x => x.User)
             .AsNoTracking()
-            .FirstOrDefaultAsync(l => l.Id == id);
+            .FirstOrDefaultAsync(x => x.Id == id && x.Page == "Newsletter");
 
-        if (log == null)
+        if (l == null)
             return NotFound(new { message = "Newsletter history record not found." });
 
-        return Ok(log);
+        string subject = "";
+        string? preheader = null;
+        string? badge = null;
+        string? heading = null;
+        string? bodyHtml = null;
+        string? buttonText = null;
+        string? buttonUrl = null;
+        string senderName = "Rednest";
+        string senderEmail = "noreply@rednest.com";
+        int recipientCount = 0;
+        int successCount = 0;
+        int failedCount = 0;
+        string status = "Sent";
+        string? errorMessage = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(l.Description);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("subject", out var pSubject)) subject = pSubject.GetString() ?? "";
+            if (root.TryGetProperty("preheader", out var pPreheader)) preheader = pPreheader.GetString();
+            if (root.TryGetProperty("badge", out var pBadge)) badge = pBadge.GetString();
+            if (root.TryGetProperty("heading", out var pHeading)) heading = pHeading.GetString();
+            if (root.TryGetProperty("bodyHtml", out var pBodyHtml)) bodyHtml = pBodyHtml.GetString();
+            if (root.TryGetProperty("buttonText", out var pBtnText)) buttonText = pBtnText.GetString();
+            if (root.TryGetProperty("buttonUrl", out var pBtnUrl)) buttonUrl = pBtnUrl.GetString();
+            if (root.TryGetProperty("senderName", out var pSenderName)) senderName = pSenderName.GetString() ?? "Rednest";
+            if (root.TryGetProperty("senderEmail", out var pSenderEmail)) senderEmail = pSenderEmail.GetString() ?? "noreply@rednest.com";
+            if (root.TryGetProperty("recipientCount", out var pRc) && pRc.TryGetInt32(out var rc)) recipientCount = rc;
+            if (root.TryGetProperty("successCount", out var pSc) && pSc.TryGetInt32(out var sc)) successCount = sc;
+            if (root.TryGetProperty("failedCount", out var pFc) && pFc.TryGetInt32(out var fc)) failedCount = fc;
+            if (root.TryGetProperty("status", out var pSt)) status = pSt.GetString() ?? "Sent";
+            if (root.TryGetProperty("errorMessage", out var pErr)) errorMessage = pErr.GetString();
+        }
+        catch { }
+
+        return Ok(new
+        {
+            id = l.Id,
+            subject,
+            preheader,
+            badge,
+            heading,
+            contentHtml = bodyHtml,
+            plainText = bodyHtml,
+            buttonText,
+            buttonUrl,
+            senderName,
+            senderEmail,
+            sentByAdminId = l.UserId,
+            sentByAdminName = l.User?.Name ?? l.User?.Email ?? "Admin",
+            recipientCount,
+            successCount,
+            failedCount,
+            status,
+            errorMessage,
+            createdAt = l.CreatedAt
+        });
     }
 
     [HttpPost("newsletter/send-test")]
@@ -1648,6 +2018,25 @@ public class AdminController : ControllerBase
                 senderName: request.SenderName?.Trim()
             );
 
+            await LogAdminActionAsync(
+                adminUser?.Id,
+                adminUser?.Role.ToString() ?? "Admin",
+                "Newsletter",
+                "POST",
+                new
+                {
+                    action = "SendNewsletterTest",
+                    toEmail = request.ToEmail.Trim(),
+                    subject = request.Subject.Trim(),
+                    preheader = request.Preheader?.Trim(),
+                    badge = request.Badge?.Trim(),
+                    heading = request.Heading?.Trim(),
+                    bodyHtml = request.BodyHtml.Trim(),
+                    buttonText = request.ButtonText?.Trim(),
+                    buttonUrl = request.ButtonUrl?.Trim(),
+                    senderName = request.SenderName?.Trim()
+                });
+
             return Ok(new { message = $"Test newsletter sent successfully to {request.ToEmail.Trim()}." });
         }
         catch (Exception ex)
@@ -1685,41 +2074,6 @@ public class AdminController : ControllerBase
 
         var senderName = !string.IsNullOrWhiteSpace(request.SenderName) ? request.SenderName.Trim() : "Rednest";
         var senderEmail = Environment.GetEnvironmentVariable("BREVO_SENDER_EMAIL") ?? "myrednest@gmail.com";
-
-        var log = new NewsletterLog
-        {
-            Id = Guid.NewGuid(),
-            Subject = request.Subject.Trim(),
-            Preheader = request.Preheader?.Trim(),
-            Badge = request.Badge?.Trim(),
-            Heading = request.Heading?.Trim(),
-            PlainText = request.BodyHtml.Trim(),
-            ButtonText = request.ButtonText?.Trim(),
-            ButtonUrl = request.ButtonUrl?.Trim(),
-            SenderName = senderName,
-            SenderEmail = senderEmail,
-            SentByAdminId = adminUser.Id,
-            SentByAdminName = adminUser.Name ?? adminUser.Email,
-            RecipientCount = subscribers.Count,
-            SuccessCount = 0,
-            FailedCount = 0,
-            Status = "Sending",
-            RecipientEmails = subscribers.Select(s => s.Email).ToList(),
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var genericHtml = _emailService.BuildNewsletterHtml(
-            subject: request.Subject.Trim(),
-            preheader: request.Preheader?.Trim(),
-            badge: request.Badge?.Trim(),
-            heading: request.Heading?.Trim(),
-            bodyHtml: request.BodyHtml.Trim(),
-            buttonText: request.ButtonText?.Trim(),
-            buttonUrl: request.ButtonUrl?.Trim(),
-            recipientName: null,
-            recipientEmail: null
-        );
-        log.ContentHtml = genericHtml;
 
         var successCount = 0;
         var failedCount = 0;
@@ -1764,22 +2118,44 @@ public class AdminController : ControllerBase
             }
         }
 
-        log.SuccessCount = successCount;
-        log.FailedCount = failedCount;
-        log.Status = failedCount == 0 ? "Sent" : (successCount > 0 ? "PartiallySent" : "Failed");
-        log.ErrorMessage = errorMessages.Count > 0 ? string.Join("; ", errorMessages) : null;
+        var status = failedCount == 0 ? "Sent" : (successCount > 0 ? "PartiallySent" : "Failed");
+        var logId = Guid.NewGuid();
 
-        _context.NewsletterLogs.Add(log);
-        await _context.SaveChangesAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Newsletter",
+            "POST",
+            new
+            {
+                action = "BroadcastNewsletter",
+                subject = request.Subject.Trim(),
+                preheader = request.Preheader?.Trim(),
+                badge = request.Badge?.Trim(),
+                heading = request.Heading?.Trim(),
+                bodyHtml = request.BodyHtml.Trim(),
+                buttonText = request.ButtonText?.Trim(),
+                buttonUrl = request.ButtonUrl?.Trim(),
+                senderName = senderName,
+                senderEmail = senderEmail,
+                sentByAdminId = adminUser.Id,
+                sentByAdminName = adminUser.Name ?? adminUser.Email,
+                recipientCount = subscribers.Count,
+                successCount = successCount,
+                failedCount = failedCount,
+                status = status,
+                errorMessage = errorMessages.Count > 0 ? string.Join("; ", errorMessages) : null,
+                recipientEmails = subscribers.Select(s => s.Email).ToList()
+            });
 
         return Ok(new
         {
             message = $"Newsletter broadcast complete. Sent to {successCount} of {subscribers.Count} subscribers.",
-            id = log.Id,
+            id = logId,
             recipientCount = subscribers.Count,
             successCount,
             failedCount,
-            status = log.Status
+            status = status
         });
     }
 
@@ -1789,14 +2165,140 @@ public class AdminController : ControllerBase
         if (!await IsFullAdminAuthenticatedAsync())
             return StatusCode(403, new { message = "Access denied. Only Super Admin and Admin roles can delete newsletter history." });
 
-        var log = await _context.NewsletterLogs.FirstOrDefaultAsync(l => l.Id == id);
+        var log = await _context.AdminLogs.FirstOrDefaultAsync(l => l.Id == id && l.Page == "Newsletter");
         if (log == null)
             return NotFound(new { message = "Newsletter history record not found." });
 
-        _context.NewsletterLogs.Remove(log);
+        _context.AdminLogs.Remove(log);
         await _context.SaveChangesAsync();
 
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Newsletter",
+            "DELETE",
+            new
+            {
+                action = "DeleteNewsletterHistory",
+                targetLogId = id
+            });
+
         return Ok(new { message = "Newsletter history record deleted successfully." });
+    }
+
+    [HttpGet("logs")]
+    public async Task<IActionResult> GetAdminLogs(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? search = null,
+        [FromQuery] string? filterPage = null,
+        [FromQuery] string? filterType = null,
+        [FromQuery] string? filterRole = null)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return Unauthorized(new { message = "Access denied." });
+
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 200) pageSize = 50;
+
+        var query = _context.AdminLogs
+            .Include(l => l.User)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filterPage) && !filterPage.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            var pLower = filterPage.Trim().ToLower();
+            query = query.Where(l => l.Page.ToLower() == pLower);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterType) && !filterType.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            var tLower = filterType.Trim().ToLower();
+            query = query.Where(l => l.Type.ToLower() == tLower);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterRole) && !filterRole.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            var rLower = filterRole.Trim().ToLower();
+            query = query.Where(l => l.Role.ToLower() == rLower);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var sLower = search.Trim().ToLower();
+            query = query.Where(l =>
+                l.Description.ToLower().Contains(sLower) ||
+                l.Page.ToLower().Contains(sLower) ||
+                l.Role.ToLower().Contains(sLower) ||
+                (l.User != null && (
+                    (l.User.Name != null && l.User.Name.ToLower().Contains(sLower)) ||
+                    l.User.Email.ToLower().Contains(sLower)
+                )));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var logs = await query
+            .OrderByDescending(l => l.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(l => new
+            {
+                id = l.Id,
+                userId = l.UserId,
+                role = l.Role,
+                page = l.Page,
+                type = l.Type,
+                description = l.Description,
+                createdAt = l.CreatedAt,
+                user = l.User != null ? new
+                {
+                    id = l.User.Id,
+                    name = l.User.Name,
+                    email = l.User.Email,
+                    profilePictureUrl = l.User.ProfilePictureUrl
+                } : null
+            })
+            .ToListAsync();
+
+        return Ok(new
+        {
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+            logs
+        });
+    }
+
+    private async Task LogAdminActionAsync(
+        Guid? userId,
+        string role,
+        string page,
+        string type,
+        object description)
+    {
+        try
+        {
+            var log = new AdminLog
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Role = role,
+                Page = page,
+                Type = type,
+                Description = JsonSerializer.Serialize(description),
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.AdminLogs.Add(log);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[AdminLog Warning] Could not save log: {ex.Message}");
+        }
     }
 
 

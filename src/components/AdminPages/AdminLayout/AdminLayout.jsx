@@ -303,8 +303,12 @@ const AdminLayout = ({ children }) => {
 
         <button
           id="admin-audit-log-btn"
-          className="admin-sidebar__audit-btn"
+          className={`admin-sidebar__audit-btn${location.pathname === '/admin/logs' ? ' admin-sidebar__audit-btn--active' : ''}`}
           type="button"
+          onClick={() => {
+            setSidebarOpen(false);
+            navigate('/admin/logs');
+          }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
