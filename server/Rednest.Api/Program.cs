@@ -39,6 +39,7 @@ builder.Services.AddScoped<IEmailService, BrevoEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPaymentEncryptionService, PaymentEncryptionService>();
 builder.Services.AddHostedService<ReviewModerationService>();
+builder.Services.AddHostedService<KeepAliveService>();
 builder.Services.AddSingleton<AnalyticsTrackingService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AnalyticsTrackingService>());
 builder.Services.AddSingleton<IAnalyticsTrackingService>(sp => sp.GetRequiredService<AnalyticsTrackingService>());
@@ -314,6 +315,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.UseStaticFiles();
+app.MapGet("/api/ping", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
