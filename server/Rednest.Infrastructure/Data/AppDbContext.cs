@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
+    public DbSet<Analytics> Analytics => Set<Analytics>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -208,6 +209,63 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Analytics>(entity =>
+        {
+            entity.ToTable("Analytics");
+            entity.HasKey(e => e.MonthYear);
+
+            entity.Property(e => e.MonthYear)
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.ProductsSold)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.MonthlyRevenue)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.NewRegistrations)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.DailyPeakOnline)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.AverageRating)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.UsersRated)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.PromosCreated)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.PromoDiscounts)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.FilesInStorage)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.StorageUsed)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.UpdatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
         });
     }
 }

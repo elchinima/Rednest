@@ -39,6 +39,9 @@ builder.Services.AddScoped<IEmailService, BrevoEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IPaymentEncryptionService, PaymentEncryptionService>();
 builder.Services.AddHostedService<ReviewModerationService>();
+builder.Services.AddSingleton<AnalyticsTrackingService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<AnalyticsTrackingService>());
+builder.Services.AddSingleton<IAnalyticsTrackingService>(sp => sp.GetRequiredService<AnalyticsTrackingService>());
 
 builder.Services.AddCors(options =>
 {

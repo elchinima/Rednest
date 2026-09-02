@@ -8,16 +8,22 @@ public class AdminController : ControllerBase
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AppDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IAnalyticsTrackingService _analyticsTrackingService;
 
     private static readonly string[] AllowedExtensions = [".png", ".jpg", ".jpeg"];
     private const long MaxFileSizeBytes = 10 * 1024 * 1024;
     private const int AdminSessionHours = 8;
 
-    public AdminController(IHttpClientFactory httpClientFactory, AppDbContext context, IEmailService emailService)
+    public AdminController(
+        IHttpClientFactory httpClientFactory,
+        AppDbContext context,
+        IEmailService emailService,
+        IAnalyticsTrackingService analyticsTrackingService)
     {
         _httpClientFactory = httpClientFactory;
         _context = context;
         _emailService = emailService;
+        _analyticsTrackingService = analyticsTrackingService;
     }
 
     [HttpPost("login")]
@@ -81,6 +87,8 @@ public class AdminController : ControllerBase
     {
         if (!await IsAdminAuthenticatedAsync())
             return Unauthorized();
+
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         var utcNow = DateTime.UtcNow;
         var bakuNow = utcNow.AddHours(4);
