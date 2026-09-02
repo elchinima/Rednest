@@ -34,7 +34,7 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
                 _logger.LogError(ex, "Error occurred in AnalyticsTrackingService");
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(60), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
         }
     }
 
@@ -80,7 +80,17 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
 
         var changed = isNew;
 
-        var todayRecord = record.DailyPeakOnline.Days.FirstOrDefault(d => d.Date == todayDate);
+        var peakData = new DailyPeakOnlineData
+        {
+            MonthlyPeak = record.DailyPeakOnline.MonthlyPeak,
+            TodayPeak = record.DailyPeakOnline.TodayPeak,
+            UpdatedAt = record.DailyPeakOnline.UpdatedAt,
+            Days = record.DailyPeakOnline.Days != null
+                ? new List<DailyPeakRecord>(record.DailyPeakOnline.Days)
+                : new List<DailyPeakRecord>()
+        };
+
+        var todayRecord = peakData.Days.FirstOrDefault(d => d.Date == todayDate);
         if (todayRecord == null)
         {
             todayRecord = new DailyPeakRecord
@@ -89,25 +99,27 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
                 PeakOnline = onlineUsersCount,
                 RecordedAt = bakuNow
             };
-            record.DailyPeakOnline.Days.Add(todayRecord);
-            record.DailyPeakOnline.TodayPeak = onlineUsersCount;
-            if (onlineUsersCount > record.DailyPeakOnline.MonthlyPeak)
+            peakData.Days.Add(todayRecord);
+            peakData.TodayPeak = onlineUsersCount;
+            if (onlineUsersCount > peakData.MonthlyPeak)
             {
-                record.DailyPeakOnline.MonthlyPeak = onlineUsersCount;
+                peakData.MonthlyPeak = onlineUsersCount;
             }
-            record.DailyPeakOnline.UpdatedAt = bakuNow;
+            peakData.UpdatedAt = bakuNow;
+            record.DailyPeakOnline = peakData;
             changed = true;
         }
         else if (onlineUsersCount > todayRecord.PeakOnline)
         {
             todayRecord.PeakOnline = onlineUsersCount;
             todayRecord.RecordedAt = bakuNow;
-            record.DailyPeakOnline.TodayPeak = onlineUsersCount;
-            if (onlineUsersCount > record.DailyPeakOnline.MonthlyPeak)
+            peakData.TodayPeak = onlineUsersCount;
+            if (onlineUsersCount > peakData.MonthlyPeak)
             {
-                record.DailyPeakOnline.MonthlyPeak = onlineUsersCount;
+                peakData.MonthlyPeak = onlineUsersCount;
             }
-            record.DailyPeakOnline.UpdatedAt = bakuNow;
+            peakData.UpdatedAt = bakuNow;
+            record.DailyPeakOnline = peakData;
             changed = true;
         }
 
@@ -175,13 +187,26 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             return inBakuDirect || inUtcRange;
         });
 
-        if (UpdateMetric(record.ProductsSold, productsSold, bakuNow)) changed = true;
-        if (UpdateMetric(record.MonthlyRevenue, monthlyProfit, bakuNow)) changed = true;
-        if (UpdateMetric(record.NewRegistrations, registrations, bakuNow)) changed = true;
-        if (UpdateMetric(record.AverageRating, averageRating, bakuNow)) changed = true;
-        if (UpdateMetric(record.UsersRated, reviewersCount, bakuNow)) changed = true;
-        if (UpdateMetric(record.PromosCreated, promosCreated, bakuNow)) changed = true;
-        if (UpdateMetric(record.PromoDiscounts, monthlyPromoDiscounts, bakuNow)) changed = true;
+        record.ProductsSold = UpdateMetric(record.ProductsSold, productsSold, bakuNow, out var c1);
+        if (c1) changed = true;
+
+        record.MonthlyRevenue = UpdateMetric(record.MonthlyRevenue, monthlyProfit, bakuNow, out var c2);
+        if (c2) changed = true;
+
+        record.NewRegistrations = UpdateMetric(record.NewRegistrations, registrations, bakuNow, out var c3);
+        if (c3) changed = true;
+
+        record.AverageRating = UpdateMetric(record.AverageRating, averageRating, bakuNow, out var c4);
+        if (c4) changed = true;
+
+        record.UsersRated = UpdateMetric(record.UsersRated, reviewersCount, bakuNow, out var c5);
+        if (c5) changed = true;
+
+        record.PromosCreated = UpdateMetric(record.PromosCreated, promosCreated, bakuNow, out var c6);
+        if (c6) changed = true;
+
+        record.PromoDiscounts = UpdateMetric(record.PromoDiscounts, monthlyPromoDiscounts, bakuNow, out var c7);
+        if (c7) changed = true;
 
         _tickCount++;
         if (_tickCount % 5 == 1 || isNew)
@@ -189,14 +214,18 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             var storageStats = await GetStorageStatsAsync(stoppingToken);
             if (storageStats.HasValue)
             {
-                if (UpdateMetric(record.FilesInStorage, storageStats.Value.fileCount, bakuNow)) changed = true;
-                if (UpdateMetric(record.StorageUsed, storageStats.Value.storageFormatted, bakuNow)) changed = true;
+                record.FilesInStorage = UpdateMetric(record.FilesInStorage, storageStats.Value.fileCount, bakuNow, out var c8);
+                if (c8) changed = true;
+
+                record.StorageUsed = UpdateMetric(record.StorageUsed, storageStats.Value.storageFormatted, bakuNow, out var c9);
+                if (c9) changed = true;
             }
         }
 
         if (changed)
         {
             record.UpdatedAt = bakuNow;
+            context.Entry(record).State = EntityState.Modified;
             await context.SaveChangesAsync(stoppingToken);
         }
     }
@@ -268,30 +297,45 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
         }
     }
 
-    private static bool UpdateMetric<T>(MetricSnapshot<T> snapshot, T newValue, DateTime now)
+    private static MetricSnapshot<T> UpdateMetric<T>(MetricSnapshot<T>? current, T newValue, DateTime now, out bool changed)
     {
-        if (snapshot.CurrentValue is not null && EqualityComparer<T>.Default.Equals(snapshot.CurrentValue, newValue) && snapshot.UpdatedAt != default)
+        if (current != null && current.CurrentValue is not null && EqualityComparer<T>.Default.Equals(current.CurrentValue, newValue) && current.UpdatedAt != default)
         {
-            return false;
+            changed = false;
+            return current;
         }
 
-        if (snapshot.CurrentValue is null || snapshot.UpdatedAt == default)
+        var next = new MetricSnapshot<T>
         {
-            snapshot.PreviousValue = newValue;
-            snapshot.CurrentValue = newValue;
-            snapshot.UpdatedAt = now;
-            return true;
-        }
-
-        snapshot.History.Add(new MetricHistoryItem<T>
-        {
-            From = snapshot.CurrentValue,
-            To = newValue,
+            PreviousValue = (current == null || current.CurrentValue is null || current.UpdatedAt == default) ? newValue : current.CurrentValue,
+            CurrentValue = newValue,
             UpdatedAt = now
-        });
-        snapshot.PreviousValue = snapshot.CurrentValue;
-        snapshot.CurrentValue = newValue;
-        snapshot.UpdatedAt = now;
-        return true;
+        };
+
+        if (current?.History != null)
+        {
+            foreach (var h in current.History)
+            {
+                next.History.Add(new MetricHistoryItem<T>
+                {
+                    From = h.From,
+                    To = h.To,
+                    UpdatedAt = h.UpdatedAt
+                });
+            }
+        }
+
+        if (current != null && current.CurrentValue is not null && current.UpdatedAt != default)
+        {
+            next.History.Add(new MetricHistoryItem<T>
+            {
+                From = current.CurrentValue,
+                To = newValue,
+                UpdatedAt = now
+            });
+        }
+
+        changed = true;
+        return next;
     }
 }

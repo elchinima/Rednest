@@ -7,11 +7,13 @@ public class OrdersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
     private readonly AppDbContext _context;
+    private readonly IAnalyticsTrackingService _analyticsTrackingService;
 
-    public OrdersController(IUserRepository userRepository, AppDbContext context)
+    public OrdersController(IUserRepository userRepository, AppDbContext context, IAnalyticsTrackingService analyticsTrackingService)
     {
         _userRepository = userRepository;
         _context = context;
+        _analyticsTrackingService = analyticsTrackingService;
     }
 
     private Guid? GetUserId()
@@ -394,6 +396,7 @@ public class OrdersController : ControllerBase
         };
 
         await _userRepository.AddOrderAsync(newOrder);
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         basket.Items.Clear();
         await _userRepository.UpdateBasketAsync(basket);
@@ -529,6 +532,7 @@ public class OrdersController : ControllerBase
             Notes = notes
         };
         await _userRepository.AddOrderAsync(newOrder);
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         basket.Items.Clear();
         await _userRepository.UpdateBasketAsync(basket);

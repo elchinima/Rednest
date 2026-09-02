@@ -5,10 +5,12 @@ namespace Rednest.Api.Controllers;
 public class ReviewsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IAnalyticsTrackingService _analyticsTrackingService;
 
-    public ReviewsController(AppDbContext db)
+    public ReviewsController(AppDbContext db, IAnalyticsTrackingService analyticsTrackingService)
     {
         _db = db;
+        _analyticsTrackingService = analyticsTrackingService;
     }
 
     private Guid? GetUserId()
@@ -239,6 +241,7 @@ public class ReviewsController : ControllerBase
 
         _db.Reviews.Add(review);
         await _db.SaveChangesAsync();
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value);
         var authorName = !string.IsNullOrWhiteSpace(user?.Name) ? user.Name.Trim().Split(' ')[0] : "Customer";
@@ -317,6 +320,7 @@ public class ReviewsController : ControllerBase
 
         _db.Reviews.Remove(review);
         await _db.SaveChangesAsync();
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         return Ok(new
         {
