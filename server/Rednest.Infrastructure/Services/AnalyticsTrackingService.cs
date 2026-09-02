@@ -55,8 +55,8 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             record = new Analytics
             {
                 MonthYear = monthYear,
-                CreatedAt = bakuNow,
-                UpdatedAt = bakuNow
+                CreatedAt = utcNow,
+                UpdatedAt = utcNow
             };
             context.Analytics.Add(record);
             isNew = true;
@@ -97,7 +97,7 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             {
                 Date = todayDate,
                 PeakOnline = onlineUsersCount,
-                RecordedAt = bakuNow
+                RecordedAt = utcNow
             };
             peakData.Days.Add(todayRecord);
             peakData.TodayPeak = onlineUsersCount;
@@ -105,20 +105,20 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             {
                 peakData.MonthlyPeak = onlineUsersCount;
             }
-            peakData.UpdatedAt = bakuNow;
+            peakData.UpdatedAt = utcNow;
             record.DailyPeakOnline = peakData;
             changed = true;
         }
         else if (onlineUsersCount > todayRecord.PeakOnline)
         {
             todayRecord.PeakOnline = onlineUsersCount;
-            todayRecord.RecordedAt = bakuNow;
+            todayRecord.RecordedAt = utcNow;
             peakData.TodayPeak = onlineUsersCount;
             if (onlineUsersCount > peakData.MonthlyPeak)
             {
                 peakData.MonthlyPeak = onlineUsersCount;
             }
-            peakData.UpdatedAt = bakuNow;
+            peakData.UpdatedAt = utcNow;
             record.DailyPeakOnline = peakData;
             changed = true;
         }
@@ -187,25 +187,25 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             return inBakuDirect || inUtcRange;
         });
 
-        record.ProductsSold = UpdateMetric(record.ProductsSold, productsSold, bakuNow, out var c1);
+        record.ProductsSold = UpdateMetric(record.ProductsSold, productsSold, utcNow, out var c1);
         if (c1) changed = true;
 
-        record.MonthlyRevenue = UpdateMetric(record.MonthlyRevenue, monthlyProfit, bakuNow, out var c2);
+        record.MonthlyRevenue = UpdateMetric(record.MonthlyRevenue, monthlyProfit, utcNow, out var c2);
         if (c2) changed = true;
 
-        record.NewRegistrations = UpdateMetric(record.NewRegistrations, registrations, bakuNow, out var c3);
+        record.NewRegistrations = UpdateMetric(record.NewRegistrations, registrations, utcNow, out var c3);
         if (c3) changed = true;
 
-        record.AverageRating = UpdateMetric(record.AverageRating, averageRating, bakuNow, out var c4);
+        record.AverageRating = UpdateMetric(record.AverageRating, averageRating, utcNow, out var c4);
         if (c4) changed = true;
 
-        record.UsersRated = UpdateMetric(record.UsersRated, reviewersCount, bakuNow, out var c5);
+        record.UsersRated = UpdateMetric(record.UsersRated, reviewersCount, utcNow, out var c5);
         if (c5) changed = true;
 
-        record.PromosCreated = UpdateMetric(record.PromosCreated, promosCreated, bakuNow, out var c6);
+        record.PromosCreated = UpdateMetric(record.PromosCreated, promosCreated, utcNow, out var c6);
         if (c6) changed = true;
 
-        record.PromoDiscounts = UpdateMetric(record.PromoDiscounts, monthlyPromoDiscounts, bakuNow, out var c7);
+        record.PromoDiscounts = UpdateMetric(record.PromoDiscounts, monthlyPromoDiscounts, utcNow, out var c7);
         if (c7) changed = true;
 
         _tickCount++;
@@ -214,17 +214,17 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             var storageStats = await GetStorageStatsAsync(stoppingToken);
             if (storageStats.HasValue)
             {
-                record.FilesInStorage = UpdateMetric(record.FilesInStorage, storageStats.Value.fileCount, bakuNow, out var c8);
+                record.FilesInStorage = UpdateMetric(record.FilesInStorage, storageStats.Value.fileCount, utcNow, out var c8);
                 if (c8) changed = true;
 
-                record.StorageUsed = UpdateMetric(record.StorageUsed, storageStats.Value.storageFormatted, bakuNow, out var c9);
+                record.StorageUsed = UpdateMetric(record.StorageUsed, storageStats.Value.storageFormatted, utcNow, out var c9);
                 if (c9) changed = true;
             }
         }
 
         if (changed)
         {
-            record.UpdatedAt = bakuNow;
+            record.UpdatedAt = utcNow;
             context.Entry(record).State = EntityState.Modified;
             await context.SaveChangesAsync(stoppingToken);
         }

@@ -45,6 +45,6 @@ public class Analytics
     public MetricSnapshot<int> FilesInStorage { get; set; } = new();
     public MetricSnapshot<string> StorageUsed { get; set; } = new();
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow.AddHours(4);
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
