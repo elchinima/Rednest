@@ -110,6 +110,11 @@
       background: #60a5fa;
       box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
     }
+
+    &--email {
+      background: #22ba38;
+      box-shadow: 0 0 10px rgba(34, 186, 56, 0.6);
+    }
   }
 
   &__section-title {
@@ -154,6 +159,12 @@
       background: rgba(96, 165, 250, 0.12);
       border: 1px solid rgba(96, 165, 250, 0.25);
       color: #93c5fd;
+    }
+
+    &--email {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #38bdf8;
     }
   }
 

@@ -12,6 +12,7 @@ const PROTECTED_ROUTES = [
   '/payment-methods',
   '/sessions',
   '/orders',
+  '/reviews',
 ];
 
 const getModalContent = (path) => {
@@ -37,6 +38,12 @@ const getModalContent = (path) => {
     return {
       title: 'Security Check',
       description: 'Enter your account password to access Order History.',
+    };
+  }
+  if (path === '/reviews') {
+    return {
+      title: 'Security Check',
+      description: 'Enter your account password to access Your Reviews.',
     };
   }
   return {

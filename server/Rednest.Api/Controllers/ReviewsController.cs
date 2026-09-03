@@ -77,6 +77,7 @@ public class ReviewsController : ControllerBase
 
     [HttpGet("my")]
     [Authorize]
+    [RequireSecurityVerification]
     public async Task<IActionResult> GetMyReviews()
     {
         var userId = GetUserId();
@@ -132,6 +133,7 @@ public class ReviewsController : ControllerBase
 
     [HttpGet("eligible-orders")]
     [Authorize]
+    [RequireSecurityVerification]
     public async Task<IActionResult> GetEligibleOrders()
     {
         var userId = GetUserId();
@@ -306,6 +308,7 @@ public class ReviewsController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     [Authorize]
+    [RequireSecurityVerification]
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = GetUserId();

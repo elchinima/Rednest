@@ -16,7 +16,7 @@ const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const Reviews = () => {
   const { user } = useAuth();
-  const { requireProfileAccess } = useProfileSecurity();
+  const { isProfileUnlocked, requireProfileAccess } = useProfileSecurity();
   const navigate = useNavigate();
 
   const [reviews, setReviews] = useState([]);
@@ -223,7 +223,13 @@ const Reviews = () => {
               <button
                 type="button"
                 className="user-reviews-back-btn"
-                onClick={() => requireProfileAccess('/profile')}
+                onClick={() => {
+                  if (isProfileUnlocked) {
+                    navigate('/profile');
+                  } else {
+                    requireProfileAccess('/profile');
+                  }
+                }}
                 title="Back to Profile"
               >
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">

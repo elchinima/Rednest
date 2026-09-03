@@ -73,7 +73,6 @@ const Dashboard = () => {
     const apiUrl = import.meta.env.VITE_API_URL || '';
 
     try {
-      // 1. Fetch monthly stats
       const statsRes = await fetchWithRefresh(`${apiUrl}/api/admin/stats`);
       if (statsRes.ok) {
         const data = await statsRes.json();
@@ -95,7 +94,6 @@ const Dashboard = () => {
         });
       }
 
-      // 2. Fetch storage stats if authorized
       if (canAccessDatabase) {
         const filesRes = await fetchWithRefresh(`${apiUrl}/api/admin/files`);
         if (filesRes.ok) {
@@ -152,7 +150,6 @@ const Dashboard = () => {
           )}
         </motion.div>
 
-        {/* Section 1: Monthly business and operational metrics (Baku UTC+4) */}
         <div className="dashboard__section">
           <div className="dashboard__section-header">
             <div className="dashboard__section-title-wrap">
@@ -172,7 +169,6 @@ const Dashboard = () => {
           </div>
 
           <div className="dashboard__stats dashboard__stats--grid-4">
-            {/* 1. Products sold this month */}
             <StatCard
               index={0}
               accent="#f59e0b"
@@ -188,7 +184,6 @@ const Dashboard = () => {
               sub="Excluding cancelled orders"
             />
 
-            {/* 2. Monthly Revenue / Profit */}
             <StatCard
               index={1}
               accent="#10b981"
@@ -203,7 +198,6 @@ const Dashboard = () => {
               sub="Total from active orders"
             />
 
-            {/* 3. New Registrations */}
             <StatCard
               index={2}
               accent="#6366f1"
@@ -220,7 +214,6 @@ const Dashboard = () => {
               sub="Users registered this month"
             />
 
-            {/* 4. Online Now */}
             <StatCard
               index={3}
               accent="#22c55e"
@@ -235,7 +228,6 @@ const Dashboard = () => {
               sub="Active in last 15 minutes"
             />
 
-            {/* 5. Average Rating */}
             <StatCard
               index={4}
               accent="#eab308"
@@ -249,7 +241,6 @@ const Dashboard = () => {
               sub="Based on reviews this month"
             />
 
-            {/* 6. Users Rated */}
             <StatCard
               index={5}
               accent="#06b6d4"
@@ -266,7 +257,6 @@ const Dashboard = () => {
               sub="Unique reviewers this month"
             />
 
-            {/* 7. Promos Created */}
             <StatCard
               index={6}
               accent="#a855f7"
@@ -281,7 +271,6 @@ const Dashboard = () => {
               sub="Created this month"
             />
 
-            {/* 8. Promo Discounts */}
             <StatCard
               index={7}
               accent="#f43f5e"
@@ -295,20 +284,6 @@ const Dashboard = () => {
               label="Promo Discounts"
               value={loading ? '...' : monthlyStats.promoSpentFormatted}
               sub="Total discounts applied"
-            />
-
-            <StatCard
-              index={8}
-              accent="#38bdf8"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
-              }
-              label="Emails Sent (Brevo)"
-              value={loading ? '...' : `${monthlyStats.emailsSentToday} / ${monthlyStats.emailsDailyLimit}`}
-              sub={`${monthlyStats.emailsRemainingToday} left today · ${monthlyStats.emailsMonthlyTotal} this month`}
             />
           </div>
         </div>
@@ -327,7 +302,7 @@ const Dashboard = () => {
 
             <div className="dashboard__stats">
               <StatCard
-                index={9}
+                index={8}
                 accent="#ef4444"
                 icon={
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -342,7 +317,7 @@ const Dashboard = () => {
                 sub="Supabase Storage · admin-files"
               />
               <StatCard
-                index={10}
+                index={9}
                 accent="#fb923c"
                 icon={
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -356,6 +331,34 @@ const Dashboard = () => {
             </div>
           </div>
         )}
+
+        <div className="dashboard__section">
+          <div className="dashboard__section-header">
+            <div className="dashboard__section-title-wrap">
+              <span className="dashboard__section-dot dashboard__section-dot--email" />
+              <h2 className="dashboard__section-title">Emails Sent (Brevo)</h2>
+            </div>
+            <span className="dashboard__badge dashboard__badge--email">
+              Brevo
+            </span>
+          </div>
+
+          <div className="dashboard__stats">
+            <StatCard
+              index={10}
+              accent="#22ba38"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+              }
+              label="Emails Sent (Brevo)"
+              value={loading ? '...' : `${monthlyStats.emailsSentToday} / ${monthlyStats.emailsDailyLimit}`}
+              sub={`${monthlyStats.emailsRemainingToday} left today · ${monthlyStats.emailsMonthlyTotal} this month`}
+            />
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );

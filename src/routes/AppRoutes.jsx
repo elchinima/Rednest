@@ -146,7 +146,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/reviews" element={
             <ProtectedRoute>
-              <UserReviews />
+              <ProfileSecurityGuard>
+                <UserReviews />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
 
