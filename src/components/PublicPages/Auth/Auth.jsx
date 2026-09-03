@@ -347,7 +347,7 @@ const Auth = () => {
 
                   <button
                     type="button"
-                    className="cta-btn auth-google-btn"
+                    className="auth-google-btn"
                     title="Sign in with Google"
                     aria-label="Sign in with Google"
                   >
