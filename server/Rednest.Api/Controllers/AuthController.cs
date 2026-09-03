@@ -600,6 +600,44 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpPost("verify-password")]
+    public async Task<IActionResult> VerifyPassword(
+        [FromBody] VerifyPasswordRequest request,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var userIdString = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized(new { message = "Unauthorized" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request?.Password))
+            {
+                return BadRequest(new { message = "Password is required." });
+            }
+
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                return BadRequest(new { message = "Incorrect password. Please try again." });
+            }
+
+            return Ok(new { success = true, message = "Password verified successfully." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [HttpGet("promo")]
     public async Task<IActionResult> GetPromo([FromServices] IUserRepository userRepository)
     {

@@ -259,6 +259,10 @@ public class AppDbContext : DbContext
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'{}'::jsonb");
 
+            entity.Property(e => e.EmailsSent)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");

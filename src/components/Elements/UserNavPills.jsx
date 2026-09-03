@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useProfileSecurity } from '../../context/ProfileSecurityContext';
 import LogoutModal from './LogoutModal';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 import './UserNavPills.scss';
 
 const UserNavPills = ({ onMenuClose }) => {
   const { user, authLoading, logout, isAuthenticated } = useAuth();
+  const { requireProfileAccess } = useProfileSecurity();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -133,13 +135,17 @@ const UserNavPills = ({ onMenuClose }) => {
         <div className={`user-nav-capsule__dropdown-wrapper ${isUserMenuOpen ? 'open' : ''}`}>
           <div className="user-nav-capsule__dropdown">
             <div className="user-nav-capsule__dropdown-inner">
-              <Link
-                to="/profile"
+              <button
+                type="button"
                 className="user-nav-capsule__dropdown-item"
-                onClick={handleProfileClick}
+                onClick={() => {
+                  setIsUserMenuOpen(false);
+                  if (onMenuClose) onMenuClose();
+                  requireProfileAccess('/profile');
+                }}
               >
                 Profile
-              </Link>
+              </button>
               <Link
                 to="/promos"
                 className="user-nav-capsule__dropdown-item"

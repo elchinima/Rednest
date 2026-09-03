@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useProfileSecurity } from '../../../context/ProfileSecurityContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
@@ -60,6 +61,7 @@ const formatBakuDate = (dateStr) => {
 
 const Sessions = () => {
   const { user } = useAuth();
+  const { requireProfileAccess } = useProfileSecurity();
   const navigate = useNavigate();
 
   const [sessions, setSessions] = useState([]);
@@ -190,7 +192,7 @@ const Sessions = () => {
               </div>
               <h3>No sessions found</h3>
               <p>No device sessions have been recorded for your account yet.</p>
-              <button type="button" className="cta-btn sm sessions-empty-btn" onClick={() => navigate('/profile')}>
+              <button type="button" className="cta-btn sm sessions-empty-btn" onClick={() => requireProfileAccess('/profile')}>
                 Back to Profile
               </button>
             </motion.div>
@@ -400,7 +402,7 @@ const Sessions = () => {
             <div className="sessions-security-card__content">
               <h3>Security Recommendations</h3>
               <p>
-                If you see an unfamiliar device or location, terminate that session immediately and consider changing your password in your <Link to="/profile">Profile Settings</Link>. Remember to always sign out when using public or shared computers.
+                If you see an unfamiliar device or location, terminate that session immediately and consider changing your password in your <a href="#profile" onClick={(e) => { e.preventDefault(); requireProfileAccess('/profile'); }}>Profile Settings</a>. Remember to always sign out when using public or shared computers.
               </p>
             </div>
           </motion.div>

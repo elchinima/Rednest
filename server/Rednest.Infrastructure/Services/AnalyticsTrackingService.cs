@@ -123,6 +123,34 @@ public class AnalyticsTrackingService : BackgroundService, IAnalyticsTrackingSer
             changed = true;
         }
 
+        record.EmailsSent ??= new DailyEmailsSentData();
+        record.EmailsSent.Days ??= new List<DailyEmailRecord>();
+
+        var todayEmailRecord = record.EmailsSent.Days.FirstOrDefault(d => d.Date == todayDate);
+        if (todayEmailRecord == null)
+        {
+            todayEmailRecord = new DailyEmailRecord
+            {
+                Date = todayDate,
+                SentCount = 0,
+                DailyLimit = 300,
+                UpdatedAt = utcNow
+            };
+            record.EmailsSent.Days.Add(todayEmailRecord);
+            record.EmailsSent.TodaySent = 0;
+            record.EmailsSent.DailyLimit = 300;
+            record.EmailsSent.MonthlyTotal = record.EmailsSent.Days.Sum(d => d.SentCount);
+            record.EmailsSent.UpdatedAt = utcNow;
+            changed = true;
+        }
+        else if (record.EmailsSent.TodaySent != todayEmailRecord.SentCount || record.EmailsSent.DailyLimit != 300)
+        {
+            record.EmailsSent.TodaySent = todayEmailRecord.SentCount;
+            record.EmailsSent.DailyLimit = 300;
+            record.EmailsSent.MonthlyTotal = record.EmailsSent.Days.Sum(d => d.SentCount);
+            changed = true;
+        }
+
         var startOfBakuMonth = new DateTime(bakuNow.Year, bakuNow.Month, 1, 0, 0, 0, DateTimeKind.Unspecified);
         var endOfBakuMonth = startOfBakuMonth.AddMonths(1);
         var startUtc = DateTime.SpecifyKind(startOfBakuMonth.AddHours(-4), DateTimeKind.Utc);

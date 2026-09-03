@@ -26,6 +26,7 @@ const AdminPromos = lazy(() => import('../components/AdminPages/Promos/Promos'))
 const AdminNewsletter = lazy(() => import('../components/AdminPages/Newsletter/Newsletter'));
 const AdminLogs = lazy(() => import('../components/AdminPages/AdminLogs/AdminLogs'));
 import ProtectedRoute from './ProtectedRoute';
+import ProfileSecurityGuard from './ProfileSecurityGuard';
 import AdminProtectedRoute from './AdminProtectedRoute';
 const ErrorPage = lazy(() => import('../components/PublicPages/ErrorPage/ErrorPage'));
 const Rules = lazy(() => import('../components/PublicPages/Rules/Rules'));
@@ -37,6 +38,7 @@ import FortuneWidget from '../components/Elements/FortuneWidget';
 import { AuthProvider } from '../context/AuthContext';
 import { AdminAuthProvider } from '../context/AdminAuthContext';
 import { BasketProvider } from '../context/BasketContext';
+import { ProfileSecurityProvider } from '../context/ProfileSecurityContext';
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -87,7 +89,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Profile />
+              <ProfileSecurityGuard>
+                <Profile />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/addresses" element={
@@ -200,11 +204,13 @@ const AppRoutes = () => {
       <AuthProvider>
         <AdminAuthProvider>
           <BasketProvider>
-            <ScrollToTop />
-            <AnimatedRoutes />
-            <SupportWidget />
-            <BuyNowWidget />
-            <FortuneWidget />
+            <ProfileSecurityProvider>
+              <ScrollToTop />
+              <AnimatedRoutes />
+              <SupportWidget />
+              <BuyNowWidget />
+              <FortuneWidget />
+            </ProfileSecurityProvider>
           </BasketProvider>
         </AdminAuthProvider>
       </AuthProvider>

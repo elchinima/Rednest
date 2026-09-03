@@ -5,15 +5,18 @@ public class BrevoEmailService : IEmailService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BrevoEmailService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public BrevoEmailService(
         IHttpClientFactory httpClientFactory, 
         IConfiguration configuration,
-        ILogger<BrevoEmailService> logger)
+        ILogger<BrevoEmailService> logger,
+        IServiceScopeFactory scopeFactory)
     {
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     private (string apiKey, string senderEmail, string senderName) GetBrevoConfig(string? customSenderName = null)
@@ -111,6 +114,8 @@ public class BrevoEmailService : IEmailService
             _logger.LogError("Brevo API 2FA error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
+
+        await RecordEmailsSentAsync(1);
     }
 
     public async Task SendSubscriptionCodeAsync(string toEmail, string code)
@@ -183,6 +188,8 @@ public class BrevoEmailService : IEmailService
             _logger.LogError("Brevo API Subscription code error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
+
+        await RecordEmailsSentAsync(1);
     }
 
     public async Task SendNewsletterEmailAsync(string toEmail, string subject, string htmlContent, string? senderName = null)
@@ -211,6 +218,8 @@ public class BrevoEmailService : IEmailService
             _logger.LogError("Brevo API Newsletter send error: {Error}", err);
             throw new InvalidOperationException($"Brevo API error: {err}");
         }
+
+        await RecordEmailsSentAsync(1);
     }
 
     public string BuildNewsletterHtml(
@@ -311,5 +320,66 @@ public class BrevoEmailService : IEmailService
         return System.Text.RegularExpressions.Regex.Replace(text, @"\{name\}", recipientName, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
             .Replace("{email}", recipientEmail, StringComparison.OrdinalIgnoreCase)
             .Replace("{year}", year, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task RecordEmailsSentAsync(int count)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var utcNow = DateTime.UtcNow;
+            var bakuNow = utcNow.AddHours(4);
+            var monthYear = bakuNow.ToString("MMMM, yyyy", CultureInfo.InvariantCulture);
+            var todayDate = bakuNow.ToString("yyyy-MM-dd");
+
+            var record = await context.Analytics.FirstOrDefaultAsync(a => a.MonthYear == monthYear);
+            if (record == null)
+            {
+                record = new Analytics
+                {
+                    MonthYear = monthYear,
+                    CreatedAt = utcNow,
+                    UpdatedAt = utcNow
+                };
+                context.Analytics.Add(record);
+            }
+
+            record.EmailsSent ??= new DailyEmailsSentData();
+            record.EmailsSent.Days ??= new List<DailyEmailRecord>();
+
+            var todayRecord = record.EmailsSent.Days.FirstOrDefault(d => d.Date == todayDate);
+            if (todayRecord == null)
+            {
+                todayRecord = new DailyEmailRecord
+                {
+                    Date = todayDate,
+                    SentCount = count,
+                    DailyLimit = 300,
+                    UpdatedAt = utcNow
+                };
+                record.EmailsSent.Days.Add(todayRecord);
+            }
+            else
+            {
+                todayRecord.SentCount += count;
+                todayRecord.DailyLimit = 300;
+                todayRecord.UpdatedAt = utcNow;
+            }
+
+            record.EmailsSent.TodaySent = todayRecord.SentCount;
+            record.EmailsSent.DailyLimit = 300;
+            record.EmailsSent.MonthlyTotal = record.EmailsSent.Days.Sum(d => d.SentCount);
+            record.EmailsSent.UpdatedAt = utcNow;
+            record.UpdatedAt = utcNow;
+
+            context.Entry(record).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to record sent email metrics");
+        }
     }
 }

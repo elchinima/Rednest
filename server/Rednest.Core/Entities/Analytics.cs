@@ -30,6 +30,23 @@ public class DailyPeakOnlineData
     public List<DailyPeakRecord> Days { get; set; } = new();
 }
 
+public class DailyEmailRecord
+{
+    public string Date { get; set; } = string.Empty;
+    public int SentCount { get; set; }
+    public int DailyLimit { get; set; } = 300;
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class DailyEmailsSentData
+{
+    public int MonthlyTotal { get; set; }
+    public int TodaySent { get; set; }
+    public int DailyLimit { get; set; } = 300;
+    public DateTime UpdatedAt { get; set; }
+    public List<DailyEmailRecord> Days { get; set; } = new();
+}
+
 public class Analytics
 {
     public string MonthYear { get; set; } = string.Empty;
@@ -44,6 +61,7 @@ public class Analytics
     public MetricSnapshot<decimal> PromoDiscounts { get; set; } = new();
     public MetricSnapshot<int> FilesInStorage { get; set; } = new();
     public MetricSnapshot<string> StorageUsed { get; set; } = new();
+    public DailyEmailsSentData EmailsSent { get; set; } = new();
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

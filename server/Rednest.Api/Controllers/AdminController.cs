@@ -174,6 +174,26 @@ public class AdminController : ControllerBase
         });
 
         var monthNameEn = bakuNow.ToString("MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture);
+        var monthYearAnalyticsKey = bakuNow.ToString("MMMM, yyyy", System.Globalization.CultureInfo.InvariantCulture);
+        var todayDate = bakuNow.ToString("yyyy-MM-dd");
+
+        var analyticsRecord = await _context.Analytics
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.MonthYear == monthYearAnalyticsKey);
+
+        var emailsSentToday = 0;
+        var emailsDailyLimit = 300;
+        var emailsMonthlyTotal = 0;
+
+        if (analyticsRecord?.EmailsSent != null)
+        {
+            emailsDailyLimit = analyticsRecord.EmailsSent.DailyLimit > 0 ? analyticsRecord.EmailsSent.DailyLimit : 300;
+            var todayEntry = analyticsRecord.EmailsSent.Days?.FirstOrDefault(d => d.Date == todayDate);
+            emailsSentToday = todayEntry?.SentCount ?? analyticsRecord.EmailsSent.TodaySent;
+            emailsMonthlyTotal = analyticsRecord.EmailsSent.MonthlyTotal;
+        }
+
+        var emailsRemainingToday = Math.Max(0, emailsDailyLimit - emailsSentToday);
 
         return Ok(new
         {
@@ -190,7 +210,12 @@ public class AdminController : ControllerBase
             totalReviewsCount = monthlyReviewCount,
             promosCreated = monthlyPromosCreated,
             promoSpent = monthlyPromoDiscounts,
-            promoSpentFormatted = $"{monthlyPromoDiscounts:0.00} ₼"
+            promoSpentFormatted = $"{monthlyPromoDiscounts:0.00} ₼",
+            emailsSentToday = emailsSentToday,
+            emailsDailyLimit = emailsDailyLimit,
+            emailsRemainingToday = emailsRemainingToday,
+            emailsMonthlyTotal = emailsMonthlyTotal,
+            emailsDailyHistory = analyticsRecord?.EmailsSent?.Days ?? new List<DailyEmailRecord>()
         });
     }
     

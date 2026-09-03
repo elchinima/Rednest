@@ -55,6 +55,10 @@ const Dashboard = () => {
     ratingUsersCount: '—',
     promosCreated: '—',
     promoSpentFormatted: '—',
+    emailsSentToday: '—',
+    emailsDailyLimit: 300,
+    emailsRemainingToday: '—',
+    emailsMonthlyTotal: '—',
   });
 
   const [storageStats, setStorageStats] = useState({ fileCount: '—', totalKb: '—' });
@@ -84,6 +88,10 @@ const Dashboard = () => {
           ratingUsersCount: data.ratingUsersCount ?? 0,
           promosCreated: data.promosCreated ?? 0,
           promoSpentFormatted: data.promoSpentFormatted || `${(data.promoSpent || 0).toFixed(2)} ₼`,
+          emailsSentToday: data.emailsSentToday ?? 0,
+          emailsDailyLimit: data.emailsDailyLimit ?? 300,
+          emailsRemainingToday: data.emailsRemainingToday ?? 300,
+          emailsMonthlyTotal: data.emailsMonthlyTotal ?? 0,
         });
       }
 
@@ -288,10 +296,23 @@ const Dashboard = () => {
               value={loading ? '...' : monthlyStats.promoSpentFormatted}
               sub="Total discounts applied"
             />
+
+            <StatCard
+              index={8}
+              accent="#38bdf8"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+              }
+              label="Emails Sent (Brevo)"
+              value={loading ? '...' : `${monthlyStats.emailsSentToday} / ${monthlyStats.emailsDailyLimit}`}
+              sub={`${monthlyStats.emailsRemainingToday} left today · ${monthlyStats.emailsMonthlyTotal} this month`}
+            />
           </div>
         </div>
 
-        {/* Section 2: Storage & System overview */}
         {canAccessDatabase && (
           <div className="dashboard__section">
             <div className="dashboard__section-header">
@@ -306,7 +327,7 @@ const Dashboard = () => {
 
             <div className="dashboard__stats">
               <StatCard
-                index={8}
+                index={9}
                 accent="#ef4444"
                 icon={
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -321,7 +342,7 @@ const Dashboard = () => {
                 sub="Supabase Storage · admin-files"
               />
               <StatCard
-                index={9}
+                index={10}
                 accent="#fb923c"
                 icon={
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
