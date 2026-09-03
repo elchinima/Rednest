@@ -68,8 +68,12 @@ const AdminProtectedRoute = ({ children, requiredRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!hasAdminRole || !isAdminAuth) {
+  if (!hasAdminRole) {
     return <Navigate to="/" state={{ from: location, roleForbidden: true }} replace />;
+  }
+
+  if (!isAdminAuth) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
   if (requiredRoles && requiredRoles.length > 0) {

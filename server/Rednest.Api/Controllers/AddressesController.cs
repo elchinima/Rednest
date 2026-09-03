@@ -2,6 +2,7 @@ namespace Rednest.Api.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireSecurityVerification]
 [Route("api/[controller]")]
 [Route("api/adresses")]
 public class AddressesController : ControllerBase

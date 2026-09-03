@@ -4,7 +4,7 @@ import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 const AdminAuthContext = createContext(null);
 
 export const AdminAuthProvider = ({ children }) => {
-  const [isAdminAuth, setIsAdminAuth] = useState(true);
+  const [isAdminAuth, setIsAdminAuth] = useState(false);
   const [adminRole, setAdminRole] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,8 +23,12 @@ export const AdminAuthProvider = ({ children }) => {
         }
         return { ok: true, role: data?.role, user: data };
       }
+      setIsAdminAuth(false);
+      setAdminRole(null);
       return { ok: false, status: res.status };
     } catch {
+      setIsAdminAuth(false);
+      setAdminRole(null);
       return { ok: false };
     } finally {
       setLoading(false);
@@ -73,5 +77,3 @@ export const useAdminAuth = () => {
 };
 
 export default AdminAuthContext;
-
-

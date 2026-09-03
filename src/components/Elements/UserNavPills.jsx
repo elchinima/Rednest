@@ -8,7 +8,7 @@ import './UserNavPills.scss';
 
 const UserNavPills = ({ onMenuClose }) => {
   const { user, authLoading, logout, isAuthenticated } = useAuth();
-  const { requireProfileAccess } = useProfileSecurity();
+  const { isProfileUnlocked, requireProfileAccess, lockProfile } = useProfileSecurity();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -33,6 +33,7 @@ const UserNavPills = ({ onMenuClose }) => {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      lockProfile();
       await logout();
       setIsLogoutModalOpen(false);
       setIsUserMenuOpen(false);
@@ -141,7 +142,11 @@ const UserNavPills = ({ onMenuClose }) => {
                 onClick={() => {
                   setIsUserMenuOpen(false);
                   if (onMenuClose) onMenuClose();
-                  requireProfileAccess('/profile');
+                  if (isProfileUnlocked) {
+                    navigate('/profile');
+                  } else {
+                    requireProfileAccess('/profile');
+                  }
                 }}
               >
                 Profile

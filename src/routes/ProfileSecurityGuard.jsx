@@ -1,21 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useProfileSecurity } from '../context/ProfileSecurityContext';
 import loaderIcon from '../assets/icons/loader-animated.svg';
 
 const ProfileSecurityGuard = ({ children }) => {
-  const { isProfileUnlocked, requireProfileAccess, lockProfile } = useProfileSecurity();
+  const { isProfileUnlocked, requireProfileAccess, checkSecurityStatus } = useProfileSecurity();
+  const location = useLocation();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!isProfileUnlocked) {
-      requireProfileAccess('/profile');
+    let isMounted = true;
+
+    if (isProfileUnlocked) {
+      setChecking(false);
+      return;
     }
 
-    return () => {
-      lockProfile();
-    };
-  }, [isProfileUnlocked, requireProfileAccess, lockProfile]);
+    setChecking(true);
+    checkSecurityStatus().then((isVerified) => {
+      if (isMounted) {
+        if (!isVerified) {
+          requireProfileAccess(location.pathname);
+        }
+        setChecking(false);
+      }
+    });
 
-  if (!isProfileUnlocked) {
+    return () => {
+      isMounted = false;
+    };
+  }, [location.pathname, isProfileUnlocked, requireProfileAccess, checkSecurityStatus]);
+
+  if (checking || !isProfileUnlocked) {
     return (
       <div
         style={{

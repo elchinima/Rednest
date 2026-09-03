@@ -134,6 +134,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpPut("2fa/toggle")]
     [HttpPost("2fa/toggle")]
     public async Task<IActionResult> ToggleTwoFactor([FromBody] ToggleTwoFactorRequest? request)
@@ -246,6 +247,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpGet("sessions")]
     public async Task<IActionResult> GetSessions()
     {
@@ -268,6 +270,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpPost("sessions/{sessionId}/revoke")]
     public async Task<IActionResult> RevokeSession(string sessionId)
     {
@@ -340,6 +343,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpPost("profile/picture")]
     public async Task<IActionResult> UploadProfilePicture(
         IFormFile file,
@@ -459,6 +463,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpDelete("profile/picture")]
     public async Task<IActionResult> DeleteProfilePicture([FromServices] IUserRepository userRepository)
     {
@@ -505,6 +510,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpPut("name")]
     public async Task<IActionResult> UpdateName(
         [FromBody] UpdateNameRequest nameRequest, 
@@ -543,6 +549,7 @@ public class AuthController : ControllerBase
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [RequireSecurityVerification]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword(
         [FromBody] ChangePasswordRequest request,
@@ -629,12 +636,30 @@ public class AuthController : ControllerBase
                 return BadRequest(new { message = "Incorrect password. Please try again." });
             }
 
+            SecurityVerificationHelper.AppendSecurityCookie(Response, userId.ToString());
+
             return Ok(new { success = true, message = "Password verified successfully." });
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    [HttpGet("security-status")]
+    public IActionResult GetSecurityStatus()
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out _))
+        {
+            return Unauthorized();
+        }
+
+        var token = Request.Cookies[SecurityVerificationHelper.CookieName];
+        var isVerified = SecurityVerificationHelper.ValidateToken(token, userIdString);
+
+        return Ok(new { verified = isVerified });
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -776,7 +801,6 @@ public class AuthController : ControllerBase
                 return BadRequest(new { message = "This promo code has expired or is no longer active." });
             }
 
-            // Switch ownership to the activating user
             promo.UserId = userId;
             await db.SaveChangesAsync();
 
@@ -934,6 +958,7 @@ public class AuthController : ControllerBase
         };
         Response.Cookies.Delete("accessToken", cookieOptions);
         Response.Cookies.Delete("refreshToken", cookieOptions);
+        SecurityVerificationHelper.DeleteSecurityCookie(Response);
     }
 
     private void SetTokenCookies(string accessToken, string refreshToken)

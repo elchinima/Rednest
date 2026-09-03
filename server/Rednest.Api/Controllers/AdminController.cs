@@ -2409,6 +2409,10 @@ public class AdminController : ControllerBase
         if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             return (false, null);
 
+        var adminSessionToken = Request.Cookies["admin_session"];
+        if (string.IsNullOrEmpty(adminSessionToken) || !ValidateSignedAdminToken(adminSessionToken, userIdStr))
+            return (false, null);
+
         var user = await _context.Users
             .Include(u => u.Session)
             .AsNoTracking()

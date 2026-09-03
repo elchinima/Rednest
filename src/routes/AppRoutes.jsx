@@ -96,17 +96,23 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/addresses" element={
             <ProtectedRoute>
-              <Addresses />
+              <ProfileSecurityGuard>
+                <Addresses />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/adresses" element={
             <ProtectedRoute>
-              <Addresses />
+              <ProfileSecurityGuard>
+                <Addresses />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/payment-methods" element={
             <ProtectedRoute>
-              <PaymentMethods />
+              <ProfileSecurityGuard>
+                <PaymentMethods />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/promos" element={
@@ -116,7 +122,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/sessions" element={
             <ProtectedRoute>
-              <Sessions />
+              <ProfileSecurityGuard>
+                <Sessions />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/basket" element={
@@ -131,7 +139,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/orders" element={
             <ProtectedRoute>
-              <Orders />
+              <ProfileSecurityGuard>
+                <Orders />
+              </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
           <Route path="/reviews" element={
@@ -140,6 +150,7 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           } />
 
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={
             <AdminProtectedRoute>

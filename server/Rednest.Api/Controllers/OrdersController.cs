@@ -552,6 +552,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("active")]
+    [RequireSecurityVerification]
     public async Task<IActionResult> GetActiveOrder()
     {
         var userId = GetUserId();
@@ -599,6 +600,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("history")]
+    [RequireSecurityVerification]
     public async Task<IActionResult> GetOrderHistory()
     {
         var userId = GetUserId();

@@ -3,6 +3,7 @@ namespace Rednest.Api.Controllers;
 
 [ApiController]
 [Authorize]
+[RequireSecurityVerification]
 [Route("api/payment-methods")]
 [Route("api/paymentmethods")]
 public class PaymentMethodsController : ControllerBase
