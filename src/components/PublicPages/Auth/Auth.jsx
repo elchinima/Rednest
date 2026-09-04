@@ -17,6 +17,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [agree, setAgree] = useState(false);
+  const [highlightAgree, setHighlightAgree] = useState(false);
+  const agreeCheckboxRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successInfo, setSuccessInfo] = useState('');
@@ -113,6 +115,9 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     if (!agree) {
       setError('Please agree to the Terms of Use before signing in with Google.');
+      setHighlightAgree(true);
+      agreeCheckboxRef.current?.focus();
+      setTimeout(() => setHighlightAgree(false), 1000);
       return;
     }
     if (loading) return;
@@ -348,8 +353,9 @@ const Auth = () => {
                   />
                 </div>
                 
-                <div className="checkbox-group">
+                <div className={`checkbox-group ${highlightAgree ? 'checkbox-group--highlight' : ''}`}>
                   <input 
+                    ref={agreeCheckboxRef}
                     type="checkbox" 
                     id="agree" 
                     checked={agree}
@@ -357,6 +363,9 @@ const Auth = () => {
                       setAgree(e.target.checked);
                       if (error && error.includes('Terms of Use')) {
                         setError(null);
+                      }
+                      if (highlightAgree) {
+                        setHighlightAgree(false);
                       }
                     }}
                     required 
@@ -386,7 +395,7 @@ const Auth = () => {
                     title={!agree ? "Please agree to the Terms of Use to sign in with Google" : "Sign in with Google"}
                     aria-label="Sign in with Google"
                     onClick={handleGoogleLogin}
-                    disabled={loading || !agree}
+                    disabled={loading}
                   >
                     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                       <path
