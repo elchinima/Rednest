@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
     public DbSet<Analytics> Analytics => Set<Analytics>();
+    public DbSet<Footer> Footers => Set<Footer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -270,6 +271,28 @@ public class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<Footer>(entity =>
+        {
+            entity.ToTable("Footer");
+            entity.HasNoKey();
+
+            entity.Property(e => e.UpdatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
+
+            entity.Property(e => e.FooterEN)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.FooterRU)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.FooterAZ)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
         });
     }
 }
