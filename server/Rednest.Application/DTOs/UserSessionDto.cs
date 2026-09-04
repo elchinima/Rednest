@@ -12,4 +12,5 @@ public class UserSessionDto
     public DateTime? LastActiveAt { get; set; }
     public bool IsActive { get; set; }
     public bool IsCurrent { get; set; }
+    public string AuthType { get; set; } = "Password";
 }

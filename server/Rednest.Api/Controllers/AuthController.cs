@@ -16,6 +16,83 @@ public class AuthController : ControllerBase
         _httpClientFactory = httpClientFactory;
     }
 
+    [HttpGet("google/url")]
+    public IActionResult GetGoogleAuthUrl([FromQuery] string? redirect_uri)
+    {
+        try
+        {
+            var url = _authService.GetGoogleAuthUrl(redirect_uri);
+            return Ok(new { url });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("google")]
+    public async Task<IActionResult> GoogleAuth(
+        [FromBody] GoogleAuthRequest request,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Code))
+            {
+                return BadRequest(new { message = "Authorization code is required." });
+            }
+
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                  ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+            var deviceModel = Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                              ?? Request.Headers["X-Device-Model"].FirstOrDefault();
+
+            var result = await _authService.AuthenticateWithGoogleAsync(
+                request.Code, 
+                request.RedirectUri, 
+                ipAddress, 
+                userAgent, 
+                platformVersion, 
+                deviceModel);
+
+            SetTokenCookies(result.AccessToken, result.RefreshToken);
+
+            var user = result.User;
+            var userSession = user.Session ?? await userRepository.GetSessionByUserIdAsync(user.Id);
+
+            return Ok(new
+            {
+                requires2FA = false,
+                hasName = result.HasName,
+                user = new
+                {
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email,
+                    profilePictureUrl = user.ProfilePictureUrl,
+                    balance = user.Balance,
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                    twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
+                }
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login(
         [FromBody] LoginRequest request,
@@ -989,4 +1066,10 @@ public class AuthController : ControllerBase
 public class ActivatePromoRequest
 {
     public string? PromoCode { get; set; }
+}
+
+public class GoogleAuthRequest
+{
+    public string Code { get; set; } = string.Empty;
+    public string? RedirectUri { get; set; }
 }

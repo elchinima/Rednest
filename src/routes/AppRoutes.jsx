@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 const Home = lazy(() => import('../components/PublicPages/Home/Home'));
 const Catalog = lazy(() => import('../components/PublicPages/Catalog/Catalog'));
 const Auth = lazy(() => import('../components/PublicPages/Auth/Auth'));
+const GoogleAuth = lazy(() => import('../components/PublicPages/Auth/GoogleAuth'));
 const Fortune = lazy(() => import('../components/UserPages/Fortune/Fortune'));
 const Profile = lazy(() => import('../components/UserPages/Profile/Profile'));
 const Promos = lazy(() => import('../components/UserPages/Promos/Promos'));
@@ -82,6 +83,7 @@ const AnimatedRoutes = () => {
           <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/login" element={<Auth />} />
+          <Route path="/google-auth" element={<GoogleAuth />} />
           <Route path="/fortune" element={
             <ProtectedRoute>
               <Fortune />

@@ -391,13 +391,21 @@
     &:active:not(:disabled) {
       transform: translateY(0);
     }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      filter: grayscale(40%);
+      transform: none !important;
+      box-shadow: none !important;
+    }
   }
 
   .auth-forgot-password-wrap {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: -6px;
+    margin-top: 8px;
   }
 
   .auth-forgot-password-btn {

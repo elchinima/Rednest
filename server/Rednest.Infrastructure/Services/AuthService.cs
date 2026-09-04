@@ -1,3 +1,6 @@
+using System.Net.Http.Headers;
+using System.Text.Json;
+
 namespace Rednest.Infrastructure.Services;
 
 public class AuthService : IAuthService
@@ -6,17 +9,20 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IGeoLocationService _geoLocationService;
     private readonly IEmailService _emailService;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public AuthService(
         IUserRepository userRepository, 
         IConfiguration configuration,
         IGeoLocationService geoLocationService,
-        IEmailService emailService)
+        IEmailService emailService,
+        IHttpClientFactory httpClientFactory)
     {
         _userRepository = userRepository;
         _configuration = configuration;
         _geoLocationService = geoLocationService;
         _emailService = emailService;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<(bool Requires2FA, string? AccessToken, string? RefreshToken, bool HasName, User? User)> AuthenticateOrRegisterAsync(
@@ -121,7 +127,8 @@ public class AuthService : IAuthService
             UserAgent = userAgent,
             CreatedAt = now,
             LastActiveAt = now,
-            IsActive = true
+            IsActive = true,
+            AuthType = "Password"
         };
 
         userSession.Sessions.Add(sessionEntry);
@@ -193,7 +200,8 @@ public class AuthService : IAuthService
             UserAgent = userAgent,
             CreatedAt = now,
             LastActiveAt = now,
-            IsActive = true
+            IsActive = true,
+            AuthType = "Password"
         };
 
         userSession.Sessions.Add(sessionEntry);
@@ -469,7 +477,8 @@ public class AuthService : IAuthService
                 CreatedAt = s.CreatedAt,
                 LastActiveAt = s.LastActiveAt ?? s.CreatedAt,
                 IsActive = s.IsActive == true,
-                IsCurrent = isCurrent
+                IsCurrent = isCurrent,
+                AuthType = string.IsNullOrEmpty(s.AuthType) ? "Password" : s.AuthType
             });
         }
 
@@ -597,5 +606,196 @@ public class AuthService : IAuthService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
+    }
+
+    public string GetGoogleAuthUrl(string? redirectUri = null)
+    {
+        var clientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+                       ?? _configuration["GOOGLE_CLIENT_ID"];
+
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            throw new InvalidOperationException("Google Client ID is not configured.");
+        }
+
+        var effectiveRedirectUri = !string.IsNullOrWhiteSpace(redirectUri)
+            ? redirectUri
+            : Environment.GetEnvironmentVariable("GOOGLE_REDIRECT_URI")
+              ?? $"{Environment.GetEnvironmentVariable("BASE_URL")}/google-auth";
+
+        var encodedRedirect = Uri.EscapeDataString(effectiveRedirectUri);
+        var scope = Uri.EscapeDataString("openid email profile");
+
+        return $"https://accounts.google.com/o/oauth2/v2/auth?client_id={clientId}&redirect_uri={encodedRedirect}&response_type=code&scope={scope}&access_type=offline&prompt=select_account";
+    }
+
+    public async Task<(string AccessToken, string RefreshToken, bool HasName, User User)> AuthenticateWithGoogleAsync(
+        string code,
+        string? redirectUri = null,
+        string? ipAddress = null,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            throw new ArgumentException("Authorization code is required.", nameof(code));
+        }
+
+        var clientId = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_ID")
+                       ?? _configuration["GOOGLE_CLIENT_ID"];
+        var clientSecret = Environment.GetEnvironmentVariable("GOOGLE_CLIENT_SECRET")
+                           ?? _configuration["GOOGLE_CLIENT_SECRET"];
+
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            throw new InvalidOperationException("Google OAuth credentials are not properly configured.");
+        }
+
+        var effectiveRedirectUri = !string.IsNullOrWhiteSpace(redirectUri)
+            ? redirectUri
+            : Environment.GetEnvironmentVariable("GOOGLE_REDIRECT_URI")
+              ?? $"{Environment.GetEnvironmentVariable("BASE_URL")}/google-auth";
+
+        var client = _httpClientFactory.CreateClient();
+
+        var tokenRequestParams = new Dictionary<string, string>
+        {
+            { "code", code.Trim() },
+            { "client_id", clientId },
+            { "client_secret", clientSecret },
+            { "redirect_uri", effectiveRedirectUri },
+            { "grant_type", "authorization_code" }
+        };
+
+        var tokenResponse = await client.PostAsync("https://oauth2.googleapis.com/token", new FormUrlEncodedContent(tokenRequestParams));
+        var tokenBody = await tokenResponse.Content.ReadAsStringAsync();
+
+        if (!tokenResponse.IsSuccessStatusCode)
+        {
+            throw new UnauthorizedAccessException($"Google token exchange failed: {tokenBody}");
+        }
+
+        using var tokenJsonDoc = JsonDocument.Parse(tokenBody);
+        var googleAccessToken = tokenJsonDoc.RootElement.TryGetProperty("access_token", out var accTokenProp)
+            ? accTokenProp.GetString()
+            : null;
+
+        if (string.IsNullOrEmpty(googleAccessToken))
+        {
+            throw new UnauthorizedAccessException("Failed to obtain Google access token.");
+        }
+
+        var userInfoRequest = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v3/userinfo");
+        userInfoRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", googleAccessToken);
+
+        var userInfoResponse = await client.SendAsync(userInfoRequest);
+        var userInfoBody = await userInfoResponse.Content.ReadAsStringAsync();
+
+        if (!userInfoResponse.IsSuccessStatusCode)
+        {
+            throw new UnauthorizedAccessException($"Failed to fetch Google profile information: {userInfoBody}");
+        }
+
+        using var userJsonDoc = JsonDocument.Parse(userInfoBody);
+        var email = userJsonDoc.RootElement.TryGetProperty("email", out var emailProp)
+            ? emailProp.GetString()
+            : null;
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new UnauthorizedAccessException("Google account does not provide an email address.");
+        }
+
+        var emailVerified = userJsonDoc.RootElement.TryGetProperty("email_verified", out var evProp) &&
+            (evProp.ValueKind == JsonValueKind.True || (evProp.ValueKind == JsonValueKind.String && bool.TryParse(evProp.GetString(), out var evBool) && evBool));
+
+        if (!emailVerified)
+        {
+            throw new UnauthorizedAccessException("Google email is not verified.");
+        }
+
+        var name = userJsonDoc.RootElement.TryGetProperty("name", out var nameProp)
+            ? nameProp.GetString()
+            : null;
+
+        var picture = userJsonDoc.RootElement.TryGetProperty("picture", out var picProp)
+            ? picProp.GetString()
+            : null;
+
+        var user = await _userRepository.GetByEmailAsync(email);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("Account not found. Please register first with your email and password before signing in with Google.");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession != null && !userSession.IsActive)
+        {
+            throw new UnauthorizedAccessException("Your account has been suspended or blocked.");
+        }
+
+        if (userSession == null)
+        {
+            userSession = new UserSession
+            {
+                UserId = user.Id,
+                RegistrationIp = ipAddress,
+                TwoFactorEnabled = false,
+                Subscribe = false,
+                IsActive = true,
+                AccountVerify = new List<AccountVerifyEntry>(),
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(userSession);
+        }
+
+        bool userChanged = false;
+        if (string.IsNullOrEmpty(user.ProfilePictureUrl) && !string.IsNullOrEmpty(picture))
+        {
+            user.ProfilePictureUrl = picture;
+            userChanged = true;
+        }
+        if (string.IsNullOrEmpty(user.Name) && !string.IsNullOrEmpty(name))
+        {
+            user.Name = name;
+            userChanged = true;
+        }
+        if (userChanged)
+        {
+            await _userRepository.UpdateAsync(user);
+        }
+
+        if (userSession.Sessions == null)
+        {
+            userSession.Sessions = new List<SessionEntry>();
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var refreshToken = GenerateRefreshToken();
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
+
+        var sessionEntry = new SessionEntry
+        {
+            RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = now.AddDays(15),
+            LastLoginIp = ipAddress,
+            OperatingSystem = uaInfo.OperatingSystem,
+            DeviceName = uaInfo.DeviceName,
+            DeviceType = uaInfo.DeviceType,
+            UserAgent = userAgent,
+            CreatedAt = now,
+            LastActiveAt = now,
+            IsActive = true,
+            AuthType = "Google"
+        };
+
+        userSession.Sessions.Add(sessionEntry);
+        await _userRepository.UpdateSessionAsync(userSession);
+
+        bool hasName = !string.IsNullOrEmpty(user.Name);
+        return (GenerateJwtToken(user), refreshToken, hasName, user);
     }
 }

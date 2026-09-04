@@ -14,4 +14,5 @@ public class SessionEntry
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastActiveAt { get; set; }
     public bool? IsActive { get; set; }
+    public string? AuthType { get; set; } = "Password";
 }

@@ -110,6 +110,36 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    if (!agree) {
+      setError('Please agree to the Terms of Use before signing in with Google.');
+      return;
+    }
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const redirectUri = `${window.location.origin}/google-auth`;
+      const response = await fetch(`${apiUrl}/api/auth/google/url?redirect_uri=${encodeURIComponent(redirectUri)}`);
+      
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Google authorization is currently unavailable');
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('Failed to obtain Google authorization URL');
+      }
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -323,7 +353,12 @@ const Auth = () => {
                     type="checkbox" 
                     id="agree" 
                     checked={agree}
-                    onChange={(e) => setAgree(e.target.checked)}
+                    onChange={(e) => {
+                      setAgree(e.target.checked);
+                      if (error && error.includes('Terms of Use')) {
+                        setError(null);
+                      }
+                    }}
                     required 
                   />
                   <label htmlFor="agree">
@@ -348,8 +383,10 @@ const Auth = () => {
                   <button
                     type="button"
                     className="auth-google-btn"
-                    title="Sign in with Google"
+                    title={!agree ? "Please agree to the Terms of Use to sign in with Google" : "Sign in with Google"}
                     aria-label="Sign in with Google"
+                    onClick={handleGoogleLogin}
+                    disabled={loading || !agree}
                   >
                     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                       <path

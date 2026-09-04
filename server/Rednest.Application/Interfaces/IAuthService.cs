@@ -34,4 +34,14 @@ public interface IAuthService
     Task<List<UserSessionDto>> GetUserSessionsAsync(Guid userId, string? currentRefreshToken);
 
     Task<bool> RevokeSessionAsync(Guid userId, string sessionId, string? currentRefreshToken);
+
+    string GetGoogleAuthUrl(string? redirectUri = null);
+
+    Task<(string AccessToken, string RefreshToken, bool HasName, User User)> AuthenticateWithGoogleAsync(
+        string code,
+        string? redirectUri = null,
+        string? ipAddress = null,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null);
 }
