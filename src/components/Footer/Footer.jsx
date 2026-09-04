@@ -4,7 +4,17 @@ import { Link } from 'react-router-dom';
 import './Footer.scss';
 import logo from '../../assets/icons/rednest_logo.png';
 
+const getBakuYear = () => {
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Baku', year: 'numeric' }).format(new Date());
+  } catch {
+    return new Date(Date.now() + 4 * 60 * 60 * 1000).getUTCFullYear().toString();
+  }
+};
+
 const Footer = () => {
+  const currentYear = getBakuYear();
+
   return (
     <motion.footer 
       className="footer"
@@ -84,7 +94,7 @@ const Footer = () => {
               <option value="az">Azərbaycan</option>
             </select>
           </div>
-          <p className="copyright">&copy; {new Date().getFullYear()} Rednest. All rights reserved.</p>
+          <p className="copyright">&copy; {currentYear} Rednest. All rights reserved.</p>
           <div className="terms-link">
             <Link to="/rules">Terms of Use</Link>
           </div>
