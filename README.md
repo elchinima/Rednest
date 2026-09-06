@@ -80,7 +80,7 @@
 | **Email Service** | Brevo (Sendinblue) Transactional & Newsletter API |
 | **AI & Automation** | Background Review Moderation Service (LLM), Keep-Alive Service, Analytics Tracker |
 | **Security & Middleware** | ASP.NET Core RateLimiter (Partitioned), Bandwidth Throttling, Client Hints Parser |
-| **Deployment** | Multi-stage Docker container (.NET 10 + Node 20), Nginx reverse proxy, Render |
+| **Deployment** | Multi-stage Docker container (.NET 10 + Node 20), Render |
 
 ---
 
@@ -92,8 +92,6 @@ Rednest/
 ├── package.json                 # Frontend dependencies & build scripts
 ├── vite.config.js               # Vite bundler configuration
 ├── Dockerfile                   # Multi-stage container build (.NET 10 + Vite 8)
-├── nginx.conf                   # Nginx reverse proxy configuration
-├── supervisord.conf             # Process control configuration
 ├── src/                         # Frontend Application (React 19)
 │   ├── assets/                  # Brand imagery, video backgrounds, product icons
 │   ├── components/
