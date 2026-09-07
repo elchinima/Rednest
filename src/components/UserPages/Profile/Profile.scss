@@ -671,6 +671,22 @@
 
   .profile-hero-text {
     margin-top: 100px;
+
+    h1 {
+      font-size: 1.6rem;
+
+      @media (max-width: 480px) {
+        font-size: 1.4rem;
+      }
+    }
+
+    p {
+      font-size: 0.84rem;
+
+      @media (max-width: 480px) {
+        font-size: 0.78rem;
+      }
+    }
   }
 
   .profile-container {
@@ -695,6 +711,19 @@
     }
   }
 
+  .profile-field-label {
+    font-size: 0.72rem;
+  }
+
+  .profile-field-input {
+    font-size: 0.85rem;
+    padding: 11px 95px 11px 14px;
+  }
+
+  .profile-field-badge {
+    font-size: 0.68rem;
+  }
+
   .profile-action-row {
     flex-direction: column;
     align-items: flex-start;
@@ -702,7 +731,20 @@
 
     .profile-action-btn {
       width: 100%;
+      font-size: 0.82rem;
     }
+  }
+
+  .profile-action-title {
+    font-size: 0.85rem;
+  }
+
+  .profile-action-desc {
+    font-size: 0.74rem;
+  }
+
+  .profile-btn {
+    font-size: 0.82rem;
   }
 
   .profile-2fa-toggle-wrap {

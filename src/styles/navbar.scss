@@ -146,6 +146,14 @@
     .logo-container {
       position: relative;
       z-index: 200;
+
+      .brand-name {
+        font-size: 1.05rem;
+
+        @media (max-width: 480px) {
+          font-size: 0.96rem;
+        }
+      }
     }
 
     .mobile-menu-btn {
@@ -213,7 +221,11 @@
         gap: $spacing-lg;
 
         .nav-link {
-          font-size: 1.25rem;
+          font-size: 1rem;
+
+          @media (max-width: 480px) {
+            font-size: 0.92rem;
+          }
         }
       }
 
@@ -221,6 +233,7 @@
         width: 100%;
         text-align: center;
         margin-top: $spacing-xl;
+        font-size: 0.88rem;
       }
     }
   }

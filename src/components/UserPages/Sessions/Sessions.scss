@@ -539,8 +539,23 @@
 
   .sessions-hero {
     margin-top: 80px;
-  }
 
+    h1 {
+      font-size: 1.6rem;
+
+      @media (max-width: 480px) {
+        font-size: 1.4rem;
+      }
+    }
+
+    &__desc {
+      font-size: 0.84rem;
+
+      @media (max-width: 480px) {
+        font-size: 0.78rem;
+      }
+    }
+  }
 
   .session-card {
     padding: 18px 16px;
@@ -550,6 +565,10 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
+    }
+
+    &__device-name {
+      font-size: 0.85rem;
     }
 
     &__badges {
@@ -569,7 +588,12 @@
     align-items: center;
   }
 
+  .session-card__detail-label {
+    font-size: 0.72rem;
+  }
+
   .session-card__detail-value {
+    font-size: 0.78rem;
     text-align: right;
   }
 
@@ -579,6 +603,7 @@
     .session-card__revoke-btn {
       width: 100%;
       justify-content: center;
+      font-size: 0.8rem;
     }
   }
 
@@ -586,5 +611,9 @@
     flex-direction: column;
     padding: 16px;
     gap: 12px;
+
+    p {
+      font-size: 0.78rem;
+    }
   }
 }

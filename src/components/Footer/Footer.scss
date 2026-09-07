@@ -49,6 +49,10 @@
       position: relative;
       padding-bottom: 8px;
 
+      @media (max-width: 576px) {
+        font-size: 0.88rem;
+      }
+
       &::after {
         content: '';
         position: absolute;
@@ -74,6 +78,10 @@
         display: flex;
         align-items: flex-start;
         gap: 12px;
+
+        @media (max-width: 576px) {
+          font-size: 0.78rem;
+        }
 
         a {
           color: $color-text-muted;
@@ -115,6 +123,10 @@
       font-size: 1.5rem;
       margin-bottom: $spacing-sm;
 
+      @media (max-width: 576px) {
+        font-size: 1.2rem;
+      }
+
       .footer-logo {
         height: 35px;
         filter: grayscale(100%) brightness(200%);
@@ -127,6 +139,10 @@
       font-size: 0.95rem;
       line-height: 1.6;
       margin-bottom: $spacing-md;
+
+      @media (max-width: 576px) {
+        font-size: 0.8rem;
+      }
     }
 
     .social-links {
@@ -164,12 +180,14 @@
         span {
           font-size: 0.9rem;
           font-weight: 500;
+
+          @media (max-width: 576px) {
+            font-size: 0.75rem;
+          }
         }
       }
     }
   }
-
-
 
   .footer-bottom {
     display: grid;
@@ -202,6 +220,10 @@
         font-family: inherit;
         font-size: 0.9rem;
         transition: border-color 0.3s ease;
+
+        @media (max-width: 576px) {
+          font-size: 0.75rem;
+        }
         
         &:focus {
           border-color: $color-primary;
@@ -220,6 +242,10 @@
       margin: 0;
       justify-self: center;
       text-align: center;
+
+      @media (max-width: 576px) {
+        font-size: 0.72rem;
+      }
     }
 
     .terms-link {
@@ -234,6 +260,10 @@
         font-size: 0.85rem;
         text-decoration: none;
         transition: color 0.3s ease;
+
+        @media (max-width: 576px) {
+          font-size: 0.72rem;
+        }
 
         &:hover {
           color: $color-primary;

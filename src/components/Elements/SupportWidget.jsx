@@ -32,6 +32,10 @@ body.mobile-menu-open .support-widget-container {
     bottom: 20px;
     right: 20px;
   }
+  .support-tooltip {
+    font-size: 0.76rem;
+    padding: 10px 14px;
+  }
 }
 .support-tooltip {
   position: absolute;

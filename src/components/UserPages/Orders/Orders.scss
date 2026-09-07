@@ -41,6 +41,14 @@
     margin: 0 0 $spacing-xs;
     color: $color-text;
     letter-spacing: -0.5px;
+
+    @media (max-width: 768px) {
+      font-size: 1.6rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.4rem;
+    }
   }
 
   &__desc {
@@ -49,6 +57,14 @@
     margin: 0;
     line-height: 1.5;
     max-width: 560px;
+
+    @media (max-width: 768px) {
+      font-size: 0.84rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 0.78rem;
+    }
   }
 }
 
@@ -306,6 +322,10 @@
     letter-spacing: 0.5px;
     color: #ffffff;
     font-family: monospace, monospace;
+
+    @media (max-width: 768px) {
+      font-size: 0.76rem;
+    }
   }
 
   &__copy-btn {
@@ -333,6 +353,10 @@
   &__date {
     font-size: 0.84rem;
     color: rgba(255, 255, 255, 0.6);
+
+    @media (max-width: 768px) {
+      font-size: 0.72rem;
+    }
   }
 
   &__status-badge {
@@ -346,6 +370,11 @@
     letter-spacing: 0.2px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
+
+    @media (max-width: 768px) {
+      font-size: 0.72rem;
+      padding: 4px 10px;
+    }
   }
 
   &__status-dot {
@@ -464,6 +493,10 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 }
 
 .order-card__item-category {
@@ -559,6 +592,10 @@
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.02em;
+
+  @media (max-width: 768px) {
+    font-size: 1.05rem;
+  }
 }
 
 .order-card__actions {
@@ -586,6 +623,11 @@
   font-size: 0.84rem;
   font-weight: 600;
   padding: 8px 18px;
+
+  @media (max-width: 768px) {
+    font-size: 0.76rem;
+    padding: 7px 14px;
+  }
 
   &--receipt {
     background: rgba(255, 255, 255, 0.08) !important;

@@ -290,8 +290,12 @@
 
   .fortune-hero-text {
     h1 {
-      font-size: 1.7rem;
+      font-size: 1.36rem;
       margin-bottom: 0;
+
+      @media (max-width: 480px) {
+        font-size: 1.24rem;
+      }
     }
 
     p {
@@ -305,5 +309,23 @@
 
   .fortune-spin-btn {
     min-width: 180px;
+    font-size: 0.88rem;
+  }
+
+  .prize-heading {
+    font-size: 1.4rem;
+  }
+
+  .prize-label {
+    font-size: 1.08rem;
+  }
+
+  .prize-desc {
+    font-size: 0.82rem;
+  }
+
+  .prize-code {
+    font-size: 0.96rem;
+    padding: $spacing-sm $spacing-md;
   }
 }

@@ -178,7 +178,7 @@ const Home = () => {
             {t('home_hero_title')}
           </h1>
           <p className="hero-subtitle" data-id="home_hero_subtitle">
-            {t('home_hero_subtitle_1')}<br />
+            {t('home_hero_subtitle_1')}<br className="hero-subtitle-br" />
             {t('home_hero_subtitle_2')}
           </p>
           <div className="hero-actions">

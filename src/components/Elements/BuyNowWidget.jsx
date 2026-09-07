@@ -34,6 +34,10 @@ body.mobile-menu-open .buynow-widget-container {
     bottom: 20px;
     gap: 10px;
   }
+  .buynow-widget {
+    padding: 0 16px;
+    font-size: 0.76rem;
+  }
 }
 .buynow-widget {
   padding: 0 24px;

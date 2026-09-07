@@ -620,7 +620,7 @@
   
   .auth-back-link {
     margin-bottom: 16px;
-    font-size: 0.9rem;
+    font-size: 0.78rem;
   }
   
   .auth-card-right {
@@ -631,11 +631,11 @@
     margin-bottom: 22px;
 
     h2 {
-      font-size: 1.45rem;
+      font-size: 1.16rem;
     }
     
     p {
-      font-size: 0.88rem;
+      font-size: 0.75rem;
     }
   }
 
@@ -644,23 +644,53 @@
     
     .input-group input {
       padding: 13px 15px;
-      font-size: 1rem;
+      font-size: 0.88rem;
+    }
+
+    .terms-agreement label {
+      font-size: 0.74rem;
+    }
+
+    .error-wrapper .auth-error {
+      font-size: 0.78rem;
     }
 
     .auth-submit-btn {
-      min-height: 48px;
-      padding: 14px;
-      font-size: 1rem;
+      min-height: 46px;
+      padding: 13px;
+      font-size: 0.88rem;
     }
 
     .auth-google-btn {
-      flex: 0 0 48px;
-      width: 48px;
-      height: 48px;
-      min-width: 48px;
-      min-height: 48px;
-      max-width: 48px;
-      max-height: 48px;
+      flex: 0 0 46px;
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      min-height: 46px;
+      max-width: 46px;
+      max-height: 46px;
+    }
+
+    .auth-forgot-password-btn {
+      font-size: 0.76rem;
+    }
+
+    .auth-footer {
+      font-size: 0.76rem;
+    }
+
+    .two-factor-digit {
+      width: 46px;
+      height: 52px;
+      font-size: 1.44rem;
+    }
+
+    .two-factor-resend-btn {
+      font-size: 0.76rem;
+    }
+
+    .two-factor-back-btn {
+      font-size: 0.72rem;
     }
   }
 }

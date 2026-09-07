@@ -78,6 +78,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
 
+  @media (max-width: 768px) {
+    font-size: 0.72rem;
+    padding: 4px 12px;
+  }
+
   &--429, &--warning {
     background: rgba(245, 158, 11, 0.15);
     border-color: rgba(245, 158, 11, 0.35);
@@ -169,6 +174,14 @@
   background: linear-gradient(135deg, #ffffff 40%, rgba(255, 255, 255, 0.4) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+
+  @media (max-width: 768px) {
+    font-size: 2.8rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 2.4rem;
+  }
 }
 
 .error-title {
@@ -176,6 +189,14 @@
   font-weight: 800;
   margin: 0 0 $spacing-sm;
   color: $color-text;
+
+  @media (max-width: 768px) {
+    font-size: 1.28rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.15rem;
+  }
 }
 
 .error-description {
@@ -184,6 +205,14 @@
   line-height: 1.6;
   margin: 0 0 $spacing-xl;
   max-width: 440px;
+
+  @media (max-width: 768px) {
+    font-size: 0.84rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.78rem;
+  }
 }
 
 .error-countdown-container {
@@ -208,6 +237,10 @@
   font-size: 0.88rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
+
+  @media (max-width: 768px) {
+    font-size: 0.76rem;
+  }
 
   .countdown-timer-value {
     color: #fcd34d;
@@ -269,6 +302,7 @@
 
     .cta-btn {
       width: 100%;
+      font-size: 0.88rem;
     }
   }
 }

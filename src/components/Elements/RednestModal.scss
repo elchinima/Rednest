@@ -66,6 +66,10 @@
     margin: 0 0 $spacing-xs;
     color: $color-text;
     letter-spacing: -0.3px;
+
+    @media (max-width: 480px) {
+      font-size: 1.15rem;
+    }
   }
 
   &__text {
@@ -74,6 +78,10 @@
     line-height: 1.55;
     margin: 0 0 $spacing-xl;
     padding: 0 8px;
+
+    @media (max-width: 480px) {
+      font-size: 0.78rem;
+    }
   }
 
   &__actions {
@@ -96,6 +104,12 @@
     cursor: pointer;
     border: none;
     transition: all 0.25s ease;
+
+    @media (max-width: 480px) {
+      font-size: 0.82rem;
+      min-height: 40px;
+      padding: 9px 16px;
+    }
 
     &--cancel {
       background: rgba(255, 255, 255, 0.08);

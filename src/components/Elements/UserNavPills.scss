@@ -295,12 +295,20 @@
       }
 
       .user-nav-capsule__name {
-        font-size: 0.95rem;
+        font-size: 0.8rem;
+
+        @media (max-width: 480px) {
+          font-size: 0.76rem;
+        }
       }
 
       .user-nav-capsule__balance-amount,
       .user-nav-capsule__balance-symbol {
-        font-size: 0.95rem;
+        font-size: 0.8rem;
+
+        @media (max-width: 480px) {
+          font-size: 0.76rem;
+        }
       }
 
       .user-nav-capsule__dropdown-wrapper {
@@ -341,6 +349,8 @@
 
         .user-nav-capsule__dropdown-item {
           margin-top: 0 !important;
+          font-size: 0.76rem;
+          padding: 8px 12px;
         }
       }
 

@@ -41,7 +41,11 @@
     -webkit-text-fill-color: transparent;
 
     @media (max-width: 768px) {
-      font-size: 1.85rem;
+      font-size: 1.48rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 1.32rem;
     }
   }
 
@@ -52,7 +56,11 @@
     margin: 0 auto;
 
     @media (max-width: 768px) {
-      font-size: 0.9rem;
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 480px) {
+      font-size: 0.74rem;
     }
   }
 }
@@ -96,6 +104,10 @@
       font-weight: 800;
       color: #ffffff;
       margin: 0;
+
+      @media (max-width: 768px) {
+        font-size: 1rem;
+      }
     }
 
     p {
@@ -103,6 +115,10 @@
       color: rgba(255, 255, 255, 0.65);
       margin: 0;
       line-height: 1.4;
+
+      @media (max-width: 768px) {
+        font-size: 0.74rem;
+      }
     }
   }
 
@@ -559,12 +575,20 @@
     line-height: 1.25;
     letter-spacing: -0.01em;
     margin-top: 2px;
+
+    @media (max-width: 768px) {
+      font-size: 0.94rem;
+    }
   }
 
   .promo-ticket__desc {
     font-size: 0.84rem;
     color: rgba(255, 255, 255, 0.7);
     line-height: 1.35;
+
+    @media (max-width: 768px) {
+      font-size: 0.74rem;
+    }
   }
 }
 

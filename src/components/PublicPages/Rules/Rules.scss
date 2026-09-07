@@ -73,6 +73,11 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
+  @media (max-width: 768px) {
+    font-size: 0.72rem;
+    padding: 4px 12px;
+  }
+
   svg {
     stroke: $color-primary-hover;
   }
@@ -88,7 +93,11 @@
   -webkit-text-fill-color: transparent;
 
   @media (max-width: 768px) {
-    font-size: 2.1rem;
+    font-size: 1.68rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.48rem;
   }
 }
 
@@ -99,7 +108,11 @@
   line-height: 1.5;
 
   @media (max-width: 768px) {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.78rem;
   }
 }
 
@@ -152,6 +165,10 @@
   font-weight: 700;
   margin-bottom: $spacing-sm;
   color: $color-text;
+
+  @media (max-width: 768px) {
+    font-size: 1.12rem;
+  }
 }
 
 .rules-placeholder-text {
@@ -160,6 +177,10 @@
   line-height: 1.6;
   max-width: 520px;
   margin-bottom: $spacing-xl;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 }
 
 .rules-meta-info {
@@ -178,6 +199,10 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.6);
+
+  @media (max-width: 768px) {
+    font-size: 0.68rem;
+  }
 }
 
 .rules-actions {
@@ -195,6 +220,7 @@
       width: 100%;
       text-align: center;
       justify-content: center;
+      font-size: 0.85rem;
     }
   }
 }
