@@ -99,8 +99,8 @@ const Footer = () => {
 
   const socialMedia = activeContent?.socialMedia || activeContent?.SocialMedia || {};
   const instagramUrl = socialMedia.instagram || socialMedia.Instagram || '';
-  const tiktokUrl = socialMedia.tiktok || socialMedia.TikTok || '';
-  const whatsappUrl = socialMedia.whatsApp || socialMedia.WhatsApp || '';
+  const tiktokUrl = socialMedia.tikTok || socialMedia.tiktok || socialMedia.TikTok || '';
+  const whatsappUrl = socialMedia.whatsApp || socialMedia.whatsapp || socialMedia.WhatsApp || '';
 
   const quickLinks = activeContent?.quickLinks || activeContent?.QuickLinks || [];
   const contactUs = activeContent?.contactUs || activeContent?.ContactUs || {};
