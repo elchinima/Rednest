@@ -18,10 +18,15 @@ const nestCappuccinoImg = `${STORAGE_BASE_URL}/nest_cappuccino_9876543290.webp`;
 const hotChocolateImg = `${STORAGE_BASE_URL}/hot_chocolate_7690568000.webp`;
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
+import { useLang } from '../../../utils/useLang';
+import { getHomeTranslation } from './Lang';
 import './Home.scss';
 
 const Home = () => {
   const navigate = useNavigate();
+  const lang = useLang();
+  const t = (dataId) => getHomeTranslation(lang, dataId);
+
   const videoRef = useRef(null);
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
@@ -169,15 +174,17 @@ const Home = () => {
         <div className="hero-overlay"></div>
 
         <div className="hero-content">
-          <h1 className="hero-title">
-            Awaken Your <span className="highlight">Senses</span>
+          <h1 className="hero-title" data-id="home_hero_title">
+            {t('home_hero_title')}
           </h1>
-          <p className="hero-subtitle">
-            Experience the rich, bold flavors of our premium coffee blends.<br />
-            Crafted with passion, served with perfection.
+          <p className="hero-subtitle" data-id="home_hero_subtitle">
+            {t('home_hero_subtitle_1')}<br />
+            {t('home_hero_subtitle_2')}
           </p>
           <div className="hero-actions">
-            <Link to="/catalog" className="cta-btn lg">Explore Menu</Link>
+            <Link to="/catalog" className="cta-btn lg" data-id="home_hero_btn">
+              {t('home_hero_btn')}
+            </Link>
           </div>
         </div>
       </section>
@@ -194,22 +201,22 @@ const Home = () => {
             <div className="feature-icon">
               <img src={premiumRoastIcon} alt="Premium Roast" className="feature-svg" />
             </div>
-            <h3>Premium Roast</h3>
-            <p>Sourced from the finest farms around the globe for an unforgettable taste.</p>
+            <h3 data-id="home_feature_1_title">{t('home_feature_1_title')}</h3>
+            <p data-id="home_feature_1_desc">{t('home_feature_1_desc')}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">
               <img src={cozyAtmosphereIcon} alt="Cozy Atmosphere" className="feature-svg" />
             </div>
-            <h3>Cozy Atmosphere</h3>
-            <p>A perfect environment to relax, work, or catch up with friends.</p>
+            <h3 data-id="home_feature_2_title">{t('home_feature_2_title')}</h3>
+            <p data-id="home_feature_2_desc">{t('home_feature_2_desc')}</p>
           </div>
           <div className="feature-card">
             <div className="feature-icon">
               <img src={ecoFriendlyIcon} alt="Eco-Friendly" className="feature-svg" />
             </div>
-            <h3>Eco-Friendly</h3>
-            <p>Committed to sustainable practices and 100% recyclable packaging.</p>
+            <h3 data-id="home_feature_3_title">{t('home_feature_3_title')}</h3>
+            <p data-id="home_feature_3_desc">{t('home_feature_3_desc')}</p>
           </div>
         </div>
       </motion.section>
@@ -222,8 +229,8 @@ const Home = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="section-header">
-          <h2>Our Favorites</h2>
-          <p>Discover the drinks our customers love the most.</p>
+          <h2 data-id="home_favorites_title">{t('home_favorites_title')}</h2>
+          <p data-id="home_favorites_subtitle">{t('home_favorites_subtitle')}</p>
         </div>
         <div className="menu-grid">
           {favoritesLoading ? (
@@ -234,7 +241,7 @@ const Home = () => {
             ))
           ) : favoriteProducts.length === 0 ? (
             <div className="empty-favorites">
-              <p>No products currently available.</p>
+              <p data-id="home_favorites_empty">{t('home_favorites_empty')}</p>
             </div>
           ) : (
             favoriteProducts.map((prod) => {
@@ -252,7 +259,7 @@ const Home = () => {
 
               return (
                 <div key={prod.id} className="menu-item-card">
-                  <div className="favorite-badge">Favorite</div>
+                  <div className="favorite-badge" data-id="home_favorites_badge">{t('home_favorites_badge')}</div>
                   <img
                     src={prod.images?.image || prod.images?.icon || cappuccinoImg}
                     alt={prod.name}
@@ -279,7 +286,9 @@ const Home = () => {
           )}
         </div>
         <div className="section-actions">
-          <Link to="/catalog" className="cta-btn secondary">View Full Menu</Link>
+          <Link to="/catalog" className="cta-btn secondary" data-id="home_favorites_btn">
+            {t('home_favorites_btn')}
+          </Link>
         </div>
       </motion.section>
 
@@ -292,15 +301,12 @@ const Home = () => {
       >
         <div className="about-grid">
           <div className="about-content">
-            <h2>The Rednest Experience</h2>
-            <p>
-              At Rednest, we believe that coffee is more than just a drink—it's a ritual.
-              We meticulously source our beans from sustainable farms across the globe,
-              ensuring every cup you enjoy is crafted with passion and respect for the environment.
+            <h2 data-id="home_about_title">{t('home_about_title')}</h2>
+            <p data-id="home_about_p1">
+              {t('home_about_p1')}
             </p>
-            <p>
-              Our baristas are artisans, dedicated to pouring perfection into every latte, cappuccino, and cold brew.
-              Step into our cozy atmosphere and let us awaken your senses.
+            <p data-id="home_about_p2">
+              {t('home_about_p2')}
             </p>
           </div>
           {isDesktop && (
@@ -319,18 +325,19 @@ const Home = () => {
         transition={{ duration: 0.6 }}
       >
         <div className="newsletter-container">
-          <h2>Join the Rednest Club</h2>
-          <p>Subscribe to receive exclusive offers, new roast announcements, and brewing tips directly to your inbox.</p>
+          <h2 data-id="home_club_title">{t('home_club_title')}</h2>
+          <p data-id="home_club_desc">{t('home_club_desc')}</p>
           <form className="newsletter-form" onSubmit={handleSubscribeSubmit}>
             <input 
               type="email" 
-              placeholder="Enter your email address" 
+              placeholder={t('home_club_placeholder')} 
               value={subscribeEmail}
               onChange={(e) => setSubscribeEmail(e.target.value)}
               required 
+              data-id="home_club_placeholder"
             />
-            <button type="submit" className="cta-btn" id="subscribe-btn" disabled={subscribeLoading}>
-              {subscribeLoading ? 'Sending...' : 'Subscribe'}
+            <button type="submit" className="cta-btn" id="subscribe-btn" disabled={subscribeLoading} data-id="home_club_btn">
+              {subscribeLoading ? t('home_club_btn_loading') : t('home_club_btn')}
             </button>
           </form>
         </div>

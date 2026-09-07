@@ -11,8 +11,10 @@ import addIcon from '../../../assets/icons/add.svg';
 import successIcon from '../../../assets/icons/success-animated.svg';
 import { useBasket } from '../../../context/BasketContext';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
+import { useLang } from '../../../utils/useLang';
+import { getCatalogTranslation, getCategoryTitle } from './Lang';
 
-const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loadedImages }) => {
+const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loadedImages, lang }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef(null);
 
@@ -58,7 +60,7 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
       viewport={{ once: true, amount: 0.1 }} 
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
-      <h2 className="category-title">{categoryObj.category}</h2>
+      <h2 className="category-title" data-id="catalog_category_title">{getCategoryTitle(lang, categoryObj.category)}</h2>
       <div className="catalog-grid" ref={scrollRef} onScroll={handleScroll}>
         {categoryObj.items.map((item) => {
           const rawBasePrice = item.prices?.price ?? item.price;
@@ -117,17 +119,20 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
               <button 
                 className="add-to-cart-btn"
                 onClick={() => onAddItem(item.id)}
+                aria-label={getCatalogTranslation(lang, 'catalog_add_btn')}
+                data-id="catalog_add_btn"
               >
                 {addedAnimations[item.id] ? (
                   <object 
                     type="image/svg+xml" 
                     data={successIcon} 
-                    aria-label="Added"
+                    aria-label={getCatalogTranslation(lang, 'catalog_added_label')}
+                    data-id="catalog_added_label"
                   />
                 ) : (
                   <img 
                     src={addIcon} 
-                    alt="Add" 
+                    alt={getCatalogTranslation(lang, 'catalog_add_btn')} 
                   />
                 )}
               </button>
@@ -153,6 +158,9 @@ const CategorySection = ({ categoryObj, index, onAddItem, addedAnimations, loade
 };
 
 const Catalog = () => {
+  const lang = useLang();
+  const t = (dataId) => getCatalogTranslation(lang, dataId);
+
   const [addedAnimations, setAddedAnimations] = useState({});
   const [menuData, setMenuData] = useState([]);
   const [isMenuLoading, setIsMenuLoading] = useState(true);
@@ -229,8 +237,8 @@ const Catalog = () => {
 
       <main className="catalog-main">
         <div className="catalog-hero">
-          <h1>Our Menu</h1>
-          <p>Discover our carefully crafted beverages and delightful desserts.</p>
+          <h1 data-id="catalog_hero_title">{t('catalog_hero_title')}</h1>
+          <p data-id="catalog_hero_subtitle">{t('catalog_hero_subtitle')}</p>
         </div>
 
         <div className="menu-categories">
@@ -251,6 +259,7 @@ const Catalog = () => {
                 onAddItem={handleAddItem}
                 addedAnimations={addedAnimations}
                 loadedImages={loadedImages}
+                lang={lang}
               />
             ))
           )}

@@ -81,6 +81,15 @@ const Footer = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleLangSync = (e) => {
+      const current = e?.detail || localStorage.getItem('rednest_language') || 'ru';
+      setLanguage(current);
+    };
+    window.addEventListener('languagechange', handleLangSync);
+    return () => window.removeEventListener('languagechange', handleLangSync);
+  }, []);
+
   const handleLanguageChange = (newLang) => {
     setLanguage(newLang);
     try {

@@ -1,8 +1,13 @@
 import React from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import { useLang } from '../../../utils/useLang';
+import { getHomeTranslation } from './Lang';
 import '../../Elements/RednestModal.scss';
 
 const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegister }) => {
+  const lang = useLang();
+  const t = (id) => getHomeTranslation(lang, id);
+
   const isAlreadySubscribed = errorType === 'ALREADY_SUBSCRIBED' || 
     (typeof message === 'string' && message.toLowerCase().includes('already subscribed'));
   
@@ -10,10 +15,10 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
     (typeof message === 'string' && message.toLowerCase().includes('not registered'));
 
   const title = isAlreadySubscribed 
-    ? 'Already Subscribed' 
+    ? (lang === 'ru' ? 'Уже подписаны' : lang === 'az' ? 'Artıq abunə olmusunuz' : 'Already Subscribed')
     : isAccountRequired 
-      ? 'Account Required' 
-      : 'Subscription Notice';
+      ? (lang === 'ru' ? 'Требуется аккаунт' : lang === 'az' ? 'Hesab tələb olunur' : 'Account Required')
+      : t('home_modal_err_title');
 
   return (
     <AnimatedModalWrapper
@@ -22,7 +27,7 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
       targetBorderRadius="24px"
     >
       <div className="rednest-modal" onClick={(e) => e.stopPropagation()}>
-        <div className={`rednest-modal__icon ${isAlreadySubscribed ? 'rednest-modal__icon--warning' : 'rednest-modal__icon--warning'}`}>
+        <div className="rednest-modal__icon rednest-modal__icon--warning">
           {isAlreadySubscribed ? (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -37,11 +42,11 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
           )}
         </div>
 
-        <h3 className="rednest-modal__title">{title}</h3>
+        <h3 className="rednest-modal__title" data-id="home_modal_err_title">{title}</h3>
         <p className="rednest-modal__text">
           {message || (isAlreadySubscribed 
-            ? 'This email is already subscribed to the newsletter. If you have questions or need assistance, please contact technical support.' 
-            : 'This email is not registered. Please create an account first.')}
+            ? (lang === 'ru' ? 'Этот адрес электронной почты уже подписан на рассылку. Если у вас возникли вопросы, свяжитесь со службой поддержки.' : lang === 'az' ? 'Bu e-poç ünvanı artıq bülletenə abunədir. Suallarınız varsa, texniki dəstəklə əlaqə saxlayın.' : 'This email is already subscribed to the newsletter. If you have questions or need assistance, please contact technical support.')
+            : (lang === 'ru' ? 'Этот адрес не зарегистрирован. Пожалуйста, сначала создайте аккаунт.' : lang === 'az' ? 'Bu e-poç qeydiyyatdan keçməyib. Zəhmət olmasa, əvvəlcə hesab yaradın.' : 'This email is not registered. Please create an account first.'))}
         </p>
 
         <div className="rednest-modal__actions">
@@ -49,8 +54,9 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
             type="button"
             className="rednest-modal__btn rednest-modal__btn--cancel"
             onClick={onClose}
+            data-id="home_modal_err_close"
           >
-            Close
+            {t('home_modal_err_close')}
           </button>
           {isAlreadySubscribed && (
             <a
@@ -63,7 +69,7 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
               }}
               onClick={onClose}
             >
-              Contact Support
+              {lang === 'ru' ? 'Служба поддержки' : lang === 'az' ? 'Dəstək xidməti' : 'Contact Support'}
             </a>
           )}
           {!isAlreadySubscribed && isAccountRequired && onOpenRegister && (
@@ -75,8 +81,9 @@ const SubscribeErrorModal = ({ isOpen, onClose, message, errorType, onOpenRegist
                 onClose();
                 onOpenRegister();
               }}
+              data-id="home_modal_err_create_acc"
             >
-              Sign Up
+              {t('home_modal_err_create_acc')}
             </button>
           )}
         </div>

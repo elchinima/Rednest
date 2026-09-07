@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import smileyAnimated from '../../assets/icons/smiley-animated.svg';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 
 const supportStyles = `
 .support-widget-container {
@@ -101,6 +103,8 @@ body.mobile-menu-open .support-widget-container {
 `;
 
 const SupportWidget = () => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -144,12 +148,13 @@ const SupportWidget = () => {
     <>
       <style>{supportStyles}</style>
       <div className={`support-widget-container ${isVisible ? 'visible' : ''}`}>
-        <span className="support-tooltip">
-          Ready to help you with your choice
+        <span className="support-tooltip" data-id="widget_support_tooltip">
+          {t('widget_support_tooltip')}
         </span>
         <button 
           className="support-widget" 
-          aria-label="Support chat" 
+          aria-label={t('widget_support_aria')} 
+          data-id="widget_support_aria"
           onClick={() => {
             if (!isAuthenticated) {
               navigate('/login');

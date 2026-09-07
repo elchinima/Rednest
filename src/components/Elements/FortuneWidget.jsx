@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fortuneWheel from '../../assets/icons/fortune-wheel.svg';
 import { useAuth } from '../../context/AuthContext';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 
 const fortuneStyles = `
 .fortune-widget-container {
@@ -101,6 +103,8 @@ body.mobile-menu-open .fortune-widget-container {
 `;
 
 const FortuneWidget = () => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -154,13 +158,14 @@ const FortuneWidget = () => {
       <div className={`fortune-widget-container ${isVisible ? 'visible' : ''}`}>
         <button 
           className="fortune-widget" 
-          aria-label="Wheel of Fortune" 
+          aria-label={t('widget_fortune_aria')} 
+          data-id="widget_fortune_aria"
           onClick={handleFortuneClick}
         >
           <img src={fortuneWheel} alt="Fortune" />
         </button>
-        <span className="fortune-tooltip">
-          Spin the wheel for a gift!
+        <span className="fortune-tooltip" data-id="widget_fortune_tooltip">
+          {t('widget_fortune_tooltip')}
         </span>
       </div>
     </>

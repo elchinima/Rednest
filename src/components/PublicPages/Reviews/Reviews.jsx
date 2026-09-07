@@ -8,10 +8,14 @@ import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime, formatTimeAgo } from './reviewsData';
+import { useLang } from '../../../utils/useLang';
+import { getReviewsTranslation, getReviewCategoryLabel } from './Lang';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import './Reviews.scss';
 
 const Reviews = () => {
+  const lang = useLang();
+  const t = (dataId) => getReviewsTranslation(lang, dataId);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -244,7 +248,7 @@ const Reviews = () => {
     if (found && found.id !== 'all') {
       return (
         <span className="review-category-chip">
-          {found.icon} {found.label}
+          {found.icon} {getReviewCategoryLabel(lang, found.id)}
         </span>
       );
     }
@@ -267,9 +271,9 @@ const Reviews = () => {
 
         <div className="reviews-container">
           <div className="reviews-hero">
-            <h1>Review</h1>
-            <p>
-              Discover authentic thoughts and stories from our coffee community.
+            <h1 data-id="reviews_hero_title">{t('reviews_hero_title')}</h1>
+            <p data-id="reviews_hero_subtitle">
+              {t('reviews_hero_subtitle')}
             </p>
 
             <div className="reviews-overall-badge">
@@ -280,7 +284,7 @@ const Reviews = () => {
                 </svg>
               </div>
               <span className="score-divider">·</span>
-              <span className="score-count">{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+              <span className="score-count" data-id="reviews_score_count">{reviews.length} {reviews.length === 1 ? t('reviews_count_singular') : t('reviews_count_plural')}</span>
             </div>
           </div>
 
@@ -293,7 +297,7 @@ const Reviews = () => {
                 title="Go to My Reviews page"
               >
                 <span className="cat-icon">👤</span>
-                <span>My Reviews</span>
+                <span data-id="reviews_my_reviews">{t('reviews_my_reviews')}</span>
                 {myReviewsCount > 0 && <span className="cat-count cat-count--my">{myReviewsCount}</span>}
               </button>
             )}
@@ -311,7 +315,7 @@ const Reviews = () => {
                   onClick={() => handleSelectCategory(cat.id)}
                 >
                   <span className="cat-icon">{cat.icon}</span>
-                  <span>{cat.label}</span>
+                  <span data-id={`reviews_cat_${cat.id.toLowerCase()}`}>{getReviewCategoryLabel(lang, cat.id)}</span>
                   {count > 0 && <span className="cat-count">{count}</span>}
                 </button>
               );
@@ -321,7 +325,7 @@ const Reviews = () => {
           {loading ? (
             <div className="reviews-loading-wrapper">
               <img src={loaderIcon} alt="Loading reviews" className="reviews-loading-spinner" />
-              <span>Loading reviews...</span>
+              <span data-id="reviews_loading">{t('reviews_loading')}</span>
             </div>
           ) : filteredReviews.length === 0 ? (
             <div className="reviews-empty-state">
@@ -336,13 +340,13 @@ const Reviews = () => {
                   </svg>
                 )}
               </div>
-              <h2>{selectedCategory === 'my' ? 'No reviews written yet' : 'No reviews found'}</h2>
-              <p>
+              <h2 data-id="reviews_empty_title">{selectedCategory === 'my' ? t('reviews_empty_my_title') : t('reviews_empty_all_title')}</h2>
+              <p data-id="reviews_empty_desc">
                 {selectedCategory === 'my'
-                  ? 'Share your experience with Rednest after completing an order to help fellow coffee lovers!'
+                  ? t('reviews_empty_my_desc')
                   : selectedCategory === 'all'
-                    ? 'Be the first to share your experience with Rednest after completing an order!'
-                    : 'There are currently no reviews in this category.'}
+                    ? t('reviews_empty_all_desc')
+                    : t('reviews_empty_cat_desc')}
               </p>
               {selectedCategory === 'my' && (
                 <div className="reviews-empty-actions">
@@ -353,15 +357,17 @@ const Reviews = () => {
                       if (!isAuthenticated) navigate('/login');
                       else setIsWriteModalOpen(true);
                     }}
+                    data-id="reviews_write_btn"
                   >
-                    Write a Review
+                    {t('reviews_write_btn')}
                   </button>
                   <button
                     type="button"
                     className="cta-btn sm reviews-empty-cta reviews-empty-cta--secondary"
                     onClick={() => navigate('/orders')}
+                    data-id="reviews_card_view_order"
                   >
-                    View Orders
+                    {t('reviews_card_view_order')}
                   </button>
                 </div>
               )}
@@ -453,8 +459,8 @@ const Reviews = () => {
                               <svg viewBox="0 0 24 24" width="15" height="15" fill="#ef4444" stroke="#ef4444" strokeWidth="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                               </svg>
-                              <span>
-                                {likesCount} {likesCount === 1 ? 'like received' : 'likes received'}
+                              <span data-id="reviews_likes_received">
+                                {likesCount} {likesCount === 1 ? t('reviews_likes_singular') : t('reviews_likes_plural')}
                               </span>
                             </div>
 
@@ -462,12 +468,13 @@ const Reviews = () => {
                               type="button"
                               className="review-card-delete-text-btn"
                               onClick={() => setReviewToDelete(review)}
+                              data-id="reviews_card_delete"
                             >
                               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" />
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                               </svg>
-                              <span>Delete Review</span>
+                              <span>{t('reviews_card_delete')}</span>
                             </button>
                           </div>
                         ) : (
@@ -475,13 +482,14 @@ const Reviews = () => {
                             type="button"
                             className={`like-button ${isLiked ? 'liked' : ''}`}
                             onClick={() => handleToggleLike(review)}
-                            aria-label="Mark as helpful"
-                            title="Helpful"
+                            aria-label={t('reviews_helpful')}
+                            title={t('reviews_helpful')}
+                            data-id="reviews_helpful"
                           >
                             <svg viewBox="0 0 24 24" width="16" height="16" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
                               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
-                            <span>Helpful ({likesCount})</span>
+                            <span>{t('reviews_helpful')} ({likesCount})</span>
                           </button>
                         )}
                       </div>
@@ -504,9 +512,9 @@ const Reviews = () => {
         isOpen={!!reviewToDelete}
         onClose={() => !isDeleting && setReviewToDelete(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Review"
-        text="Are you sure you want to delete your review? You will be able to write a new review for this order again."
-        confirmLabel="Delete Review"
+        title={t('reviews_delete_modal_title')}
+        text={t('reviews_delete_modal_text')}
+        confirmLabel={t('reviews_card_delete')}
         loading={isDeleting}
       />
 

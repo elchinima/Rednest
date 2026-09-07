@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import logo from '../../assets/icons/rednest_logo.png';
 import UserNavPills from './UserNavPills';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 
 const Navbar = () => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
@@ -57,22 +61,25 @@ const Navbar = () => {
             to="/"
             className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
             onClick={handleCloseMenu}
+            data-id="nav_home"
           >
-            Home
+            {t('nav_home')}
           </Link>
           <Link
             to="/catalog"
             className={`nav-link ${location.pathname === '/catalog' ? 'active' : ''}`}
             onClick={handleCloseMenu}
+            data-id="nav_menu"
           >
-            Menu
+            {t('nav_menu')}
           </Link>
           <Link
             to="/review"
             className={`nav-link ${location.pathname === '/review' || location.pathname === '/reviews' ? 'active' : ''}`}
             onClick={handleCloseMenu}
+            data-id="nav_review"
           >
-            Review
+            {t('nav_review')}
           </Link>
         </nav>
         <UserNavPills onMenuClose={handleCloseMenu} />

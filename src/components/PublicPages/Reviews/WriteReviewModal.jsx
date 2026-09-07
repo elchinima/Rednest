@@ -3,19 +3,15 @@ import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import OrderSelectModal from './OrderSelectModal';
 import { REVIEW_CATEGORIES, formatBakuDateTime } from './reviewsData';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useLang } from '../../../utils/useLang';
+import { getReviewsTranslation, getReviewCategoryLabel, getReviewRatingLabel } from './Lang';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './WriteReviewModal.scss';
 
-const RATING_LABELS = {
-  1: 'Poor',
-  2: 'Fair',
-  3: 'Good',
-  4: 'Very Good',
-  5: 'Exceptional'
-};
-
 const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
+  const lang = useLang();
+  const t = (id) => getReviewsTranslation(lang, id);
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [category, setCategory] = useState('Delivery');
@@ -76,7 +72,7 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
   }, [eligibleOrders, selectedOrderId]);
 
   const activeRating = hoverRating || rating;
-  const currentLabel = RATING_LABELS[Math.round(activeRating)] || 'Exceptional';
+  const currentLabel = getReviewRatingLabel(lang, activeRating);
   const sliderPercentage = ((activeRating - 1) / 4) * 100;
 
   const handleSubmit = async (e) => {
@@ -158,16 +154,16 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
             </div>
-            <h2 className="review-modal__title">Write a Review</h2>
-            <p className="review-modal__desc">
-              Share your experience on your completed Rednest order
+            <h2 className="review-modal__title" data-id="reviews_modal_title">{t('reviews_modal_title')}</h2>
+            <p className="review-modal__desc" data-id="reviews_modal_desc">
+              {t('reviews_modal_desc')}
             </p>
           </div>
 
           {loadingOrders ? (
             <div className="review-modal__loader">
               <img src={loaderIcon} alt="Loading" className="review-modal__spinner" />
-              <span>Checking eligible orders...</span>
+              <span data-id="reviews_modal_loading_orders">{t('reviews_modal_loading_orders')}</span>
             </div>
           ) : eligibleOrders.length === 0 ? (
             <div className="review-modal__empty-orders">
@@ -178,16 +174,17 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
               </div>
-              <h3>No eligible orders found</h3>
-              <p>
-                You can only write a review after your order status is marked as <strong>Complete</strong>. Each order can only be reviewed once.
+              <h3 data-id="reviews_modal_empty_title">{t('reviews_modal_empty_title')}</h3>
+              <p data-id="reviews_modal_empty_desc">
+                {t('reviews_modal_empty_desc')}
               </p>
               <button
                 type="button"
                 className="cta-btn sm review-modal__btn--close"
                 onClick={handleClose}
+                data-id="reviews_modal_cancel"
               >
-                Close
+                {t('reviews_modal_cancel')}
               </button>
             </div>
           ) : (
@@ -205,8 +202,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
 
               <div className="review-modal__field review-modal__field--rating-top">
                 <div className="review-modal__rating-header">
-                  <span className="review-modal__label-title">
-                    Your Rating <span className="review-modal__required">*</span>
+                  <span className="review-modal__label-title" data-id="reviews_modal_rating_label">
+                    {t('reviews_modal_rating_label')} <span className="review-modal__required">*</span>
                   </span>
                   <div className="review-modal__rating-pill">
                     <span className="review-modal__rating-val">{Math.round(rating)}</span>
@@ -246,8 +243,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
 
               <div className="review-modal__row">
                 <div className="review-modal__field review-modal__col">
-                  <label htmlFor="rev-category">
-                    Category <span className="review-modal__required">*</span>
+                  <label htmlFor="rev-category" data-id="reviews_modal_category">
+                    {t('reviews_modal_category')} <span className="review-modal__required">*</span>
                   </label>
                   <select
                     id="rev-category"
@@ -257,15 +254,15 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                   >
                     {REVIEW_CATEGORIES.filter(c => c.id !== 'all').map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.icon} {c.label}
+                        {c.icon} {getReviewCategoryLabel(lang, c.id)}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="review-modal__field review-modal__col">
-                  <label>
-                    Select Order <span className="review-modal__required">*</span>
+                  <label data-id="reviews_modal_select_order">
+                    {t('reviews_modal_select_order')} <span className="review-modal__required">*</span>
                   </label>
                   <button
                     type="button"
@@ -284,8 +281,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                         </span>
                       </div>
                     ) : (
-                      <span className="review-modal__order-trigger-placeholder">
-                        Choose order...
+                      <span className="review-modal__order-trigger-placeholder" data-id="reviews_modal_choose_order">
+                        {t('reviews_modal_choose_order')}
                       </span>
                     )}
 
@@ -298,8 +295,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
 
               <div className="review-modal__field">
                 <div className="review-modal__label-row">
-                  <label htmlFor="rev-comment">
-                    Your Review <span className="review-modal__required">*</span>
+                  <label htmlFor="rev-comment" data-id="reviews_modal_your_review">
+                    {t('reviews_modal_your_review')} <span className="review-modal__required">*</span>
                   </label>
                   <span className={`review-modal__counter ${comment.length >= 300 ? 'limit' : ''}`}>
                     {comment.length}/300
@@ -308,7 +305,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                 <textarea
                   id="rev-comment"
                   className="review-modal__textarea--tall"
-                  placeholder="Share details about the taste, coffee quality, delivery, staff..."
+                  placeholder={t('reviews_modal_placeholder')}
+                  data-id="reviews_modal_placeholder"
                   value={comment}
                   onChange={(e) => {
                     setComment(e.target.value.slice(0, 300));
@@ -327,20 +325,22 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
                   className="cta-btn sm review-modal__btn review-modal__btn--cancel"
                   onClick={handleClose}
                   disabled={submitting}
+                  data-id="reviews_modal_cancel"
                 >
-                  Cancel
+                  {t('reviews_modal_cancel')}
                 </button>
                 <button
                   type="submit"
                   className="cta-btn sm review-modal__btn review-modal__btn--submit"
                   disabled={submitting || !selectedOrderId || !comment.trim()}
+                  data-id="reviews_modal_submit"
                 >
                   {submitting ? (
                     <span className="review-btn-loader">
                       <img src={loaderIconRed} alt="Submitting..." style={{ width: '18px', height: '18px' }} />
-                      Submitting...
+                      {t('reviews_modal_submitting')}
                     </span>
-                  ) : 'Submit Review'}
+                  ) : t('reviews_modal_submit')}
                 </button>
               </div>
             </form>

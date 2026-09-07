@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import { useLang } from '../../../utils/useLang';
+import { getHomeTranslation } from './Lang';
 import './SubscribeModal.scss';
 
 const LoaderIcon = () => (
@@ -9,6 +11,8 @@ const LoaderIcon = () => (
 );
 
 const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
+  const lang = useLang();
+  const t = (id) => getHomeTranslation(lang, id);
   const [digits, setDigits] = useState(['', '', '', '']);
   const [timer, setTimer] = useState(900);
   const [loading, setLoading] = useState(false);
@@ -142,8 +146,8 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
 
         <div className="subscribe-modal-header">
           <img src={logo} alt="Rednest Logo" className="subscribe-modal-logo" />
-          <h2>Join the Rednest Club</h2>
-          <p>Enter the 4-digit confirmation code sent to <strong>{email}</strong></p>
+          <h2 data-id="home_club_title">{t('home_club_title')}</h2>
+          <p data-id="home_modal_sub_desc">{t('home_modal_sub_desc')} <strong>{email}</strong></p>
         </div>
 
         <form className="subscribe-modal-form" onSubmit={handleVerify}>
@@ -176,12 +180,12 @@ const SubscribeModal = ({ isOpen, onClose, email, onSuccess }) => {
             <div className="subscribe-error-msg">{error}</div>
           )}
 
-          <button type="submit" className="cta-btn subscribe-submit-btn" disabled={loading || digits.join('').length < 4 || timer === 0}>
+          <button type="submit" className="cta-btn subscribe-submit-btn" disabled={loading || digits.join('').length < 4 || timer === 0} data-id="home_modal_sub_confirm_btn">
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <LoaderIcon /> Confirming...
               </span>
-            ) : 'Confirm Subscription'}
+            ) : t('home_modal_sub_confirm_btn')}
           </button>
         </form>
       </div>

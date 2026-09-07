@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBasket } from '../../context/BasketContext';
 import cartAnimated from '../../assets/icons/cart-animated.svg';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 
 const buyNowStyles = `
 .buynow-widget-container {
@@ -141,6 +143,8 @@ body.mobile-menu-open .buynow-widget-container {
 `;
 
 const BuyNowWidget = () => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
   const location = useLocation();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -189,7 +193,8 @@ const BuyNowWidget = () => {
         <button 
           className="buynow-widget" 
           onClick={() => navigate('/basket')}
-          aria-label="Buy Now"
+          aria-label={t('widget_buynow_cart')}
+          data-id="widget_buynow_cart"
         >
           <div className="buynow-icon-wrapper">
             <img src={cartAnimated} alt="Cart" className="buynow-icon" />
@@ -197,20 +202,21 @@ const BuyNowWidget = () => {
               <span key={totalCount} className="cart-badge">{totalCount}</span>
             )}
           </div>
-          <span className="buynow-widget-text">Buy Now</span>
+          <span className="buynow-widget-text" data-id="widget_buynow_cart">{t('widget_buynow_cart')}</span>
         </button>
 
         {isReviewPage && (
           <button
             className="buynow-widget review-widget-btn"
             onClick={() => window.dispatchEvent(new CustomEvent('open-write-review-modal'))}
-            aria-label="Write a Review"
+            aria-label={t('widget_buynow_write_review')}
+            data-id="widget_buynow_write_review"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="review-widget-icon">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            <span className="buynow-widget-text">Write a Review</span>
+            <span className="buynow-widget-text" data-id="widget_buynow_write_review">{t('widget_buynow_write_review')}</span>
           </button>
         )}
       </div>

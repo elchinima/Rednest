@@ -2,9 +2,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import { formatBakuDateTime } from './reviewsData';
+import { useLang } from '../../../utils/useLang';
+import { getReviewsTranslation } from './Lang';
 import './OrderSelectModal.scss';
 
 const OrderSelectModal = ({ isOpen, onClose, orders = [], selectedOrderId, onSelectOrder }) => {
+  const lang = useLang();
+  const t = (id) => getReviewsTranslation(lang, id);
+
   if (!isOpen) return null;
 
   return (
@@ -34,9 +39,9 @@ const OrderSelectModal = ({ isOpen, onClose, orders = [], selectedOrderId, onSel
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
           </div>
-          <h2 className="order-select-modal__title">Select Completed Order</h2>
-          <p className="order-select-modal__desc">
-            Choose which completed order you would like to evaluate
+          <h2 className="order-select-modal__title" data-id="reviews_order_select_title">{t('reviews_order_select_title')}</h2>
+          <p className="order-select-modal__desc" data-id="reviews_order_select_desc">
+            {t('reviews_order_select_desc')}
           </p>
         </div>
 
@@ -60,7 +65,7 @@ const OrderSelectModal = ({ isOpen, onClose, orders = [], selectedOrderId, onSel
               >
                 <div className="order-select-card__top">
                   <div className="order-select-card__id-group">
-                    <span className="order-select-card__id">Order #{shortId}</span>
+                    <span className="order-select-card__id">{t('reviews_order_card_order')} #{shortId}</span>
                     <span className="order-select-card__date" title="Time in Baku (UTC+4)">
                       {formatBakuDateTime(order.createdAt)}
                     </span>
