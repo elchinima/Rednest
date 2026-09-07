@@ -23,6 +23,10 @@ public class FooterContactUs
 public class FooterLanguageContent
 {
     public string Description { get; set; } = string.Empty;
+    public string QuickLinksTitle { get; set; } = "Quick Links";
+    public string ContactUsTitle { get; set; } = "Contact Us";
+    public string TermsOfUseTitle { get; set; } = "Terms of Use";
+    public string CopyrightText { get; set; } = "All rights reserved.";
     public FooterSocialMedia SocialMedia { get; set; } = new();
     public List<FooterQuickLink> QuickLinks { get; set; } = new();
     public FooterContactUs ContactUs { get; set; } = new();

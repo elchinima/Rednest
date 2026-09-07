@@ -2501,6 +2501,38 @@ public class AdminController : ControllerBase
         }
     }
 
+    [HttpPut("footer")]
+    public async Task<IActionResult> UpdateFooter([FromBody] FooterUpdateRequest request)
+    {
+        if (!await IsAdminAuthenticatedAsync())
+            return Unauthorized(new { message = "Unauthorized." });
+
+        if (request == null || request.FooterRU == null || request.FooterEN == null || request.FooterAZ == null)
+            return BadRequest(new { message = "Invalid footer data." });
+
+        var ruJson = System.Text.Json.JsonSerializer.Serialize(request.FooterRU);
+        var enJson = System.Text.Json.JsonSerializer.Serialize(request.FooterEN);
+        var azJson = System.Text.Json.JsonSerializer.Serialize(request.FooterAZ);
+
+        var affected = await _context.Database.ExecuteSqlRawAsync(
+            @"UPDATE ""Footer"" 
+              SET ""UpdatedAt"" = NOW(), 
+                  ""FooterRU"" = {0}::jsonb, 
+                  ""FooterEN"" = {1}::jsonb, 
+                  ""FooterAZ"" = {2}::jsonb",
+            ruJson, enJson, azJson);
+
+        if (affected == 0)
+        {
+            await _context.Database.ExecuteSqlRawAsync(
+                @"INSERT INTO ""Footer"" (""UpdatedAt"", ""FooterRU"", ""FooterEN"", ""FooterAZ"") 
+                  VALUES (NOW(), {0}::jsonb, {1}::jsonb, {2}::jsonb)",
+                ruJson, enJson, azJson);
+        }
+
+        return Ok(new { message = "Footer updated successfully." });
+    }
+
     private static CookieOptions AdminSessionCookieOptions() => new()
     {
         HttpOnly = true,
@@ -2509,6 +2541,13 @@ public class AdminController : ControllerBase
         Path = "/",
         Expires = DateTimeOffset.UtcNow.AddHours(AdminSessionHours)
     };
+}
+
+public class FooterUpdateRequest
+{
+    public FooterLanguageContent FooterRU { get; set; } = new();
+    public FooterLanguageContent FooterEN { get; set; } = new();
+    public FooterLanguageContent FooterAZ { get; set; } = new();
 }
 
 public record AdminLoginRequest(string Password);
