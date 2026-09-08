@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getProfileTranslation } from './Lang';
 
 const CROP_BOX_SIZE = 260;
 
 const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loading }) => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getProfileTranslation(lang, id);
 
   const [zoom, setZoom] = useState(1);

@@ -35,3 +35,5 @@ export const useLang = () => {
 
   return lang;
 };
+
+export default useLang;

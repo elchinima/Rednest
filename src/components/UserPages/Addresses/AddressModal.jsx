@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getAddressesTranslation } from './Lang';
 import './AddressModal.scss';
 
@@ -10,7 +10,7 @@ const ButtonSpinner = () => (
 );
 
 const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getAddressesTranslation(lang, id);
   const isEditing = Boolean(addressToEdit && addressToEdit.id);
 

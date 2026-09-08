@@ -17,7 +17,7 @@ import discount50Icon from '../../../assets/icons/discount-50.svg';
 import defaultGiftIcon from '../../../assets/icons/gift-animated.svg';
 import ticketAnimatedIcon from '../../../assets/icons/ticket-animated.svg';
 import fortuneWheelDarkIcon from '../../../assets/icons/fortune-wheel-dark.svg';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getPromosTranslation } from './Lang';
 import './Promos.scss';
 
@@ -93,7 +93,7 @@ const BarcodeVisual = ({ code }) => {
 
 const Promos = () => {
   const { user } = useAuth();
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getPromosTranslation(lang, id);
 
   const [promos, setPromos] = useState([]);

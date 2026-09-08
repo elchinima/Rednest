@@ -99,7 +99,7 @@ const getStatusBadge = (status, t) => {
 };
 
 const Orders = () => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getOrdersTranslation(lang, id);
   const { user } = useAuth();
   const { addItem } = useBasket();

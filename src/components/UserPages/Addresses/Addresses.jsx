@@ -9,7 +9,7 @@ import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddressModal from './AddressModal';
 import PaymentErrorModal from '../PaymentMethods/PaymentErrorModal';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getAddressesTranslation } from './Lang';
 import './Addresses.scss';
 
@@ -51,7 +51,7 @@ const cardVariants = {
 const Addresses = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getAddressesTranslation(lang, id);
 
   const [addresses, setAddresses] = useState([]);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getPaymentMethodsTranslation } from './Lang';
 import './AddCardModal.scss';
 
@@ -37,7 +37,7 @@ export const getCardBrand = (digits) => {
 };
 
 const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getPaymentMethodsTranslation(lang, id);
 
   const [cardNumber, setCardNumber] = useState('');

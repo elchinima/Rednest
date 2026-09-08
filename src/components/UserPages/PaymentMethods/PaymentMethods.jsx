@@ -10,7 +10,7 @@ import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddCardModal from './AddCardModal';
 import PaymentErrorModal from './PaymentErrorModal';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getPaymentMethodsTranslation } from './Lang';
 import './PaymentMethods.scss';
 
@@ -52,7 +52,7 @@ const cardVariants = {
 const PaymentMethods = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getPaymentMethodsTranslation(lang, id);
 
   const [cards, setCards] = useState([]);

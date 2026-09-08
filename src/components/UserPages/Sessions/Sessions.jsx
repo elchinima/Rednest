@@ -8,7 +8,7 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getSessionsTranslation } from './Lang';
 import './Sessions.scss';
 
@@ -65,7 +65,7 @@ const Sessions = () => {
   const { user } = useAuth();
   const { requireProfileAccess } = useProfileSecurity();
   const navigate = useNavigate();
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getSessionsTranslation(lang, id);
 
   const [sessions, setSessions] = useState([]);

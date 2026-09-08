@@ -1,11 +1,11 @@
 import React from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getPaymentMethodsTranslation } from './Lang';
 import '../../Elements/RednestModal.scss';
 
 const PaymentErrorModal = ({ isOpen, onClose, message, title = 'Card Error' }) => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getPaymentMethodsTranslation(lang, id);
 
   return (

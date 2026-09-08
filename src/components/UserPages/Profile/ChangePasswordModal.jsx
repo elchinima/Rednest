@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import useLang from '../../../utils/useLang';
+import { useLang } from '../../../utils/useLang';
 import { getProfileTranslation } from './Lang';
 import './ChangePasswordModal.scss';
 
@@ -25,7 +25,7 @@ const EyeIcon = ({ visible }) => (
 );
 
 const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
-  const { lang } = useLang();
+  const lang = useLang();
   const t = (id) => getProfileTranslation(lang, id);
 
   const [currentPassword, setCurrentPassword] = useState('');
