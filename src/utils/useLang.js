@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 
+export const getStoredLanguage = () => {
+  try {
+    return localStorage.getItem('rednest_language') || 'az';
+  } catch {
+    return 'az';
+  }
+};
+
+export const setStoredLanguage = (newLang) => {
+  try {
+    localStorage.setItem('rednest_language', newLang);
+    localStorage.setItem('rednest_language_updated_at', new Date().toISOString());
+    window.dispatchEvent(new CustomEvent('languagechange', { detail: newLang }));
+  } catch {}
+};
+
 export const useLang = () => {
-  const [lang, setLang] = useState(() => {
-    try {
-      return localStorage.getItem('rednest_language') || 'ru';
-    } catch {
-      return 'ru';
-    }
-  });
+  const [lang, setLang] = useState(getStoredLanguage);
 
   useEffect(() => {
     const handleLanguageChange = (e) => {
-      const newLang = e?.detail || localStorage.getItem('rednest_language') || 'ru';
+      const newLang = e?.detail || getStoredLanguage();
       setLang(newLang);
     };
 

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useProfileSecurity } from '../../context/ProfileSecurityContext';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 import LogoutModal from './LogoutModal';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
 import './UserNavPills.scss';
@@ -9,6 +11,8 @@ import './UserNavPills.scss';
 const UserNavPills = ({ onMenuClose }) => {
   const { user, authLoading, logout, isAuthenticated } = useAuth();
   const { isProfileUnlocked, requireProfileAccess, lockProfile } = useProfileSecurity();
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -65,7 +69,7 @@ const UserNavPills = ({ onMenuClose }) => {
         className="cta-btn sm user-nav-login-btn"
         onClick={() => onMenuClose && onMenuClose()}
       >
-        Log In
+        {t('user_nav_login')}
       </Link>
     );
   }
@@ -149,21 +153,21 @@ const UserNavPills = ({ onMenuClose }) => {
                   }
                 }}
               >
-                Profile
+                {t('user_nav_profile')}
               </button>
               <Link
                 to="/promos"
                 className="user-nav-capsule__dropdown-item"
                 onClick={handleProfileClick}
               >
-                Promos
+                {t('user_nav_promos')}
               </Link>
               <Link
                 to="/admin/dashboard"
                 className="user-nav-capsule__dropdown-item"
                 onClick={handleProfileClick}
               >
-                Admin
+                {t('user_nav_admin')}
               </Link>
               <button
                 type="button"
@@ -174,7 +178,7 @@ const UserNavPills = ({ onMenuClose }) => {
                   setIsLogoutModalOpen(true);
                 }}
               >
-                Log Out
+                {t('user_nav_logout')}
               </button>
             </div>
           </div>

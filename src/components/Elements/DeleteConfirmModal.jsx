@@ -1,6 +1,8 @@
 import React from 'react';
 import AnimatedModalWrapper from './AnimatedModalWrapper';
 import loaderIconRed from '../../assets/icons/loader-animated-red.svg';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 import './RednestModal.scss';
 
 const DeleteConfirmModal = ({
@@ -8,11 +10,17 @@ const DeleteConfirmModal = ({
   onClose,
   onConfirm,
   itemName,
-  title = 'Remove Item',
+  title,
   text,
-  confirmLabel = 'Remove',
+  confirmLabel,
   loading
 }) => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
+
+  const displayTitle = title || t('modal_delete_remove');
+  const displayConfirmLabel = confirmLabel || t('modal_delete_remove');
+
   return (
     <AnimatedModalWrapper
       isOpen={isOpen}
@@ -29,11 +37,19 @@ const DeleteConfirmModal = ({
           </svg>
         </div>
 
-        <h3 className="rednest-modal__title">{title}</h3>
+        <h3 className="rednest-modal__title">{displayTitle}</h3>
         <p className="rednest-modal__text">
           {text || (itemName
-            ? `Are you sure you want to remove ${itemName} from your basket?`
-            : 'Are you sure you want to remove this item from your basket?')}
+            ? (lang === 'az'
+                ? `${itemName} səbətinizdən silinsin?`
+                : lang === 'en'
+                  ? `Are you sure you want to remove ${itemName} from your basket?`
+                  : `Вы уверены, что хотите удалить ${itemName} из корзины?`)
+            : (lang === 'az'
+                ? 'Bu məhsulu silmək istədiyinizə əminsiniz?'
+                : lang === 'en'
+                  ? 'Are you sure you want to remove this item?'
+                  : 'Вы уверены, что хотите удалить этот элемент?'))}
         </p>
 
         <div className="rednest-modal__actions">
@@ -43,7 +59,7 @@ const DeleteConfirmModal = ({
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            {t('modal_delete_cancel')}
           </button>
           <button
             type="button"
@@ -54,9 +70,9 @@ const DeleteConfirmModal = ({
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
                 <img src={loaderIconRed} alt="Loading" style={{ width: '18px', height: '18px' }} />
-                Deleting...
+                {t('modal_delete_deleting')}
               </span>
-            ) : confirmLabel}
+            ) : displayConfirmLabel}
           </button>
         </div>
       </div>

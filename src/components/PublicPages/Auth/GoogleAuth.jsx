@@ -3,11 +3,15 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { ensureClientHintsHeaders } from '../../../utils/clientHints';
+import { useLang } from '../../../utils/useLang';
+import { getAuthTranslation } from './Lang';
 import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import './GoogleAuth.scss';
 
 const GoogleAuth = () => {
+  const lang = useLang();
+  const t = (id) => getAuthTranslation(lang, id);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
@@ -103,8 +107,8 @@ const GoogleAuth = () => {
             <div className="google-auth-spinner">
               <img src={loaderIconRed} alt="Processing..." />
             </div>
-            <h2>Connecting to Google</h2>
-            <p>Authenticating your account, please wait a moment...</p>
+            <h2>{t('google_connecting_title')}</h2>
+            <p>{t('google_connecting_desc')}</p>
           </div>
         )}
 
@@ -117,13 +121,13 @@ const GoogleAuth = () => {
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             </div>
-            <h2>Account Not Found</h2>
+            <h2>{t('google_not_found_title')}</h2>
             <p className="google-auth-error-desc">
-              {errorMessage}
+              {errorMessage || t('google_not_found_desc')}
             </p>
             <div className="google-auth-actions">
               <Link to="/login" className="cta-btn google-auth-btn">
-                Go to Registration / Login
+                {t('google_not_found_btn')}
               </Link>
             </div>
           </div>
@@ -138,13 +142,13 @@ const GoogleAuth = () => {
                 <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
             </div>
-            <h2>Authentication Failed</h2>
+            <h2>{t('google_error_title')}</h2>
             <p className="google-auth-error-desc">
               {errorMessage}
             </p>
             <div className="google-auth-actions">
               <Link to="/login" className="cta-btn google-auth-btn">
-                Back to Login
+                {t('google_error_btn')}
               </Link>
             </div>
           </div>

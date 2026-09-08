@@ -3,6 +3,8 @@ import AnimatedModalWrapper from './AnimatedModalWrapper';
 import logo from '../../assets/icons/rednest_logo.png';
 import loaderIconRed from '../../assets/icons/loader-animated-red.svg';
 import { fetchWithRefresh } from '../../utils/fetchWithRefresh';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 import './ProfilePasswordModal.scss';
 
 const EyeIcon = ({ visible }) => (
@@ -23,9 +25,15 @@ const ProfilePasswordModal = ({
   isOpen,
   onClose,
   onSuccess,
-  title = 'Security Check',
-  description = 'Enter your account password to access Profile settings.',
+  title,
+  description,
 }) => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
+
+  const displayTitle = title || t('modal_security_title');
+  const displayDescription = description || t('modal_security_desc');
+
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,7 +66,13 @@ const ProfilePasswordModal = ({
     if (loading) return;
 
     if (!password.trim()) {
-      setError('Please enter your account password.');
+      setError(
+        lang === 'az'
+          ? 'Hesabınızın şifrəsini daxil edin.'
+          : lang === 'en'
+            ? 'Please enter your account password.'
+            : 'Пожалуйста, введите пароль вашей учетной записи.'
+      );
       if (inputRef.current) inputRef.current.focus();
       return;
     }
@@ -84,13 +98,27 @@ const ProfilePasswordModal = ({
           onSuccess();
         }
       } else {
-        setError(data.message || 'Incorrect password. Please try again.');
+        setError(
+          data.message || (
+            lang === 'az'
+              ? 'Yanlış şifrə. Yenidən cəhd edin.'
+              : lang === 'en'
+                ? 'Incorrect password. Please try again.'
+                : 'Неверный пароль. Попробуйте еще раз.'
+          )
+        );
         if (inputRef.current) {
           inputRef.current.select();
         }
       }
     } catch {
-      setError('Connection error. Please try again.');
+      setError(
+        lang === 'az'
+          ? 'Bağlantı xətası. Yenidən cəhd edin.'
+          : lang === 'en'
+            ? 'Connection error. Please try again.'
+            : 'Ошибка подключения. Попробуйте еще раз.'
+      );
     } finally {
       setLoading(false);
     }
@@ -116,26 +144,34 @@ const ProfilePasswordModal = ({
           <div className="profile-auth-card-left__content">
             <img src={logo} alt="Rednest" className="profile-auth-card-left__logo" />
             <h2>Rednest</h2>
-            <p>Confirm your password to securely access your personal details and account settings.</p>
+            <p>
+              {lang === 'az'
+                ? 'Şəxsi məlumatlarınıza və hesab ayarlarına təhlükəsiz giriş üçün şifrənizi təsdiqləyin.'
+                : lang === 'en'
+                  ? 'Confirm your password to securely access your personal details and account settings.'
+                  : 'Подтвердите пароль для безопасного доступа к личным данным и настройкам аккаунта.'}
+            </p>
           </div>
         </div>
 
         <div className="profile-auth-card-right">
           <div className="profile-auth-header">
             <img src={logo} alt="Rednest" className="profile-auth-header__mobile-logo" />
-            <h2>{title}</h2>
-            <p>{description}</p>
+            <h2>{displayTitle}</h2>
+            <p>{displayDescription}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="profile-auth-form" noValidate>
             <div className="profile-auth-input-group">
-              <label htmlFor="profile-auth-password">Password</label>
+              <label htmlFor="profile-auth-password">
+                {lang === 'az' ? 'Şifrə' : lang === 'en' ? 'Password' : 'Пароль'}
+              </label>
               <div className="profile-auth-input-wrap">
                 <input
                   ref={inputRef}
                   id="profile-auth-password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder={t('modal_security_placeholder')}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -175,7 +211,7 @@ const ProfilePasswordModal = ({
                 onClick={handleClose}
                 disabled={loading}
               >
-                Cancel
+                {t('modal_logout_cancel')}
               </button>
               <button
                 type="submit"
@@ -189,7 +225,7 @@ const ProfilePasswordModal = ({
                     className="profile-auth-btn-spinner"
                   />
                 ) : (
-                  'Continue'
+                  t('modal_security_unlock')
                 )}
               </button>
             </div>

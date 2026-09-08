@@ -8,13 +8,15 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
+import useLang from '../../../utils/useLang';
+import { getSessionsTranslation } from './Lang';
 import './Sessions.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const DeviceIcon = ({ type }) => {
-  const t = (type || '').toLowerCase();
-  if (t === 'mobile' || t === 'phone') {
+  const dt = (type || '').toLowerCase();
+  if (dt === 'mobile' || dt === 'phone') {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -22,7 +24,7 @@ const DeviceIcon = ({ type }) => {
       </svg>
     );
   }
-  if (t === 'tablet' || t === 'ipad') {
+  if (dt === 'tablet' || dt === 'ipad') {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
@@ -63,6 +65,8 @@ const Sessions = () => {
   const { user } = useAuth();
   const { requireProfileAccess } = useProfileSecurity();
   const navigate = useNavigate();
+  const { lang } = useLang();
+  const t = (id) => getSessionsTranslation(lang, id);
 
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -117,9 +121,9 @@ const Sessions = () => {
       setSessions((prev) =>
         prev.map((s) => (s.id === sessionId ? { ...s, isActive: false } : s))
       );
-      showToast('Session terminated successfully.');
+      showToast(t('sessions_toast_revoked'));
     } catch (err) {
-      showToast(err.message || 'Error revoking session');
+      showToast(err.message || t('sessions_toast_revoke_error'));
     } finally {
       setRevokingId(null);
     }
@@ -129,7 +133,7 @@ const Sessions = () => {
     if (!ip) return;
     navigator.clipboard.writeText(ip);
     setCopiedIp(ip);
-    showToast('IP address copied to clipboard!');
+    showToast(t('sessions_toast_ip_copied'));
     setTimeout(() => {
       setCopiedIp(null);
     }, 2000);
@@ -153,16 +157,16 @@ const Sessions = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>Active Sessions</h1>
+            <h1>{t('sessions_hero_title')}</h1>
             <p className="sessions-hero__desc">
-              Manage connected devices, monitor browser logins, and secure your Rednest account
+              {t('sessions_hero_desc')}
             </p>
           </motion.div>
 
           {loading ? (
             <div className="sessions-loading-state">
               <img src={loaderIcon} alt="Loading..." className="sessions-loader-icon" />
-              <p>Loading active sessions...</p>
+              <p>{t('sessions_loading')}</p>
             </div>
           ) : error ? (
             <div className="sessions-error-state">
@@ -173,7 +177,7 @@ const Sessions = () => {
               </svg>
               <p>{error}</p>
               <button type="button" className="cta-btn sm" onClick={fetchSessions}>
-                Try Again
+                {t('sessions_try_again')}
               </button>
             </div>
           ) : sessions.length === 0 ? (
@@ -190,10 +194,10 @@ const Sessions = () => {
                   <line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
               </div>
-              <h3>No sessions found</h3>
-              <p>No device sessions have been recorded for your account yet.</p>
+              <h3>{t('sessions_empty_title')}</h3>
+              <p>{t('sessions_empty_desc')}</p>
               <button type="button" className="cta-btn sm sessions-empty-btn" onClick={() => requireProfileAccess('/profile')}>
-                Back to Profile
+                {t('sessions_empty_btn')}
               </button>
             </motion.div>
           ) : (
@@ -228,11 +232,11 @@ const Sessions = () => {
                           <div className="session-card__device-meta">
                             <div className="session-card__title-row">
                               <h3 className="session-card__device-name">
-                                {session.deviceName || 'Unknown Device'}
+                                {session.deviceName || t('sessions_unknown_device')}
                               </h3>
                             </div>
                             <span className="session-card__device-sub">
-                              {session.operatingSystem || 'Unknown OS'} • {session.deviceType || 'Desktop'}
+                              {session.operatingSystem || t('sessions_unknown_os')} • {session.deviceType || 'Desktop'}
                             </span>
                           </div>
                         </div>
@@ -259,7 +263,7 @@ const Sessions = () => {
                           )}
                           {isCurrent && (
                             <span className="session-badge session-badge--current">
-                              <span className="pulsing-dot" /> This device
+                              <span className="pulsing-dot" /> {t('sessions_badge_current')}
                             </span>
                           )}
                           <span
@@ -267,7 +271,7 @@ const Sessions = () => {
                               isActive ? 'session-badge--active' : 'session-badge--inactive'
                             }`}
                           >
-                            {isActive ? 'Active' : 'Terminated'}
+                            {isActive ? t('sessions_badge_active') : t('sessions_badge_terminated')}
                           </span>
                         </div>
                       </div>
@@ -279,10 +283,10 @@ const Sessions = () => {
                               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                               <circle cx="12" cy="10" r="3" />
                             </svg>
-                            Location
+                            {t('sessions_detail_location')}
                           </span>
                           <span className="session-card__detail-value">
-                            {session.country || 'Unknown location'}
+                            {session.country || t('sessions_unknown_location')}
                           </span>
                         </div>
 
@@ -294,7 +298,7 @@ const Sessions = () => {
                               <line x1="6" y1="6" x2="6.01" y2="6" />
                               <line x1="6" y1="18" x2="6.01" y2="18" />
                             </svg>
-                            IP Address
+                            {t('sessions_detail_ip')}
                           </span>
                           <span className="session-card__detail-value session-card__detail-value--ip">
                             <span>{session.lastLoginIp || '—'}</span>
@@ -326,7 +330,7 @@ const Sessions = () => {
                               <circle cx="12" cy="12" r="10" />
                               <polyline points="12 6 12 12 14 14" />
                             </svg>
-                            First Signed In
+                            {t('sessions_detail_created')}
                           </span>
                           <span className="session-card__detail-value">
                             {formatBakuDate(session.createdAt)}
@@ -338,7 +342,7 @@ const Sessions = () => {
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                               <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                             </svg>
-                            Last Activity
+                            {t('sessions_detail_active')}
                           </span>
                           <span className="session-card__detail-value">
                             {formatBakuDate(session.lastActiveAt)}
@@ -352,7 +356,7 @@ const Sessions = () => {
                             <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" width="15" height="15">
                               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                             </svg>
-                            <span>Current session (cannot be terminated from here)</span>
+                            <span>{t('sessions_current_note')}</span>
                           </div>
                         ) : isActive ? (
                           <button
@@ -371,7 +375,7 @@ const Sessions = () => {
                                     height: '14px',
                                   }}
                                 />
-                                <span>Terminating...</span>
+                                <span>{t('sessions_btn_revoking')}</span>
                               </span>
                             ) : (
                               <>
@@ -389,13 +393,13 @@ const Sessions = () => {
                                   <line x1="15" y1="9" x2="9" y2="15" />
                                   <line x1="9" y1="9" x2="15" y2="15" />
                                 </svg>
-                                <span>Terminate Session</span>
+                                <span>{t('sessions_btn_revoke')}</span>
                               </>
                             )}
                           </button>
                         ) : (
                           <span className="session-card__terminated-note">
-                            Session has been terminated
+                            {t('sessions_terminated_note')}
                           </span>
                         )}
                       </div>
@@ -419,9 +423,13 @@ const Sessions = () => {
               </svg>
             </div>
             <div className="sessions-security-card__content">
-              <h3>Security Recommendations</h3>
+              <h3>{t('sessions_sec_title')}</h3>
               <p>
-                If you see an unfamiliar device or location, terminate that session immediately and consider changing your password in your <a href="#profile" onClick={(e) => { e.preventDefault(); requireProfileAccess('/profile'); }}>Profile Settings</a>. Remember to always sign out when using public or shared computers.
+                {t('sessions_sec_desc_prefix')}
+                <a href="#profile" onClick={(e) => { e.preventDefault(); requireProfileAccess('/profile'); }}>
+                  {t('sessions_sec_desc_link')}
+                </a>
+                {t('sessions_sec_desc_suffix')}
               </p>
             </div>
           </motion.div>

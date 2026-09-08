@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import useLang from '../../../utils/useLang';
+import { getProfileTranslation } from './Lang';
 import './ChangePasswordModal.scss';
 
 const ButtonSpinner = () => (
@@ -23,6 +25,9 @@ const EyeIcon = ({ visible }) => (
 );
 
 const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
+  const { lang } = useLang();
+  const t = (id) => getProfileTranslation(lang, id);
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,27 +62,27 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
     setError('');
 
     if (!currentPassword.trim()) {
-      setError('Please enter your current password.');
+      setError(t('pwd_err_current_required'));
       return;
     }
 
     if (!newPassword.trim()) {
-      setError('Please enter a new password.');
+      setError(t('pwd_err_new_required'));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long.');
+      setError(t('pwd_err_length'));
       return;
     }
 
     if (newPassword === currentPassword) {
-      setError('New password cannot be the same as current password.');
+      setError(t('pwd_err_same'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('pwd_err_mismatch'));
       return;
     }
 
@@ -99,14 +104,14 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
 
       if (response.ok) {
         resetForm();
-        onSuccess(data.message || 'Password changed successfully.');
+        onSuccess(data.message || t('pwd_success'));
         onClose();
       } else {
         setError(data.message || 'Failed to change password.');
       }
     } catch (err) {
       console.error('Password change error:', err);
-      setError('Connection error. Please try again.');
+      setError(t('pwd_err_conn'));
     } finally {
       setLoading(false);
     }
@@ -135,9 +140,9 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           </div>
-          <h2 className="change-password-modal__title">Change Password</h2>
+          <h2 className="change-password-modal__title">{t('pwd_modal_title')}</h2>
           <p className="change-password-modal__desc">
-            Enter your current password and choose a secure new one.
+            {t('pwd_modal_desc')}
           </p>
         </div>
 
@@ -154,12 +159,12 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
           )}
 
           <div className="pwd-input-group">
-            <label htmlFor="current-password">Current Password</label>
+            <label htmlFor="current-password">{t('pwd_modal_current')}</label>
             <div className="pwd-input-wrap">
               <input
                 id="current-password"
                 type={showCurrent ? 'text' : 'password'}
-                placeholder="Enter current password"
+                placeholder={t('pwd_modal_current_placeholder')}
                 value={currentPassword}
                 onChange={(e) => {
                   setCurrentPassword(e.target.value);
@@ -181,12 +186,12 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
           <div className="pwd-input-group">
-            <label htmlFor="new-password">New Password</label>
+            <label htmlFor="new-password">{t('pwd_modal_new')}</label>
             <div className="pwd-input-wrap">
               <input
                 id="new-password"
                 type={showNew ? 'text' : 'password'}
-                placeholder="At least 6 characters"
+                placeholder={t('pwd_modal_new_placeholder')}
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value);
@@ -208,12 +213,12 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
           <div className="pwd-input-group">
-            <label htmlFor="confirm-password">Confirm New Password</label>
+            <label htmlFor="confirm-password">{t('pwd_modal_confirm')}</label>
             <div className="pwd-input-wrap">
               <input
                 id="confirm-password"
                 type={showConfirm ? 'text' : 'password'}
-                placeholder="Repeat new password"
+                placeholder={t('pwd_modal_confirm_placeholder')}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -241,7 +246,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
               onClick={handleClose}
               disabled={loading}
             >
-              Cancel
+              {t('pwd_modal_btn_cancel')}
             </button>
             <button
               type="submit"
@@ -251,10 +256,10 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
               {loading ? (
                 <span className="pwd-loader-inner">
                   <ButtonSpinner />
-                  Updating...
+                  {t('pwd_modal_btn_updating')}
                 </span>
               ) : (
-                'Update Password'
+                t('pwd_modal_btn_submit')
               )}
             </button>
           </div>

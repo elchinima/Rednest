@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import './ErrorPage.scss';
+import { useLang } from '../../../utils/useLang';
+import { getErrorPageTranslation } from './Lang';
 
 const HTTP_ERROR_REGISTRY = {
   400: {
@@ -189,18 +191,42 @@ const HTTP_ERROR_REGISTRY = {
   },
 };
 
+const getLocalizedErrorDetails = (code, lang) => {
+  const t = (id) => getErrorPageTranslation(lang, id);
+  const mapping = {
+    400: { badge: t('error_400_badge'), title: t('error_400_title'), desc: t('error_400_desc') },
+    401: { badge: t('error_401_badge'), title: t('error_401_title'), desc: t('error_401_desc') },
+    403: { badge: t('error_403_badge'), title: t('error_403_title'), desc: t('error_403_desc') },
+    404: { badge: t('error_404_badge'), title: t('error_404_title'), desc: t('error_404_desc') },
+    405: { badge: t('error_405_badge'), title: t('error_405_title'), desc: t('error_405_desc') },
+    408: { badge: t('error_408_badge'), title: t('error_408_title'), desc: t('error_408_desc') },
+    409: { badge: t('error_409_badge'), title: t('error_409_title'), desc: t('error_409_desc') },
+    413: { badge: t('error_413_badge'), title: t('error_413_title'), desc: t('error_413_desc') },
+    422: { badge: t('error_422_badge'), title: t('error_422_title'), desc: t('error_422_desc') },
+    429: { badge: t('error_429_badge'), title: t('error_429_title'), desc: t('error_429_desc') },
+    500: { badge: t('error_500_badge'), title: t('error_500_title'), desc: t('error_500_desc') },
+    502: { badge: t('error_502_badge'), title: t('error_502_title'), desc: t('error_502_desc') },
+    503: { badge: t('error_503_badge'), title: t('error_503_title'), desc: t('error_503_desc') },
+    504: { badge: t('error_504_badge'), title: t('error_504_title'), desc: t('error_504_desc') },
+  };
+  return mapping[code] || {
+    badge: `${code} • ${code >= 500 ? t('error_badge_server') : t('error_badge_request')}`,
+    title: code >= 500 ? t('error_badge_server') : t('error_badge_request'),
+    desc: t('error_fallback_desc')
+  };
+};
+
 const ErrorPage = ({ defaultCode = '429' }) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const lang = useLang();
+  const t = (id) => getErrorPageTranslation(lang, id);
 
   const codeParam = searchParams.get('code') || defaultCode;
   const numCode = parseInt(codeParam, 10) || 500;
 
-  const fallbackConfig = {
-    badge: `${numCode} • ${numCode >= 500 ? 'Server Error' : 'Request Error'}`,
+  const baseConfig = HTTP_ERROR_REGISTRY[numCode] || {
     badgeClass: numCode >= 500 ? 'error-badge--server' : 'error-badge--warning',
-    title: numCode >= 500 ? 'Server Error' : 'Unexpected Error',
-    desc: 'An unexpected issue occurred while processing your request.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
@@ -211,13 +237,14 @@ const ErrorPage = ({ defaultCode = '429' }) => {
     defaultRetrySeconds: numCode === 429 ? 30 : 0,
   };
 
-  const baseConfig = HTTP_ERROR_REGISTRY[numCode] || fallbackConfig;
+  const localizedDetails = getLocalizedErrorDetails(numCode, lang);
 
   const backendTitle = searchParams.get('title');
   const backendMessage = searchParams.get('message');
 
-  const title = backendTitle || baseConfig.title;
-  const description = backendMessage || baseConfig.desc;
+  const title = backendTitle || localizedDetails.title;
+  const description = backendMessage || localizedDetails.desc;
+  const badgeText = localizedDetails.badge;
 
   const retryParam = parseInt(searchParams.get('retry'), 10);
   const initialRetry = !isNaN(retryParam) && retryParam > 0
@@ -276,7 +303,7 @@ const ErrorPage = ({ defaultCode = '429' }) => {
         >
           <div className={`error-badge ${baseConfig.badgeClass}`}>
             <span className="error-badge__dot" />
-            <span>{baseConfig.badge}</span>
+            <span>{badgeText}</span>
           </div>
 
           <div className="error-icon-wrapper">
@@ -290,9 +317,9 @@ const ErrorPage = ({ defaultCode = '429' }) => {
           {initialRetry > 0 && (
             <div className="error-countdown-container">
               <div className="error-countdown-header">
-                <span>Cooldown active</span>
+                <span>{t('error_cooldown_active')}</span>
                 <span className="countdown-timer-value">
-                  {timeLeft > 0 ? `${timeLeft}s remaining` : 'Ready to retry'}
+                  {timeLeft > 0 ? `${timeLeft}s ${t('error_remaining')}` : t('error_ready_retry')}
                 </span>
               </div>
               <div className="error-countdown-bar-wrap">
@@ -311,15 +338,15 @@ const ErrorPage = ({ defaultCode = '429' }) => {
               onClick={handleRetry}
               disabled={timeLeft > 0 || isRetrying}
             >
-              {isRetrying ? 'Retrying...' : (timeLeft > 0 ? `Wait ${timeLeft}s` : 'Try Again')}
+              {isRetrying ? t('error_btn_retrying') : (timeLeft > 0 ? `${t('error_btn_wait')} ${timeLeft}s` : t('error_btn_try_again'))}
             </button>
 
             <Link to="/" className="cta-btn secondary">
-              Back to Home
+              {t('error_btn_home')}
             </Link>
 
             <Link to="/catalog" className="cta-btn secondary">
-              Explore Menu
+              {t('error_btn_menu')}
             </Link>
           </div>
         </motion.div>

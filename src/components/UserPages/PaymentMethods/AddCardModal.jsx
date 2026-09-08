@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
+import useLang from '../../../utils/useLang';
+import { getPaymentMethodsTranslation } from './Lang';
 import './AddCardModal.scss';
 
 const checkLuhn = (numStr) => {
@@ -35,6 +37,9 @@ export const getCardBrand = (digits) => {
 };
 
 const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
+  const { lang } = useLang();
+  const t = (id) => getPaymentMethodsTranslation(lang, id);
+
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvc, setCvc] = useState('');
@@ -95,19 +100,19 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
     const newErrors = {};
 
     if (!cleanDigits) {
-      newErrors.cardNumber = 'Card number is required.';
+      newErrors.cardNumber = t('card_err_num_req');
     } else if (cleanDigits.length < 16) {
-      newErrors.cardNumber = 'Card number must be 16 digits.';
+      newErrors.cardNumber = t('card_err_num_len');
     } else if (!brand) {
-      newErrors.cardNumber = 'Only Visa and Mastercard cards are supported.';
+      newErrors.cardNumber = t('card_err_brand');
     } else if (!checkLuhn(cleanDigits)) {
-      newErrors.cardNumber = 'Invalid card number checksum.';
+      newErrors.cardNumber = t('card_err_luhn');
     }
 
     if (!expiryDate) {
-      newErrors.expiryDate = 'Expiry date is required.';
+      newErrors.expiryDate = t('card_err_exp_req');
     } else if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-      newErrors.expiryDate = 'Format must be MM/YY.';
+      newErrors.expiryDate = t('card_err_exp_fmt');
     } else {
       const [mStr, yStr] = expiryDate.split('/');
       const month = parseInt(mStr, 10);
@@ -117,24 +122,24 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
       const currentMonth = now.getMonth() + 1;
 
       if (month < 1 || month > 12) {
-        newErrors.expiryDate = 'Month must be 01–12.';
+        newErrors.expiryDate = t('card_err_exp_month');
       } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
-        newErrors.expiryDate = 'Card has expired.';
+        newErrors.expiryDate = t('card_err_exp_past');
       }
     }
 
     if (!cvc) {
-      newErrors.cvc = 'CVC is required.';
+      newErrors.cvc = t('card_err_cvc_req');
     } else if (cvc.length !== 3) {
-      newErrors.cvc = 'Must be 3 digits.';
+      newErrors.cvc = t('card_err_cvc_len');
     }
 
     if (cardholderName && cardholderName.trim().length < 3) {
-      newErrors.cardholderName = 'Please enter a valid cardholder name.';
+      newErrors.cardholderName = t('card_err_holder');
     }
 
     if (!agreedToRules) {
-      newErrors.agreedToRules = 'You must agree to the payment rules.';
+      newErrors.agreedToRules = t('card_err_rules');
     }
 
     setErrors(newErrors);
@@ -190,8 +195,8 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
             </svg>
           </div>
           <div>
-            <h3 className="add-card-modal__title">Add Payment Card</h3>
-            <p className="add-card-modal__subtitle">Enter your Visa or Mastercard details</p>
+            <h3 className="add-card-modal__title">{t('card_modal_title')}</h3>
+            <p className="add-card-modal__subtitle">{t('card_modal_subtitle')}</p>
           </div>
         </div>
 
@@ -225,11 +230,11 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
 
           <div className="card-preview__bottom">
             <div className="card-preview__holder">
-              <span className="card-preview__label">CARDHOLDER</span>
+              <span className="card-preview__label">{t('pm_cardholder').toUpperCase()}</span>
               <span className="card-preview__val">{cardholderName || 'NAME SURNAME'}</span>
             </div>
             <div className="card-preview__expires">
-              <span className="card-preview__label">EXPIRES</span>
+              <span className="card-preview__label">{t('pm_expires').toUpperCase()}</span>
               <span className="card-preview__val">{expiryDate || 'MM/YY'}</span>
             </div>
           </div>
@@ -237,7 +242,7 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
 
         <form className="add-card-form" onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="card-number">Card Number</label>
+            <label htmlFor="card-number">{t('card_number')}</label>
             <div className="input-with-brand">
               <input
                 id="card-number"
@@ -263,7 +268,7 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="card-expiry">Expiry Date</label>
+              <label htmlFor="card-expiry">{t('card_expiry')}</label>
               <input
                 id="card-expiry"
                 type="text"
@@ -282,7 +287,7 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="card-cvc">CVC / CVV</label>
+              <label htmlFor="card-cvc">{t('card_cvc')}</label>
               <input
                 id="card-cvc"
                 type="password"
@@ -303,11 +308,11 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="cardholder-name">Cardholder (Optional)</label>
+              <label htmlFor="cardholder-name">{t('card_holder_label')}</label>
               <input
                 id="cardholder-name"
                 type="text"
-                placeholder="e.g. ELCHIN"
+                placeholder={t('card_holder_ph')}
                 value={cardholderName}
                 onChange={handleCardholderChange}
                 onBlur={() => handleBlur('cardholderName')}
@@ -318,11 +323,11 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="card-label">Card Label (Optional)</label>
+              <label htmlFor="card-label">{t('card_name_label')}</label>
               <input
                 id="card-label"
                 type="text"
-                placeholder="e.g. Salary Card"
+                placeholder={t('card_name_ph')}
                 value={cardName}
                 onChange={(e) => setCardName(e.target.value)}
                 className="form-input"
@@ -340,7 +345,7 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
                 disabled={loading}
               />
               <span className="checkbox-box" />
-              <span className="checkbox-text">Set as default</span>
+              <span className="checkbox-text">{t('card_set_default')}</span>
             </label>
 
             <label className="custom-checkbox-label terms-label">
@@ -357,9 +362,9 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
               />
               <span className="checkbox-box" />
               <span className="checkbox-text">
-                Agree to{' '}
+                {t('card_agree_prefix')}
                 <Link to="/rules" target="_blank" rel="noopener noreferrer" className="terms-link">
-                  Payment Rules
+                  {t('card_agree_rules')}
                 </Link>
               </span>
             </label>
@@ -375,7 +380,7 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
               onClick={onClose}
               disabled={loading}
             >
-              Cancel
+              {t('card_btn_cancel')}
             </button>
             <button
               type="submit"
@@ -385,9 +390,9 @@ const AddCardModal = ({ isOpen, onClose, onSave, loading }) => {
               {loading ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
                   <img src={loaderIconRed} alt="Saving" style={{ width: '16px', height: '16px' }} />
-                  Saving Card...
+                  {t('card_btn_saving')}
                 </span>
-              ) : 'Add Card'}
+              ) : t('card_btn_add')}
             </button>
           </div>
         </form>

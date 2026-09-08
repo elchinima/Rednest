@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
+import useLang from '../../../utils/useLang';
+import { getAddressesTranslation } from './Lang';
 import './AddressModal.scss';
 
 const ButtonSpinner = () => (
@@ -8,6 +10,8 @@ const ButtonSpinner = () => (
 );
 
 const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
+  const { lang } = useLang();
+  const t = (id) => getAddressesTranslation(lang, id);
   const isEditing = Boolean(addressToEdit && addressToEdit.id);
 
   const [title, setTitle] = useState('');
@@ -54,17 +58,17 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
     setError('');
 
     if (!address.trim()) {
-      setError('Please enter your street address.');
+      setError(t('modal_err_street'));
       return;
     }
 
     if (!city.trim()) {
-      setError('Please enter your city.');
+      setError(t('modal_err_city'));
       return;
     }
 
     if (!phone.trim()) {
-      setError('Please enter your contact phone number.');
+      setError(t('modal_err_phone'));
       return;
     }
 
@@ -107,12 +111,12 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
             </svg>
           </div>
           <h2 className="address-modal__title">
-            {isEditing ? 'Edit Delivery Address' : 'Add Delivery Address'}
+            {isEditing ? t('modal_title_edit') : t('modal_title_add')}
           </h2>
           <p className="address-modal__desc">
             {isEditing
-              ? 'Update your delivery details and instructions'
-              : 'Save a new delivery address for faster checkout'}
+              ? t('modal_desc_edit')
+              : t('modal_desc_add')}
           </p>
         </div>
 
@@ -130,11 +134,11 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
 
           <div className="address-modal__row">
             <div className="address-modal__field">
-              <label htmlFor="addr-title">Title</label>
+              <label htmlFor="addr-title">{t('modal_label_title')}</label>
               <input
                 id="addr-title"
                 type="text"
-                placeholder="e.g. Home, Office, Gym..."
+                placeholder={t('modal_ph_title')}
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value);
@@ -147,12 +151,12 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
 
             <div className="address-modal__field">
               <label htmlFor="addr-city">
-                City <span className="address-modal__required">*</span>
+                {t('modal_label_city')} <span className="address-modal__required">*</span>
               </label>
               <input
                 id="addr-city"
                 type="text"
-                placeholder="e.g. Baku"
+                placeholder={t('modal_ph_city')}
                 value={city}
                 onChange={(e) => {
                   setCity(e.target.value);
@@ -166,12 +170,12 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
 
           <div className="address-modal__field">
             <label htmlFor="addr-street">
-              Street Address <span className="address-modal__required">*</span>
+              {t('modal_label_street')} <span className="address-modal__required">*</span>
             </label>
             <input
               id="addr-street"
               type="text"
-              placeholder="e.g. Nizami Street 48, Building 2"
+              placeholder={t('modal_ph_street')}
               value={address}
               onChange={(e) => {
                 setAddress(e.target.value);
@@ -184,11 +188,11 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
 
           <div className="address-modal__row">
             <div className="address-modal__field">
-              <label htmlFor="addr-apt">Apt / Floor / Entrance</label>
+              <label htmlFor="addr-apt">{t('modal_label_apt')}</label>
               <input
                 id="addr-apt"
                 type="text"
-                placeholder="e.g. Apt 14, Floor 3, Ent. 1"
+                placeholder={t('modal_ph_apt')}
                 value={apartment}
                 onChange={(e) => setApartment(e.target.value)}
                 disabled={loading}
@@ -197,12 +201,12 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
 
             <div className="address-modal__field">
               <label htmlFor="addr-phone">
-                Contact Phone <span className="address-modal__required">*</span>
+                {t('modal_label_phone')} <span className="address-modal__required">*</span>
               </label>
               <input
                 id="addr-phone"
                 type="tel"
-                placeholder="e.g. +994 50 123 45 67"
+                placeholder={t('modal_ph_phone')}
                 value={phone}
                 onChange={(e) => {
                   setPhone(e.target.value);
@@ -215,10 +219,10 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
           </div>
 
           <div className="address-modal__field">
-            <label htmlFor="addr-notes">Courier Instructions / Intercom Code</label>
+            <label htmlFor="addr-notes">{t('modal_label_notes')}</label>
             <textarea
               id="addr-notes"
-              placeholder="e.g. Intercom code #1234. Please leave at door or call before arriving."
+              placeholder={t('modal_ph_notes')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -228,11 +232,11 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
           </div>
 
           <div className="address-modal__default-toggle" onClick={() => !loading && setIsDefault((prev) => !prev)}>
-            <span className="address-modal__toggle-title">Set as default</span>
+            <span className="address-modal__toggle-title">{t('modal_toggle_default')}</span>
             <button
               type="button"
               className={`address-modal__switch ${isDefault ? 'address-modal__switch--on' : ''}`}
-              aria-label="Set as default address"
+              aria-label={t('modal_toggle_default')}
               disabled={loading}
               onClick={(e) => {
                 e.stopPropagation();
@@ -250,7 +254,7 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
               onClick={handleClose}
               disabled={loading}
             >
-              Cancel
+              {t('modal_btn_cancel')}
             </button>
             <button
               type="submit"
@@ -260,10 +264,10 @@ const AddressModal = ({ isOpen, onClose, onSave, addressToEdit, loading }) => {
               {loading ? (
                 <span className="address-loader-inner">
                   <ButtonSpinner />
-                  {isEditing ? 'Saving...' : 'Adding...'}
+                  {isEditing ? t('modal_btn_saving') : t('modal_btn_adding')}
                 </span>
               ) : (
-                isEditing ? 'Save Changes' : 'Add Address'
+                isEditing ? t('modal_btn_save') : t('modal_btn_add')
               )}
             </button>
           </div>

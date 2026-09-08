@@ -26,15 +26,11 @@ const getLanguageContent = (data, lang) => {
   return data.footerRU || data.FooterRU || null;
 };
 
+import { getStoredLanguage, setStoredLanguage } from '../../utils/useLang';
+
 const Footer = () => {
   const currentYear = getBakuYear();
-  const [language, setLanguage] = useState(() => {
-    try {
-      return localStorage.getItem('rednest_language') || 'ru';
-    } catch {
-      return 'ru';
-    }
-  });
+  const [language, setLanguage] = useState(getStoredLanguage);
   const [footerData, setFooterData] = useState(() => cachedFooterData);
 
   useEffect(() => {
@@ -83,7 +79,7 @@ const Footer = () => {
 
   useEffect(() => {
     const handleLangSync = (e) => {
-      const current = e?.detail || localStorage.getItem('rednest_language') || 'ru';
+      const current = e?.detail || getStoredLanguage();
       setLanguage(current);
     };
     window.addEventListener('languagechange', handleLangSync);
@@ -92,10 +88,7 @@ const Footer = () => {
 
   const handleLanguageChange = (newLang) => {
     setLanguage(newLang);
-    try {
-      localStorage.setItem('rednest_language', newLang);
-      window.dispatchEvent(new CustomEvent('languagechange', { detail: newLang }));
-    } catch {}
+    setStoredLanguage(newLang);
   };
 
   const activeContent = getLanguageContent(footerData, language);

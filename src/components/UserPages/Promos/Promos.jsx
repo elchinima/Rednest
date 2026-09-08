@@ -17,6 +17,8 @@ import discount50Icon from '../../../assets/icons/discount-50.svg';
 import defaultGiftIcon from '../../../assets/icons/gift-animated.svg';
 import ticketAnimatedIcon from '../../../assets/icons/ticket-animated.svg';
 import fortuneWheelDarkIcon from '../../../assets/icons/fortune-wheel-dark.svg';
+import useLang from '../../../utils/useLang';
+import { getPromosTranslation } from './Lang';
 import './Promos.scss';
 
 const PRIZE_TYPE_ICONS = {
@@ -91,6 +93,9 @@ const BarcodeVisual = ({ code }) => {
 
 const Promos = () => {
   const { user } = useAuth();
+  const { lang } = useLang();
+  const t = (id) => getPromosTranslation(lang, id);
+
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -140,8 +145,8 @@ const Promos = () => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => {
-      setCopiedCode(null), 2000;
-    });
+      setCopiedCode(null);
+    }, 2000);
   };
 
   const handleActivatePromo = async (e) => {
@@ -163,21 +168,21 @@ const Promos = () => {
       if (!res.ok) {
         setActivationMessage({
           type: 'error',
-          text: data.message || 'Failed to activate promo code. Please check the code.',
+          text: data.message || t('promos_activate_error'),
         });
         return;
       }
 
       setActivationMessage({
         type: 'success',
-        text: data.message || 'Promo code successfully activated! You can now use it on your next order.',
+        text: data.message || t('promos_activate_success'),
       });
       setInputCode('');
       fetchPromos();
     } catch (err) {
       setActivationMessage({
         type: 'error',
-        text: err.message || 'Network error occurred. Please try again.',
+        text: err.message || t('promos_activate_network_error'),
       });
     } finally {
       setIsActivating(false);
@@ -211,9 +216,9 @@ const Promos = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>My Promo Codes</h1>
+            <h1>{t('promos_hero_title')}</h1>
             <p className="promos-hero-desc">
-              Your exclusive rewards, discounts, and wheel spin bonuses
+              {t('promos_hero_desc')}
             </p>
           </motion.div>
 
@@ -229,10 +234,10 @@ const Promos = () => {
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                   </svg>
-                  <span>Redeem Code</span>
+                  <span>{t('promos_badge_redeem')}</span>
                 </div>
-                <h3>Have a Promo Code?</h3>
-                <p>Enter your gift or event promo code to claim your special discount or reward.</p>
+                <h3>{t('promos_card_title')}</h3>
+                <p>{t('promos_card_desc')}</p>
               </div>
 
               <form onSubmit={handleActivatePromo} className="promos-activate-card__form">
@@ -243,7 +248,7 @@ const Promos = () => {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Enter code (e.g. RED-DISC-7X9K)"
+                    placeholder={t('promos_input_placeholder')}
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
                     disabled={isActivating}
@@ -269,10 +274,10 @@ const Promos = () => {
                   {isActivating ? (
                     <>
                       <img src={loaderIconRed} alt="" className="spinner-inline" />
-                      <span>Activating...</span>
+                      <span>{t('promos_btn_activating')}</span>
                     </>
                   ) : (
-                    <span>Activate</span>
+                    <span>{t('promos_btn_activate')}</span>
                   )}
                 </button>
               </form>
@@ -316,34 +321,34 @@ const Promos = () => {
               className={`promos-filter-btn ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
-              All ({promos.length})
+              {t('promos_filter_all')} ({promos.length})
             </button>
             <button
               type="button"
               className={`promos-filter-btn ${filter === 'active' ? 'active' : ''}`}
               onClick={() => setFilter('active')}
             >
-              Active ({activeCount})
+              {t('promos_filter_active')} ({activeCount})
             </button>
             <button
               type="button"
               className={`promos-filter-btn ${filter === 'expired' ? 'active' : ''}`}
               onClick={() => setFilter('expired')}
             >
-              Expired ({expiredCount})
+              {t('promos_filter_expired')} ({expiredCount})
             </button>
           </div>
 
           {loading ? (
             <div className="promos-loading-state">
               <img src={loaderIcon} alt="Loading..." className="promos-loader-icon" />
-              <p>Loading your promo codes...</p>
+              <p>{t('promos_loading')}</p>
             </div>
           ) : error ? (
             <div className="promos-error-state">
               <p>{error}</p>
               <button type="button" className="cta-btn sm" onClick={fetchPromos}>
-                Try Again
+                {t('promos_try_again')}
               </button>
             </div>
           ) : filteredPromos.length === 0 ? (
@@ -358,19 +363,19 @@ const Promos = () => {
               </div>
               <h3>
                 {filter === 'active'
-                  ? 'No active promo codes right now'
+                  ? t('promos_empty_active_title')
                   : filter === 'expired'
-                  ? 'No expired promo codes'
-                  : 'No promo codes yet'}
+                  ? t('promos_empty_expired_title')
+                  : t('promos_empty_all_title')}
               </h3>
               <p>
                 {filter === 'active'
-                  ? 'Spin the Wheel of Fortune to win free drinks, desserts, and discounts!'
-                  : 'Play the Fortune mini-game to unlock exclusive Rednest perks and discounts.'}
+                  ? t('promos_empty_active_desc')
+                  : t('promos_empty_all_desc')}
               </p>
               <Link to="/fortune" className="cta-btn sm promos-empty-btn">
                 <img src={fortuneWheelDarkIcon} alt="" className="promos-empty-btn-icon" />
-                <span>Spin Fortune Wheel</span>
+                <span>{t('promos_empty_btn_spin')}</span>
               </Link>
             </motion.div>
           ) : (
@@ -402,7 +407,7 @@ const Promos = () => {
                         </div>
                         <div className="promo-ticket__title-group">
                           <span className={`promo-status-badge ${isActive ? 'badge-active' : 'badge-expired'}`}>
-                            {isActive ? '● Active' : 'Expired / Used'}
+                            {isActive ? t('promos_status_active') : t('promos_status_expired')}
                           </span>
                           <h3 className="promo-ticket__name">{promo.prizeName}</h3>
                           <p className="promo-ticket__desc">{promo.prizeDescription}</p>
@@ -418,21 +423,21 @@ const Promos = () => {
                       <div className="promo-ticket__body">
                         <div className="promo-code-box">
                           <div className="promo-code-text-group">
-                            <span className="promo-code-label">PROMO CODE</span>
+                            <span className="promo-code-label">{t('promos_label_code')}</span>
                             <span className="promo-code-value">{promo.promoCode}</span>
                           </div>
                           <button
                             type="button"
                             className={`promo-copy-btn ${isCopied ? 'copied' : ''}`}
                             onClick={() => handleCopy(promo.promoCode)}
-                            title="Copy code"
+                            title={t('promos_btn_copy')}
                           >
                             {isCopied ? (
                               <>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                   <polyline points="20 6 9 17 4 12" />
                                 </svg>
-                                <span>Copied!</span>
+                                <span>{t('promos_btn_copied')}</span>
                               </>
                             ) : (
                               <>
@@ -440,7 +445,7 @@ const Promos = () => {
                                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                                 </svg>
-                                <span>Copy</span>
+                                <span>{t('promos_btn_copy')}</span>
                               </>
                             )}
                           </button>
@@ -452,11 +457,11 @@ const Promos = () => {
 
                         <div className="promo-dates-row">
                           <div className="promo-date-item">
-                            <span className="promo-date-label">Activated:</span>
+                            <span className="promo-date-label">{t('promos_date_activated')}</span>
                             <span className="promo-date-val">{formatDate(promo.activatedAt)}</span>
                           </div>
                           <div className="promo-date-item">
-                            <span className="promo-date-label">Expires:</span>
+                            <span className="promo-date-label">{t('promos_date_expires')}</span>
                             <span className="promo-date-val">{formatDate(promo.expiresAt)}</span>
                           </div>
                         </div>
@@ -464,7 +469,7 @@ const Promos = () => {
                         {isActive && (
                           <div className="promo-ticket__actions">
                             <Link to="/catalog" className="promo-action-btn">
-                              Use in Menu →
+                              {t('promos_btn_use')}
                             </Link>
                           </div>
                         )}

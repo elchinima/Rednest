@@ -19,28 +19,31 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import { useLang } from '../../../utils/useLang';
+import { getOrdersTranslation } from './Lang';
 import './Orders.scss';
 
-const PAYMENT_METHODS = {
-  0: { label: 'Cash Desk', icon: featureCashIcon },
-  CashDeskCash: { label: 'Cash Desk', icon: featureCashIcon },
-  1: { label: 'Card at Register', icon: featureCardIcon },
-  CashDeskCard: { label: 'Card at Register', icon: featureCardIcon },
-  2: { label: 'Wallet Balance', icon: featureWalletIcon },
-  OnlineBalance: { label: 'Wallet Balance', icon: featureWalletIcon },
-  3: { label: 'Bank Card', icon: featureCardIcon },
-  OnlineCardDetails: { label: 'Bank Card', icon: featureCardIcon },
-  4: { label: 'Stripe', icon: featureStripeIcon },
-  OnlineStripe: { label: 'Stripe', icon: featureStripeIcon },
-  5: { label: 'Google Pay', icon: featureGPayIcon },
-  OnlineGooglePay: { label: 'Google Pay', icon: featureGPayIcon },
-};
+const getPaymentMethods = (t) => ({
+  0: { label: t('payCashDesk'), icon: featureCashIcon },
+  CashDeskCash: { label: t('payCashDesk'), icon: featureCashIcon },
+  1: { label: t('payCardRegister'), icon: featureCardIcon },
+  CashDeskCard: { label: t('payCardRegister'), icon: featureCardIcon },
+  2: { label: t('payWalletBalance'), icon: featureWalletIcon },
+  OnlineBalance: { label: t('payWalletBalance'), icon: featureWalletIcon },
+  3: { label: t('payBankCard'), icon: featureCardIcon },
+  OnlineCardDetails: { label: t('payBankCard'), icon: featureCardIcon },
+  4: { label: t('payStripe'), icon: featureStripeIcon },
+  OnlineStripe: { label: t('payStripe'), icon: featureStripeIcon },
+  5: { label: t('payGooglePay'), icon: featureGPayIcon },
+  OnlineGooglePay: { label: t('payGooglePay'), icon: featureGPayIcon },
+});
 
-const getPaymentInfo = (method) => {
+const getPaymentInfo = (method, t) => {
   if (method === undefined || method === null) {
-    return { label: 'Pay at Cashier', icon: cashierIcon };
+    return { label: t('payCashier'), icon: cashierIcon };
   }
-  return PAYMENT_METHODS[method] || { label: String(method), icon: onlineIcon };
+  const methods = getPaymentMethods(t);
+  return methods[method] || { label: String(method), icon: onlineIcon };
 };
 
 const formatBakuDate = (isoStr) => {
@@ -75,27 +78,29 @@ const getShortId = (id) => {
   return str.slice(0, 8).toUpperCase();
 };
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, t) => {
   const s = String(status || '').toLowerCase();
   if (s.includes('paid online') || s === 'paid online') {
-    return { className: 'orders-status--paid-online', label: 'Paid Online', dotColor: '#10b981' };
+    return { className: 'orders-status--paid-online', label: t('statusPaidOnline'), dotColor: '#10b981' };
   }
   if (s.includes('pending')) {
-    return { className: 'orders-status--pending', label: 'Pending Payment', dotColor: '#f59e0b' };
+    return { className: 'orders-status--pending', label: t('statusPending'), dotColor: '#f59e0b' };
   }
   if (s.includes('prep') || s.includes('process')) {
-    return { className: 'orders-status--preparing', label: 'Preparing', dotColor: '#38bdf8' };
+    return { className: 'orders-status--preparing', label: t('statusPreparing'), dotColor: '#38bdf8' };
   }
   if (s.includes('ready')) {
-    return { className: 'orders-status--ready', label: 'Ready for Pickup', dotColor: '#34d399' };
+    return { className: 'orders-status--ready', label: t('statusReady'), dotColor: '#34d399' };
   }
   if (s.includes('cancel')) {
-    return { className: 'orders-status--cancelled', label: 'Cancelled', dotColor: '#ef4444' };
+    return { className: 'orders-status--cancelled', label: t('statusCancelled'), dotColor: '#ef4444' };
   }
-  return { className: 'orders-status--completed', label: 'Completed', dotColor: '#22c55e' };
+  return { className: 'orders-status--completed', label: t('statusCompleted'), dotColor: '#22c55e' };
 };
 
 const Orders = () => {
+  const { lang } = useLang();
+  const t = (id) => getOrdersTranslation(lang, id);
   const { user } = useAuth();
   const { addItem } = useBasket();
   const navigate = useNavigate();
@@ -133,7 +138,7 @@ const Orders = () => {
       setOrders(list);
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setError(err.message || 'Could not load your orders. Please try again.');
+      setError(err.message || t('loadError'));
     } finally {
       setLoading(false);
     }
@@ -145,12 +150,11 @@ const Orders = () => {
     }
   }, [user]);
 
-
   const handleCopyId = (id) => {
     if (!id) return;
     navigator.clipboard.writeText(id);
     setCopiedId(id);
-    showToast(`Order ID copied to clipboard!`);
+    showToast(t('copiedToast'));
     setTimeout(() => {
       setCopiedId(null);
     }, 2000);
@@ -168,10 +172,10 @@ const Orders = () => {
           await addItem(prodId);
         }
       }
-      showToast(`Added ${order.items.length} item(s) to your basket!`);
+      showToast(t('reorderSuccess').replace('{count}', order.items.length));
     } catch (err) {
       console.error('Reorder error:', err);
-      showToast('Could not add items to basket.');
+      showToast(t('reorderError'));
     } finally {
       setReorderingId(null);
     }
@@ -222,9 +226,9 @@ const Orders = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>My Orders</h1>
+            <h1>{t('title')}</h1>
             <p className="orders-hero__desc">
-              Review your coffee receipts, order history, and track live statuses
+              {t('subtitle')}
             </p>
           </motion.div>
 
@@ -235,28 +239,28 @@ const Orders = () => {
                 className={`orders-filter-btn ${activeFilter === 'all' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('all')}
               >
-                All
+                {t('all')}
               </button>
               <button
                 type="button"
                 className={`orders-filter-btn ${activeFilter === 'pending' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('pending')}
               >
-                Pending
+                {t('pending')}
               </button>
               <button
                 type="button"
                 className={`orders-filter-btn ${activeFilter === 'completed' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('completed')}
               >
-                Completed
+                {t('completed')}
               </button>
               <button
                 type="button"
                 className={`orders-filter-btn ${activeFilter === 'cancelled' ? 'active' : ''}`}
                 onClick={() => setActiveFilter('cancelled')}
               >
-                Cancelled
+                {t('cancelled')}
               </button>
             </div>
 
@@ -268,7 +272,7 @@ const Orders = () => {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search by order ID or item..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="orders-search-input"
@@ -289,7 +293,7 @@ const Orders = () => {
           {loading ? (
             <div className="orders-loading-state">
               <img src={loaderIcon} alt="Loading..." className="orders-loader-icon" />
-              <p>Loading your orders...</p>
+              <p>{t('loadingOrders')}</p>
             </div>
           ) : error ? (
             <div className="orders-error-state">
@@ -300,7 +304,7 @@ const Orders = () => {
               </svg>
               <p>{error}</p>
               <button type="button" className="cta-btn sm" onClick={() => fetchOrders()}>
-                Try Again
+                {t('tryAgain')}
               </button>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -315,18 +319,18 @@ const Orders = () => {
               </div>
               <h3>
                 {searchQuery
-                  ? 'No matching orders found'
+                  ? t('noMatching')
                   : activeFilter !== 'all'
-                    ? `No ${activeFilter} orders found`
-                    : 'No orders placed yet'}
+                    ? t('noFilterOrders').replace('{filter}', t(activeFilter))
+                    : t('noOrdersYet')}
               </h3>
               <p>
                 {searchQuery
-                  ? 'Try searching with a different keyword or clear your search query.'
-                  : 'Treat yourself to freshly roasted coffee, signature lattes, and artisan desserts!'}
+                  ? t('searchHint')
+                  : t('emptyHint')}
               </p>
               <Link to="/catalog" className="cta-btn sm orders-empty-btn">
-                <span>Browse Menu</span>
+                <span>{t('browseMenu')}</span>
               </Link>
             </motion.div>
           ) : (
@@ -339,8 +343,8 @@ const Orders = () => {
             >
               <AnimatePresence>
                 {filteredOrders.map((order, idx) => {
-                  const statusInfo = getStatusBadge(order.status);
-                  const payInfo = getPaymentInfo(order.payment?.paymentMethod);
+                  const statusInfo = getStatusBadge(order.status, t);
+                  const payInfo = getPaymentInfo(order.payment?.paymentMethod, t);
                   const shortId = getShortId(order.id);
                   const itemCount = (order.items || []).reduce((s, it) => s + (it.quantity || 1), 0);
                   const discount = Number(order.payment?.discountAmount || 0);
@@ -366,13 +370,13 @@ const Orders = () => {
                               type="button"
                               className="order-card__copy-btn"
                               onClick={() => handleCopyId(order.id)}
-                              title="Copy full Order ID"
+                              title={t('copyFullId')}
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                               </svg>
-                              <span>{copiedId === order.id ? 'Copied!' : 'Copy'}</span>
+                              <span>{copiedId === order.id ? t('copied') : t('copy')}</span>
                             </button>
                           </div>
                           <span className="order-card__date">{formatBakuDate(order.createdAt)}</span>
@@ -402,13 +406,13 @@ const Orders = () => {
 
                                 <div className="order-card__item-info">
                                   <div className="order-card__item-name-row">
-                                    <span className="order-card__item-name">{item.name || 'Artisan Coffee'}</span>
+                                    <span className="order-card__item-name">{item.name || t('artisanCoffee')}</span>
                                     {item.category && (
                                       <span className="order-card__item-category">{item.category}</span>
                                     )}
                                   </div>
                                   <div className="order-card__item-meta">
-                                    <span className="order-card__item-qty">Qty: {item.quantity || 1}</span>
+                                    <span className="order-card__item-qty">{t('qty')}: {item.quantity || 1}</span>
                                     <span className="order-card__item-unit">× {unitPrice} ₼</span>
                                   </div>
                                 </div>
@@ -433,7 +437,7 @@ const Orders = () => {
                             <div className="order-card__discount-pill">
                               <img src={featurePromoIcon} alt="" className="order-card__method-icon" />
                               <span>
-                                Saved −{discount.toFixed(2)} ₼
+                                {t('saved')} −{discount.toFixed(2)} ₼
                                 {order.payment?.promoPrizeName ? ` (${order.payment.promoPrizeName})` : ''}
                               </span>
                             </div>
@@ -441,7 +445,7 @@ const Orders = () => {
                         </div>
 
                         <div className="order-card__total-wrap">
-                          <span className="order-card__total-label">Total Amount:</span>
+                          <span className="order-card__total-label">{t('totalAmount')}</span>
                           <span className="order-card__total-value">{total} ₼</span>
                         </div>
                       </div>
@@ -459,7 +463,7 @@ const Orders = () => {
                             <line x1="16" y1="17" x2="8" y2="17" />
                             <polyline points="10 9 9 9 8 9" />
                           </svg>
-                          <span>Receipt Details</span>
+                          <span>{t('receiptDetails')}</span>
                         </button>
 
                         <button
@@ -471,14 +475,14 @@ const Orders = () => {
                           {isReordering ? (
                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
                               <img src={loaderIconRed} alt="" style={{ width: '15px', height: '15px' }} />
-                              Adding...
+                              {t('adding')}
                             </span>
                           ) : (
                             <>
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
                                 <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                               </svg>
-                              <span>Order Again</span>
+                              <span>{t('orderAgain')}</span>
                             </>
                           )}
                         </button>
@@ -501,33 +505,33 @@ const Orders = () => {
           <div className="orders-receipt-modal">
             <div className="orders-receipt-modal__header">
               <img src={logo} alt="Rednest" className="orders-receipt-modal__logo" />
-              <h3 className="orders-receipt-modal__brand">REDNEST COFFEE</h3>
-              <p className="orders-receipt-modal__sub">Specialty Coffee & Artisan Roasts</p>
+              <h3 className="orders-receipt-modal__brand">{t('receiptTitle')}</h3>
+              <p className="orders-receipt-modal__sub">{t('receiptSub')}</p>
               <span className="orders-receipt-modal__divider-line" />
             </div>
 
             <div className="orders-receipt-modal__meta">
               <div className="orders-receipt-modal__meta-row">
-                <span>Receipt Number:</span>
+                <span>{t('receiptNumber')}</span>
                 <strong>{getShortId(selectedReceiptOrder.id)}</strong>
               </div>
               <div className="orders-receipt-modal__meta-row">
-                <span>Date & Time:</span>
+                <span>{t('dateTime')}</span>
                 <span>{formatBakuDate(selectedReceiptOrder.createdAt)}</span>
               </div>
             </div>
 
             <div className="orders-receipt-modal__items">
               <div className="orders-receipt-modal__items-header">
-                <span>ITEM</span>
-                <span>QTY</span>
-                <span>TOTAL</span>
+                <span>{t('itemCol')}</span>
+                <span>{t('qtyCol')}</span>
+                <span>{t('totalCol')}</span>
               </div>
 
               {(selectedReceiptOrder.items || []).map((it, idx) => (
                 <div key={it.productId || idx} className="orders-receipt-modal__item-row">
                   <div className="orders-receipt-modal__item-desc">
-                    <span className="orders-receipt-modal__item-title">{it.name || 'Coffee Item'}</span>
+                    <span className="orders-receipt-modal__item-title">{it.name || t('coffeeItem')}</span>
                     <span className="orders-receipt-modal__item-sub">@ {Number(it.unitPrice || 0).toFixed(2)} ₼</span>
                   </div>
                   <span className="orders-receipt-modal__item-qty">{it.quantity || 1}</span>
@@ -540,26 +544,26 @@ const Orders = () => {
 
             <div className="orders-receipt-modal__totals">
               <div className="orders-receipt-modal__totals-row">
-                <span>Subtotal</span>
+                <span>{t('subtotal')}</span>
                 <span>{Number(selectedReceiptOrder.payment?.originalTotal || selectedReceiptOrder.payment?.totalAmount || 0).toFixed(2)} ₼</span>
               </div>
 
               {Number(selectedReceiptOrder.payment?.discountAmount || 0) > 0 && (
                 <div className="orders-receipt-modal__totals-row discount">
                   <span>
-                    Discount {selectedReceiptOrder.payment?.promoPrizeName ? `(${selectedReceiptOrder.payment.promoPrizeName})` : ''}
+                    {t('discount')} {selectedReceiptOrder.payment?.promoPrizeName ? `(${selectedReceiptOrder.payment.promoPrizeName})` : ''}
                   </span>
                   <span>−{Number(selectedReceiptOrder.payment.discountAmount).toFixed(2)} ₼</span>
                 </div>
               )}
 
               <div className="orders-receipt-modal__totals-row method">
-                <span>Payment Method</span>
-                <span>{getPaymentInfo(selectedReceiptOrder.payment?.paymentMethod).label}</span>
+                <span>{t('paymentMethod')}</span>
+                <span>{getPaymentInfo(selectedReceiptOrder.payment?.paymentMethod, t).label}</span>
               </div>
 
               <div className="orders-receipt-modal__totals-row grand-total">
-                <span>Total Amount Paid</span>
+                <span>{t('totalPaid')}</span>
                 <span>{Number(selectedReceiptOrder.payment?.totalAmount || 0).toFixed(2)} ₼</span>
               </div>
             </div>
@@ -570,7 +574,7 @@ const Orders = () => {
                 className="cta-btn sm orders-receipt-modal__btn orders-receipt-modal__btn--close"
                 onClick={() => setSelectedReceiptOrder(null)}
               >
-                Close
+                {t('close')}
               </button>
               <button
                 type="button"
@@ -580,7 +584,7 @@ const Orders = () => {
                   setSelectedReceiptOrder(null);
                 }}
               >
-                Reorder This
+                {t('reorderThis')}
               </button>
             </div>
           </div>

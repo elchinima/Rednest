@@ -9,6 +9,8 @@ import ImageCropperModal from './ImageCropperModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
+import { useLang } from '../../../utils/useLang';
+import { getProfileTranslation } from './Lang';
 import './Profile.scss';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg'];
@@ -18,6 +20,8 @@ const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 const Profile = () => {
   const { user, logout, updateUser, authLoading } = useAuth();
   const navigate = useNavigate();
+  const lang = useLang();
+  const t = (id) => getProfileTranslation(lang, id);
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
@@ -193,9 +197,9 @@ const Profile = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>My Profile</h1>
+            <h1>{t('profile_hero_title')}</h1>
             <p className="profile-hero-desc">
-              Manage your account security and personal details
+              {t('profile_hero_desc')}
             </p>
           </motion.div>
 
@@ -244,7 +248,7 @@ const Profile = () => {
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Add
+                    {t('profile_avatar_add')}
                   </button>
                 ) : (
                   <div className="profile-avatar-btn-group">
@@ -258,7 +262,7 @@ const Profile = () => {
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                       </svg>
-                      Change
+                      {t('profile_avatar_change')}
                     </button>
                     <button
                       type="button"
@@ -270,7 +274,7 @@ const Profile = () => {
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                       </svg>
-                      Delete
+                      {t('profile_avatar_delete')}
                     </button>
                   </div>
                 )}
@@ -279,7 +283,7 @@ const Profile = () => {
 
             <div className="profile-card__info-section">
               <div className="profile-field-group">
-                <label className="profile-field-label">Name</label>
+                <label className="profile-field-label">{t('profile_field_name')}</label>
                 <div className="profile-field-input-wrap">
                   <input
                     type="text"
@@ -293,13 +297,13 @@ const Profile = () => {
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                    Locked
+                    {t('profile_badge_locked')}
                   </span>
                 </div>
               </div>
 
               <div className="profile-field-group">
-                <label className="profile-field-label">Email</label>
+                <label className="profile-field-label">{t('profile_field_email')}</label>
                 <div className="profile-field-input-wrap">
                   <input
                     type="email"
@@ -313,16 +317,16 @@ const Profile = () => {
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                    Locked
+                    {t('profile_badge_locked')}
                   </span>
                 </div>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Change Password</div>
+                  <div className="profile-action-title">{t('profile_row_password_title')}</div>
                   <p className="profile-action-desc">
-                    Update your account password for enhanced security
+                    {t('profile_row_password_desc')}
                   </p>
                 </div>
                 <button
@@ -330,15 +334,15 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => setIsPasswordModalOpen(true)}
                 >
-                  Change Password
+                  {t('profile_row_password_btn')}
                 </button>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Active Sessions</div>
+                  <div className="profile-action-title">{t('profile_row_sessions_title')}</div>
                   <p className="profile-action-desc">
-                    View and manage devices currently signed in to your account
+                    {t('profile_row_sessions_desc')}
                   </p>
                 </div>
                 <button
@@ -346,20 +350,20 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => navigate('/sessions')}
                 >
-                  Active Sessions
+                  {t('profile_row_sessions_btn')}
                 </button>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Two-Factor Authentication (2FA)</div>
+                  <div className="profile-action-title">{t('profile_row_2fa_title')}</div>
                   <p className="profile-action-desc">
-                    Add an additional layer of security during sign in
+                    {t('profile_row_2fa_desc')}
                   </p>
                 </div>
                 <div className="profile-2fa-toggle-wrap">
                   <span className={`profile-2fa-status ${twoFactorEnabled ? 'active' : ''}`}>
-                    {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                    {twoFactorEnabled ? t('profile_row_2fa_enabled') : t('profile_row_2fa_disabled')}
                   </span>
                   <button
                     type="button"
@@ -374,9 +378,9 @@ const Profile = () => {
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Delivery Addresses</div>
+                  <div className="profile-action-title">{t('profile_row_addresses_title')}</div>
                   <p className="profile-action-desc">
-                    Manage your saved shipping and delivery addresses
+                    {t('profile_row_addresses_desc')}
                   </p>
                 </div>
                 <button
@@ -384,15 +388,15 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => navigate('/addresses')}
                 >
-                  Addresses
+                  {t('profile_row_addresses_btn')}
                 </button>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Payment Methods</div>
+                  <div className="profile-action-title">{t('profile_row_payments_title')}</div>
                   <p className="profile-action-desc">
-                    Manage your saved payment cards and billing methods
+                    {t('profile_row_payments_desc')}
                   </p>
                 </div>
                 <button
@@ -400,15 +404,15 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => navigate('/payment-methods')}
                 >
-                  Payment Methods
+                  {t('profile_row_payments_btn')}
                 </button>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">Order History</div>
+                  <div className="profile-action-title">{t('profile_row_orders_title')}</div>
                   <p className="profile-action-desc">
-                    View your past coffee orders and purchase receipts
+                    {t('profile_row_orders_desc')}
                   </p>
                 </div>
                 <button
@@ -416,15 +420,15 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => navigate('/orders')}
                 >
-                  Orders
+                  {t('profile_row_orders_btn')}
                 </button>
               </div>
 
               <div className="profile-field-group profile-action-row">
                 <div className="profile-action-text">
-                  <div className="profile-action-title">My Reviews</div>
+                  <div className="profile-action-title">{t('profile_row_reviews_title')}</div>
                   <p className="profile-action-desc">
-                    View your submitted feedback, check likes received, and manage your reviews
+                    {t('profile_row_reviews_desc')}
                   </p>
                 </div>
                 <button
@@ -432,7 +436,7 @@ const Profile = () => {
                   className="cta-btn sm profile-action-btn"
                   onClick={() => navigate('/reviews')}
                 >
-                  My Reviews
+                  {t('profile_row_reviews_btn')}
                 </button>
               </div>
             </div>
@@ -458,9 +462,9 @@ const Profile = () => {
               <line x1="1" y1="10" x2="23" y2="10" />
             </svg>
           </div>
-          <h3 className="profile-modal__title">Payment Methods</h3>
+          <h3 className="profile-modal__title">{t('profile_payments_modal_title')}</h3>
           <p className="profile-modal__text">
-            Payment method management will be available in an upcoming update.
+            {t('profile_payments_modal_desc')}
           </p>
           <div className="profile-modal__actions">
             <button
@@ -468,7 +472,7 @@ const Profile = () => {
               className="cta-btn sm profile-modal__btn"
               onClick={() => setIsPaymentsModalOpen(false)}
             >
-              Got it
+              {t('profile_modal_got_it')}
             </button>
           </div>
         </div>
@@ -487,9 +491,9 @@ const Profile = () => {
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
           </div>
-          <h3 className="profile-modal__title">Order History</h3>
+          <h3 className="profile-modal__title">{t('profile_orders_modal_title')}</h3>
           <p className="profile-modal__text">
-            Order history and tracking will be available in an upcoming update.
+            {t('profile_orders_modal_desc')}
           </p>
           <div className="profile-modal__actions">
             <button
@@ -497,7 +501,7 @@ const Profile = () => {
               className="cta-btn sm profile-modal__btn"
               onClick={() => setIsOrdersModalOpen(false)}
             >
-              Got it
+              {t('profile_modal_got_it')}
             </button>
           </div>
         </div>
@@ -517,9 +521,9 @@ const Profile = () => {
               <line x1="14" y1="11" x2="14" y2="17" />
             </svg>
           </div>
-          <h3 className="profile-modal__title">Delete Profile Photo?</h3>
+          <h3 className="profile-modal__title">{t('profile_delete_avatar_title')}</h3>
           <p className="profile-modal__text">
-            This will permanently remove your photo from storage. You can upload a new one anytime.
+            {t('profile_delete_avatar_text')}
           </p>
           <div className="profile-modal__actions">
             <button
@@ -528,7 +532,7 @@ const Profile = () => {
               onClick={() => setIsDeleteAvatarModalOpen(false)}
               disabled={avatarDeleting}
             >
-              Cancel
+              {t('profile_delete_avatar_cancel')}
             </button>
             <button
               type="button"
@@ -543,10 +547,10 @@ const Profile = () => {
                     alt="Deleting..."
                     style={{ width: '16px', height: '16px', flexShrink: 0 }}
                   />
-                  Deleting...
+                  {t('profile_delete_avatar_deleting')}
                 </span>
               ) : (
-                'Delete'
+                t('profile_delete_avatar_confirm')
               )}
             </button>
           </div>

@@ -12,32 +12,16 @@ import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import useSequentialImageLoader from '../../../utils/useSequentialImageLoader';
+import { useLang } from '../../../utils/useLang';
+import { getBasketTranslation, formatLocalizedPrizeName } from './Lang';
 import './Basket.scss';
-
-const formatPrizeName = (name) => {
-  if (!name) return '';
-  const mapping = {
-    'SUPER PRIZE': 'Super Prize',
-    'FREE DRINK': 'Free Drink',
-    'FREE DESSERT': 'Free Dessert',
-    'DISCOUNT UP TO 25%': 'Discount up to 25%',
-    'CASHBACK ON PURCHASES': 'Cashback on Purchases',
-    'DISCOUNT UP TO 50%': 'Discount up to 50%',
-  };
-  const upper = name.trim().toUpperCase();
-  if (mapping[upper]) return mapping[upper];
-
-  return name
-    .toLowerCase()
-    .split(' ')
-    .map(w => w ? w.charAt(0).toUpperCase() + w.slice(1) : '')
-    .join(' ');
-};
 
 const Basket = () => {
   const { user, logout, authLoading } = useAuth();
   const { items, addItem, removeItem, deleteItem, loading: basketLoading } = useBasket();
   const navigate = useNavigate();
+  const lang = useLang();
+  const t = (id) => getBasketTranslation(lang, id);
 
   const [products, setProducts] = useState({});
   const [productsLoading, setProductsLoading] = useState(true);
@@ -210,8 +194,8 @@ const Basket = () => {
 
       <main className="basket-main">
         <div className="basket-hero">
-          <h1>Your Basket</h1>
-          <p>Review your selections before placing an order.</p>
+          <h1>{t('basket_hero_title')}</h1>
+          <p>{t('basket_hero_subtitle')}</p>
         </div>
 
         {isLoading ? (
@@ -228,9 +212,9 @@ const Basket = () => {
             <div className="empty-icon">
               <img src={cartAnimated} alt="Cart" />
             </div>
-            <h2>Your basket is empty</h2>
-            <p>Looks like you haven't added anything yet. Browse our menu and find your perfect drink.</p>
-            <Link to="/catalog" className="cta-btn">Explore Menu</Link>
+            <h2>{t('basket_empty_title')}</h2>
+            <p>{t('basket_empty_subtitle')}</p>
+            <Link to="/catalog" className="cta-btn">{t('basket_empty_btn')}</Link>
           </motion.div>
         ) : (
           <div className="basket-content">
@@ -271,7 +255,7 @@ const Basket = () => {
                           <FitText as="h3" className="basket-item-name" maxFontSize={1.15} minFontSize={0.72}>
                             {item.product.name}
                           </FitText>
-                          <span className="basket-item-unit-price">{item.unitPrice.toFixed(2)} ₼ each</span>
+                          <span className="basket-item-unit-price">{item.unitPrice.toFixed(2)} ₼ {t('basket_unit_price')}</span>
                         </div>
 
                         <button
@@ -338,7 +322,7 @@ const Basket = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
-              <h2>Order Summary</h2>
+              <h2>{t('basket_summary_title')}</h2>
               <div className="summary-lines">
                 {enrichedItems.map(item => (
                   <div key={item.productId} className="summary-line">
@@ -353,8 +337,8 @@ const Basket = () => {
               {userPromos.length >= 2 && (
                 <div className="basket-promo-selector">
                   <div className="promo-selector-label">
-                    <span>Apply Promo Code</span>
-                    <span className="promo-count">{userPromos.length} active</span>
+                    <span>{t('basket_promo_label')}</span>
+                    <span className="promo-count">{userPromos.length} {t('basket_promo_active')}</span>
                   </div>
                   <select
                     value={selectedPromoCode}
@@ -363,10 +347,10 @@ const Basket = () => {
                   >
                     {userPromos.map((p) => (
                       <option key={p.id} value={p.promoCode}>
-                        {p.promoCode} — {p.prizeName}
+                        {p.promoCode} — {formatLocalizedPrizeName(p.prizeName, lang)}
                       </option>
                     ))}
-                    <option value="NONE">Don't use any promo code</option>
+                    <option value="NONE">{t('basket_promo_none')}</option>
                   </select>
                 </div>
               )}
@@ -374,7 +358,7 @@ const Basket = () => {
               <div className="summary-divider" />
               {promoDiscountAmount > 0 && (
                 <div className="summary-subtotal">
-                  <span>Subtotal</span>
+                  <span>{t('basket_subtotal')}</span>
                   <span>{grandTotal} ₼</span>
                 </div>
               )}
@@ -389,14 +373,14 @@ const Basket = () => {
                   >
                     <span className="summary-promo-label">
                       <img src={giftAnimated} alt="Promo gift" className="summary-promo-icon" />
-                      <span>{formatPrizeName(activePromo?.prizeName)}</span>
+                      <span>{formatLocalizedPrizeName(activePromo?.prizeName, lang)}</span>
                     </span>
                     <span className="summary-promo-discount">−{promoDiscountAmount.toFixed(2)} ₼</span>
                   </motion.div>
                 </AnimatePresence>
               )}
               <div className="summary-total">
-                <span>Total</span>
+                <span>{t('basket_total')}</span>
                 <span className="summary-total-price">{discountedTotal} ₼</span>
               </div>
 
@@ -404,10 +388,10 @@ const Basket = () => {
                 className="cta-btn basket-checkout-btn"
                 onClick={() => navigate('/order', { state: { selectedPromoCode: activePromo ? activePromo.promoCode : null } })}
               >
-                Place Order
+                {t('basket_btn_checkout')}
               </button>
               <Link to="/catalog" className="cta-btn secondary basket-continue-btn">
-                Continue Shopping
+                {t('basket_btn_continue')}
               </Link>
             </motion.div>
           </div>

@@ -1,8 +1,13 @@
 import React from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
+import useLang from '../../../utils/useLang';
+import { getPaymentMethodsTranslation } from './Lang';
 import '../../Elements/RednestModal.scss';
 
 const PaymentErrorModal = ({ isOpen, onClose, message, title = 'Card Error' }) => {
+  const { lang } = useLang();
+  const t = (id) => getPaymentMethodsTranslation(lang, id);
+
   return (
     <AnimatedModalWrapper
       isOpen={isOpen}
@@ -30,7 +35,7 @@ const PaymentErrorModal = ({ isOpen, onClose, message, title = 'Card Error' }) =
             className="rednest-modal__btn rednest-modal__btn--danger"
             onClick={onClose}
           >
-            Understand
+            {t('modal_understand')}
           </button>
         </div>
       </div>

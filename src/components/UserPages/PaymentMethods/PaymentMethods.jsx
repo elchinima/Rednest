@@ -10,6 +10,8 @@ import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddCardModal from './AddCardModal';
 import PaymentErrorModal from './PaymentErrorModal';
+import useLang from '../../../utils/useLang';
+import { getPaymentMethodsTranslation } from './Lang';
 import './PaymentMethods.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -50,6 +52,8 @@ const cardVariants = {
 const PaymentMethods = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { lang } = useLang();
+  const t = (id) => getPaymentMethodsTranslation(lang, id);
 
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,7 +122,7 @@ const PaymentMethods = () => {
 
       setIsAddModalOpen(false);
       await fetchCards();
-      showToast('Payment card added successfully!');
+      showToast(t('pm_toast_added'));
     } catch (err) {
       setErrorModalMessage(err.message || 'Failed to add card.');
       setIsErrorModalOpen(true);
@@ -149,7 +153,7 @@ const PaymentMethods = () => {
           }))
           .sort((a, b) => (b.isDefault || b.IsDefault ? 1 : 0) - (a.isDefault || a.IsDefault ? 1 : 0))
       );
-      showToast(`"${card.cardName || card.CardName || 'Card'}" set as default payment method!`);
+      showToast(`"${card.cardName || card.CardName || 'Card'}" ${t('pm_toast_default')}`);
     } catch (err) {
       showToast(err.message || 'Error setting default payment method.', 'error');
     } finally {
@@ -180,7 +184,7 @@ const PaymentMethods = () => {
         return remaining;
       });
 
-      showToast('Payment card removed successfully.');
+      showToast(t('pm_toast_deleted'));
       setIsDeleteModalOpen(false);
       setCardToDelete(null);
     } catch (err) {
@@ -210,9 +214,9 @@ const PaymentMethods = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>Payment Methods</h1>
+            <h1>{t('pm_hero_title')}</h1>
             <p className="payment-methods-hero__desc">
-              Manage your saved Visa and Mastercard cards, configure default payment method, and speed up checkout
+              {t('pm_hero_desc')}
             </p>
 
             <div className="payment-methods-hero__actions">
@@ -221,7 +225,7 @@ const PaymentMethods = () => {
                 className="cta-btn primary-red payment-methods-hero__add-btn"
                 onClick={() => {
                   if (cards.length >= 3) {
-                    setErrorModalMessage('You can only save up to 3 payment cards. Please delete an existing card to add a new one.');
+                    setErrorModalMessage(t('pm_limit_reached'));
                     setIsErrorModalOpen(true);
                   } else {
                     setIsAddModalOpen(true);
@@ -232,7 +236,7 @@ const PaymentMethods = () => {
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span>Add New Card</span>
+                <span>{t('pm_btn_add')}</span>
               </button>
             </div>
           </motion.div>
@@ -240,7 +244,7 @@ const PaymentMethods = () => {
           {loading ? (
             <div className="payment-methods-loading-state">
               <img src={loaderIcon} alt="Loading..." className="payment-methods-loader-icon" />
-              <p>Loading your saved payment methods...</p>
+              <p>{t('pm_loading')}</p>
             </div>
           ) : error ? (
             <div className="payment-methods-error-state">
@@ -250,7 +254,7 @@ const PaymentMethods = () => {
                 className="cta-btn sm secondary"
                 onClick={fetchCards}
               >
-                Try Again
+                {t('pm_try_again')}
               </button>
             </div>
           ) : (
@@ -290,7 +294,7 @@ const PaymentMethods = () => {
                               <h3 className="payment-card__title">{title}</h3>
                               {createdAt ? (
                                 <span className="payment-card__date">
-                                  Added {formatBakuDate(createdAt)}
+                                  {t('pm_added_on')} {formatBakuDate(createdAt)}
                                 </span>
                               ) : (
                                 <span className="payment-card__date">
@@ -304,7 +308,7 @@ const PaymentMethods = () => {
                             {isDef && (
                               <span className="payment-card__badge-default">
                                 <span className="pulsing-dot" />
-                                Default
+                                {t('pm_badge_default')}
                               </span>
                             )}
                           </div>
@@ -325,12 +329,12 @@ const PaymentMethods = () => {
 
                           <div className="payment-card__details-grid">
                             <div className="payment-card__detail-item">
-                              <span className="payment-card__detail-label">Cardholder</span>
+                              <span className="payment-card__detail-label">{t('pm_cardholder')}</span>
                               <span className="payment-card__detail-val">{holder}</span>
                             </div>
 
                             <div className="payment-card__detail-item">
-                              <span className="payment-card__detail-label">Expires</span>
+                              <span className="payment-card__detail-label">{t('pm_expires')}</span>
                               <span className="payment-card__detail-val">{expiry}</span>
                             </div>
                           </div>
@@ -344,12 +348,12 @@ const PaymentMethods = () => {
                                 className="payment-card__action-btn payment-card__action-btn--default"
                                 onClick={() => handleSetDefault(card)}
                                 disabled={settingDefaultId === id}
-                                title="Set as default payment method"
+                                title={t('pm_set_default')}
                               >
                                 {settingDefaultId === id ? (
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ff6b6b' }}>
                                     <img src={loaderIconRed} alt="" style={{ width: '14px', height: '14px' }} />
-                                    <span>Setting...</span>
+                                    <span>{t('pm_setting_default')}</span>
                                   </span>
                                 ) : (
                                   <>
@@ -357,7 +361,7 @@ const PaymentMethods = () => {
                                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                                       <polyline points="22 4 12 14.01 9 11.01" />
                                     </svg>
-                                    <span>Set Default</span>
+                                    <span>{t('pm_set_default')}</span>
                                   </>
                                 )}
                               </button>
@@ -372,13 +376,13 @@ const PaymentMethods = () => {
                                 setCardToDelete(card);
                                 setIsDeleteModalOpen(true);
                               }}
-                              title="Delete card"
+                              title={t('pm_delete')}
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" />
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                               </svg>
-                              <span>Delete</span>
+                              <span>{t('pm_delete')}</span>
                             </button>
                           </div>
                         </div>
@@ -408,8 +412,8 @@ const PaymentMethods = () => {
         onConfirm={handleConfirmDelete}
         itemName={
           cardToDelete
-            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ending in ${cardToDelete.id || cardToDelete.Id ? String(cardToDelete.id || cardToDelete.Id).padStart(4, '0') : '••••'}`
-            : 'this card'
+            ? `${cardToDelete.cardName || cardToDelete.CardName || 'Card'} ${t('pm_ending_in')} ${cardToDelete.id || cardToDelete.Id ? String(cardToDelete.id || cardToDelete.Id).padStart(4, '0') : '••••'}`
+            : t('pm_this_card')
         }
         loading={deleteLoading}
       />
@@ -418,7 +422,7 @@ const PaymentMethods = () => {
         isOpen={isErrorModalOpen}
         onClose={() => setIsErrorModalOpen(false)}
         message={errorModalMessage}
-        title="Card Error"
+        title={t('pm_limit_title')}
       />
 
       <div className="payment-methods-toast-container">

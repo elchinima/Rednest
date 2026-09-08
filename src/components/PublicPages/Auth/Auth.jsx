@@ -6,6 +6,8 @@ import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import { useAuth } from '../../../context/AuthContext';
 import { ensureClientHintsHeaders } from '../../../utils/clientHints';
+import { useLang, setStoredLanguage } from '../../../utils/useLang';
+import { getAuthTranslation } from './Lang';
 import './Auth.scss';
 
 const LoaderIcon = () => (
@@ -13,6 +15,9 @@ const LoaderIcon = () => (
 );
 
 const Auth = () => {
+  const lang = useLang();
+  const t = (id) => getAuthTranslation(lang, id);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -31,6 +36,10 @@ const Auth = () => {
   const { login, isAuthenticated, fetchCurrentUser } = useAuth();
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  const handleLanguageChange = (newLang) => {
+    setStoredLanguage(newLang);
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -114,7 +123,7 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     if (!agree) {
-      setError('Please agree to the Terms of Use before signing in with Google.');
+      setError(t('auth_err_agree'));
       setHighlightAgree(true);
       agreeCheckboxRef.current?.focus();
       setTimeout(() => setHighlightAgree(false), 1000);
@@ -149,6 +158,13 @@ const Auth = () => {
     e.preventDefault();
     if (loading) return;
     
+    if (!agree) {
+      setError(t('auth_err_agree'));
+      setHighlightAgree(true);
+      agreeCheckboxRef.current?.focus();
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccessInfo('');
@@ -175,7 +191,6 @@ const Auth = () => {
         setStep('2fa');
         setTwoFactorDigits(['', '', '', '']);
         setTwoFactorTimer(900);
-        setResendCooldown(60);
       } else if (!data.hasName) {
         setStep('name');
       } else {
@@ -198,7 +213,7 @@ const Auth = () => {
     e.preventDefault();
     const code = twoFactorDigits.join('');
     if (code.length < 4) {
-      setError('Please enter the full 4-digit code.');
+      setError(t('auth_err_code_length'));
       return;
     }
 
@@ -247,6 +262,11 @@ const Auth = () => {
     e.preventDefault();
     if (loading) return;
     
+    if (!name.trim()) {
+      setError(t('auth_err_name'));
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -291,9 +311,22 @@ const Auth = () => {
       <div className="auth-overlay"></div>
       
       <div className="auth-container">
-        <Link to="/" className="auth-back-link">
-          &larr; Back to Home
-        </Link>
+        <div className="auth-top-bar">
+          <Link to="/" className="auth-back-link">
+            &larr; {t('auth_back_home')}
+          </Link>
+          <div className="auth-lang-switcher">
+            <select
+              aria-label="Select language"
+              value={lang}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+            >
+              <option value="az">Azərbaycan</option>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
         
         <div className="auth-card-split">
           <div className="auth-card-left">
@@ -301,8 +334,8 @@ const Auth = () => {
               <Link to="/">
                 <img src={logo} alt="Rednest" className="auth-brand-logo" />
               </Link>
-              <h2>Awaken Your Senses</h2>
-              <p>Experience the rich, bold flavors of our premium coffee blends. Join our community today.</p>
+              <h2>{t('auth_hero_title')}</h2>
+              <p>{t('auth_hero_subtitle')}</p>
             </div>
           </div>
           
@@ -312,27 +345,27 @@ const Auth = () => {
                 <img src={logo} alt="Rednest Logo" className="auth-logo mobile-only-logo" />
               </Link>
               <h2>
-                {step === 'login' && 'Welcome to Rednest'}
-                {step === '2fa' && 'Two-Factor Authentication'}
-                {step === 'name' && 'Welcome to Rednest'}
+                {step === 'login' && t('auth_step_login_title')}
+                {step === '2fa' && t('auth_step_2fa_title')}
+                {step === 'name' && t('auth_step_name_title')}
               </h2>
               <p>
-                {step === 'login' && 'Enter your email and password to log in or create a new account.'}
-                {step === '2fa' && `Enter the 4-digit code sent to ${email}`}
-                {step === 'name' && 'Almost there! Enter your name to complete registration.'}
+                {step === 'login' && t('auth_step_login_subtitle')}
+                {step === '2fa' && `${t('auth_step_2fa_subtitle')} (${email})`}
+                {step === 'name' && t('auth_step_name_subtitle')}
               </p>
             </div>
             
             {step === 'login' && (
               <form className="auth-form" onSubmit={handleSubmit}>
                 <div className="input-group">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{t('auth_label_email')}</label>
                   <input 
                     type="email" 
                     id="email" 
                     name="email"
                     autoComplete="username email"
-                    placeholder="Enter your email" 
+                    placeholder={t('auth_placeholder_email')} 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required 
@@ -340,13 +373,13 @@ const Auth = () => {
                 </div>
                 
                 <div className="input-group">
-                  <label htmlFor="password">Password</label>
+                  <label htmlFor="password">{t('auth_label_password')}</label>
                   <input 
                     type="password" 
                     id="password" 
                     name="password"
                     autoComplete="current-password"
-                    placeholder="Enter your password" 
+                    placeholder={t('auth_placeholder_password')} 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required 
@@ -371,7 +404,10 @@ const Auth = () => {
                     required 
                   />
                   <label htmlFor="agree">
-                    I agree to the <Link to="/rules" className="terms-link">Terms of Use</Link>
+                    {t('auth_agree_terms')}{' '}
+                    <Link to="/rules" className="terms-link">
+                      {t('auth_terms_link')}
+                    </Link>
                   </label>
                 </div>
                 
@@ -384,15 +420,15 @@ const Auth = () => {
                     {loading ? (
                       <span className="auth-btn-loader">
                         <LoaderIcon />
-                        Processing...
+                        ...
                       </span>
-                    ) : 'Continue'}
+                    ) : t('auth_btn_continue')}
                   </button>
 
                   <button
                     type="button"
                     className="auth-google-btn"
-                    title={!agree ? "Please agree to the Terms of Use to sign in with Google" : "Sign in with Google"}
+                    title={!agree ? t('auth_err_agree') : t('auth_btn_google')}
                     aria-label="Sign in with Google"
                     onClick={handleGoogleLogin}
                     disabled={loading}
@@ -423,7 +459,7 @@ const Auth = () => {
                     type="button"
                     className="auth-forgot-password-btn"
                   >
-                    Forgot password
+                    {lang === 'az' ? 'Şifrəni unutmusunuz?' : lang === 'en' ? 'Forgot password' : 'Забыли пароль?'}
                   </button>
                 </div>
               </form>
@@ -450,9 +486,14 @@ const Auth = () => {
 
                 <div className="two-factor-info">
                   {twoFactorTimer > 0 ? (
-                    <span>Code expires in <strong className="two-factor-timer">{formatTimer(twoFactorTimer)}</strong></span>
+                    <span>
+                      {lang === 'az' ? 'Kodun vaxtı bitir:' : lang === 'en' ? 'Code expires in' : 'Код истекает через'}{' '}
+                      <strong className="two-factor-timer">{formatTimer(twoFactorTimer)}</strong>
+                    </span>
                   ) : (
-                    <span className="two-factor-expired">Code has expired. Please request a new one.</span>
+                    <span className="two-factor-expired">
+                      {lang === 'az' ? 'Kodun vaxtı bitdi. Yenisini istəyin.' : lang === 'en' ? 'Code has expired. Please request a new one.' : 'Срок действия кода истек. Запросите новый код.'}
+                    </span>
                   )}
                 </div>
 
@@ -468,9 +509,9 @@ const Auth = () => {
                   {loading ? (
                     <span className="auth-btn-loader">
                       <LoaderIcon />
-                      Verifying...
+                      ...
                     </span>
-                  ) : 'Verify & Sign In'}
+                  ) : t('auth_btn_verify')}
                 </button>
 
                 <div className="two-factor-actions">
@@ -483,7 +524,7 @@ const Auth = () => {
                       setSuccessInfo('');
                     }}
                   >
-                    &larr; Back to login
+                    &larr; {lang === 'az' ? 'Girişə qayıt' : lang === 'en' ? 'Back to login' : 'Назад ко входу'}
                   </button>
                 </div>
               </form>
@@ -492,13 +533,13 @@ const Auth = () => {
             {step === 'name' && (
               <form className="auth-form" onSubmit={handleNameSubmit}>
                 <div className="input-group">
-                  <label htmlFor="name">Your Name</label>
+                  <label htmlFor="name">{t('auth_label_name')}</label>
                   <input 
                     type="text" 
                     id="name" 
                     name="name"
                     autoComplete="name"
-                    placeholder="Enter your name" 
+                    placeholder={t('auth_placeholder_name')} 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required 
@@ -514,9 +555,9 @@ const Auth = () => {
                   {loading ? (
                     <span className="auth-btn-loader">
                       <LoaderIcon />
-                      Saving...
+                      ...
                     </span>
-                  ) : 'Complete Registration'}
+                  ) : t('auth_btn_complete')}
                 </button>
               </form>
             )}

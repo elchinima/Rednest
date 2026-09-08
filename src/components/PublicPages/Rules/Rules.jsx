@@ -1,15 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
+import { useLang } from '../../../utils/useLang';
+import { getRulesTranslation } from './Lang';
 import './Rules.scss';
 
 const Rules = () => {
+  const lang = useLang();
+  const t = (id) => getRulesTranslation(lang, id);
+
   useEffect(() => {
     document.title = 'Rednest';
     window.scrollTo(0, 0);
   }, []);
+
+  const localeMap = { ru: 'ru-RU', az: 'az-AZ', en: 'en-US' };
+  const formattedDate = new Date().toLocaleDateString(localeMap[lang] || 'az-AZ', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   return (
     <motion.div 
@@ -39,11 +51,11 @@ const Rules = () => {
                 <line x1="16" y1="17" x2="8" y2="17" />
                 <polyline points="10 9 9 9 8 9" />
               </svg>
-              <span>Legal & Policies</span>
+              <span>{t('rules_badge')}</span>
             </div>
-            <h1 className="rules-title">Terms of Use</h1>
+            <h1 className="rules-title">{t('rules_title')}</h1>
             <p className="rules-subtitle">
-              Please review our terms of service, policies, and guidelines.
+              {t('rules_subtitle')}
             </p>
           </motion.div>
 
@@ -60,23 +72,23 @@ const Rules = () => {
                   <path d="M9 12l2 2 4-4" />
                 </svg>
               </div>
-              <h2 className="rules-section-title">Terms of Service</h2>
+              <h2 className="rules-section-title">{t('rules_section_title')}</h2>
               <p className="rules-placeholder-text">
-                The content for the Terms of Use is currently being updated. Please check back soon for our comprehensive rules, terms of service, and user agreements.
+                {t('rules_placeholder')}
               </p>
               
               <div className="rules-meta-info">
-                <span className="rules-meta-tag">Status: Draft</span>
-                <span className="rules-meta-tag">Last modified: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span className="rules-meta-tag">{t('rules_status_draft')}</span>
+                <span className="rules-meta-tag">{t('rules_last_modified')} {formattedDate}</span>
               </div>
             </div>
 
             <div className="rules-actions">
               <Link to="/" className="cta-btn secondary">
-                Back to Home
+                {t('rules_btn_home')}
               </Link>
               <Link to="/catalog" className="cta-btn">
-                Explore Menu
+                {t('rules_btn_menu')}
               </Link>
             </div>
           </motion.div>

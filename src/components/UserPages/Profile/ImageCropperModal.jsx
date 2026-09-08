@@ -1,10 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
+import useLang from '../../../utils/useLang';
+import { getProfileTranslation } from './Lang';
 
 const CROP_BOX_SIZE = 260;
 
 const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loading }) => {
+  const { lang } = useLang();
+  const t = (id) => getProfileTranslation(lang, id);
+
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -158,9 +163,9 @@ const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loadin
   return (
     <AnimatedModalWrapper isOpen={isOpen} onClose={() => !loading && onClose()} targetBorderRadius="24px">
       <div className="profile-cropper-modal">
-        <h3 className="profile-cropper-modal__title">Crop & Position Photo</h3>
+        <h3 className="profile-cropper-modal__title">{t('crop_modal_title')}</h3>
         <p className="profile-cropper-modal__subtitle">
-          Drag to move and use slider to zoom into square
+          {t('crop_modal_hint')}
         </p>
 
         <div
@@ -235,7 +240,7 @@ const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loadin
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            {t('crop_modal_cancel')}
           </button>
           <button
             type="button"
@@ -250,10 +255,10 @@ const ImageCropperModal = ({ isOpen, imageSrc, fileName, onClose, onCrop, loadin
                   alt="Saving..."
                   style={{ width: '16px', height: '16px', flexShrink: 0 }}
                 />
-                Saving...
+                {t('crop_modal_saving')}
               </span>
             ) : (
-              'Apply'
+              t('crop_modal_apply')
             )}
           </button>
         </div>

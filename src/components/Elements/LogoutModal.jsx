@@ -1,6 +1,8 @@
 import React from 'react';
 import AnimatedModalWrapper from './AnimatedModalWrapper';
 import loaderIconRed from '../../assets/icons/loader-animated-red.svg';
+import { useLang } from '../../utils/useLang';
+import { getWidgetTranslation } from './Lang';
 import './RednestModal.scss';
 
 const LogoutModal = ({
@@ -8,10 +10,17 @@ const LogoutModal = ({
   onClose,
   onConfirm,
   loading,
-  title = 'Log Out',
-  text = 'Are you sure you want to log out of your account?',
-  confirmText = 'Log Out',
+  title,
+  text,
+  confirmText,
 }) => {
+  const lang = useLang();
+  const t = (id) => getWidgetTranslation(lang, id);
+
+  const displayTitle = title || t('modal_logout_title');
+  const displayText = text || t('modal_logout_text');
+  const displayConfirmText = confirmText || t('modal_logout_confirm');
+
   return (
     <AnimatedModalWrapper
       isOpen={isOpen}
@@ -27,9 +36,9 @@ const LogoutModal = ({
           </svg>
         </div>
 
-        <h3 className="rednest-modal__title">{title}</h3>
+        <h3 className="rednest-modal__title">{displayTitle}</h3>
         <p className="rednest-modal__text">
-          {text}
+          {displayText}
         </p>
 
         <div className="rednest-modal__actions">
@@ -39,7 +48,7 @@ const LogoutModal = ({
             onClick={onClose}
             disabled={loading}
           >
-            Cancel
+            {t('modal_logout_cancel')}
           </button>
           <button
             type="button"
@@ -50,9 +59,9 @@ const LogoutModal = ({
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
                 <img src={loaderIconRed} alt="Loading" style={{ width: '18px', height: '18px' }} />
-                Processing...
+                {t('modal_delete_deleting')}
               </span>
-            ) : 'Log Out'}
+            ) : displayConfirmText}
           </button>
         </div>
       </div>

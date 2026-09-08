@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ProfilePasswordModal from '../components/Elements/ProfilePasswordModal';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
 
+import { useLang } from '../utils/useLang';
+import { getWidgetTranslation } from '../components/Elements/Lang';
+
 const ProfileSecurityContext = createContext(null);
 
 const PROTECTED_ROUTES = [
@@ -15,40 +18,42 @@ const PROTECTED_ROUTES = [
   '/reviews',
 ];
 
-const getModalContent = (path) => {
+const getModalContent = (path, lang) => {
+  const t = (id) => getWidgetTranslation(lang, id);
+  const title = t('modal_security_title');
   if (path === '/addresses' || path === '/adresses') {
     return {
-      title: 'Security Check',
-      description: 'Enter your account password to access Delivery Addresses.',
+      title,
+      description: t('modal_security_desc_addresses'),
     };
   }
   if (path === '/payment-methods') {
     return {
-      title: 'Security Check',
-      description: 'Enter your account password to access Payment Methods.',
+      title,
+      description: t('modal_security_desc_payments'),
     };
   }
   if (path === '/sessions') {
     return {
-      title: 'Security Check',
-      description: 'Enter your account password to access Active Sessions.',
+      title,
+      description: t('modal_security_desc_sessions'),
     };
   }
   if (path === '/orders') {
     return {
-      title: 'Security Check',
-      description: 'Enter your account password to access Order History.',
+      title,
+      description: t('modal_security_desc_orders'),
     };
   }
   if (path === '/reviews') {
     return {
-      title: 'Security Check',
-      description: 'Enter your account password to access Your Reviews.',
+      title,
+      description: t('modal_security_desc_reviews'),
     };
   }
   return {
-    title: 'Security Check',
-    description: 'Enter your account password to access Profile settings.',
+    title,
+    description: t('modal_security_desc_profile'),
   };
 };
 
@@ -58,6 +63,7 @@ export const ProfileSecurityProvider = ({ children }) => {
   const [targetPath, setTargetPath] = useState('/profile');
   const navigate = useNavigate();
   const location = useLocation();
+  const lang = useLang();
   const successCallbackRef = useRef(null);
 
   const checkSecurityStatus = useCallback(async () => {
@@ -113,7 +119,7 @@ export const ProfileSecurityProvider = ({ children }) => {
     }
   }, [location.pathname, isProfileUnlocked, navigate]);
 
-  const modalContent = getModalContent(targetPath || location.pathname);
+  const modalContent = getModalContent(targetPath || location.pathname, lang);
 
   return (
     <ProfileSecurityContext.Provider

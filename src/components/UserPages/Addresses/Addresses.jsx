@@ -9,6 +9,8 @@ import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import AddressModal from './AddressModal';
 import PaymentErrorModal from '../PaymentMethods/PaymentErrorModal';
+import useLang from '../../../utils/useLang';
+import { getAddressesTranslation } from './Lang';
 import './Addresses.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -49,6 +51,8 @@ const cardVariants = {
 const Addresses = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { lang } = useLang();
+  const t = (id) => getAddressesTranslation(lang, id);
 
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -130,7 +134,7 @@ const Addresses = () => {
           );
           return updated.sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
         });
-        showToast('Address updated successfully!');
+        showToast(t('addr_toast_updated'));
       } else {
         setAddresses((prev) => {
           const updated = formData.isDefault
@@ -138,7 +142,7 @@ const Addresses = () => {
             : [...prev];
           return [savedAddress, ...updated].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
         });
-        showToast('New delivery address added!');
+        showToast(t('addr_toast_added'));
       }
 
       setIsAddressModalOpen(false);
@@ -171,7 +175,7 @@ const Addresses = () => {
           }))
           .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
       );
-      showToast(`"${address.title || address.address}" set as default address!`);
+      showToast(`"${address.title || address.address}" ${t('addr_toast_default')}`);
     } catch (err) {
       showToast(err.message || 'Error setting default address.', 'error');
     } finally {
@@ -199,7 +203,7 @@ const Addresses = () => {
         return remaining;
       });
 
-      showToast('Address removed successfully.');
+      showToast(t('addr_toast_deleted'));
       setIsDeleteModalOpen(false);
       setAddressToDelete(null);
     } catch (err) {
@@ -229,9 +233,9 @@ const Addresses = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1>Delivery Addresses</h1>
+            <h1>{t('addr_hero_title')}</h1>
             <p className="addresses-hero__desc">
-              Manage your delivery locations, set default shipping destination, and configure courier instructions
+              {t('addr_hero_desc')}
             </p>
 
             <div className="addresses-hero__actions">
@@ -240,7 +244,7 @@ const Addresses = () => {
                 className="cta-btn primary-red addresses-hero__add-btn"
                 onClick={() => {
                   if (addresses.length >= 3) {
-                    setErrorModalMessage('You can only save up to 3 delivery addresses. Please delete an existing address to add a new one.');
+                    setErrorModalMessage(t('addr_limit_reached'));
                     setIsErrorModalOpen(true);
                   } else {
                     setAddressToEdit(null);
@@ -252,7 +256,7 @@ const Addresses = () => {
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span>Add New Address</span>
+                <span>{t('addr_btn_add')}</span>
               </button>
             </div>
           </motion.div>
@@ -260,7 +264,7 @@ const Addresses = () => {
           {loading ? (
             <div className="addresses-loading-state">
               <img src={loaderIcon} alt="Loading..." className="addresses-loader-icon" />
-              <p>Loading your saved addresses...</p>
+              <p>{t('addr_loading')}</p>
             </div>
           ) : error ? (
             <div className="addresses-error-state">
@@ -270,7 +274,7 @@ const Addresses = () => {
                 className="cta-btn sm secondary"
                 onClick={fetchAddresses}
               >
-                Try Again
+                {t('addr_try_again')}
               </button>
             </div>
           ) : (
@@ -302,13 +306,13 @@ const Addresses = () => {
                                 <h3 className="address-card__title">{addr.title}</h3>
                                 {addr.createdAt && (
                                   <span className="address-card__date">
-                                    Added {formatBakuDate(addr.createdAt)}
+                                    {t('addr_added_on')} {formatBakuDate(addr.createdAt)}
                                   </span>
                                 )}
                               </>
                             ) : (
                               <span className="address-card__date address-card__date--standalone">
-                                {addr.createdAt ? `Added ${formatBakuDate(addr.createdAt)}` : 'Delivery Address'}
+                                {addr.createdAt ? `${t('addr_added_on')} ${formatBakuDate(addr.createdAt)}` : t('addr_fallback_title')}
                               </span>
                             )}
                           </div>
@@ -318,7 +322,7 @@ const Addresses = () => {
                           {addr.isDefault && (
                             <span className="address-card__badge-default">
                               <span className="pulsing-dot" />
-                              Default
+                              {t('addr_badge_default')}
                             </span>
                           )}
                         </div>
@@ -336,21 +340,21 @@ const Addresses = () => {
                         <div className="address-card__details-grid">
                           {addr.city && (
                             <div className="address-card__detail-item">
-                              <span className="address-card__detail-label">City</span>
+                              <span className="address-card__detail-label">{t('addr_city')}</span>
                               <span className="address-card__detail-val">{addr.city}</span>
                             </div>
                           )}
 
                           {addr.apartment && (
                             <div className="address-card__detail-item">
-                              <span className="address-card__detail-label">Apt / Floor</span>
+                              <span className="address-card__detail-label">{t('addr_apt')}</span>
                               <span className="address-card__detail-val">{addr.apartment}</span>
                             </div>
                           )}
 
                           {addr.phone && (
                             <div className="address-card__detail-item">
-                              <span className="address-card__detail-label">Phone</span>
+                              <span className="address-card__detail-label">{t('addr_phone')}</span>
                               <span className="address-card__detail-val">{addr.phone}</span>
                             </div>
                           )}
@@ -374,13 +378,13 @@ const Addresses = () => {
                               className="address-card__action-btn address-card__action-btn--default"
                               onClick={() => handleSetDefault(addr)}
                               disabled={settingDefaultId === addr.id}
-                              title="Set as default delivery address"
+                              title={t('addr_set_default')}
                             >
                               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                                 <polyline points="22 4 12 14.01 9 11.01" />
                               </svg>
-                              <span>{settingDefaultId === addr.id ? 'Setting...' : 'Set Default'}</span>
+                              <span>{settingDefaultId === addr.id ? t('addr_setting_default') : t('addr_set_default')}</span>
                             </button>
                           )}
                         </div>
@@ -393,13 +397,13 @@ const Addresses = () => {
                               setAddressToEdit(addr);
                               setIsAddressModalOpen(true);
                             }}
-                            title="Edit address"
+                            title={t('addr_edit')}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
-                            <span>Edit</span>
+                            <span>{t('addr_edit')}</span>
                           </button>
 
                           <button
@@ -409,13 +413,13 @@ const Addresses = () => {
                               setAddressToDelete(addr);
                               setIsDeleteModalOpen(true);
                             }}
-                            title="Delete address"
+                            title={t('addr_delete')}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6" />
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                             </svg>
-                            <span>Delete</span>
+                            <span>{t('addr_delete')}</span>
                           </button>
                         </div>
                       </div>
@@ -446,7 +450,7 @@ const Addresses = () => {
           setAddressToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        itemName={addressToDelete ? (addressToDelete.title ? `"${addressToDelete.title}" (${addressToDelete.address})` : `"${addressToDelete.address}"`) : 'this address'}
+        itemName={addressToDelete ? (addressToDelete.title ? `"${addressToDelete.title}" (${addressToDelete.address})` : `"${addressToDelete.address}"`) : t('addr_this_address')}
         loading={deleteLoading}
       />
 
@@ -454,7 +458,7 @@ const Addresses = () => {
         isOpen={isErrorModalOpen}
         onClose={() => setIsErrorModalOpen(false)}
         message={errorModalMessage}
-        title="Address Limit"
+        title={t('addr_limit_title')}
       />
 
       <div className="addresses-toast-container">
