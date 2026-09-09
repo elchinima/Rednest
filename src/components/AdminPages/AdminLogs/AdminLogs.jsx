@@ -16,6 +16,7 @@ const PAGES_LIST = [
   'Reviews',
   'Newsletter',
   'Database',
+  'Footer',
 ];
 
 const TYPES_LIST = ['All', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -263,6 +264,8 @@ const extractActionSummary = (descriptionStr, type, page) => {
     targetPreview = `User: ${String(data.targetUserId).substring(0, 8)}...`;
   } else if (data.reviewId) {
     targetPreview = `Review: ${String(data.reviewId).substring(0, 8)}...`;
+  } else if (data.target) {
+    targetPreview = data.target;
   }
 
   return { actionName, targetPreview, data, changes, params };

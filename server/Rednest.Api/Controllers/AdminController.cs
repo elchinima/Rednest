@@ -2504,7 +2504,8 @@ public class AdminController : ControllerBase
     [HttpPut("footer")]
     public async Task<IActionResult> UpdateFooter([FromBody] FooterUpdateRequest request)
     {
-        if (!await IsAdminAuthenticatedAsync())
+        var (auth, adminUser) = await GetAdminUserAsync();
+        if (!auth)
             return Unauthorized(new { message = "Unauthorized." });
 
         if (request == null || request.FooterRU == null || request.FooterEN == null || request.FooterAZ == null)
@@ -2529,6 +2530,17 @@ public class AdminController : ControllerBase
                   VALUES (NOW(), {0}::jsonb, {1}::jsonb, {2}::jsonb)",
                 ruJson, enJson, azJson);
         }
+
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Footer",
+            "PUT",
+            new
+            {
+                action = "UpdateFooter",
+                target = "Website Footer (RU/EN/AZ)"
+            });
 
         return Ok(new { message = "Footer updated successfully." });
     }
