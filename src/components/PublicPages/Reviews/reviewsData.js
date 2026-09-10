@@ -101,3 +101,80 @@ export const formatTimeAgo = (dateInput) => {
   }
 };
 
+export const normalizeLanguageCode = (langStr) => {
+  if (!langStr) return '';
+  const l = String(langStr).trim().toLowerCase();
+  if (l.includes('ru') || l.includes('russia')) return 'ru';
+  if (l.includes('az') || l.includes('azerbaijan')) return 'az';
+  if (l.includes('en') || l.includes('english')) return 'en';
+  return '';
+};
+
+export const detectCommentLanguage = (comment) => {
+  if (!comment || typeof comment !== 'string') return '';
+  const text = comment.trim();
+  if (!text) return '';
+
+  // Cyrillic script -> Russian
+  if (/[а-яёА-ЯЁ]/.test(text)) {
+    return 'ru';
+  }
+
+  // Azerbaijani specific letters (ə, ı, ö, ş, ğ, ç, ü)
+  if (/[əıöşğçüƏIÖŞĞÇÜ]/i.test(text)) {
+    return 'az';
+  }
+
+  // Azerbaijani Latin transliterated keywords
+  const azKeywords = /\b(cox|çox|ela|əla|dadli|dadlı|dadlidir|dadlıdır|qeseng|qəşəng|yaxsi|yaxşı|pis|sagol|sağol|sag|sağ|olun|tesekkur|təşəkkür|minnetdaram|minnətdaram|sifaris|sifariş|catdirilma|çatdırılma|baku|baki|bakı|men|mən|sen|sən|biz|siz|ve|və|amma|ancaq|ucun|üçün|hec|heç|her|hər|bir|kimi)\b/i;
+  if (azKeywords.test(text)) {
+    return 'az';
+  }
+
+  // English common words
+  const enKeywords = /\b(the|and|is|it|you|that|was|for|are|with|have|this|from|great|good|coffee|service|delivery|taste|delicious|fast|nice|friendly|best|place|food|drink|order)\b/i;
+  if (enKeywords.test(text)) {
+    return 'en';
+  }
+
+  // Fallback: standard Latin text default to English
+  if (/^[a-zA-Z0-9\s.,!?'"()#@%&*+/:;-]+$/.test(text)) {
+    return 'en';
+  }
+
+  return '';
+};
+
+export const getReviewLanguage = (review) => {
+  if (!review) return '';
+  const fromExplicit = normalizeLanguageCode(review.language);
+  if (fromExplicit) return fromExplicit;
+  return detectCommentLanguage(review.comment);
+};
+
+export const doesReviewMatchLanguage = (review, userLang) => {
+  if (!userLang) return false;
+  const target = normalizeLanguageCode(userLang);
+  if (!target) return false;
+  return getReviewLanguage(review) === target;
+};
+
+export const sortReviewsByLanguage = (reviewsList, userLang) => {
+  if (!Array.isArray(reviewsList) || reviewsList.length <= 1) return reviewsList || [];
+  const targetLang = normalizeLanguageCode(userLang);
+  if (!targetLang) return reviewsList;
+
+  const matching = [];
+  const others = [];
+
+  for (const review of reviewsList) {
+    if (doesReviewMatchLanguage(review, targetLang)) {
+      matching.push(review);
+    } else {
+      others.push(review);
+    }
+  }
+
+  return [...matching, ...others];
+};
+

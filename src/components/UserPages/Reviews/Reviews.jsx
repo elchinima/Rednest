@@ -9,12 +9,14 @@ import Navbar from '../../Elements/Navbar';
 import Footer from '../../Footer/Footer';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import WriteReviewModal from '../../PublicPages/Reviews/WriteReviewModal';
-import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime } from '../../PublicPages/Reviews/reviewsData';
+import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime, sortReviewsByLanguage } from '../../PublicPages/Reviews/reviewsData';
+import { useLang } from '../../../utils/useLang';
 import './Reviews.scss';
 
 const apiUrl = import.meta.env.VITE_API_URL || '';
 
 const Reviews = () => {
+  const lang = useLang();
   const { user } = useAuth();
   const { isProfileUnlocked, requireProfileAccess } = useProfileSecurity();
   const navigate = useNavigate();
@@ -95,9 +97,12 @@ const Reviews = () => {
   };
 
   const filteredReviews = useMemo(() => {
-    if (selectedCategory === 'all') return reviews;
-    return reviews.filter(r => (r.category || '').toLowerCase() === selectedCategory.toLowerCase());
-  }, [reviews, selectedCategory]);
+    let list = reviews;
+    if (selectedCategory !== 'all') {
+      list = reviews.filter(r => (r.category || '').toLowerCase() === selectedCategory.toLowerCase());
+    }
+    return sortReviewsByLanguage(list, lang);
+  }, [reviews, selectedCategory, lang]);
 
   const totalLikes = useMemo(() => {
     return reviews.reduce((sum, r) => sum + (Number(r.likes) || 0), 0);

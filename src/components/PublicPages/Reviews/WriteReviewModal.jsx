@@ -107,7 +107,8 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmitReview }) => {
           orderId: selectedOrderId,
           category,
           rating: Number(rating),
-          comment: comment.trim()
+          comment: comment.trim(),
+          language: lang === 'ru' ? 'Russian' : lang === 'az' ? 'Azerbaijani' : 'English'
         })
       });
 

@@ -7,7 +7,7 @@ import WriteReviewModal from './WriteReviewModal';
 import DeleteConfirmModal from '../../Elements/DeleteConfirmModal';
 import { useAuth } from '../../../context/AuthContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime, formatTimeAgo } from './reviewsData';
+import { REVIEW_CATEGORIES, getAvatarGradient, formatBakuDateTime, formatTimeAgo, sortReviewsByLanguage } from './reviewsData';
 import { useLang } from '../../../utils/useLang';
 import { getReviewsTranslation, getReviewCategoryLabel } from './Lang';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
@@ -191,14 +191,16 @@ const Reviews = () => {
   }, [reviews, user]);
 
   const filteredReviews = useMemo(() => {
+    let list = reviews;
     if (selectedCategory === 'my') {
-      return reviews.filter(
+      list = reviews.filter(
         r => r.isOwner || (user && (r.userId === user.id || r.userId === user.Id))
       );
+    } else if (selectedCategory !== 'all') {
+      list = reviews.filter(r => (r.category || '').toLowerCase() === selectedCategory.toLowerCase());
     }
-    if (selectedCategory === 'all') return reviews;
-    return reviews.filter(r => (r.category || '').toLowerCase() === selectedCategory.toLowerCase());
-  }, [reviews, selectedCategory, user]);
+    return sortReviewsByLanguage(list, lang);
+  }, [reviews, selectedCategory, user, lang]);
 
   const averageRating = useMemo(() => {
     if (!reviews || reviews.length === 0) return '0.00';

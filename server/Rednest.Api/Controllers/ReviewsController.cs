@@ -220,6 +220,15 @@ public class ReviewsController : ControllerBase
         if (alreadyReviewed)
             return Conflict(new { message = "You have already submitted a review for this order." });
 
+        ReviewLanguage? initialLanguage = null;
+        if (!string.IsNullOrWhiteSpace(request.Language))
+        {
+            var l = request.Language.Trim().ToLowerInvariant();
+            if (l.Contains("az") || l.Contains("azerbaijan")) initialLanguage = ReviewLanguage.Azerbaijani;
+            else if (l.Contains("ru") || l.Contains("russia")) initialLanguage = ReviewLanguage.Russian;
+            else if (l.Contains("en") || l.Contains("english")) initialLanguage = ReviewLanguage.English;
+        }
+
         var review = new Review
         {
             Id = Guid.NewGuid(),
@@ -231,7 +240,7 @@ public class ReviewsController : ControllerBase
                 Status = ReviewStatus.Pending,
                 UpdatedAt = GetBakuTime()
             },
-            Language = null,
+            Language = initialLanguage,
             ReviewData = new ReviewDetails
             {
                 Rating = Math.Round(request.Rating, 2),
