@@ -228,14 +228,3 @@ docker run -d -p 8080:8080 --name rednest-container \
   rednest-app
 ```
 > Access the complete application at `http://localhost:8080`.
-
----
-
-## 📜 Available NPM Scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Starts Vite development server with Hot Module Replacement (HMR) |
-| `npm run build` | Compiles and bundles production frontend assets into `/dist` |
-| `npm run lint` | Runs `oxlint` for lightning-fast code quality checks |
-| `npm run preview` | Locally previews the production build |
