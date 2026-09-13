@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_URL } from '../utils/config';
 
 const AdminAuthContext = createContext(null);
 
@@ -11,7 +12,7 @@ export const AdminAuthProvider = ({ children }) => {
   const verify = useCallback(async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = API_URL;
       const res = await fetchWithRefresh(`${apiUrl}/api/admin/verify`, {
         skipAuthRedirect: true,
       });

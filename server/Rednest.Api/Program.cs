@@ -48,7 +48,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)
+        var allowedOrigins = new List<string> { "http://localhost:5173", "http://localhost:8080" };
+        var baseUrl = Environment.GetEnvironmentVariable("BASE_URL");
+        if (!string.IsNullOrEmpty(baseUrl))
+            allowedOrigins.Add(baseUrl.TrimEnd('/'));
+
+        policy.WithOrigins(allowedOrigins.ToArray())
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

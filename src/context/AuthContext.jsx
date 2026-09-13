@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_URL } from '../utils/config';
 
 const AuthContext = createContext(null);
 
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = API_URL;
       await fetch(`${apiUrl}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchCurrentUser = useCallback(async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = API_URL;
       const response = await fetchWithRefresh(`${apiUrl}/api/auth/me`);
 
       if (response.ok) {
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const retryDelays = [5000, 10000, 15000, 20000];
+      const retryDelays = [3000, 5000];
       let result = await fetchCurrentUser();
 
       for (let i = 0; i < retryDelays.length && result && !result.ok && !result.unauthorized; i++) {

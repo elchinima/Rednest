@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_URL } from '../utils/config';
 
 const BasketContext = createContext(null);
 
@@ -26,10 +27,15 @@ function setLocalBasket(items) {
 }
 
 function getBakuTimeISO() {
-  const d = new Date();
-  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-  const baku = new Date(utc + (3600000 * 4));
-  return baku.toISOString();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Baku',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(new Date());
+  const get = (type) => parts.find(p => p.type === type)?.value || '00';
+  return `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}.000Z`;
 }
 
 function clearLocalBasket() {
@@ -43,7 +49,7 @@ export const BasketProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasSynced = useRef(false);
-  const apiUrl = import.meta.env.VITE_API_URL || '';
+  const apiUrl = API_URL;
 
   // Synchronize across browser tabs instantly without websockets
   useEffect(() => {
@@ -107,122 +113,71 @@ export const BasketProvider = ({ children }) => {
     } catch {}
   };
 
-  const addItem = useCallback(async (productId) => {
+  // Shared helper: applies a state transform, broadcasts, and persists to localStorage or API
+  const applyUpdate = useCallback((transform, apiCall) => {
     let nextItems = null;
+    setItems(prev => {
+      const result = transform(prev);
+      if (result === prev) return prev; // no change
+      nextItems = result;
+      return result;
+    });
 
-    if (isAuthenticated && user) {
-      setItems(prev => {
-        const existing = prev.find(i => i.productId === productId);
-        if (existing) {
-          if (existing.quantity >= 100) return prev;
-          nextItems = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
-        } else {
-          nextItems = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
-        }
-        return nextItems;
-      });
-
-      if (nextItems) {
-        broadcastSync(nextItems);
-        try {
-          await fetchWithRefresh(`${apiUrl}/api/basket/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId }),
-          });
-        } catch (err) {
-          console.error('Failed to add item:', err);
-        }
+    // Persist happens after setItems
+    if (nextItems) {
+      broadcastSync(nextItems);
+      if (isAuthenticated && user) {
+        apiCall?.().catch(err => console.error('Basket API error:', err));
+      } else {
+        setLocalBasket(nextItems);
       }
-    } else {
-      setItems(prev => {
+    }
+  }, [isAuthenticated, user]);
+
+  const addItem = useCallback(async (productId) => {
+    applyUpdate(
+      prev => {
         const existing = prev.find(i => i.productId === productId);
-        let updated;
         if (existing) {
           if (existing.quantity >= 100) return prev;
-          updated = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
-        } else {
-          updated = [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
+          return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i);
         }
-        setLocalBasket(updated);
-        broadcastSync(updated);
-        return updated;
-      });
-    }
-  }, [isAuthenticated, user, apiUrl]);
+        return [...prev, { productId, addedAt: getBakuTimeISO(), quantity: 1 }];
+      },
+      () => fetchWithRefresh(`${apiUrl}/api/basket/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+    );
+  }, [applyUpdate, apiUrl]);
 
   const removeItem = useCallback(async (productId) => {
-    let nextItems = null;
-
-    if (isAuthenticated && user) {
-      setItems(prev => {
+    applyUpdate(
+      prev => {
         const existing = prev.find(i => i.productId === productId);
         if (!existing) return prev;
         if (existing.quantity <= 1) {
-          nextItems = prev.filter(i => i.productId !== productId);
-        } else {
-          nextItems = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
+          return prev.filter(i => i.productId !== productId);
         }
-        return nextItems;
-      });
-
-      if (nextItems) {
-        broadcastSync(nextItems);
-        try {
-          await fetchWithRefresh(`${apiUrl}/api/basket/remove`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId }),
-          });
-        } catch (err) {
-          console.error('Failed to remove item:', err);
-        }
-      }
-    } else {
-      setItems(prev => {
-        const existing = prev.find(i => i.productId === productId);
-        if (!existing) return prev;
-        let updated;
-        if (existing.quantity <= 1) {
-          updated = prev.filter(i => i.productId !== productId);
-        } else {
-          updated = prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
-        }
-        setLocalBasket(updated);
-        broadcastSync(updated);
-        return updated;
-      });
-    }
-  }, [isAuthenticated, user, apiUrl]);
+        return prev.map(i => i.productId === productId ? { ...i, quantity: i.quantity - 1 } : i);
+      },
+      () => fetchWithRefresh(`${apiUrl}/api/basket/remove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId }),
+      })
+    );
+  }, [applyUpdate, apiUrl]);
 
   const deleteItem = useCallback(async (productId) => {
-    if (isAuthenticated && user) {
-      let nextItems = null;
-      setItems(prev => {
-        nextItems = prev.filter(i => i.productId !== productId);
-        return nextItems;
-      });
-
-      if (nextItems) {
-        broadcastSync(nextItems);
-      }
-
-      try {
-        await fetchWithRefresh(`${apiUrl}/api/basket/delete/${productId}`, {
-          method: 'DELETE',
-        });
-      } catch (err) {
-        console.error('Failed to delete item:', err);
-      }
-    } else {
-      setItems(prev => {
-        const updated = prev.filter(i => i.productId !== productId);
-        setLocalBasket(updated);
-        broadcastSync(updated);
-        return updated;
-      });
-    }
-  }, [isAuthenticated, user, apiUrl]);
+    applyUpdate(
+      prev => prev.filter(i => i.productId !== productId),
+      () => fetchWithRefresh(`${apiUrl}/api/basket/delete/${productId}`, {
+        method: 'DELETE',
+      })
+    );
+  }, [applyUpdate, apiUrl]);
 
   const getItemQuantity = useCallback((productId) => {
     const item = items.find(i => i.productId === productId);

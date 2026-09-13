@@ -42,14 +42,8 @@ export async function handleBackendErrorResponse(response) {
 }
 
 export function initGlobalRateLimitInterceptor() {
-  if (typeof window === 'undefined' || !window.fetch) return;
-
-  const originalFetch = window.fetch;
-  window.fetch = async function (...args) {
-    const response = await originalFetch.apply(this, args);
-    if (response && (response.status === 429 || (response.status >= 500 && response.status <= 599))) {
-      handleBackendErrorResponse(response);
-    }
-    return response;
-  };
+  // Intentionally a no-op.
+  // Error handling for 429 / 5xx is handled inside fetchWithRefresh.
+  // Previously this monkey-patched window.fetch which broke
+  // third-party SDKs (Stripe, Google OAuth) and caused double-handling.
 }

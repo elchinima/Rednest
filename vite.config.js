@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite'
+// transformWithOxc is used by the 'transform-js-as-jsx' plugin below
+// to transpile .js files that contain JSX syntax (e.g. legacy files not renamed to .jsx)
 import { transformWithOxc } from 'vite'
 import react from '@vitejs/plugin-react'
 

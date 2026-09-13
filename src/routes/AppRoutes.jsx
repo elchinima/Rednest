@@ -76,7 +76,12 @@ const AnimatedRoutes = () => {
   }, [location.pathname]);
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,0.15)', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      </div>
+    }>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home />} />
@@ -103,13 +108,7 @@ const AnimatedRoutes = () => {
               </ProfileSecurityGuard>
             </ProtectedRoute>
           } />
-          <Route path="/adresses" element={
-            <ProtectedRoute>
-              <ProfileSecurityGuard>
-                <Addresses />
-              </ProfileSecurityGuard>
-            </ProtectedRoute>
-          } />
+          <Route path="/adresses" element={<Navigate to="/addresses" replace />} />
           <Route path="/payment-methods" element={
             <ProtectedRoute>
               <ProfileSecurityGuard>

@@ -1,7 +1,8 @@
 import { handleBackendErrorResponse } from './rateLimitInterceptor';
 import { ensureClientHintsHeaders } from './clientHints';
+import { API_URL } from './config';
 
-const apiUrl = import.meta.env.VITE_API_URL || '';
+const apiUrl = API_URL;
 
 let isRefreshing = false;
 let refreshPromise = null;

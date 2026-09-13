@@ -48,7 +48,13 @@ public class AdminController : ControllerBase
             return StatusCode(403, new { message = "Access denied." });
 
         var adminSecret = Environment.GetEnvironmentVariable("ADMIN_SECRET");
-        if (string.IsNullOrEmpty(adminSecret) || request.Password != adminSecret)
+        if (string.IsNullOrEmpty(adminSecret) || string.IsNullOrEmpty(request.Password))
+            return Unauthorized(new { message = "Incorrect password." });
+
+        var secretBytes = System.Text.Encoding.UTF8.GetBytes(adminSecret);
+        var inputBytes = System.Text.Encoding.UTF8.GetBytes(request.Password);
+        if (secretBytes.Length != inputBytes.Length ||
+            !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(secretBytes, inputBytes))
             return Unauthorized(new { message = "Incorrect password." });
 
         var token = GenerateSignedAdminToken(userIdStr);

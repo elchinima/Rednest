@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useNavigate, useLocation } from 'react-router-dom';
 import ProfilePasswordModal from '../components/Elements/ProfilePasswordModal';
 import { fetchWithRefresh } from '../utils/fetchWithRefresh';
+import { API_URL } from '../utils/config';
 
 import { useLang } from '../utils/useLang';
 import { getWidgetTranslation } from '../components/Elements/Lang';
@@ -68,7 +69,7 @@ export const ProfileSecurityProvider = ({ children }) => {
 
   const checkSecurityStatus = useCallback(async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = API_URL;
       const res = await fetchWithRefresh(`${apiUrl}/api/auth/security-status`, {
         skipAuthRedirect: true,
       });
