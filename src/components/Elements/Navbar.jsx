@@ -56,6 +56,7 @@ const Navbar = () => {
       </div>
 
       <div className={`nav-menu ${isMenuOpen ? 'open' : ''}`}>
+        <UserNavPills onMenuClose={handleCloseMenu} />
         <nav className="nav-links">
           <Link
             to="/"
@@ -63,7 +64,11 @@ const Navbar = () => {
             onClick={handleCloseMenu}
             data-id="nav_home"
           >
-            {t('nav_home')}
+            <svg className="nav-link__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" />
+              <path d="M9 21V12h6v9" />
+            </svg>
+            <span>{t('nav_home')}</span>
           </Link>
           <Link
             to="/catalog"
@@ -71,7 +76,13 @@ const Navbar = () => {
             onClick={handleCloseMenu}
             data-id="nav_menu"
           >
-            {t('nav_menu')}
+            <svg className="nav-link__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            <span>{t('nav_menu')}</span>
           </Link>
           <Link
             to="/review"
@@ -79,10 +90,30 @@ const Navbar = () => {
             onClick={handleCloseMenu}
             data-id="nav_review"
           >
-            {t('nav_review')}
+            <svg className="nav-link__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+            <span>{t('nav_review')}</span>
           </Link>
         </nav>
-        <UserNavPills onMenuClose={handleCloseMenu} />
+
+        <div className="nav-menu__footer">
+          <div className="nav-menu__social">
+            <a href="https://www.instagram.com/rednest.az/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" />
+                <circle cx="12" cy="12" r="5" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
+            <a href="https://www.facebook.com/rednest.az" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+              </svg>
+            </a>
+          </div>
+          <span className="nav-menu__version">v2.0</span>
+        </div>
       </div>
 
       <div
