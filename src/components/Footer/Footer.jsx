@@ -12,97 +12,28 @@ const getBakuYear = () => {
   }
 };
 
-let cachedFooterData = null;
-let pendingFooterPromise = null;
-
-const getLanguageContent = (data, lang) => {
-  if (!data) return null;
-  if (lang === 'en') {
-    return data.footerEN || data.FooterEN || null;
-  }
-  if (lang === 'az') {
-    return data.footerAZ || data.FooterAZ || null;
-  }
-  return data.footerRU || data.FooterRU || null;
-};
-
-import { getStoredLanguage, setStoredLanguage } from '../../utils/useLang';
+import { setStoredLanguage } from '../../utils/useLang';
+import { useFooterData } from '../../utils/footerData';
 
 const Footer = () => {
   const currentYear = getBakuYear();
-  const [language, setLanguage] = useState(getStoredLanguage);
-  const [footerData, setFooterData] = useState(() => cachedFooterData);
-
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-
-    if (cachedFooterData) {
-      setFooterData(cachedFooterData);
-      return;
-    }
-
-    if (!pendingFooterPromise) {
-      pendingFooterPromise = fetch(`${apiUrl}/api/footer`, {
-        signal: controller.signal,
-        headers: { 'Accept': 'application/json' }
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to fetch');
-          return res.json();
-        })
-        .then(data => {
-          if (data) {
-            cachedFooterData = data;
-          }
-          pendingFooterPromise = null;
-          return data;
-        })
-        .catch(() => {
-          pendingFooterPromise = null;
-          return null;
-        });
-    }
-
-    pendingFooterPromise.then(data => {
-      if (isMounted && data) {
-        setFooterData(data);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleLangSync = (e) => {
-      const current = e?.detail || getStoredLanguage();
-      setLanguage(current);
-    };
-    window.addEventListener('languagechange', handleLangSync);
-    return () => window.removeEventListener('languagechange', handleLangSync);
-  }, []);
+  const {
+    activeContent,
+    instagramUrl,
+    tiktokUrl,
+    whatsappUrl,
+    language
+  } = useFooterData();
 
   const handleLanguageChange = (newLang) => {
-    setLanguage(newLang);
     setStoredLanguage(newLang);
   };
-
-  const activeContent = getLanguageContent(footerData, language);
 
   const description = activeContent?.description || activeContent?.Description || '';
   const quickLinksTitle = activeContent?.quickLinksTitle || activeContent?.QuickLinksTitle || '';
   const contactUsTitle = activeContent?.contactUsTitle || activeContent?.ContactUsTitle || '';
   const termsOfUseTitle = activeContent?.termsOfUseTitle || activeContent?.TermsOfUseTitle || '';
   const copyrightText = activeContent?.copyrightText || activeContent?.CopyrightText || '';
-
-  const socialMedia = activeContent?.socialMedia || activeContent?.SocialMedia || {};
-  const instagramUrl = socialMedia.instagram || socialMedia.Instagram || '';
-  const tiktokUrl = socialMedia.tikTok || socialMedia.tiktok || socialMedia.TikTok || '';
-  const whatsappUrl = socialMedia.whatsApp || socialMedia.whatsapp || socialMedia.WhatsApp || '';
 
   const quickLinks = activeContent?.quickLinks || activeContent?.QuickLinks || [];
   const contactUs = activeContent?.contactUs || activeContent?.ContactUs || {};
