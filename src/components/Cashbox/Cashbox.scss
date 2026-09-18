@@ -1,0 +1,1014 @@
+@import '../../styles/variables.scss';
+
+.cashbox-view {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #1a0303;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(127, 29, 29, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(69, 10, 10, 0.8) 0%, transparent 55%),
+    linear-gradient(180deg, #130202 0%, #200404 100%);
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+
+  // Toast
+  &__toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: rgba(220, 38, 38, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.4);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #ffffff;
+
+    svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+  }
+
+  // 3-Column Workspace
+  &__workspace {
+    display: grid;
+    grid-template-columns: 100px 1fr 390px;
+    height: calc(100vh - 68px);
+    overflow: hidden;
+
+    @media (max-width: 1280px) {
+      grid-template-columns: 88px 1fr 360px;
+    }
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 80px 1fr 340px;
+    }
+  }
+
+  // Catalog Section
+  &__catalog {
+    height: 100%;
+    overflow-y: auto;
+    padding: 18px 22px;
+    box-sizing: border-box;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(239, 68, 68, 0.35);
+      border-radius: 4px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(239, 68, 68, 0.6);
+    }
+  }
+
+  // Right Checkout Column
+  &__checkout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: rgba(18, 2, 2, 0.7);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px 16px;
+    gap: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+}
+
+// ----------------------------------------------------
+// TOPBAR
+// ----------------------------------------------------
+.cashbox-topbar {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(20, 3, 3, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 20px;
+  z-index: 20;
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &__logo {
+    height: 34px;
+    width: auto;
+    filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.3));
+  }
+
+  &__brand-text {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #ffffff 40%, #fca5a5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  &__badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+
+  // Search Bar
+  &__search {
+    flex: 1;
+    max-width: 480px;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    color: rgba(255, 255, 255, 0.45);
+    pointer-events: none;
+  }
+
+  &__search-input {
+    width: 100%;
+    height: 42px;
+    padding: 0 40px 0 42px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    &:focus {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+    }
+  }
+
+  &__search-clear {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  // Meta stats
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+
+    strong {
+      color: #ffffff;
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
+      color: #ef4444;
+    }
+
+    &--balance {
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.08);
+
+      strong {
+        color: #fca5a5;
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  &__chip-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  &__avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__exit-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #ffffff;
+    }
+  }
+}
+
+// ----------------------------------------------------
+// SIDEBAR (Categories)
+// ----------------------------------------------------
+.cashbox-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: rgba(15, 2, 2, 0.85);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 8px;
+  overflow-y: auto;
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.22s ease;
+    font-family: inherit;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    &--active {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: #ef4444 !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.35), inset 0 0 12px rgba(239, 68, 68, 0.15);
+
+      .cashbox-sidebar__icon svg {
+        color: #ef4444;
+        filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+      }
+    }
+  }
+
+  &__icon {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 22px;
+      height: 22px;
+      transition: all 0.2s ease;
+    }
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  &__bottom {
+    margin-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 14px;
+  }
+
+  &__held-btn {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 10px 4px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px dashed rgba(245, 158, 11, 0.4);
+    border-radius: 12px;
+    color: #fbbf24;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: #fbbf24;
+      transform: translateY(-1px);
+    }
+  }
+
+  &__held-text {
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+
+  &__held-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+}
+
+// ----------------------------------------------------
+// PRODUCT GRID
+// ----------------------------------------------------
+.cashbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 1400px) {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  &--loading {
+    opacity: 0.7;
+  }
+
+  &__empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 12px 0 6px;
+    }
+
+    p {
+      font-size: 0.88rem;
+      max-width: 320px;
+    }
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+  }
+
+  &__empty-btn {
+    margin-top: 18px;
+    padding: 9px 20px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #ef4444;
+    }
+  }
+}
+
+// Product Card
+.cashbox-card {
+  background: rgba(28, 5, 5, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    background: rgba(45, 8, 8, 0.75);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 16px rgba(239, 68, 68, 0.2);
+    transform: translateY(-3px);
+
+    .cashbox-card__img {
+      transform: scale(1.05);
+    }
+  }
+
+  &__img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 11;
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  &__img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  // S / M / L Pills
+  &__sizes {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 3px;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    padding: 3px 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  &__size-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      color: #ffffff;
+    }
+
+    &--active {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+  }
+
+  &__info {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #f87171;
+    letter-spacing: -0.01em;
+  }
+
+  &__add-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+
+    .cashbox-card:hover & {
+      background: #ef4444;
+      border-color: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+  }
+
+  // Custom Item Card
+  &--custom {
+    border: 2px dashed rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.04);
+    min-height: 190px;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &__custom-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__custom-plus {
+    font-size: 2.2rem;
+    color: #ef4444;
+    line-height: 1;
+  }
+
+  &__custom-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  // Skeleton
+  &--skeleton {
+    pointer-events: none;
+    padding: 12px;
+
+    .cashbox-card__skeleton-img {
+      width: 100%;
+      height: 110px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    .cashbox-card__skeleton-line {
+      height: 14px;
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      animation: pulse 1.5s infinite ease-in-out;
+
+      &--short {
+        width: 60%;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------
+// ELECTRONIC RECEIPT
+// ----------------------------------------------------
+.cashbox-receipt {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  position: relative;
+  flex: 1;
+  max-height: 48%;
+  overflow: hidden;
+
+  // Zig-zag top edge
+  &__zigzag {
+    height: 6px;
+    width: 100%;
+    background-image: linear-gradient(135deg, #180404 25%, transparent 25%),
+                      linear-gradient(225deg, #180404 25%, transparent 25%);
+    background-size: 12px 6px;
+    background-repeat: repeat-x;
+  }
+
+  &__header {
+    padding: 10px 14px 4px;
+  }
+
+  &__header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.01em;
+  }
+
+  &__clear-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &__divider-dashed {
+    margin: 8px 0;
+    border-bottom: 1px dashed #d1d5db;
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 14px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #e5e7eb;
+      border-radius: 4px;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 80px;
+    color: #9ca3af;
+    font-size: 0.88rem;
+
+    small {
+      font-size: 0.72rem;
+      margin-top: 4px;
+    }
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.86rem;
+    gap: 8px;
+  }
+
+  &__col-name {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+  }
+
+  &__item-name {
+    font-weight: 600;
+    color: #1f2937;
+    line-height: 1.2;
+  }
+
+  &__stepper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__step-btn {
+    width: 20px;
+    height: 20px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:hover {
+      background: #e5e7eb;
+    }
+  }
+
+  &__qty {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #4b5563;
+    padding: 0 3px;
+  }
+
+  &__del-btn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 0.72rem;
+    cursor: pointer;
+    margin-left: 6px;
+
+    &:hover {
+      color: #ef4444;
+    }
+  }
+
+  &__col-price {
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+  }
+
+  &__footer {
+    padding: 0 14px 10px;
+  }
+
+  &__total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__total-label {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  &__total-val {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: #dc2626;
+    letter-spacing: -0.02em;
+  }
+}
+
+// ----------------------------------------------------
+// NUMPAD & TENDER
+// ----------------------------------------------------
+.cashbox-numpad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+
+  &__key {
+    height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &--note {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      font-size: 0.95rem;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.25);
+        border-color: #ef4444;
+        color: #ffffff;
+      }
+    }
+
+    &--fn {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.05rem;
+    }
+  }
+
+  // Tender / Change Box
+  &__tender {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+
+  &__tender-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-size: 0.85rem;
+  }
+
+  &__tender-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  &__tender-val {
+    font-weight: 700;
+    color: #ffffff;
+
+    &--green {
+      color: #34d399;
+      text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+    }
+  }
+
+  &__tender-sep {
+    color: rgba(255, 255, 255, 0.2);
+  }
+
+  // Action Buttons
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  &__pay-btn {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 12px;
+    border: none;
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    &--card {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+
+      &:hover {
+        background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+        box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55);
+      }
+    }
+
+    &--cash {
+      background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+      &:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+      }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}

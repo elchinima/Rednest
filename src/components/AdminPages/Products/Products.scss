@@ -982,23 +982,26 @@
 
   &__lang-nav {
     display: flex;
-    gap: 6px;
-    padding: 4px;
+    gap: 4px;
+    padding: 3px;
     background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    margin-bottom: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: $border-radius-sm;
+    height: 42px;
+    box-sizing: border-box;
+    align-items: center;
   }
 
   &__lang-tab {
     flex: 1;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 7px 10px;
-    border-radius: 7px;
-    border: none;
+    gap: 4px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: 1px solid transparent;
     background: transparent;
     color: $color-text-muted;
     font-size: 0.82rem;
@@ -1015,7 +1018,7 @@
     &--active {
       background: rgba(239, 68, 68, 0.18);
       color: #fff;
-      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-color: rgba(239, 68, 68, 0.35);
     }
   }
 

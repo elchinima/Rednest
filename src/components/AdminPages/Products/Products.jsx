@@ -1084,7 +1084,7 @@ const Products = () => {
 
                 <form className="product-modal__form" onSubmit={handleSaveProduct}>
                   <div className="product-modal__form-row">
-                    <div className="product-modal__form-group" style={{ flex: 1 }}>
+                    <div className="product-modal__form-group">
                       <div className="product-modal__label-row">
                         <label>Category *</label>
                       </div>
@@ -1099,29 +1099,34 @@ const Products = () => {
                         ))}
                       </select>
                     </div>
-                  </div>
 
-                  <div className="product-modal__lang-nav">
-                    {['AZ', 'EN', 'RU'].map((lang) => (
-                      <button
-                        key={lang}
-                        type="button"
-                        className={`product-modal__lang-tab ${langTab === lang ? 'product-modal__lang-tab--active' : ''}`}
-                        onClick={() => setLangTab(lang)}
-                      >
-                        {lang === 'AZ' && '🇦🇿'}
-                        {lang === 'EN' && '🇬🇧'}
-                        {lang === 'RU' && '🇷🇺'}
-                        {' '}{lang}
-                        {lang === 'AZ' && <span className="product-modal__lang-required">*</span>}
-                        {lang !== 'AZ' && !form.nameTranslations[lang].trim() && (
-                          <span className="product-modal__lang-empty" />
-                        )}
-                        {lang !== 'AZ' && form.nameTranslations[lang].trim() && (
-                          <span className="product-modal__lang-filled" />
-                        )}
-                      </button>
-                    ))}
+                    <div className="product-modal__form-group">
+                      <div className="product-modal__label-row">
+                        <label>Language *</label>
+                      </div>
+                      <div className="product-modal__lang-nav">
+                        {['AZ', 'EN', 'RU'].map((lang) => (
+                          <button
+                            key={lang}
+                            type="button"
+                            className={`product-modal__lang-tab ${langTab === lang ? 'product-modal__lang-tab--active' : ''}`}
+                            onClick={() => setLangTab(lang)}
+                          >
+                            {lang === 'AZ' && '🇦🇿'}
+                            {lang === 'EN' && '🇬🇧'}
+                            {lang === 'RU' && '🇷🇺'}
+                            {' '}{lang}
+                            {lang === 'AZ' && <span className="product-modal__lang-required">*</span>}
+                            {lang !== 'AZ' && !form.nameTranslations[lang].trim() && (
+                              <span className="product-modal__lang-empty" />
+                            )}
+                            {lang !== 'AZ' && form.nameTranslations[lang].trim() && (
+                              <span className="product-modal__lang-filled" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {['AZ', 'EN', 'RU'].map((lang) => (

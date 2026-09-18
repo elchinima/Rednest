@@ -26,6 +26,7 @@ const AdminReviews = lazy(() => import('../components/AdminPages/Reviews/Reviews
 const AdminPromos = lazy(() => import('../components/AdminPages/Promos/Promos'));
 const AdminNewsletter = lazy(() => import('../components/AdminPages/Newsletter/Newsletter'));
 const AdminLogs = lazy(() => import('../components/AdminPages/AdminLogs/AdminLogs'));
+const Cashbox = lazy(() => import('../components/Cashbox/Cashbox'));
 import ProtectedRoute from './ProtectedRoute';
 import ProfileSecurityGuard from './ProfileSecurityGuard';
 import AdminProtectedRoute from './AdminProtectedRoute';
@@ -200,6 +201,8 @@ const AnimatedRoutes = () => {
               <AdminLogs />
             </AdminProtectedRoute>
           } />
+
+          <Route path="/cashbox" element={<Cashbox />} />
 
           <Route path="/rules" element={<Rules />} />
           <Route path="/terms" element={<Navigate to="/rules" replace />} />
