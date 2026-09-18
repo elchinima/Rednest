@@ -24,6 +24,15 @@ public interface IAuthService
 
     Task VerifySubscriptionCodeAsync(string email, string code);
 
+    Task RequestPasswordResetCodeAsync(string email);
+
+    Task<(string AccessToken, string RefreshToken, bool HasName, User User)> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        string? ipAddress,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null);
+
     Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
         string? ipAddress = null, 

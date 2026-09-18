@@ -519,6 +519,37 @@
     }
   }
 
+  .forgot-code-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 4px 0 8px;
+    width: 100%;
+
+    .forgot-code-digit {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 44px;
+      height: 54px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: $border-radius-md;
+      color: #ffffff;
+      transition: all 0.25s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $color-primary;
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 0 3px rgba($color-primary, 0.25);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
   .two-factor-info {
     text-align: center;
     font-size: 0.9rem;
@@ -719,6 +750,15 @@
       width: 46px;
       height: 52px;
       font-size: 1.44rem;
+    }
+
+    .forgot-code-inputs {
+      gap: 5px;
+    }
+
+    .forgot-code-digit {
+      height: 48px;
+      font-size: 1.25rem;
     }
 
     .two-factor-resend-btn {

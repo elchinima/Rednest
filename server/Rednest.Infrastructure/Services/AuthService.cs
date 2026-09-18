@@ -381,6 +381,161 @@ public class AuthService : IAuthService
         await _userRepository.UpdateSessionAsync(userSession);
     }
 
+    public async Task RequestPasswordResetCodeAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email is required.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _userRepository.GetByEmailAsync(normalizedEmail);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("No account found with this email address.");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession != null && !userSession.IsActive)
+        {
+            throw new UnauthorizedAccessException("Your account has been suspended or blocked.");
+        }
+
+        if (userSession == null)
+        {
+            userSession = new UserSession
+            {
+                UserId = user.Id,
+                TwoFactorEnabled = false,
+                Subscribe = false,
+                AccountVerify = new List<AccountVerifyEntry>(),
+                Sessions = new List<SessionEntry>()
+            };
+            await _userRepository.AddSessionAsync(userSession);
+        }
+
+        if (userSession.AccountVerify == null)
+        {
+            userSession.AccountVerify = new List<AccountVerifyEntry>();
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        userSession.AccountVerify.RemoveAll(v => v.Type == "PasswordReset");
+
+        var code = RandomNumberGenerator.GetInt32(1000000, 10000000).ToString("D7");
+        userSession.AccountVerify.Add(new AccountVerifyEntry
+        {
+            Type = "PasswordReset",
+            Code = code,
+            Expire = 15,
+            CreateData = now
+        });
+
+        await _userRepository.UpdateSessionAsync(userSession);
+        await _emailService.SendPasswordResetCodeAsync(user.Email, code);
+    }
+
+    public async Task<(string AccessToken, string RefreshToken, bool HasName, User User)> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        string? ipAddress,
+        string? userAgent = null,
+        string? platformVersion = null,
+        string? deviceModel = null)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            throw new ArgumentException("Email is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Code))
+        {
+            throw new ArgumentException("Verification code is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            throw new ArgumentException("New password is required.");
+        }
+
+        if (request.NewPassword.Length < 6)
+        {
+            throw new ArgumentException("Password must be at least 6 characters long.");
+        }
+
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var user = await _userRepository.GetByEmailAsync(normalizedEmail);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("No account found with this email address.");
+        }
+
+        var userSession = user.Session ?? await _userRepository.GetSessionByUserIdAsync(user.Id);
+        if (userSession != null && !userSession.IsActive)
+        {
+            throw new UnauthorizedAccessException("Your account has been suspended or blocked.");
+        }
+
+        if (userSession == null || userSession.AccountVerify == null || userSession.AccountVerify.Count == 0)
+        {
+            throw new UnauthorizedAccessException("Invalid or expired verification code.");
+        }
+
+        var now = DateTime.UtcNow;
+        CleanExpiredData(userSession, now);
+
+        var trimmedCode = request.Code.Trim();
+        var entry = userSession.AccountVerify
+            .Where(v => v.Type == "PasswordReset" && v.Code == trimmedCode)
+            .OrderByDescending(v => v.CreateData)
+            .FirstOrDefault();
+
+        if (entry == null)
+        {
+            throw new UnauthorizedAccessException("Invalid verification code. Please check the code and try again.");
+        }
+
+        if (entry.CreateData.AddMinutes(entry.Expire) <= now)
+        {
+            throw new UnauthorizedAccessException("Verification code has expired. Please request a new code.");
+        }
+
+        userSession.AccountVerify.Remove(entry);
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _userRepository.UpdateAsync(user);
+
+        if (userSession.Sessions == null)
+        {
+            userSession.Sessions = new List<SessionEntry>();
+        }
+
+        var refreshToken = GenerateRefreshToken();
+        var uaInfo = UserAgentParser.Parse(userAgent, platformVersion, deviceModel);
+
+        var sessionEntry = new SessionEntry
+        {
+            RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = now.AddDays(15),
+            LastLoginIp = ipAddress,
+            OperatingSystem = uaInfo.OperatingSystem,
+            DeviceName = uaInfo.DeviceName,
+            DeviceType = uaInfo.DeviceType,
+            UserAgent = userAgent,
+            CreatedAt = now,
+            LastActiveAt = now,
+            IsActive = true,
+            AuthType = "PasswordReset"
+        };
+
+        userSession.Sessions.Add(sessionEntry);
+        await _userRepository.UpdateSessionAsync(userSession);
+
+        bool hasName = !string.IsNullOrEmpty(user.Name);
+        return (GenerateJwtToken(user), refreshToken, hasName, user);
+    }
+
     public async Task<(string AccessToken, string RefreshToken)> RefreshTokenAsync(
         string refreshToken, 
         string? ipAddress = null, 

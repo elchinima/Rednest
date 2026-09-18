@@ -289,6 +289,113 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("forgot-password/request")]
+    public async Task<IActionResult> RequestForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            await _authService.RequestPasswordResetCodeAsync(request.Email);
+            return Ok(new { message = "Password reset code sent to your email." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("forgot-password/resend")]
+    public async Task<IActionResult> ResendForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            await _authService.RequestPasswordResetCodeAsync(request.Email);
+            return Ok(new { message = "Password reset code resent successfully." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("forgot-password/reset")]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        [FromServices] IUserRepository userRepository)
+    {
+        try
+        {
+            var ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim()
+                            ?? HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var platformVersion = Request.Headers["Sec-CH-UA-Platform-Version"].FirstOrDefault()
+                                  ?? Request.Headers["X-Platform-Version"].FirstOrDefault();
+            var deviceModel = Request.Headers["Sec-CH-UA-Model"].FirstOrDefault()
+                              ?? Request.Headers["X-Device-Model"].FirstOrDefault();
+
+            var result = await _authService.ResetPasswordAsync(request, ipAddress, userAgent, platformVersion, deviceModel);
+            SetTokenCookies(result.AccessToken, result.RefreshToken);
+
+            var user = result.User;
+            var userSession = user.Session ?? await userRepository.GetSessionByUserIdAsync(user.Id);
+
+            return Ok(new
+            {
+                message = "Password has been successfully reset.",
+                hasName = result.HasName,
+                user = new
+                {
+                    id = user.Id,
+                    name = user.Name,
+                    email = user.Email,
+                    profilePictureUrl = user.ProfilePictureUrl,
+                    balance = user.Balance,
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                    twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
+                }
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message, errorType = "ACCOUNT_NOT_FOUND" });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {

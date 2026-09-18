@@ -33,6 +33,17 @@ const Auth = () => {
   const [twoFactorTimer, setTwoFactorTimer] = useState(900);
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotDigits, setForgotDigits] = useState(['', '', '', '', '', '', '']);
+  const [forgotTimer, setForgotTimer] = useState(900);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const forgotRefs = [
+    useRef(null), useRef(null), useRef(null), useRef(null),
+    useRef(null), useRef(null), useRef(null)
+  ];
+
   const { login, isAuthenticated, fetchCurrentUser } = useAuth();
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -60,8 +71,38 @@ const Auth = () => {
   }, [step]);
 
   useEffect(() => {
+    let interval = null;
+    if (step === 'forgot_reset') {
+      interval = setInterval(() => {
+        setForgotTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step]);
+
+  useEffect(() => {
+    let interval = null;
+    if (resendCooldown > 0) {
+      interval = setInterval(() => {
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [resendCooldown]);
+
+  useEffect(() => {
     if (step === '2fa' && inputRefs[0].current) {
       inputRefs[0].current.focus();
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 'forgot_reset' && forgotRefs[0].current) {
+      forgotRefs[0].current.focus();
     }
   }, [step]);
 
@@ -118,6 +159,187 @@ const Auth = () => {
       setTwoFactorDigits(nextDigits);
       const focusIndex = Math.min(pastedData.length, 3);
       inputRefs[focusIndex].current?.focus();
+    }
+  };
+
+  const handleForgotDigitChange = (index, value) => {
+    const cleanVal = value.replace(/\D/g, '');
+    if (!cleanVal) {
+      const nextDigits = [...forgotDigits];
+      nextDigits[index] = '';
+      setForgotDigits(nextDigits);
+      return;
+    }
+
+    if (cleanVal.length > 1) {
+      const pasted = cleanVal.slice(0, 7).split('');
+      const nextDigits = [...forgotDigits];
+      for (let i = 0; i < 7; i++) {
+        nextDigits[i] = pasted[i] || '';
+      }
+      setForgotDigits(nextDigits);
+      const focusIndex = Math.min(pasted.length, 6);
+      forgotRefs[focusIndex].current?.focus();
+      return;
+    }
+
+    const nextDigits = [...forgotDigits];
+    nextDigits[index] = cleanVal.slice(-1);
+    setForgotDigits(nextDigits);
+
+    if (index < 6) {
+      forgotRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleForgotKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !forgotDigits[index] && index > 0) {
+      forgotRefs[index - 1].current?.focus();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      forgotRefs[index - 1].current?.focus();
+    } else if (e.key === 'ArrowRight' && index < 6) {
+      forgotRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleForgotPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 7);
+    if (pastedData) {
+      const nextDigits = ['', '', '', '', '', '', ''];
+      for (let i = 0; i < pastedData.length; i++) {
+        nextDigits[i] = pastedData[i];
+      }
+      setForgotDigits(nextDigits);
+      const focusIndex = Math.min(pastedData.length, 6);
+      forgotRefs[focusIndex].current?.focus();
+    }
+  };
+
+  const handleRequestReset = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    if (!forgotEmail || !forgotEmail.includes('@')) {
+      setError(t('auth_err_email'));
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccessInfo('');
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/forgot-password/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send reset code');
+      }
+
+      setStep('forgot_reset');
+      setForgotDigits(['', '', '', '', '', '', '']);
+      setForgotTimer(900);
+      setResendCooldown(60);
+      setSuccessInfo(t('auth_reset_code_sent'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendResetCode = async () => {
+    if (loading || resendCooldown > 0) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/forgot-password/resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend code');
+      }
+
+      setForgotTimer(900);
+      setResendCooldown(60);
+      setSuccessInfo(t('auth_reset_code_sent'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    const code = forgotDigits.join('');
+    if (code.length < 7) {
+      setError(t('auth_err_code_7_length'));
+      return;
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setError(t('auth_err_password_short'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError(t('auth_err_password_mismatch'));
+      return;
+    }
+
+    if (loading) return;
+    setLoading(true);
+    setError(null);
+    setSuccessInfo('');
+
+    try {
+      const clientHeaders = await ensureClientHintsHeaders();
+      const response = await fetch(`${apiUrl}/api/auth/forgot-password/reset`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...clientHeaders,
+        },
+        body: JSON.stringify({
+          email: forgotEmail.trim(),
+          code,
+          newPassword
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Password reset failed');
+      }
+
+      if (!data.hasName) {
+        setStep('name');
+      } else {
+        localStorage.setItem('rednest_auth', 'true');
+        if (data.user) {
+          login(data.user);
+        } else {
+          await fetchCurrentUser();
+        }
+        navigate('/', { replace: true });
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -348,11 +570,15 @@ const Auth = () => {
                 {step === 'login' && t('auth_step_login_title')}
                 {step === '2fa' && t('auth_step_2fa_title')}
                 {step === 'name' && t('auth_step_name_title')}
+                {step === 'forgot_email' && t('auth_step_forgot_title')}
+                {step === 'forgot_reset' && t('auth_step_reset_title')}
               </h2>
               <p>
                 {step === 'login' && t('auth_step_login_subtitle')}
                 {step === '2fa' && `${t('auth_step_2fa_subtitle')} (${email})`}
                 {step === 'name' && t('auth_step_name_subtitle')}
+                {step === 'forgot_email' && t('auth_step_forgot_subtitle')}
+                {step === 'forgot_reset' && `${t('auth_step_reset_subtitle')} (${forgotEmail})`}
               </p>
             </div>
             
@@ -458,6 +684,12 @@ const Auth = () => {
                   <button
                     type="button"
                     className="auth-forgot-password-btn"
+                    onClick={() => {
+                      setForgotEmail(email || '');
+                      setStep('forgot_email');
+                      setError(null);
+                      setSuccessInfo('');
+                    }}
                   >
                     {lang === 'az' ? 'Şifrəni unutmusunuz?' : lang === 'en' ? 'Forgot password' : 'Забыли пароль?'}
                   </button>
@@ -559,6 +791,163 @@ const Auth = () => {
                     </span>
                   ) : t('auth_btn_complete')}
                 </button>
+              </form>
+            )}
+
+            {step === 'forgot_email' && (
+              <form className="auth-form" onSubmit={handleRequestReset}>
+                <div className="input-group">
+                  <label htmlFor="forgot-email">{t('auth_label_email')}</label>
+                  <input 
+                    type="email" 
+                    id="forgot-email" 
+                    name="email"
+                    autoComplete="username email"
+                    placeholder={t('auth_placeholder_email')} 
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required 
+                    autoFocus
+                  />
+                </div>
+                
+                <div className="error-wrapper">
+                  {error && <div className="auth-error">{error}</div>}
+                </div>
+
+                <button type="submit" className="cta-btn auth-submit-btn" disabled={loading || !forgotEmail.trim()}>
+                  {loading ? (
+                    <span className="auth-btn-loader">
+                      <LoaderIcon />
+                      ...
+                    </span>
+                  ) : t('auth_btn_send_code')}
+                </button>
+
+                <div className="two-factor-actions">
+                  <button
+                    type="button"
+                    className="two-factor-back-btn"
+                    onClick={() => {
+                      setStep('login');
+                      setError(null);
+                      setSuccessInfo('');
+                    }}
+                  >
+                    &larr; {t('auth_btn_back_login')}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {step === 'forgot_reset' && (
+              <form className="auth-form" onSubmit={handleResetPassword}>
+                <div className="input-group">
+                  <label>{lang === 'az' ? '7 rəqəmli təsdiq kodu' : lang === 'en' ? '7-digit reset code' : '7-значный код сброса'}</label>
+                  <div className="forgot-code-inputs" onPaste={handleForgotPaste}>
+                    {forgotDigits.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={forgotRefs[idx]}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={7}
+                        value={digit}
+                        onChange={(e) => handleForgotDigitChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleForgotKeyDown(idx, e)}
+                        className="forgot-code-digit"
+                        autoComplete="one-time-code"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="two-factor-info">
+                  {forgotTimer > 0 ? (
+                    <span>
+                      {lang === 'az' ? 'Kodun vaxtı bitir:' : lang === 'en' ? 'Code expires in' : 'Код истекает через'}{' '}
+                      <strong className="two-factor-timer">{formatTimer(forgotTimer)}</strong>
+                    </span>
+                  ) : (
+                    <span className="two-factor-expired">
+                      {lang === 'az' ? 'Kodun vaxtı bitdi. Yenisini istəyin.' : lang === 'en' ? 'Code has expired. Please request a new one.' : 'Срок действия кода истек. Запросите новый код.'}
+                    </span>
+                  )}
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="new-password">{t('auth_label_new_password')}</label>
+                  <input
+                    type="password"
+                    id="new-password"
+                    name="new-password"
+                    autoComplete="new-password"
+                    placeholder={t('auth_placeholder_new_password')}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="confirm-password">{t('auth_label_confirm_password')}</label>
+                  <input
+                    type="password"
+                    id="confirm-password"
+                    name="confirm-password"
+                    autoComplete="new-password"
+                    placeholder={t('auth_placeholder_confirm_password')}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {successInfo && (
+                  <div className="two-factor-success">{successInfo}</div>
+                )}
+
+                <div className="error-wrapper">
+                  {error && <div className="auth-error">{error}</div>}
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="cta-btn auth-submit-btn" 
+                  disabled={loading || forgotDigits.join('').length < 7 || !newPassword || !confirmPassword}
+                >
+                  {loading ? (
+                    <span className="auth-btn-loader">
+                      <LoaderIcon />
+                      ...
+                    </span>
+                  ) : t('auth_btn_reset_password')}
+                </button>
+
+                <div className="two-factor-actions">
+                  <button
+                    type="button"
+                    className="two-factor-resend-btn"
+                    onClick={handleResendResetCode}
+                    disabled={loading || resendCooldown > 0}
+                  >
+                    {resendCooldown > 0
+                      ? `${t('auth_btn_resend_wait')} ${resendCooldown}s`
+                      : t('auth_btn_resend')}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="two-factor-back-btn"
+                    onClick={() => {
+                      setStep('forgot_email');
+                      setError(null);
+                      setSuccessInfo('');
+                    }}
+                  >
+                    &larr; {lang === 'az' ? 'E-poçtu dəyiş' : lang === 'en' ? 'Change email' : 'Изменить email'}
+                  </button>
+                </div>
               </form>
             )}
           </div>

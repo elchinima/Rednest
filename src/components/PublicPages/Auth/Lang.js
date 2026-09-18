@@ -41,7 +41,24 @@ export const translations = {
     "google_not_found_desc": "Аккаунт с таким Google адресом не найден. Пожалуйста, сначала зарегистрируйтесь.",
     "google_not_found_btn": "Перейти к регистрации / входу",
     "google_error_title": "Ошибка авторизации",
-    "google_error_btn": "Вернуться ко входу"
+    "google_error_btn": "Вернуться ко входу",
+
+    "auth_step_forgot_title": "Сброс пароля",
+    "auth_step_forgot_subtitle": "Введите ваш email, чтобы получить 7-значный код для сброса пароля.",
+    "auth_step_reset_title": "Установка нового пароля",
+    "auth_step_reset_subtitle": "Введите 7-значный код из письма и ваш новый пароль.",
+    "auth_label_new_password": "Новый пароль",
+    "auth_placeholder_new_password": "Минимум 6 символов",
+    "auth_label_confirm_password": "Подтвердите пароль",
+    "auth_placeholder_confirm_password": "Повторите новый пароль",
+    "auth_btn_send_code": "Отправить код",
+    "auth_btn_reset_password": "Сбросить пароль",
+    "auth_btn_back_login": "Назад ко входу",
+    "auth_err_code_7_length": "Пожалуйста, введите полный 7-значный код.",
+    "auth_err_password_mismatch": "Пароли не совпадают.",
+    "auth_err_password_short": "Пароль должен содержать минимум 6 символов.",
+    "auth_reset_code_sent": "7-значный код отправлен на вашу почту.",
+    "auth_reset_success": "Пароль успешно изменен!"
   },
   en: {
     "auth_back_home": "Back to Home",
@@ -85,7 +102,24 @@ export const translations = {
     "google_not_found_desc": "Account not found. Please register first before signing in with Google.",
     "google_not_found_btn": "Go to Registration / Login",
     "google_error_title": "Authentication Failed",
-    "google_error_btn": "Back to Login"
+    "google_error_btn": "Back to Login",
+
+    "auth_step_forgot_title": "Reset Password",
+    "auth_step_forgot_subtitle": "Enter your email to receive a 7-digit password reset code.",
+    "auth_step_reset_title": "Set New Password",
+    "auth_step_reset_subtitle": "Enter the 7-digit code sent to your email and your new password.",
+    "auth_label_new_password": "New Password",
+    "auth_placeholder_new_password": "At least 6 characters",
+    "auth_label_confirm_password": "Confirm Password",
+    "auth_placeholder_confirm_password": "Repeat new password",
+    "auth_btn_send_code": "Send Reset Code",
+    "auth_btn_reset_password": "Reset Password",
+    "auth_btn_back_login": "Back to login",
+    "auth_err_code_7_length": "Please enter the full 7-digit code.",
+    "auth_err_password_mismatch": "Passwords do not match.",
+    "auth_err_password_short": "Password must be at least 6 characters long.",
+    "auth_reset_code_sent": "7-digit code sent to your email.",
+    "auth_reset_success": "Password has been reset successfully!"
   },
   az: {
     "auth_back_home": "Ana səhifəyə",
@@ -129,7 +163,24 @@ export const translations = {
     "google_not_found_desc": "Bu Google ünvanı ilə hesab tapılmadı. Zəhmət olmasa əvvəlcə qeydiyyatdan keçin.",
     "google_not_found_btn": "Qeydiyyat / Giriş səhifəsinə keç",
     "google_error_title": "Autentifikasiya xətası",
-    "google_error_btn": "Girişə qayıt"
+    "google_error_btn": "Girişə qayıt",
+
+    "auth_step_forgot_title": "Şifrənin bərpası",
+    "auth_step_forgot_subtitle": "Şifrəni sıfırlamaq üçün 7 rəqəmli kodu əldə etmək üçün e-poçtunuzu daxil edin.",
+    "auth_step_reset_title": "Yeni şifrənin təyini",
+    "auth_step_reset_subtitle": "E-poçtunuza göndərilən 7 rəqəmli kodu və yeni şifrənizi daxil edin.",
+    "auth_label_new_password": "Yeni şifrə",
+    "auth_placeholder_new_password": "Ən azı 6 simvol",
+    "auth_label_confirm_password": "Şifrəni təsdiqləyin",
+    "auth_placeholder_confirm_password": "Yeni şifrəni təkrar edin",
+    "auth_btn_send_code": "Kodu göndər",
+    "auth_btn_reset_password": "Şifrəni yenilə",
+    "auth_btn_back_login": "Girişə qayıt",
+    "auth_err_code_7_length": "Zəhmət olmasa 7 rəqəmli kodu tam daxil edin.",
+    "auth_err_password_mismatch": "Şifrələr uyğun gəlmir.",
+    "auth_err_password_short": "Şifrə ən azı 6 simvoldan ibarət olmalıdır.",
+    "auth_reset_code_sent": "7 rəqəmli kod e-poçtunuza göndərildi.",
+    "auth_reset_success": "Şifrə uğurla yeniləndi!"
   }
 };
 

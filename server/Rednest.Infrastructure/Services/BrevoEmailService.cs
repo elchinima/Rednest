@@ -192,6 +192,80 @@ public class BrevoEmailService : IEmailService
         await RecordEmailsSentAsync(1);
     }
 
+    public async Task SendPasswordResetCodeAsync(string toEmail, string code)
+    {
+        var (apiKey, senderEmail, senderName) = GetBrevoConfig();
+
+        var htmlContent = $@"<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Your Rednest Password Reset Code</title>
+</head>
+<body style=""margin:0;padding:0;background-color:#0d0d0d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#ffffff;"">
+  <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""background-color:#0d0d0d;padding:40px 20px;"">
+    <tr>
+      <td align=""center"">
+        <table width=""100%"" border=""0"" cellspacing=""0"" cellpadding=""0"" style=""max-width:480px;background:#141414;border:1px solid #262626;border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.6);"">
+          <tr>
+            <td style=""padding:36px 32px 24px;text-align:center;background:linear-gradient(180deg, #1f1414 0%, #141414 100%);border-bottom:1px solid #222;"">
+              <h1 style=""margin:0;font-size:26px;font-weight:800;letter-spacing:1px;color:#e53e3e;"">REDNEST</h1>
+              <p style=""margin:8px 0 0;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#888;"">Password Reset</p>
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding:32px 32px 24px;text-align:center;"">
+              <p style=""margin:0 0 20px;font-size:15px;line-height:1.5;color:#cccccc;"">
+                You requested a password reset for your Rednest account. Use the following 7-digit code to set a new password. This code is valid for <strong>15 minutes</strong>.
+              </p>
+              <div style=""display:inline-block;padding:16px 28px;background:#1c1414;border:1px solid #e53e3e44;border-radius:12px;margin:8px 0 24px;"">
+                <span style=""font-size:32px;font-weight:800;letter-spacing:8px;color:#ff4d4d;font-family:'Courier New',Courier,monospace;"">{code}</span>
+              </div>
+              <p style=""margin:0 0 8px;font-size:13px;color:#777777;"">
+                If you did not request a password reset, please ignore this email or make sure your account is secure.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding:20px 32px;background:#0f0f0f;border-top:1px solid #1f1f1f;text-align:center;"">
+              <p style=""margin:0;font-size:11px;color:#555555;"">
+                &copy; {DateTime.UtcNow.Year} Rednest. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>";
+
+        var payload = new
+        {
+            sender = new { name = senderName, email = senderEmail },
+            to = new[] { new { email = toEmail } },
+            subject = $"{code} is your Rednest password reset code",
+            htmlContent = htmlContent
+        };
+
+        var client = _httpClientFactory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+
+        var response = await client.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var err = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Brevo API Password reset code error: {Error}", err);
+            throw new InvalidOperationException($"Brevo API error: {err}");
+        }
+
+        await RecordEmailsSentAsync(1);
+    }
+
     public async Task SendNewsletterEmailAsync(string toEmail, string subject, string htmlContent, string? senderName = null)
     {
         var (apiKey, senderEmail, actualSenderName) = GetBrevoConfig(senderName);
