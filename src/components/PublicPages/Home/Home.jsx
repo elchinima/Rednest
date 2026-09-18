@@ -74,7 +74,7 @@ const Home = () => {
     const fetchFavorites = async () => {
       setFavoritesLoading(true);
       try {
-        const res = await fetch(`${apiUrl}/api/products/favorites?limit=4`);
+        const res = await fetch(`${apiUrl}/api/products/favorites?limit=4&lang=${lang}`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && Array.isArray(data)) {
@@ -94,7 +94,7 @@ const Home = () => {
     return () => {
       isMounted = false;
     };
-  }, [apiUrl]);
+  }, [apiUrl, lang]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

@@ -12,9 +12,41 @@ public class ProductsController : ControllerBase
         _db = db;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
+    private static string GetTranslation(ProductName? translations, string fallback, string lang)
     {
+        if (translations == null) return fallback;
+        return lang switch
+        {
+            "en" => string.IsNullOrEmpty(translations.EN)
+                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
+                        : translations.EN,
+            "ru" => string.IsNullOrEmpty(translations.RU)
+                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
+                        : translations.RU,
+            _ => string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ,
+        };
+    }
+
+    private static string GetDescriptionTranslation(ProductDescription? translations, string fallback, string lang)
+    {
+        if (translations == null) return fallback;
+        return lang switch
+        {
+            "en" => string.IsNullOrEmpty(translations.EN)
+                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
+                        : translations.EN,
+            "ru" => string.IsNullOrEmpty(translations.RU)
+                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
+                        : translations.RU,
+            _ => string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ,
+        };
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? lang = null)
+    {
+        var normalizedLang = (lang ?? "az").Trim().ToLowerInvariant();
+
         var products = await _db.Products
             .AsNoTracking()
             .Where(p => p.IsActive)
@@ -32,8 +64,8 @@ public class ProductsController : ControllerBase
                     .Select(p => new
                     {
                         id = p.Id,
-                        name = p.Name,
-                        description = p.Description,
+                        name = GetTranslation(p.NameTranslations, p.Name, normalizedLang),
+                        description = GetDescriptionTranslation(p.DescriptionTranslations, p.Description, normalizedLang),
                         price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
                         prices = new
                         {
@@ -52,8 +84,10 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("favorites")]
-    public async Task<IActionResult> GetFavorites([FromQuery] int limit = 4)
+    public async Task<IActionResult> GetFavorites([FromQuery] int limit = 4, [FromQuery] string? lang = null)
     {
+        var normalizedLang = (lang ?? "az").Trim().ToLowerInvariant();
+
         var activeProducts = await _db.Products
             .AsNoTracking()
             .Where(p => p.IsActive)
@@ -74,8 +108,8 @@ public class ProductsController : ControllerBase
             .Select(p => new
             {
                 id = p.Id,
-                name = p.Name,
-                description = p.Description,
+                name = GetTranslation(p.NameTranslations, p.Name, normalizedLang),
+                description = GetDescriptionTranslation(p.DescriptionTranslations, p.Description, normalizedLang),
                 price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
                 prices = new
                 {

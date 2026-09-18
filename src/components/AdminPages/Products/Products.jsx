@@ -30,8 +30,8 @@ const Products = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [form, setForm] = useState({
-    name: '',
-    description: '',
+    nameTranslations: { AZ: '', EN: '', RU: '' },
+    descriptionTranslations: { AZ: '', EN: '', RU: '' },
     price: '',
     discountPrice: '',
     category: 'Main Drinks',
@@ -39,6 +39,8 @@ const Products = () => {
     iconUrl: '',
     isActive: true,
   });
+
+  const [langTab, setLangTab] = useState('AZ');
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
 
@@ -180,9 +182,10 @@ const Products = () => {
 
   const handleOpenCreate = () => {
     setActiveProduct(null);
+    setLangTab('AZ');
     setForm({
-      name: '',
-      description: '',
+      nameTranslations: { AZ: '', EN: '', RU: '' },
+      descriptionTranslations: { AZ: '', EN: '', RU: '' },
       price: '',
       discountPrice: '',
       category: 'Main Drinks',
@@ -195,11 +198,22 @@ const Products = () => {
 
   const handleOpenEdit = (product) => {
     setActiveProduct(product);
+    setLangTab('AZ');
     const rawPrice = product.prices?.price ?? product.price;
     const rawDiscount = product.prices?.discountPrice;
+    const nt = product.nameTranslations || {};
+    const dt = product.descriptionTranslations || {};
     setForm({
-      name: product.name || '',
-      description: product.description || '',
+      nameTranslations: {
+        AZ: nt.AZ ?? nt.az ?? product.name ?? '',
+        EN: nt.EN ?? nt.en ?? '',
+        RU: nt.RU ?? nt.ru ?? '',
+      },
+      descriptionTranslations: {
+        AZ: dt.AZ ?? dt.az ?? product.description ?? '',
+        EN: dt.EN ?? dt.en ?? '',
+        RU: dt.RU ?? dt.ru ?? '',
+      },
       price: rawPrice !== undefined && rawPrice !== null ? String(rawPrice) : '',
       discountPrice: rawDiscount !== undefined && rawDiscount !== null ? String(rawDiscount) : '',
       category: product.category || 'Main Drinks',
@@ -245,16 +259,40 @@ const Products = () => {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) {
-      showToast('Product name is required.', 'error');
+    const azName = form.nameTranslations.AZ.trim();
+    if (!azName) {
+      showToast('Azərbaycan dilində ad mütləqdir.', 'error');
+      setLangTab('AZ');
       return;
     }
-    if (form.name.trim().length > 50) {
+    if (azName.length > 50) {
       showToast('Product name cannot exceed 50 characters.', 'error');
+      setLangTab('AZ');
       return;
     }
-    if (form.description.trim().length > 250) {
-      showToast('Product description cannot exceed 250 characters.', 'error');
+    if (form.nameTranslations.EN.trim().length > 50) {
+      showToast('English name cannot exceed 50 characters.', 'error');
+      setLangTab('EN');
+      return;
+    }
+    if (form.nameTranslations.RU.trim().length > 50) {
+      showToast('Russian name cannot exceed 50 characters.', 'error');
+      setLangTab('RU');
+      return;
+    }
+    if (form.descriptionTranslations.AZ.trim().length > 250) {
+      showToast('AZ description cannot exceed 250 characters.', 'error');
+      setLangTab('AZ');
+      return;
+    }
+    if (form.descriptionTranslations.EN.trim().length > 250) {
+      showToast('EN description cannot exceed 250 characters.', 'error');
+      setLangTab('EN');
+      return;
+    }
+    if (form.descriptionTranslations.RU.trim().length > 250) {
+      showToast('RU description cannot exceed 250 characters.', 'error');
+      setLangTab('RU');
       return;
     }
     const numPrice = parseFloat(form.price);
@@ -278,8 +316,18 @@ const Products = () => {
 
     setIsSaving(true);
     const payload = {
-      name: form.name.trim(),
-      description: form.description.trim(),
+      name: azName,
+      description: form.descriptionTranslations.AZ.trim(),
+      nameTranslations: {
+        AZ: form.nameTranslations.AZ.trim(),
+        EN: form.nameTranslations.EN.trim(),
+        RU: form.nameTranslations.RU.trim(),
+      },
+      descriptionTranslations: {
+        AZ: form.descriptionTranslations.AZ.trim(),
+        EN: form.descriptionTranslations.EN.trim(),
+        RU: form.descriptionTranslations.RU.trim(),
+      },
       price: numPrice,
       discountPrice: numDiscountPrice,
       prices: {
@@ -915,8 +963,35 @@ const Products = () => {
                   </div>
 
                   <div className="product-modal__details-box">
-                    <span>Description</span>
-                    <p>{activeProduct.description || 'No description provided for this item.'}</p>
+                    <span>Translations</span>
+                    {[
+                      { code: 'AZ', flag: '🇦🇿', label: 'Azərbaycan' },
+                      { code: 'EN', flag: '🇬🇧', label: 'English' },
+                      { code: 'RU', flag: '🇷🇺', label: 'Русский' },
+                    ].map(({ code, flag, label }) => {
+                      const nt = activeProduct.nameTranslations || {};
+                      const dt = activeProduct.descriptionTranslations || {};
+                      const name = nt[code] || nt[code.toLowerCase()] || '';
+                      const desc = dt[code] || dt[code.toLowerCase()] || '';
+                      const isEmpty = !name && !desc;
+                      return (
+                        <div key={code} style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <span style={{ fontSize: '1rem' }}>{flag}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>{label}</span>
+                            {code === 'AZ' && <span style={{ fontSize: '0.68rem', color: '#ef4444', fontWeight: 700 }}>required</span>}
+                          </div>
+                          {isEmpty ? (
+                            <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>—</p>
+                          ) : (
+                            <>
+                              {name && <p style={{ margin: '0 0 2px', fontSize: '0.88rem', color: '#fff', fontWeight: 600 }}>{name}</p>}
+                              {desc && <p style={{ margin: 0, fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)' }}>{desc}</p>}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="product-modal__details-row">
@@ -1009,24 +1084,7 @@ const Products = () => {
 
                 <form className="product-modal__form" onSubmit={handleSaveProduct}>
                   <div className="product-modal__form-row">
-                    <div className="product-modal__form-group">
-                      <div className="product-modal__label-row">
-                        <label>Product Name *</label>
-                        <span className={`product-modal__counter ${form.name.length >= 50 ? 'limit' : ''}`}>
-                          {form.name.length}/50
-                        </span>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="e.g. Red Latte, Croissant"
-                        value={form.name}
-                        maxLength={50}
-                        onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 50) })}
-                        required
-                      />
-                    </div>
-
-                    <div className="product-modal__form-group">
+                    <div className="product-modal__form-group" style={{ flex: 1 }}>
                       <div className="product-modal__label-row">
                         <label>Category *</label>
                       </div>
@@ -1042,6 +1100,89 @@ const Products = () => {
                       </select>
                     </div>
                   </div>
+
+                  <div className="product-modal__lang-nav">
+                    {['AZ', 'EN', 'RU'].map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        className={`product-modal__lang-tab ${langTab === lang ? 'product-modal__lang-tab--active' : ''}`}
+                        onClick={() => setLangTab(lang)}
+                      >
+                        {lang === 'AZ' && '🇦🇿'}
+                        {lang === 'EN' && '🇬🇧'}
+                        {lang === 'RU' && '🇷🇺'}
+                        {' '}{lang}
+                        {lang === 'AZ' && <span className="product-modal__lang-required">*</span>}
+                        {lang !== 'AZ' && !form.nameTranslations[lang].trim() && (
+                          <span className="product-modal__lang-empty" />
+                        )}
+                        {lang !== 'AZ' && form.nameTranslations[lang].trim() && (
+                          <span className="product-modal__lang-filled" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {['AZ', 'EN', 'RU'].map((lang) => (
+                    langTab === lang && (
+                      <div key={lang}>
+                        <div className="product-modal__form-group">
+                          <div className="product-modal__label-row">
+                            <label>
+                              {lang === 'AZ' && 'Ad (Azərbaycan) *'}
+                              {lang === 'EN' && 'Name (English)'}
+                              {lang === 'RU' && 'Название (Русский)'}
+                            </label>
+                            <span className={`product-modal__counter ${form.nameTranslations[lang].length >= 50 ? 'limit' : ''}`}>
+                              {form.nameTranslations[lang].length}/50
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            placeholder={
+                              lang === 'AZ' ? 'məs. Qırmızı Latte, Kruasan' :
+                              lang === 'EN' ? 'e.g. Red Latte, Croissant' :
+                              'напр. Красный Латте, Круассан'
+                            }
+                            value={form.nameTranslations[lang]}
+                            maxLength={50}
+                            onChange={(e) => setForm({
+                              ...form,
+                              nameTranslations: { ...form.nameTranslations, [lang]: e.target.value.slice(0, 50) }
+                            })}
+                            required={lang === 'AZ'}
+                          />
+                        </div>
+
+                        <div className="product-modal__form-group">
+                          <div className="product-modal__label-row">
+                            <label>
+                              {lang === 'AZ' && 'Təsvir (Azərbaycan)'}
+                              {lang === 'EN' && 'Description (English)'}
+                              {lang === 'RU' && 'Описание (Русский)'}
+                            </label>
+                            <span className={`product-modal__counter ${form.descriptionTranslations[lang].length >= 250 ? 'limit' : ''}`}>
+                              {form.descriptionTranslations[lang].length}/250
+                            </span>
+                          </div>
+                          <textarea
+                            placeholder={
+                              lang === 'AZ' ? 'Məhsulun dadı, inqrediyentlər haqqında...' :
+                              lang === 'EN' ? 'Enter product taste notes, ingredients...' :
+                              'Вкус, ингредиенты, особенности...'
+                            }
+                            value={form.descriptionTranslations[lang]}
+                            maxLength={250}
+                            onChange={(e) => setForm({
+                              ...form,
+                              descriptionTranslations: { ...form.descriptionTranslations, [lang]: e.target.value.slice(0, 250) }
+                            })}
+                          />
+                        </div>
+                      </div>
+                    )
+                  ))}
 
                   <div className="product-modal__form-row">
                     <div className="product-modal__form-group">
@@ -1078,23 +1219,6 @@ const Products = () => {
                       />
                     </div>
                   </div>
-
-                  <div className="product-modal__form-group">
-                    <div className="product-modal__label-row">
-                      <label>Description</label>
-                      <span className={`product-modal__counter ${form.description.length >= 250 ? 'limit' : ''}`}>
-                        {form.description.length}/250
-                      </span>
-                    </div>
-                    <textarea
-                      placeholder="Enter product taste notes, ingredients, or story..."
-                      value={form.description}
-                      maxLength={250}
-                      onChange={(e) => setForm({ ...form, description: e.target.value.slice(0, 250) })}
-                    />
-                  </div>
-
-
 
                   <div className="product-modal__form-group">
                     <label>Image URL (Photo)</label>

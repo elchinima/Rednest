@@ -107,6 +107,16 @@ public class AppDbContext : DbContext
             {
                 img.ToJson("Images");
             });
+
+            entity.OwnsOne(e => e.NameTranslations, nt =>
+            {
+                nt.ToJson("NameTranslations");
+            });
+
+            entity.OwnsOne(e => e.DescriptionTranslations, dt =>
+            {
+                dt.ToJson("DescriptionTranslations");
+            });
         });
 
         modelBuilder.Entity<UserBasket>(entity =>

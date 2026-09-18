@@ -1509,6 +1509,18 @@ public class AdminController : ControllerBase
             id = p.Id,
             name = p.Name,
             description = p.Description,
+            nameTranslations = p.NameTranslations != null ? new
+            {
+                EN = p.NameTranslations.EN,
+                RU = p.NameTranslations.RU,
+                AZ = p.NameTranslations.AZ
+            } : new { EN = p.Name, RU = "", AZ = "" },
+            descriptionTranslations = p.DescriptionTranslations != null ? new
+            {
+                EN = p.DescriptionTranslations.EN,
+                RU = p.DescriptionTranslations.RU,
+                AZ = p.DescriptionTranslations.AZ
+            } : new { EN = p.Description, RU = "", AZ = "" },
             price = (p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m,
             formattedPrice = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -1552,6 +1564,18 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
+            nameTranslations = product.NameTranslations != null ? new
+            {
+                EN = product.NameTranslations.EN,
+                RU = product.NameTranslations.RU,
+                AZ = product.NameTranslations.AZ
+            } : new { EN = product.Name, RU = "", AZ = "" },
+            descriptionTranslations = product.DescriptionTranslations != null ? new
+            {
+                EN = product.DescriptionTranslations.EN,
+                RU = product.DescriptionTranslations.RU,
+                AZ = product.DescriptionTranslations.AZ
+            } : new { EN = product.Description, RU = "", AZ = "" },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
             formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -1591,11 +1615,21 @@ public class AdminController : ControllerBase
 
         var category = string.IsNullOrWhiteSpace(request.Category) ? "Main Drinks" : request.Category.Trim();
 
+        var nameEN = request.NameTranslations?.EN?.Trim() ?? request.Name?.Trim() ?? string.Empty;
+        var nameRU = request.NameTranslations?.RU?.Trim() ?? string.Empty;
+        var nameAZ = request.NameTranslations?.AZ?.Trim() ?? string.Empty;
+
+        var descEN = request.DescriptionTranslations?.EN?.Trim() ?? request.Description?.Trim() ?? string.Empty;
+        var descRU = request.DescriptionTranslations?.RU?.Trim() ?? string.Empty;
+        var descAZ = request.DescriptionTranslations?.AZ?.Trim() ?? string.Empty;
+
         var product = new Rednest.Core.Entities.Product
         {
             Id = Guid.NewGuid(),
-            Name = request.Name.Trim(),
-            Description = request.Description?.Trim() ?? string.Empty,
+            Name = nameEN,
+            Description = descEN,
+            NameTranslations = new Rednest.Core.Entities.ProductName { EN = nameEN, RU = nameRU, AZ = nameAZ },
+            DescriptionTranslations = new Rednest.Core.Entities.ProductDescription { EN = descEN, RU = descRU, AZ = descAZ },
             Prices = new Rednest.Core.Entities.ProductPrices
             {
                 Price = basePrice.Value,
@@ -1636,6 +1670,8 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
+            nameTranslations = new { EN = nameEN, RU = nameRU, AZ = nameAZ },
+            descriptionTranslations = new { EN = descEN, RU = descRU, AZ = descAZ },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
             formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -1665,18 +1701,38 @@ public class AdminController : ControllerBase
         var oldDiscountPrice = product.Prices?.DiscountPrice;
         var oldIsActive = product.IsActive;
 
-        if (!string.IsNullOrWhiteSpace(request.Name))
+        if (request.NameTranslations != null)
+        {
+            product.NameTranslations ??= new Rednest.Core.Entities.ProductName();
+            if (request.NameTranslations.EN != null) product.NameTranslations.EN = request.NameTranslations.EN.Trim();
+            if (request.NameTranslations.RU != null) product.NameTranslations.RU = request.NameTranslations.RU.Trim();
+            if (request.NameTranslations.AZ != null) product.NameTranslations.AZ = request.NameTranslations.AZ.Trim();
+            if (request.NameTranslations.EN != null) product.Name = request.NameTranslations.EN.Trim();
+        }
+        else if (!string.IsNullOrWhiteSpace(request.Name))
         {
             if (request.Name.Trim().Length > 50)
                 return BadRequest(new { message = "Product name cannot exceed 50 characters." });
             product.Name = request.Name.Trim();
+            product.NameTranslations ??= new Rednest.Core.Entities.ProductName();
+            product.NameTranslations.EN = product.Name;
         }
 
-        if (request.Description != null)
+        if (request.DescriptionTranslations != null)
+        {
+            product.DescriptionTranslations ??= new Rednest.Core.Entities.ProductDescription();
+            if (request.DescriptionTranslations.EN != null) product.DescriptionTranslations.EN = request.DescriptionTranslations.EN.Trim();
+            if (request.DescriptionTranslations.RU != null) product.DescriptionTranslations.RU = request.DescriptionTranslations.RU.Trim();
+            if (request.DescriptionTranslations.AZ != null) product.DescriptionTranslations.AZ = request.DescriptionTranslations.AZ.Trim();
+            if (request.DescriptionTranslations.EN != null) product.Description = request.DescriptionTranslations.EN.Trim();
+        }
+        else if (request.Description != null)
         {
             if (request.Description.Trim().Length > 250)
                 return BadRequest(new { message = "Product description cannot exceed 250 characters." });
             product.Description = request.Description.Trim();
+            product.DescriptionTranslations ??= new Rednest.Core.Entities.ProductDescription();
+            product.DescriptionTranslations.EN = product.Description;
         }
 
         product.Prices ??= new Rednest.Core.Entities.ProductPrices();
@@ -1740,6 +1796,8 @@ public class AdminController : ControllerBase
             id = product.Id,
             name = product.Name,
             description = product.Description,
+            nameTranslations = product.NameTranslations != null ? new { EN = product.NameTranslations.EN, RU = product.NameTranslations.RU, AZ = product.NameTranslations.AZ } : new { EN = product.Name, RU = "", AZ = "" },
+            descriptionTranslations = product.DescriptionTranslations != null ? new { EN = product.DescriptionTranslations.EN, RU = product.DescriptionTranslations.RU, AZ = product.DescriptionTranslations.AZ } : new { EN = product.Description, RU = "", AZ = "" },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
             formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -2591,10 +2649,19 @@ public class AdminProductPricesRequest
     public decimal? DiscountPrice { get; set; }
 }
 
+public class AdminProductTranslationsRequest
+{
+    public string? EN { get; set; }
+    public string? RU { get; set; }
+    public string? AZ { get; set; }
+}
+
 public class AdminProductRequest
 {
     public string? Name { get; set; }
     public string? Description { get; set; }
+    public AdminProductTranslationsRequest? NameTranslations { get; set; }
+    public AdminProductTranslationsRequest? DescriptionTranslations { get; set; }
     public decimal? Price { get; set; }
     public decimal? DiscountPrice { get; set; }
     public AdminProductPricesRequest? Prices { get; set; }

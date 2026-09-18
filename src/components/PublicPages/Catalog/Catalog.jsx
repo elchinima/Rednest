@@ -211,7 +211,7 @@ const Catalog = () => {
     const fetchProducts = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const response = await fetch(`${apiUrl}/api/products`);
+        const response = await fetch(`${apiUrl}/api/products?lang=${lang}`);
         if (response.ok) {
           const data = await response.json();
           setMenuData(data);
@@ -223,7 +223,7 @@ const Catalog = () => {
       }
     };
     fetchProducts();
-  }, []);
+  }, [lang]);
 
   return (
     <motion.div 
