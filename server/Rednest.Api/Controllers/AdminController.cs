@@ -1615,19 +1615,25 @@ public class AdminController : ControllerBase
 
         var category = string.IsNullOrWhiteSpace(request.Category) ? "Main Drinks" : request.Category.Trim();
 
-        var nameEN = request.NameTranslations?.EN?.Trim() ?? request.Name?.Trim() ?? string.Empty;
+        var nameAZ = request.NameTranslations?.AZ?.Trim() ?? request.Name?.Trim() ?? string.Empty;
+        var nameEN = request.NameTranslations?.EN?.Trim() ?? string.Empty;
         var nameRU = request.NameTranslations?.RU?.Trim() ?? string.Empty;
-        var nameAZ = request.NameTranslations?.AZ?.Trim() ?? string.Empty;
 
-        var descEN = request.DescriptionTranslations?.EN?.Trim() ?? request.Description?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(nameAZ) && string.IsNullOrWhiteSpace(nameEN))
+            return BadRequest(new { message = "Product name is required." });
+
+        var descAZ = request.DescriptionTranslations?.AZ?.Trim() ?? request.Description?.Trim() ?? string.Empty;
+        var descEN = request.DescriptionTranslations?.EN?.Trim() ?? string.Empty;
         var descRU = request.DescriptionTranslations?.RU?.Trim() ?? string.Empty;
-        var descAZ = request.DescriptionTranslations?.AZ?.Trim() ?? string.Empty;
+
+        var canonicalName = !string.IsNullOrEmpty(nameAZ) ? nameAZ : nameEN;
+        var canonicalDesc = !string.IsNullOrEmpty(descAZ) ? descAZ : descEN;
 
         var product = new Rednest.Core.Entities.Product
         {
             Id = Guid.NewGuid(),
-            Name = nameEN,
-            Description = descEN,
+            Name = canonicalName,
+            Description = canonicalDesc,
             NameTranslations = new Rednest.Core.Entities.ProductName { EN = nameEN, RU = nameRU, AZ = nameAZ },
             DescriptionTranslations = new Rednest.Core.Entities.ProductDescription { EN = descEN, RU = descRU, AZ = descAZ },
             Prices = new Rednest.Core.Entities.ProductPrices
@@ -1707,7 +1713,10 @@ public class AdminController : ControllerBase
             if (request.NameTranslations.EN != null) product.NameTranslations.EN = request.NameTranslations.EN.Trim();
             if (request.NameTranslations.RU != null) product.NameTranslations.RU = request.NameTranslations.RU.Trim();
             if (request.NameTranslations.AZ != null) product.NameTranslations.AZ = request.NameTranslations.AZ.Trim();
-            if (request.NameTranslations.EN != null) product.Name = request.NameTranslations.EN.Trim();
+            if (!string.IsNullOrEmpty(product.NameTranslations.AZ))
+                product.Name = product.NameTranslations.AZ;
+            else if (!string.IsNullOrEmpty(product.NameTranslations.EN))
+                product.Name = product.NameTranslations.EN;
         }
         else if (!string.IsNullOrWhiteSpace(request.Name))
         {
@@ -1715,6 +1724,7 @@ public class AdminController : ControllerBase
                 return BadRequest(new { message = "Product name cannot exceed 50 characters." });
             product.Name = request.Name.Trim();
             product.NameTranslations ??= new Rednest.Core.Entities.ProductName();
+            product.NameTranslations.AZ = product.Name;
             product.NameTranslations.EN = product.Name;
         }
 
@@ -1724,7 +1734,10 @@ public class AdminController : ControllerBase
             if (request.DescriptionTranslations.EN != null) product.DescriptionTranslations.EN = request.DescriptionTranslations.EN.Trim();
             if (request.DescriptionTranslations.RU != null) product.DescriptionTranslations.RU = request.DescriptionTranslations.RU.Trim();
             if (request.DescriptionTranslations.AZ != null) product.DescriptionTranslations.AZ = request.DescriptionTranslations.AZ.Trim();
-            if (request.DescriptionTranslations.EN != null) product.Description = request.DescriptionTranslations.EN.Trim();
+            if (!string.IsNullOrEmpty(product.DescriptionTranslations.AZ))
+                product.Description = product.DescriptionTranslations.AZ;
+            else if (!string.IsNullOrEmpty(product.DescriptionTranslations.EN))
+                product.Description = product.DescriptionTranslations.EN;
         }
         else if (request.Description != null)
         {

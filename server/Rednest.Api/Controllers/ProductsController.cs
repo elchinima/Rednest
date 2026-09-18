@@ -17,13 +17,9 @@ public class ProductsController : ControllerBase
         if (translations == null) return fallback;
         return lang switch
         {
-            "en" => string.IsNullOrEmpty(translations.EN)
-                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
-                        : translations.EN,
-            "ru" => string.IsNullOrEmpty(translations.RU)
-                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
-                        : translations.RU,
-            _ => string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ,
+            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
+            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
+            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : fallback),
         };
     }
 
@@ -32,13 +28,9 @@ public class ProductsController : ControllerBase
         if (translations == null) return fallback;
         return lang switch
         {
-            "en" => string.IsNullOrEmpty(translations.EN)
-                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
-                        : translations.EN,
-            "ru" => string.IsNullOrEmpty(translations.RU)
-                        ? (string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ)
-                        : translations.RU,
-            _ => string.IsNullOrEmpty(translations.AZ) ? fallback : translations.AZ,
+            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
+            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
+            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : fallback),
         };
     }
 
