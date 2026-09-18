@@ -93,8 +93,6 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
@@ -108,14 +106,14 @@ public class AppDbContext : DbContext
                 img.ToJson("Images");
             });
 
-            entity.OwnsOne(e => e.NameTranslations, nt =>
+            entity.OwnsOne(e => e.Name, n =>
             {
-                nt.ToJson("NameTranslations");
+                n.ToJson("Name");
             });
 
-            entity.OwnsOne(e => e.DescriptionTranslations, dt =>
+            entity.OwnsOne(e => e.Description, d =>
             {
-                dt.ToJson("DescriptionTranslations");
+                d.ToJson("Description");
             });
         });
 

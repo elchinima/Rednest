@@ -1507,20 +1507,20 @@ public class AdminController : ControllerBase
         return Ok(products.Select(p => new
         {
             id = p.Id,
-            name = p.Name,
-            description = p.Description,
-            nameTranslations = p.NameTranslations != null ? new
+            name = p.Name.AZ,
+            description = p.Description.AZ,
+            nameTranslations = new
             {
-                EN = p.NameTranslations.EN,
-                RU = p.NameTranslations.RU,
-                AZ = p.NameTranslations.AZ
-            } : new { EN = p.Name, RU = "", AZ = "" },
-            descriptionTranslations = p.DescriptionTranslations != null ? new
+                EN = p.Name.EN,
+                RU = p.Name.RU,
+                AZ = p.Name.AZ
+            },
+            descriptionTranslations = new
             {
-                EN = p.DescriptionTranslations.EN,
-                RU = p.DescriptionTranslations.RU,
-                AZ = p.DescriptionTranslations.AZ
-            } : new { EN = p.Description, RU = "", AZ = "" },
+                EN = p.Description.EN,
+                RU = p.Description.RU,
+                AZ = p.Description.AZ
+            },
             price = (p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m,
             formattedPrice = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -1562,20 +1562,20 @@ public class AdminController : ControllerBase
         return Ok(new
         {
             id = product.Id,
-            name = product.Name,
-            description = product.Description,
-            nameTranslations = product.NameTranslations != null ? new
+            name = product.Name.AZ,
+            description = product.Description.AZ,
+            nameTranslations = new
             {
-                EN = product.NameTranslations.EN,
-                RU = product.NameTranslations.RU,
-                AZ = product.NameTranslations.AZ
-            } : new { EN = product.Name, RU = "", AZ = "" },
-            descriptionTranslations = product.DescriptionTranslations != null ? new
+                EN = product.Name.EN,
+                RU = product.Name.RU,
+                AZ = product.Name.AZ
+            },
+            descriptionTranslations = new
             {
-                EN = product.DescriptionTranslations.EN,
-                RU = product.DescriptionTranslations.RU,
-                AZ = product.DescriptionTranslations.AZ
-            } : new { EN = product.Description, RU = "", AZ = "" },
+                EN = product.Description.EN,
+                RU = product.Description.RU,
+                AZ = product.Description.AZ
+            },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
             formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new
@@ -1626,16 +1626,11 @@ public class AdminController : ControllerBase
         var descEN = request.DescriptionTranslations?.EN?.Trim() ?? string.Empty;
         var descRU = request.DescriptionTranslations?.RU?.Trim() ?? string.Empty;
 
-        var canonicalName = !string.IsNullOrEmpty(nameAZ) ? nameAZ : nameEN;
-        var canonicalDesc = !string.IsNullOrEmpty(descAZ) ? descAZ : descEN;
-
         var product = new Rednest.Core.Entities.Product
         {
             Id = Guid.NewGuid(),
-            Name = canonicalName,
-            Description = canonicalDesc,
-            NameTranslations = new Rednest.Core.Entities.ProductName { EN = nameEN, RU = nameRU, AZ = nameAZ },
-            DescriptionTranslations = new Rednest.Core.Entities.ProductDescription { EN = descEN, RU = descRU, AZ = descAZ },
+            Name = new Rednest.Core.Entities.ProductName { EN = nameEN, RU = nameRU, AZ = nameAZ },
+            Description = new Rednest.Core.Entities.ProductDescription { EN = descEN, RU = descRU, AZ = descAZ },
             Prices = new Rednest.Core.Entities.ProductPrices
             {
                 Price = basePrice.Value,
@@ -1663,7 +1658,7 @@ public class AdminController : ControllerBase
             {
                 action = "CreateProduct",
                 productId = product.Id,
-                productName = product.Name,
+                productName = product.Name.AZ,
                 category = product.Category,
                 price = product.Prices.Price,
                 discountPrice = product.Prices.DiscountPrice,
@@ -1674,8 +1669,8 @@ public class AdminController : ControllerBase
         {
             message = "Product created successfully.",
             id = product.Id,
-            name = product.Name,
-            description = product.Description,
+            name = product.Name.AZ,
+            description = product.Description.AZ,
             nameTranslations = new { EN = nameEN, RU = nameRU, AZ = nameAZ },
             descriptionTranslations = new { EN = descEN, RU = descRU, AZ = descAZ },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
@@ -1701,7 +1696,7 @@ public class AdminController : ControllerBase
         if (product == null)
             return NotFound(new { message = "Product not found." });
 
-        var oldName = product.Name;
+        var oldName = product.Name.AZ;
         var oldCategory = product.Category;
         var oldPrice = product.Prices?.Price;
         var oldDiscountPrice = product.Prices?.DiscountPrice;
@@ -1709,43 +1704,34 @@ public class AdminController : ControllerBase
 
         if (request.NameTranslations != null)
         {
-            product.NameTranslations ??= new Rednest.Core.Entities.ProductName();
-            if (request.NameTranslations.EN != null) product.NameTranslations.EN = request.NameTranslations.EN.Trim();
-            if (request.NameTranslations.RU != null) product.NameTranslations.RU = request.NameTranslations.RU.Trim();
-            if (request.NameTranslations.AZ != null) product.NameTranslations.AZ = request.NameTranslations.AZ.Trim();
-            if (!string.IsNullOrEmpty(product.NameTranslations.AZ))
-                product.Name = product.NameTranslations.AZ;
-            else if (!string.IsNullOrEmpty(product.NameTranslations.EN))
-                product.Name = product.NameTranslations.EN;
+            product.Name ??= new Rednest.Core.Entities.ProductName();
+            if (request.NameTranslations.EN != null) product.Name.EN = request.NameTranslations.EN.Trim();
+            if (request.NameTranslations.RU != null) product.Name.RU = request.NameTranslations.RU.Trim();
+            if (request.NameTranslations.AZ != null) product.Name.AZ = request.NameTranslations.AZ.Trim();
         }
         else if (!string.IsNullOrWhiteSpace(request.Name))
         {
             if (request.Name.Trim().Length > 50)
                 return BadRequest(new { message = "Product name cannot exceed 50 characters." });
-            product.Name = request.Name.Trim();
-            product.NameTranslations ??= new Rednest.Core.Entities.ProductName();
-            product.NameTranslations.AZ = product.Name;
-            product.NameTranslations.EN = product.Name;
+            product.Name ??= new Rednest.Core.Entities.ProductName();
+            product.Name.AZ = request.Name.Trim();
+            product.Name.EN = request.Name.Trim();
         }
 
         if (request.DescriptionTranslations != null)
         {
-            product.DescriptionTranslations ??= new Rednest.Core.Entities.ProductDescription();
-            if (request.DescriptionTranslations.EN != null) product.DescriptionTranslations.EN = request.DescriptionTranslations.EN.Trim();
-            if (request.DescriptionTranslations.RU != null) product.DescriptionTranslations.RU = request.DescriptionTranslations.RU.Trim();
-            if (request.DescriptionTranslations.AZ != null) product.DescriptionTranslations.AZ = request.DescriptionTranslations.AZ.Trim();
-            if (!string.IsNullOrEmpty(product.DescriptionTranslations.AZ))
-                product.Description = product.DescriptionTranslations.AZ;
-            else if (!string.IsNullOrEmpty(product.DescriptionTranslations.EN))
-                product.Description = product.DescriptionTranslations.EN;
+            product.Description ??= new Rednest.Core.Entities.ProductDescription();
+            if (request.DescriptionTranslations.EN != null) product.Description.EN = request.DescriptionTranslations.EN.Trim();
+            if (request.DescriptionTranslations.RU != null) product.Description.RU = request.DescriptionTranslations.RU.Trim();
+            if (request.DescriptionTranslations.AZ != null) product.Description.AZ = request.DescriptionTranslations.AZ.Trim();
         }
         else if (request.Description != null)
         {
             if (request.Description.Trim().Length > 250)
                 return BadRequest(new { message = "Product description cannot exceed 250 characters." });
-            product.Description = request.Description.Trim();
-            product.DescriptionTranslations ??= new Rednest.Core.Entities.ProductDescription();
-            product.DescriptionTranslations.EN = product.Description;
+            product.Description ??= new Rednest.Core.Entities.ProductDescription();
+            product.Description.AZ = request.Description.Trim();
+            product.Description.EN = request.Description.Trim();
         }
 
         product.Prices ??= new Rednest.Core.Entities.ProductPrices();
@@ -1759,17 +1745,32 @@ public class AdminController : ControllerBase
 
         if (request.Prices != null)
         {
+            if (request.Prices.Price.HasValue && request.Prices.Price.Value >= 0)
+            {
+                product.Prices.Price = request.Prices.Price.Value;
+            }
+
+            if (request.Prices.DiscountPrice.HasValue && request.Prices.DiscountPrice.Value < 0)
+            {
+                return BadRequest(new { message = "Discount price cannot be negative." });
+            }
+
             product.Prices.DiscountPrice = request.Prices.DiscountPrice;
         }
         else if (request.DiscountPrice.HasValue)
         {
-            product.Prices.DiscountPrice = request.DiscountPrice.Value;
+            if (request.DiscountPrice.Value < 0)
+            {
+                return BadRequest(new { message = "Discount price cannot be negative." });
+            }
+
+            product.Prices.DiscountPrice = request.DiscountPrice;
         }
 
-        if (request.ImageUrl != null)
+        if (!string.IsNullOrWhiteSpace(request.ImageUrl))
             product.Images.Image = request.ImageUrl.Trim();
 
-        if (request.IconUrl != null)
+        if (!string.IsNullOrWhiteSpace(request.IconUrl))
             product.Images.Icon = request.IconUrl.Trim();
 
         if (!string.IsNullOrWhiteSpace(request.Category))
@@ -1778,14 +1779,14 @@ public class AdminController : ControllerBase
         if (request.IsActive.HasValue)
             product.IsActive = request.IsActive.Value;
 
-        await _context.SaveChangesAsync();
+        var changes = new List<string>();
+        if (oldName != product.Name.AZ) changes.Add($"Name: '{oldName}' -> '{product.Name.AZ}'");
+        if (oldCategory != product.Category) changes.Add($"Category: '{oldCategory}' -> '{product.Category}'");
+        if (oldPrice != product.Prices?.Price) changes.Add($"Price: '{oldPrice}' -> '{product.Prices?.Price}'");
+        if (oldDiscountPrice != product.Prices?.DiscountPrice) changes.Add($"DiscountPrice: '{oldDiscountPrice}' -> '{product.Prices?.DiscountPrice}'");
+        if (oldIsActive != product.IsActive) changes.Add($"IsActive: '{oldIsActive}' -> '{product.IsActive}'");
 
-        var changes = new Dictionary<string, object>();
-        if (oldName != product.Name) changes["name"] = new { from = oldName, to = product.Name };
-        if (oldCategory != product.Category) changes["category"] = new { from = oldCategory, to = product.Category };
-        if (oldPrice != product.Prices?.Price) changes["price"] = new { from = oldPrice, to = product.Prices?.Price };
-        if (oldDiscountPrice != product.Prices?.DiscountPrice) changes["discountPrice"] = new { from = oldDiscountPrice, to = product.Prices?.DiscountPrice };
-        if (oldIsActive != product.IsActive) changes["isActive"] = new { from = oldIsActive, to = product.IsActive };
+        await _context.SaveChangesAsync();
 
         var (auth, adminUser) = await GetAdminUserAsync();
         await LogAdminActionAsync(
@@ -1797,20 +1798,20 @@ public class AdminController : ControllerBase
             {
                 action = "UpdateProduct",
                 productId = id,
-                productName = product.Name,
+                productName = product.Name.AZ,
                 changes = changes.Count > 0 ? changes : null,
                 before = new { name = oldName, category = oldCategory, price = oldPrice, discountPrice = oldDiscountPrice, isActive = oldIsActive },
-                after = new { name = product.Name, category = product.Category, price = product.Prices?.Price, discountPrice = product.Prices?.DiscountPrice, isActive = product.IsActive }
+                after = new { name = product.Name.AZ, category = product.Category, price = product.Prices?.Price, discountPrice = product.Prices?.DiscountPrice, isActive = product.IsActive }
             });
 
         return Ok(new
         {
             message = "Product updated successfully.",
             id = product.Id,
-            name = product.Name,
-            description = product.Description,
-            nameTranslations = product.NameTranslations != null ? new { EN = product.NameTranslations.EN, RU = product.NameTranslations.RU, AZ = product.NameTranslations.AZ } : new { EN = product.Name, RU = "", AZ = "" },
-            descriptionTranslations = product.DescriptionTranslations != null ? new { EN = product.DescriptionTranslations.EN, RU = product.DescriptionTranslations.RU, AZ = product.DescriptionTranslations.AZ } : new { EN = product.Description, RU = "", AZ = "" },
+            name = product.Name.AZ,
+            description = product.Description.AZ,
+            nameTranslations = new { EN = product.Name.EN, RU = product.Name.RU, AZ = product.Name.AZ },
+            descriptionTranslations = new { EN = product.Description.EN, RU = product.Description.RU, AZ = product.Description.AZ },
             price = (product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m,
             formattedPrice = ((product.Prices?.DiscountPrice ?? product.Prices?.Price) ?? 0m).ToString("0.00"),
             prices = new

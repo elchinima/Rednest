@@ -1,4 +1,3 @@
-
 namespace Rednest.Api.Controllers;
 
 [ApiController]
@@ -12,25 +11,25 @@ public class ProductsController : ControllerBase
         _db = db;
     }
 
-    private static string GetTranslation(ProductName? translations, string fallback, string lang)
+    private static string GetTranslation(ProductName? translations, string lang)
     {
-        if (translations == null) return fallback;
+        if (translations == null) return string.Empty;
         return lang switch
         {
-            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
-            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
-            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : fallback),
+            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : translations.RU),
+            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : translations.EN),
+            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : translations.RU),
         };
     }
 
-    private static string GetDescriptionTranslation(ProductDescription? translations, string fallback, string lang)
+    private static string GetDescriptionTranslation(ProductDescription? translations, string lang)
     {
-        if (translations == null) return fallback;
+        if (translations == null) return string.Empty;
         return lang switch
         {
-            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
-            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : fallback),
-            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : fallback),
+            "en" => !string.IsNullOrEmpty(translations.EN) ? translations.EN : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : translations.RU),
+            "ru" => !string.IsNullOrEmpty(translations.RU) ? translations.RU : (!string.IsNullOrEmpty(translations.AZ) ? translations.AZ : translations.EN),
+            _ => !string.IsNullOrEmpty(translations.AZ) ? translations.AZ : (!string.IsNullOrEmpty(translations.EN) ? translations.EN : translations.RU),
         };
     }
 
@@ -56,8 +55,8 @@ public class ProductsController : ControllerBase
                     .Select(p => new
                     {
                         id = p.Id,
-                        name = GetTranslation(p.NameTranslations, p.Name, normalizedLang),
-                        description = GetDescriptionTranslation(p.DescriptionTranslations, p.Description, normalizedLang),
+                        name = GetTranslation(p.Name, normalizedLang),
+                        description = GetDescriptionTranslation(p.Description, normalizedLang),
                         price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
                         prices = new
                         {
@@ -100,8 +99,8 @@ public class ProductsController : ControllerBase
             .Select(p => new
             {
                 id = p.Id,
-                name = GetTranslation(p.NameTranslations, p.Name, normalizedLang),
-                description = GetDescriptionTranslation(p.DescriptionTranslations, p.Description, normalizedLang),
+                name = GetTranslation(p.Name, normalizedLang),
+                description = GetDescriptionTranslation(p.Description, normalizedLang),
                 price = ((p.Prices?.DiscountPrice ?? p.Prices?.Price) ?? 0m).ToString("0.00"),
                 prices = new
                 {
