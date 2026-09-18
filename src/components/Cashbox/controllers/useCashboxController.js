@@ -9,7 +9,6 @@ export function useCashboxController() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSizes, setSelectedSizes] = useState({});
 
   // Active receipt (cart)
   const [cartItems, setCartItems] = useState([]);
@@ -17,10 +16,7 @@ export function useCashboxController() {
   // Calculator / tender state
   const [receivedAmount, setReceivedAmount] = useState('50.00');
 
-  // Shift & Cashier info
-  const [shiftSeconds, setShiftSeconds] = useState(16335); // 04:32:15
-  const [heldOrdersCount] = useState(3);
-  const [cashDrawerBalance] = useState('1,450.80');
+  // Cashier info
   const cashierName = user?.name || user?.username || 'Anna K.';
 
   // Extract English name from product
@@ -47,13 +43,31 @@ export function useCashboxController() {
     return item.description || '';
   }, []);
 
+  // Helper to extract product icon or image from all possible formats
+  const resolveProductImage = useCallback((item) => {
+    if (!item) return '';
+    if (item.images && typeof item.images === 'object') {
+      const icon = item.images.icon || item.images.Icon;
+      const img = item.images.image || item.images.Image;
+      return icon || img || '';
+    }
+    if (typeof item.images === 'string' && item.images.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(item.images);
+        return parsed.icon || parsed.Icon || parsed.image || parsed.Image || '';
+      } catch {}
+    }
+    return item.iconUrl || item.imageUrl || item.image || item.icon || '';
+  }, []);
+
   // Fetch products directly from backend database
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Try public products endpoint with lang=en
       let res = await fetchWithRefresh(`${API_URL}/api/products?lang=en`);
-      if (res.ok) {
+      const isJson1 = res.headers.get('content-type')?.includes('application/json');
+      if (res.ok && isJson1) {
         const data = await res.json();
         let flat = [];
         if (Array.isArray(data)) {
@@ -61,39 +75,45 @@ export function useCashboxController() {
             const groupCategory = group.category || 'General';
             if (Array.isArray(group.items)) {
               group.items.forEach((item) => {
+                const img = resolveProductImage(item);
                 flat.push({
                   ...item,
                   _id: item._id || item.id,
                   category: item.category || groupCategory,
                   displayName: item.name || 'Product',
                   displayDescription: item.description || '',
+                  imageUrl: img,
+                  iconUrl: img,
+                  image: img,
                 });
               });
             } else if (group._id || group.id || group.name) {
+              const img = resolveProductImage(group);
               flat.push({
                 ...group,
                 _id: group._id || group.id,
                 category: group.category || groupCategory,
                 displayName: group.name || 'Product',
                 displayDescription: group.description || '',
+                imageUrl: img,
+                iconUrl: img,
+                image: img,
               });
             }
           });
         }
         if (flat.length > 0) {
           setProducts(flat);
-          // Set initial demo cart from loaded DB products if cart is empty
           setCartItems((prev) => {
             if (prev.length > 0) return prev;
             return flat.slice(0, 3).map((p, idx) => {
               const rawPrice = p.prices?.price ?? p.price ?? 4.0;
               const priceNum = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice) || 4.0;
-              const size = idx === 1 ? 'S' : 'M';
               return {
                 id: `cart-init-${idx}`,
                 productId: p._id,
                 name: p.displayName,
-                size,
+                image: p.imageUrl || p.image,
                 price: priceNum,
                 qty: idx === 1 ? 2 : 1,
               };
@@ -105,27 +125,33 @@ export function useCashboxController() {
 
       // 2. Fallback to admin products endpoint
       res = await fetchWithRefresh(`${API_URL}/api/admin/products`);
-      if (res.ok) {
+      const isJson2 = res.headers.get('content-type')?.includes('application/json');
+      if (res.ok && isJson2) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          const flat = data.map((item) => ({
-            ...item,
-            _id: item._id || item.id,
-            displayName: getProductName(item),
-            displayDescription: getProductDescription(item),
-          }));
+          const flat = data.map((item) => {
+            const img = resolveProductImage(item);
+            return {
+              ...item,
+              _id: item._id || item.id,
+              displayName: getProductName(item),
+              displayDescription: getProductDescription(item),
+              imageUrl: img,
+              iconUrl: img,
+              image: img,
+            };
+          });
           setProducts(flat);
           setCartItems((prev) => {
             if (prev.length > 0) return prev;
             return flat.slice(0, 3).map((p, idx) => {
               const rawPrice = p.prices?.price ?? p.price ?? 4.0;
               const priceNum = typeof rawPrice === 'number' ? rawPrice : parseFloat(rawPrice) || 4.0;
-              const size = idx === 1 ? 'S' : 'M';
               return {
                 id: `cart-init-${idx}`,
                 productId: p._id,
                 name: p.displayName,
-                size,
+                image: p.imageUrl || p.image,
                 price: priceNum,
                 qty: idx === 1 ? 2 : 1,
               };
@@ -143,21 +169,6 @@ export function useCashboxController() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  // Shift Timer
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setShiftSeconds((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formattedShiftTime = useMemo(() => {
-    const hrs = String(Math.floor(shiftSeconds / 3600)).padStart(2, '0');
-    const mins = String(Math.floor((shiftSeconds % 3600) / 60)).padStart(2, '0');
-    const secs = String(shiftSeconds % 60).padStart(2, '0');
-    return `${hrs}:${mins}:${secs}`;
-  }, [shiftSeconds]);
 
   // Dynamically extract unique categories from DB products
   const categories = useMemo(() => {
@@ -186,36 +197,22 @@ export function useCashboxController() {
     });
   }, [products, searchQuery, selectedCategory, getProductName, getProductDescription]);
 
-  // Manage size per product
-  const setProductSize = (productId, size) => {
-    setSelectedSizes((prev) => ({ ...prev, [productId]: size }));
-  };
-
-  const getProductSize = (productId) => {
-    return selectedSizes[productId] || 'M';
-  };
-
-  // Calculate dynamic price based on size
-  const getProductPrice = (item, size = 'M') => {
+  // Calculate price directly from product
+  const getProductPrice = (item) => {
     const raw = item.prices?.price !== undefined ? item.prices.price : item.price;
     const base = typeof raw === 'number' ? raw : parseFloat(raw) || 0;
-
-    if (size === 'S') return Math.max(1, Number((base - 0.5).toFixed(2)));
-    if (size === 'L') return Number((base + 0.8).toFixed(2));
     return Number(base.toFixed(2));
   };
 
   // Add item to active order receipt
   const addToCart = (product) => {
     const prodId = product._id || product.id;
-    const size = getProductSize(prodId);
-    const price = getProductPrice(product, size);
+    const price = getProductPrice(product);
     const prodName = product.displayName || getProductName(product);
+    const prodImg = product.imageUrl || product.image || resolveProductImage(product);
 
     setCartItems((prev) => {
-      const existingIdx = prev.findIndex(
-        (i) => i.productId === prodId && i.size === size
-      );
+      const existingIdx = prev.findIndex((i) => i.productId === prodId);
       if (existingIdx > -1) {
         const next = [...prev];
         next[existingIdx] = { ...next[existingIdx], qty: next[existingIdx].qty + 1 };
@@ -227,7 +224,7 @@ export function useCashboxController() {
           id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           productId: prodId,
           name: prodName,
-          size,
+          image: prodImg,
           price,
           qty: 1,
         },
@@ -295,9 +292,6 @@ export function useCashboxController() {
 
   return {
     cashierName,
-    shiftTime: formattedShiftTime,
-    cashDrawerBalance,
-    heldOrdersCount,
     products,
     categories,
     filteredProducts,
@@ -306,9 +300,6 @@ export function useCashboxController() {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
-    selectedSizes,
-    setProductSize,
-    getProductSize,
     getProductPrice,
     getProductName,
     cartItems,

@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 
 const CashboxTopBar = ({
-  shiftTime,
   cashierName,
-  cashDrawerBalance,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -13,7 +11,7 @@ const CashboxTopBar = ({
 
   return (
     <header className="cashbox-topbar">
-      <div className="cashbox-topbar__brand" onClick={() => navigate('/admin')}>
+      <div className="cashbox-topbar__brand" onClick={() => navigate('/')}>
         <img src={logo} alt="Rednest" className="cashbox-topbar__logo" />
         <span className="cashbox-topbar__brand-text">Rednest</span>
         <span className="cashbox-topbar__badge">POS</span>
@@ -50,16 +48,8 @@ const CashboxTopBar = ({
         )}
       </div>
 
-      {/* Shift & Cashier Meta */}
+      {/* Cashier Meta */}
       <div className="cashbox-topbar__meta">
-        <div className="cashbox-topbar__chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <polyline points="12 6 12 12 16 14" />
-          </svg>
-          <span>Shift: <strong>{shiftTime}</strong></span>
-        </div>
-
         <div className="cashbox-topbar__chip">
           <div className="cashbox-topbar__avatar">
             {cashierName?.charAt(0) || 'C'}
@@ -67,16 +57,11 @@ const CashboxTopBar = ({
           <span>Cashier: <strong>{cashierName}</strong></span>
         </div>
 
-        <div className="cashbox-topbar__chip cashbox-topbar__chip--balance">
-          <span className="cashbox-topbar__chip-label">Cash Balance:</span>
-          <strong>{cashDrawerBalance} ₼</strong>
-        </div>
-
         <button
           type="button"
-          onClick={() => navigate('/admin')}
+          onClick={() => navigate('/')}
           className="cashbox-topbar__exit-btn"
-          title="Back to Admin Dashboard"
+          title="Back to Home"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

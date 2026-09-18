@@ -42,9 +42,21 @@ const CashboxReceipt = ({
               const lineTotal = (item.price * item.qty).toFixed(2);
               return (
                 <div key={item.id} className="cashbox-receipt__row">
+                  {item.image && (
+                    <div className="cashbox-receipt__thumb-wrap">
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="cashbox-receipt__thumb-img"
+                        onError={(e) => {
+                          e.currentTarget.parentElement.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                   <div className="cashbox-receipt__col-name">
                     <span className="cashbox-receipt__item-name">
-                      {item.name} {item.size ? `(${item.size})` : ''}
+                      {item.name}
                     </span>
                     <div className="cashbox-receipt__stepper">
                       <button

@@ -1,14 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const SIZES = ['S', 'M', 'L'];
-
 const CashboxProductGrid = ({
   products,
   loading,
   onAddToCart,
-  selectedSizes,
-  onSetProductSize,
   getProductPrice,
   onResetSearch,
 }) => {
@@ -45,18 +41,34 @@ const CashboxProductGrid = ({
     );
   }
 
+  // Extract image or icon from any backend format (images.icon, images.image, etc.)
+  const getProductImage = (item) => {
+    if (!item) return null;
+    if (item.images && typeof item.images === 'object') {
+      const icon = item.images.icon || item.images.Icon;
+      const img = item.images.image || item.images.Image;
+      if (icon) return icon;
+      if (img) return img;
+    }
+    if (typeof item.images === 'string' && item.images.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(item.images);
+        const icon = parsed.icon || parsed.Icon;
+        const img = parsed.image || parsed.Image;
+        if (icon) return icon;
+        if (img) return img;
+      } catch {}
+    }
+    return item.imageUrl || item.iconUrl || item.image || item.icon || null;
+  };
+
   return (
     <div className="cashbox-grid">
       {products.map((item) => {
         const prodId = item._id || item.id;
-        const currentSize = selectedSizes[prodId] || 'M';
-        const price = getProductPrice(item, currentSize);
+        const price = getProductPrice(item);
         const name = item.displayName || item.name || 'Product';
-        const img = item.imageUrl || item.image;
-
-        // By default show S/M/L for drinks; for desserts/pastries default to M
-        const isFood = (item.category || '').toLowerCase().includes('dessert') || (item.category || '').toLowerCase().includes('pastry');
-        const availableSizes = item.availableSizes || (isFood ? ['M'] : SIZES);
+        const img = getProductImage(item);
 
         return (
           <motion.div
@@ -74,8 +86,9 @@ const CashboxProductGrid = ({
                   className="cashbox-card__img"
                   loading="lazy"
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                    e.currentTarget.style.display = 'none';
+                    const ph = e.currentTarget.parentElement?.querySelector('.cashbox-card__img-placeholder');
+                    if (ph) ph.style.display = 'flex';
                   }}
                 />
               ) : null}
@@ -85,25 +98,6 @@ const CashboxProductGrid = ({
               >
                 ☕
               </div>
-
-              {/* S / M / L Size Pill Toggle */}
-              {availableSizes.length > 1 && (
-                <div
-                  className="cashbox-card__sizes"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      className={`cashbox-card__size-btn ${currentSize === size ? 'cashbox-card__size-btn--active' : ''}`}
-                      onClick={() => onSetProductSize(prodId, size)}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Product Info */}
@@ -121,24 +115,6 @@ const CashboxProductGrid = ({
           </motion.div>
         );
       })}
-
-      {/* Quick Custom Charge Item */}
-      <div
-        className="cashbox-card cashbox-card--custom"
-        onClick={() => onAddToCart({
-          _id: `custom-${Date.now()}`,
-          name: 'Custom Order',
-          displayName: 'Custom Order',
-          price: 2.00,
-          category: 'Other',
-        })}
-        title="Add Custom Order"
-      >
-        <div className="cashbox-card__custom-inner">
-          <span className="cashbox-card__custom-plus">+</span>
-          <span className="cashbox-card__custom-label">Custom Item</span>
-        </div>
-      </div>
     </div>
   );
 };

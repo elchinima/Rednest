@@ -58,7 +58,6 @@ const CashboxSidebar = ({
   categories = ['All', 'Main Drinks', 'Specialty Drinks', 'Desserts'],
   selectedCategory,
   onSelectCategory,
-  heldOrdersCount = 3,
 }) => {
   return (
     <aside className="cashbox-sidebar">
@@ -78,24 +77,6 @@ const CashboxSidebar = ({
           );
         })}
       </nav>
-
-      {/* Held Orders Queue */}
-      <div className="cashbox-sidebar__bottom">
-        <button
-          type="button"
-          className="cashbox-sidebar__held-btn"
-          title="Held Orders Queue"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-            <path d="M16 21h5v-5" />
-          </svg>
-          <span className="cashbox-sidebar__held-text">Held Orders</span>
-          <span className="cashbox-sidebar__held-badge">({heldOrdersCount})</span>
-        </button>
-      </div>
     </aside>
   );
 };
