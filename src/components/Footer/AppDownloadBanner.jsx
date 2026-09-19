@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLang } from '../../utils/useLang';
 import summerModel from '../../assets/images/footer_image_summer.png';
@@ -196,6 +196,21 @@ const AppDownloadBanner = () => {
     return BANNER_CONTENT[currentLang] || BANNER_CONTENT.ru;
   }, [currentLang]);
 
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 900;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const isWinter = isWinterSeason();
   const modelImg = isWinter ? winterModel : summerModel;
   const modelAlt = isWinter ? 'Rednest Winter Coffee App' : 'Rednest Summer Coffee App';
@@ -211,15 +226,17 @@ const AppDownloadBanner = () => {
       <div className="banner-inner">
         <div className="banner-ambient-glow" />
 
-        <div className="banner-model-col">
-          <div className="model-glow-ring" />
-          <img 
-            src={modelImg} 
-            alt={modelAlt} 
-            className="model-img" 
-            loading="lazy"
-          />
-        </div>
+        {!isMobile && (
+          <div className="banner-model-col">
+            <div className="model-glow-ring" />
+            <img 
+              src={modelImg} 
+              alt={modelAlt} 
+              className="model-img" 
+              loading="lazy"
+            />
+          </div>
+        )}
 
         <div className="banner-center-col">
           <h3 className="banner-title">
