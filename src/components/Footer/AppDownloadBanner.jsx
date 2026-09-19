@@ -221,7 +221,7 @@ const AppDownloadBanner = () => {
           />
         </div>
 
-        <div className="banner-content-col">
+        <div className="banner-center-col">
           <h3 className="banner-title">
             {content.title}
           </h3>
@@ -231,12 +231,12 @@ const AppDownloadBanner = () => {
               <motion.div 
                 key={idx}
                 className="banner-feature-card"
-                initial={{ opacity: 0, x: -30 }}
+                initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ 
-                  duration: 0.6, 
-                  delay: 0.12 * (idx + 1),
+                  duration: 0.5, 
+                  delay: 0.08 * (idx + 1),
                   ease: 'easeOut' 
                 }}
                 animate={{
@@ -248,9 +248,9 @@ const AppDownloadBanner = () => {
                   ease: 'easeInOut'
                 }}
                 whileHover={{ 
-                  x: 14, 
-                  scale: 1.025,
-                  transition: { duration: 0.25 }
+                  x: 12, 
+                  scale: 1.015,
+                  transition: { duration: 0.2 }
                 }}
               >
                 <div className="feature-icon-box">
