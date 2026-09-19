@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import './Footer.scss';
+import AppDownloadBanner from './AppDownloadBanner';
 import logo from '../../assets/icons/rednest_logo.png';
 
 const getBakuYear = () => {
@@ -126,6 +127,8 @@ const Footer = () => {
             </ul>
           </div>
         </div>
+
+        <AppDownloadBanner />
 
         <div className="footer-bottom">
           <div className="language-switcher">
