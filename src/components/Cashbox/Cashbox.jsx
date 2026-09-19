@@ -11,6 +11,7 @@ import './Cashbox.scss';
 const Cashbox = () => {
   const {
     cashierName,
+    cashierAvatar,
     categories,
     filteredProducts,
     loading,
@@ -83,6 +84,7 @@ const Cashbox = () => {
       {/* Top Bar with Brand, Search, Cashier */}
       <CashboxTopBar
         cashierName={cashierName}
+        cashierAvatar={cashierAvatar}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />

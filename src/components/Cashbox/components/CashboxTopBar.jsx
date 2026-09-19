@@ -4,6 +4,7 @@ import logo from '../../../assets/icons/rednest_logo.png';
 
 const CashboxTopBar = ({
   cashierName,
+  cashierAvatar,
   searchQuery,
   setSearchQuery,
 }) => {
@@ -52,7 +53,24 @@ const CashboxTopBar = ({
       <div className="cashbox-topbar__meta">
         <div className="cashbox-topbar__chip">
           <div className="cashbox-topbar__avatar">
-            {cashierName?.charAt(0) || 'C'}
+            {cashierAvatar ? (
+              <img
+                src={cashierAvatar}
+                alt={cashierName}
+                className="cashbox-topbar__avatar-img"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const fallback = e.currentTarget.parentElement?.querySelector('.cashbox-topbar__avatar-fallback');
+                  if (fallback) fallback.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <span
+              className="cashbox-topbar__avatar-fallback"
+              style={{ display: cashierAvatar ? 'none' : 'flex' }}
+            >
+              {cashierName?.charAt(0)?.toUpperCase() || 'C'}
+            </span>
           </div>
           <span>Cashier: <strong>{cashierName}</strong></span>
         </div>

@@ -291,16 +291,35 @@
   }
 
   &__avatar {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: #ef4444;
     color: #ffffff;
     font-weight: 700;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img,
+    &-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 50%;
+    }
+
+    &-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   &__exit-btn {
@@ -599,23 +618,22 @@
   &__img-wrap {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 11;
+    aspect-ratio: 1 / 1;
     background: radial-gradient(circle at center, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.5) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
+    padding: 0;
     box-sizing: border-box;
   }
 
   &__img {
-    max-width: 88%;
-    max-height: 88%;
-    width: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -690,7 +708,8 @@
 
     .cashbox-card__skeleton-img {
       width: 100%;
-      height: 110px;
+      aspect-ratio: 1 / 1;
+      height: auto;
       background: rgba(255, 255, 255, 0.05);
       border-radius: 10px;
       animation: pulse 1.5s infinite ease-in-out;

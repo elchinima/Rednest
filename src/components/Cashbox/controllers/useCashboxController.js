@@ -17,7 +17,8 @@ export function useCashboxController() {
   const [receivedAmount, setReceivedAmount] = useState('50.00');
 
   // Cashier info
-  const cashierName = user?.name || user?.username || 'Anna K.';
+  const cashierName = user?.name || user?.username || user?.Name || 'Anna K.';
+  const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
 
   // Extract English name from product
   const getProductName = useCallback((item) => {
@@ -292,6 +293,7 @@ export function useCashboxController() {
 
   return {
     cashierName,
+    cashierAvatar,
     products,
     categories,
     filteredProducts,

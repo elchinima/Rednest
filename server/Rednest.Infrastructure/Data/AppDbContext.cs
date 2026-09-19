@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
     public DbSet<Analytics> Analytics => Set<Analytics>();
     public DbSet<Footer> Footers => Set<Footer>();
+    public DbSet<Cashbox> Cashboxes => Set<Cashbox>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -301,6 +302,29 @@ public class AppDbContext : DbContext
             entity.Property(e => e.FooterAZ)
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'{}'::jsonb");
+        });
+
+        modelBuilder.Entity<Cashbox>(entity =>
+        {
+            entity.ToTable("Cashbox");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.PayMethod)
+                  .HasConversion<string>()
+                  .HasColumnType("text")
+                  .IsRequired();
+
+            entity.Property(e => e.Products)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'[]'::jsonb");
+
+            entity.Property(e => e.Paid)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{}'::jsonb");
+
+            entity.Property(e => e.CreatedAt)
+                  .HasColumnType("timestamp with time zone")
+                  .HasDefaultValueSql("NOW()");
         });
     }
 }
