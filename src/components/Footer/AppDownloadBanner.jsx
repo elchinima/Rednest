@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useLang } from '../../utils/useLang';
 import summerModel from '../../assets/images/footer_image_summer.png';
@@ -62,11 +62,11 @@ const BANNER_CONTENT = {
       }
     ],
     appStore: {
-      subtitle: 'Загрузите в',
+      subtitle: 'Скачать',
       title: 'App Store'
     },
     googlePlay: {
-      subtitle: 'Доступно в',
+      subtitle: 'Скачать',
       title: 'Google Play'
     }
   },
@@ -121,11 +121,11 @@ const BANNER_CONTENT = {
       }
     ],
     appStore: {
-      subtitle: 'Yükləyin',
+      subtitle: 'Yüklə',
       title: 'App Store'
     },
     googlePlay: {
-      subtitle: 'Yükləyin',
+      subtitle: 'Yüklə',
       title: 'Google Play'
     }
   },
@@ -180,11 +180,11 @@ const BANNER_CONTENT = {
       }
     ],
     appStore: {
-      subtitle: 'Download on the',
+      subtitle: 'Download',
       title: 'App Store'
     },
     googlePlay: {
-      subtitle: 'GET IT ON',
+      subtitle: 'Get it on',
       title: 'Google Play'
     }
   }
@@ -210,6 +210,68 @@ const AppDownloadBanner = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const featureRefs = useRef([]);
+  const [marqueeState, setMarqueeState] = useState(null);
+
+  const handleFeatureClick = (e, idx) => {
+    e.stopPropagation();
+
+    if (marqueeState && marqueeState.index === idx) {
+      return;
+    }
+
+    const cardEl = featureRefs.current[idx];
+    if (!cardEl) return;
+
+    const descEl = cardEl.querySelector('.feature-desc');
+    const titleEl = cardEl.querySelector('.feature-title');
+
+    const descOverflows = descEl ? descEl.scrollWidth > descEl.clientWidth + 1 : false;
+    const titleOverflows = titleEl ? titleEl.scrollWidth > titleEl.clientWidth + 1 : false;
+
+    if (descOverflows || titleOverflows) {
+      const descWidth = descEl ? descEl.scrollWidth : 0;
+      const titleWidth = titleEl ? titleEl.scrollWidth : 0;
+
+      const descDuration = Math.max(5, Math.min(14, Math.round((descWidth + 36) / 35)));
+      const titleDuration = Math.max(5, Math.min(14, Math.round((titleWidth + 36) / 35)));
+
+      setMarqueeState({
+        index: idx,
+        descOverflow: descOverflows,
+        titleOverflow: titleOverflows,
+        descDuration,
+        titleDuration,
+      });
+    } else {
+      setMarqueeState(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!marqueeState) return;
+
+    const handleClickOutside = (e) => {
+      const activeCard = featureRefs.current[marqueeState.index];
+      if (activeCard && !activeCard.contains(e.target)) {
+        setMarqueeState(null);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [marqueeState]);
+
+  useEffect(() => {
+    setMarqueeState(null);
+  }, [currentLang]);
 
   const isWinter = isWinterSeason();
   const modelImg = isWinter ? winterModel : summerModel;
@@ -244,41 +306,79 @@ const AppDownloadBanner = () => {
           </h3>
 
           <div className="banner-features-track">
-            {content.features.map((feature, idx) => (
-              <motion.div 
-                key={idx}
-                className="banner-feature-card"
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5, 
-                  delay: 0.08 * (idx + 1),
-                  ease: 'easeOut' 
-                }}
-                animate={{
-                  x: [0, 8, 0],
-                }}
-                transitionRepeat={{
-                  repeat: Infinity,
-                  duration: 4 + idx * 0.7,
-                  ease: 'easeInOut'
-                }}
-                whileHover={{ 
-                  x: 12, 
-                  scale: 1.015,
-                  transition: { duration: 0.2 }
-                }}
-              >
-                <div className="feature-icon-box">
-                  {feature.icon}
-                </div>
-                <div className="feature-text">
-                  <span className="feature-title">{feature.title}</span>
-                  <span className="feature-desc">{feature.desc}</span>
-                </div>
-              </motion.div>
-            ))}
+            {content.features.map((feature, idx) => {
+              const isCardActive = marqueeState?.index === idx;
+              const isDescMarquee = isCardActive && marqueeState.descOverflow;
+              const isTitleMarquee = isCardActive && marqueeState.titleOverflow;
+
+              return (
+                <motion.div 
+                  key={idx}
+                  ref={(el) => { featureRefs.current[idx] = el; }}
+                  className={`banner-feature-card ${isCardActive ? 'is-marquee-active' : ''}`}
+                  onClick={(e) => handleFeatureClick(e, idx)}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: 0.08 * (idx + 1),
+                    ease: 'easeOut' 
+                  }}
+                  animate={{
+                    x: [0, 8, 0],
+                  }}
+                  transitionRepeat={{
+                    repeat: Infinity,
+                    duration: 4 + idx * 0.7,
+                    ease: 'easeInOut'
+                  }}
+                  whileHover={{ 
+                    x: 12, 
+                    scale: 1.015,
+                    transition: { duration: 0.2 }
+                  }}
+                >
+                  <div className="feature-icon-box">
+                    {feature.icon}
+                  </div>
+                  <div className="feature-text">
+                    <span 
+                      className={`feature-title ${isTitleMarquee ? 'is-marquee' : ''}`} 
+                      title={feature.title}
+                    >
+                      {isTitleMarquee ? (
+                        <span 
+                          className="marquee-track" 
+                          style={{ animationDuration: `${marqueeState.titleDuration}s` }}
+                        >
+                          <span className="marquee-item">{feature.title}</span>
+                          <span className="marquee-item" aria-hidden="true">{feature.title}</span>
+                        </span>
+                      ) : (
+                        feature.title
+                      )}
+                    </span>
+                    <span 
+                      className={`feature-desc ${isDescMarquee ? 'is-marquee' : ''}`} 
+                      title={feature.desc}
+                    >
+                      {isDescMarquee ? (
+                        <span 
+                          className="marquee-track" 
+                          style={{ animationDuration: `${marqueeState.descDuration}s` }}
+                        >
+                          <span className="marquee-item">{feature.desc}</span>
+                          <span className="marquee-item" aria-hidden="true">{feature.desc}</span>
+                        </span>
+                      ) : (
+                        feature.desc
+                      )}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
