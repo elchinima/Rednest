@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLang } from '../../utils/useLang';
 import summerModel from '../../assets/images/footer_image_summer.png';
 import winterModel from '../../assets/images/footer_image_winter.png';
+import addIcon from '../../assets/icons/add.svg';
 import './AppDownloadBanner.scss';
 
 const isWinterSeason = () => {
@@ -273,20 +274,63 @@ const AppDownloadBanner = () => {
     setMarqueeState(null);
   }, [currentLang]);
 
+  const [isVisible, setIsVisible] = useState(() => {
+    try {
+      const hiddenUntil = localStorage.getItem('rednest_app_banner_hidden_until');
+      if (hiddenUntil) {
+        const time = parseInt(hiddenUntil, 10);
+        if (!isNaN(time) && Date.now() < time) {
+          return false;
+        }
+      }
+    } catch {
+      return true;
+    }
+    return true;
+  });
+
+  const handleDismiss = (e) => {
+    e.stopPropagation();
+    try {
+      const hideUntil = Date.now() + 24 * 60 * 60 * 1000;
+      localStorage.setItem('rednest_app_banner_hidden_until', hideUntil.toString());
+    } catch {}
+    setIsVisible(false);
+  };
+
   const isWinter = isWinterSeason();
   const modelImg = isWinter ? winterModel : summerModel;
   const modelAlt = isWinter ? 'Rednest Winter Coffee App' : 'Rednest Summer Coffee App';
 
   return (
-    <motion.section 
-      className="rednest-app-banner"
-      initial={{ opacity: 0, y: 35 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
-      <div className="banner-inner">
-        <div className="banner-ambient-glow" />
+    <AnimatePresence>
+      {isVisible && (
+        <motion.section 
+          className="rednest-app-banner"
+          initial={{ opacity: 0, y: 35 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ 
+            opacity: 0, 
+            y: -25, 
+            scale: 0.96, 
+            height: 0, 
+            marginTop: 0, 
+            marginBottom: 0,
+            transition: { duration: 0.4, ease: 'easeInOut' } 
+          }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        >
+          <div className="banner-inner">
+            <button 
+              type="button" 
+              className="banner-close-btn" 
+              onClick={handleDismiss} 
+              aria-label="Close"
+            >
+              <img src={addIcon} alt="" className="banner-close-icon" />
+            </button>
+
+            <div className="banner-ambient-glow" />
 
         {!isMobile && (
           <div className="banner-model-col">
@@ -417,6 +461,8 @@ const AppDownloadBanner = () => {
         </div>
       </div>
     </motion.section>
+  )}
+  </AnimatePresence>
   );
 };
 
