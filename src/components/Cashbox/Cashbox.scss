@@ -373,6 +373,8 @@
     overflow-y: hidden;
     flex-shrink: 0;
     z-index: 15;
+    flex-direction: row;
+    align-items: center;
   }
 
   &__nav {
@@ -477,9 +479,62 @@
   }
 
   &__bottom {
-    margin-top: 16px;
+    margin-top: auto;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 14px;
+
+    @media (max-width: 900px) {
+      margin-top: 0;
+      border-top: none;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0;
+      padding-left: 8px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__promo-btn {
+    width: 100%;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px dashed rgba(239, 68, 68, 0.4);
+    color: rgba(255, 255, 255, 0.75);
+
+    .cashbox-sidebar__icon svg {
+      color: #ef4444;
+      transition: transform 0.22s ease, filter 0.22s ease;
+    }
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: #ef4444;
+      border-style: solid;
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
+
+      .cashbox-sidebar__icon svg {
+        transform: scale(1.12);
+        filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.6));
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      width: auto;
+      flex-direction: row;
+      padding: 7px 14px;
+      gap: 7px;
+      border-radius: 9999px;
+      flex-shrink: 0;
+
+      &:hover {
+        transform: none;
+      }
+    }
   }
 
   &__held-btn {
@@ -521,9 +576,6 @@
   }
 }
 
-// ----------------------------------------------------
-// PRODUCT GRID
-// ----------------------------------------------------
 .cashbox-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -592,7 +644,6 @@
   }
 }
 
-// Product Card
 .cashbox-card {
   background: rgba(28, 5, 5, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -701,7 +752,6 @@
     }
   }
 
-  // Skeleton
   &--skeleton {
     pointer-events: none;
     padding: 12px;
@@ -728,9 +778,6 @@
   }
 }
 
-// ----------------------------------------------------
-// ELECTRONIC RECEIPT
-// ----------------------------------------------------
 .cashbox-receipt {
   display: flex;
   flex-direction: column;
@@ -743,7 +790,6 @@
   max-height: 48%;
   overflow: hidden;
 
-  // Zig-zag top edge
   &__zigzag {
     height: 6px;
     width: 100%;
@@ -1089,9 +1135,6 @@
   50% { opacity: 0.8; }
 }
 
-// ----------------------------------------------------
-// MOBILE FLOATING RECEIPT TRIGGER (Centered at Bottom)
-// ----------------------------------------------------
 .cashbox-mobile-trigger {
   display: none;
 
@@ -1099,8 +1142,10 @@
     display: flex;
     position: fixed;
     bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
     width: calc(100% - 28px);
     max-width: 440px;
     align-items: center;
@@ -1115,7 +1160,7 @@
     color: #ffffff;
     cursor: pointer;
     z-index: 100;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
       background: rgba(38, 5, 5, 0.98);
@@ -1217,9 +1262,6 @@
   }
 }
 
-// ----------------------------------------------------
-// ELECTRONIC RECEIPT & CHECKOUT MODAL
-// ----------------------------------------------------
 .cashbox-modal-backdrop {
   position: fixed;
   inset: 0;

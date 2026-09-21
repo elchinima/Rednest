@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Icon mapping helper for categories
 const getCategoryIcon = (category) => {
   const cat = (category || '').toLowerCase();
   if (cat.includes('drink') || cat.includes('coffee') || cat.includes('main')) {
@@ -58,6 +57,7 @@ const CashboxSidebar = ({
   categories = ['All', 'Main Drinks', 'Specialty Drinks', 'Desserts'],
   selectedCategory,
   onSelectCategory,
+  onPromoClick,
 }) => {
   return (
     <aside className="cashbox-sidebar">
@@ -77,6 +77,32 @@ const CashboxSidebar = ({
           );
         })}
       </nav>
+
+      <div className="cashbox-sidebar__bottom">
+        <button
+          type="button"
+          className="cashbox-sidebar__btn cashbox-sidebar__promo-btn"
+          onClick={onPromoClick}
+          title="Promo Codes"
+        >
+          <div className="cashbox-sidebar__icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+              <path d="M9 9h.01" />
+              <path d="M15 15h.01" />
+              <path d="M16 8L8 16" />
+            </svg>
+          </div>
+          <span className="cashbox-sidebar__label">Promo Codes</span>
+        </button>
+      </div>
     </aside>
   );
 };
