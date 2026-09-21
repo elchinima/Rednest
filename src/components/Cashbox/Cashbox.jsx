@@ -6,6 +6,7 @@ import CashboxSidebar from './components/CashboxSidebar';
 import CashboxProductGrid from './components/CashboxProductGrid';
 import CashboxReceipt from './components/CashboxReceipt';
 import CashboxNumpad from './components/CashboxNumpad';
+import CashboxPromoModal from './components/CashboxPromoModal';
 import './Cashbox.scss';
 
 const Cashbox = () => {
@@ -34,8 +35,8 @@ const Cashbox = () => {
 
   const [toast, setToast] = useState('');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
 
-  // Total quantity of items currently in receipt
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   const showToast = (msg) => {
@@ -63,7 +64,6 @@ const Cashbox = () => {
 
   return (
     <div className="cashbox-view">
-      {/* Toast notification */}
       <AnimatePresence>
         {toast && (
           <motion.div
@@ -81,7 +81,6 @@ const Cashbox = () => {
         )}
       </AnimatePresence>
 
-      {/* Top Bar with Brand, Search, Cashier */}
       <CashboxTopBar
         cashierName={cashierName}
         cashierAvatar={cashierAvatar}
@@ -89,16 +88,14 @@ const Cashbox = () => {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* 3-Column POS Workspace (Desktop) / Vertical Stack (Mobile) */}
       <div className="cashbox-view__workspace">
-        {/* Left Column (Desktop) / Top Sub-Navbar (Mobile) */}
         <CashboxSidebar
           categories={categories}
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
+          onPromoClick={() => setIsPromoModalOpen(true)}
         />
 
-        {/* Catalog Grid */}
         <main className="cashbox-view__catalog">
           <CashboxProductGrid
             products={filteredProducts}
@@ -112,7 +109,6 @@ const Cashbox = () => {
           />
         </main>
 
-        {/* Right Column (Desktop Only): Electronic Receipt + Touch Numpad */}
         <aside className="cashbox-view__checkout">
           <CashboxReceipt
             cartItems={cartItems}
@@ -134,7 +130,6 @@ const Cashbox = () => {
         </aside>
       </div>
 
-      {/* Mobile Floating Receipt Trigger (Centered at bottom of screen) */}
       <motion.button
         type="button"
         className="cashbox-mobile-trigger"
@@ -165,16 +160,9 @@ const Cashbox = () => {
           <span className="cashbox-mobile-trigger__total">
             {totalAmount.toFixed(2)} ₼
           </span>
-          <div className="cashbox-mobile-trigger__btn">
-            <span>View</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </div>
         </div>
       </motion.button>
 
-      {/* Mobile Electronic Receipt Modal / Bottom Sheet */}
       <AnimatePresence>
         {isReceiptModalOpen && (
           <motion.div
@@ -232,6 +220,11 @@ const Cashbox = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <CashboxPromoModal
+        isOpen={isPromoModalOpen}
+        onClose={() => setIsPromoModalOpen(false)}
+      />
     </div>
   );
 };
