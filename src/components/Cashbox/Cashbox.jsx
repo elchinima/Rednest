@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCashboxController } from './controllers/useCashboxController';
+import { API_URL } from '../../utils/config';
+import { fetchWithRefresh } from '../../utils/fetchWithRefresh';
+import { useAuth } from '../../context/AuthContext';
 import CashboxTopBar from './components/CashboxTopBar';
 import CashboxSidebar from './components/CashboxSidebar';
 import CashboxProductGrid from './components/CashboxProductGrid';
@@ -10,55 +12,196 @@ import CashboxPromoModal from './components/CashboxPromoModal';
 import './Cashbox.scss';
 
 const Cashbox = () => {
-  const {
-    cashierName,
-    cashierAvatar,
-    categories,
-    filteredProducts,
-    loading,
-    selectedCategory,
-    setSelectedCategory,
-    searchQuery,
-    setSearchQuery,
-    getProductPrice,
-    cartItems,
-    addToCart,
-    updateItemQty,
-    removeCartItem,
-    clearCart,
-    totalAmount,
-    receivedAmount,
-    handleNumpadPress,
-    handleBanknoteClick,
-    changeAmount,
-  } = useCashboxController();
+  const { user } = useAuth();
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['All', 'Main Drinks', 'Specialty Drinks', 'Desserts']);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cartItems, setCartItems] = useState([]);
+  const [receivedAmount, setReceivedAmount] = useState('50.00');
 
   const [toast, setToast] = useState('');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
 
+  const cashierName = user?.name || user?.username || user?.Name || 'Anna K.';
+  const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
+
+  const fetchInitData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchWithRefresh(`${API_URL}/api/cashbox/init`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.products)) {
+          setProducts(data.products);
+        }
+        if (Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(data.categories);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load cashbox data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInitData();
+  }, [fetchInitData]);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return products.filter((item) => {
+      const name = (item.displayName || item.name || '').toLowerCase();
+      const desc = (item.displayDescription || item.description || '').toLowerCase();
+      const category = (item.category || '').toLowerCase();
+
+      const matchesSearch = !q || name.includes(q) || desc.includes(q) || category.includes(q);
+      if (!matchesSearch) return false;
+
+      if (selectedCategory === 'All') return true;
+      return item.category?.toLowerCase() === selectedCategory.toLowerCase();
+    });
+  }, [products, searchQuery, selectedCategory]);
+
+  const getProductPrice = (item) => {
+    const raw = item.prices?.price !== undefined ? item.prices.price : item.price;
+    const base = typeof raw === 'number' ? raw : parseFloat(raw) || 0;
+    return Number(base.toFixed(2));
+  };
+
+  const addToCart = (product) => {
+    const prodId = product._id || product.id;
+    const price = getProductPrice(product);
+    const prodName = product.displayName || product.name || 'Item';
+    const prodImg = product.imageUrl || product.image || '';
+
+    setCartItems((prev) => {
+      const existingIdx = prev.findIndex((i) => i.productId === prodId);
+      if (existingIdx > -1) {
+        const next = [...prev];
+        next[existingIdx] = { ...next[existingIdx], qty: next[existingIdx].qty + 1 };
+        return next;
+      }
+      return [
+        ...prev,
+        {
+          id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          productId: prodId,
+          name: prodName,
+          image: prodImg,
+          price,
+          qty: 1,
+        },
+      ];
+    });
+  };
+
+  const updateItemQty = (id, delta) => {
+    setCartItems((prev) => {
+      return prev
+        .map((item) => {
+          if (item.id === id) {
+            const nextQty = item.qty + delta;
+            return nextQty > 0 ? { ...item, qty: nextQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean);
+    });
+  };
+
+  const removeCartItem = (id) => {
+    setCartItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const totalAmount = useMemo(() => {
+    const sum = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
+    return Number(sum.toFixed(2));
+  }, [cartItems]);
+
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
+
+  const handleNumpadPress = (char) => {
+    if (char === 'C') {
+      setReceivedAmount('0');
+      return;
+    }
+    if (char === '⌫') {
+      setReceivedAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
+      return;
+    }
+    setReceivedAmount((prev) => {
+      if (prev === '0' && char !== '.') return char;
+      if (char === '.' && prev.includes('.')) return prev;
+      if (prev.includes('.') && prev.split('.')[1]?.length >= 2) return prev;
+      return `${prev}${char}`;
+    });
+  };
+
+  const handleBanknoteClick = (amount) => {
+    setReceivedAmount(amount.toFixed(2));
+  };
+
+  const changeAmount = useMemo(() => {
+    const received = parseFloat(receivedAmount) || 0;
+    const diff = received - totalAmount;
+    return diff > 0 ? Number(diff.toFixed(2)) : 0;
+  }, [receivedAmount, totalAmount]);
 
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handlePayCard = () => {
+  const handlePayCard = async () => {
     if (cartItems.length === 0) {
       showToast('Receipt is empty! Please add products.');
       return;
     }
-    showToast(`Card Payment successful: ${totalAmount.toFixed(2)} ₼ (Demo Visual Mode)`);
+    try {
+      await fetchWithRefresh(`${API_URL}/api/cashbox/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payMethod: 'Card',
+          products: cartItems.map((item) => ({ productId: item.productId, quantity: item.qty })),
+          initialAmount: totalAmount,
+          totalAmount: totalAmount,
+        }),
+      });
+    } catch {}
+    showToast(`Card Payment successful: ${totalAmount.toFixed(2)} ₼`);
+    clearCart();
     setIsReceiptModalOpen(false);
   };
 
-  const handlePayCash = () => {
+  const handlePayCash = async () => {
     if (cartItems.length === 0) {
       showToast('Receipt is empty! Please add products.');
       return;
     }
+    try {
+      await fetchWithRefresh(`${API_URL}/api/cashbox/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payMethod: 'Cash',
+          products: cartItems.map((item) => ({ productId: item.productId, quantity: item.qty })),
+          initialAmount: totalAmount,
+          totalAmount: totalAmount,
+        }),
+      });
+    } catch {}
     showToast(`Cash Payment successful: Received ${receivedAmount} ₼, Change ${changeAmount.toFixed(2)} ₼`);
+    clearCart();
     setIsReceiptModalOpen(false);
   };
 
@@ -140,7 +283,7 @@ const Cashbox = () => {
         <div className="cashbox-mobile-trigger__left">
           <div className="cashbox-mobile-trigger__icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6l-3-4z" />
               <line x1="3" y1="6" x2="21" y2="6" />
               <path d="M16 10a4 4 0 0 1-8 0" />
             </svg>
@@ -148,18 +291,20 @@ const Cashbox = () => {
               <span className="cashbox-mobile-trigger__badge">{totalItemsCount}</span>
             )}
           </div>
-          <div className="cashbox-mobile-trigger__info">
-            <span className="cashbox-mobile-trigger__label">Electronic Receipt</span>
-            <span className="cashbox-mobile-trigger__sub">
-              {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'}
-            </span>
-          </div>
+          <span className="cashbox-mobile-trigger__label">Electronic Receipt</span>
         </div>
 
         <div className="cashbox-mobile-trigger__right">
-          <span className="cashbox-mobile-trigger__total">
-            {totalAmount.toFixed(2)} ₼
-          </span>
+          <span className="cashbox-mobile-trigger__amount">{totalAmount.toFixed(2)} ₼</span>
+          <svg
+            className="cashbox-mobile-trigger__chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
         </div>
       </motion.button>
 
@@ -174,22 +319,17 @@ const Cashbox = () => {
           >
             <motion.div
               className="cashbox-modal"
-              initial={{ y: '100%', opacity: 0.6 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              initial={{ opacity: 0, y: 100, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 100, scale: 0.96 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="cashbox-modal__handle-bar" />
-
               <div className="cashbox-modal__header">
-                <div className="cashbox-modal__title-group">
-                  <span className="cashbox-modal__title">Electronic Receipt & Checkout</span>
-                  <span className="cashbox-modal__items-count">{totalItemsCount} items</span>
-                </div>
+                <h3>Current Order</h3>
                 <button
                   type="button"
-                  className="cashbox-modal__close-btn"
+                  className="cashbox-modal__close"
                   onClick={() => setIsReceiptModalOpen(false)}
                   title="Close receipt"
                 >

@@ -11,6 +11,97 @@ public class CashboxController : ControllerBase
         _context = context;
     }
 
+    [HttpGet("init")]
+    [HttpGet("products")]
+    public async Task<IActionResult> GetInitData([FromQuery] string? lang = "en")
+    {
+        var normalizedLang = (lang ?? "en").Trim().ToLowerInvariant();
+
+        var products = await _context.Products
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .ToListAsync();
+
+        var productList = products.Select(p =>
+        {
+            var name = normalizedLang switch
+            {
+                "az" => !string.IsNullOrEmpty(p.Name.AZ) ? p.Name.AZ : (!string.IsNullOrEmpty(p.Name.EN) ? p.Name.EN : p.Name.RU),
+                "ru" => !string.IsNullOrEmpty(p.Name.RU) ? p.Name.RU : (!string.IsNullOrEmpty(p.Name.EN) ? p.Name.EN : p.Name.AZ),
+                _ => !string.IsNullOrEmpty(p.Name.EN) ? p.Name.EN : (!string.IsNullOrEmpty(p.Name.AZ) ? p.Name.AZ : p.Name.RU),
+            };
+
+            var desc = normalizedLang switch
+            {
+                "az" => !string.IsNullOrEmpty(p.Description.AZ) ? p.Description.AZ : (!string.IsNullOrEmpty(p.Description.EN) ? p.Description.EN : p.Description.RU),
+                "ru" => !string.IsNullOrEmpty(p.Description.RU) ? p.Description.RU : (!string.IsNullOrEmpty(p.Description.EN) ? p.Description.EN : p.Description.AZ),
+                _ => !string.IsNullOrEmpty(p.Description.EN) ? p.Description.EN : (!string.IsNullOrEmpty(p.Description.AZ) ? p.Description.AZ : p.Description.RU),
+            };
+
+            var price = p.Prices != null ? (p.Prices.DiscountPrice ?? p.Prices.Price) : 0m;
+            var img = !string.IsNullOrEmpty(p.Images?.Icon) ? p.Images.Icon : (p.Images?.Image ?? string.Empty);
+
+            return new
+            {
+                id = p.Id,
+                name = name,
+                displayName = name,
+                description = desc,
+                displayDescription = desc,
+                category = !string.IsNullOrWhiteSpace(p.Category) ? p.Category.Trim() : "General",
+                price = price,
+                originalPrice = p.Prices?.Price ?? price,
+                discountPrice = p.Prices?.DiscountPrice,
+                imageUrl = img,
+                iconUrl = img,
+                image = img
+            };
+        }).ToList();
+
+        var predefinedOrder = new List<string> { "All", "Main Drinks", "Specialty Drinks", "Desserts" };
+        var foundCategories = productList.Select(p => p.category).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var allCategories = new List<string> { "All" };
+        foreach (var cat in predefinedOrder.Skip(1))
+        {
+            if (foundCategories.Any(c => string.Equals(c, cat, StringComparison.OrdinalIgnoreCase)) && !allCategories.Contains(cat))
+            {
+                allCategories.Add(cat);
+            }
+        }
+        foreach (var cat in foundCategories)
+        {
+            if (!allCategories.Any(c => string.Equals(c, cat, StringComparison.OrdinalIgnoreCase)))
+            {
+                allCategories.Add(cat);
+            }
+        }
+
+        var cashierName = "Anna K.";
+        string? cashierAvatar = null;
+
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (Guid.TryParse(userIdStr, out var userId))
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                cashierName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : (user.Email ?? "Cashier");
+                cashierAvatar = user.ProfilePictureUrl;
+            }
+        }
+
+        return Ok(new
+        {
+            products = productList,
+            categories = allCategories,
+            cashier = new
+            {
+                name = cashierName,
+                avatar = cashierAvatar
+            }
+        });
+    }
+
     [HttpGet("promos/search")]
     public async Task<IActionResult> SearchPromos([FromQuery] string? query)
     {
