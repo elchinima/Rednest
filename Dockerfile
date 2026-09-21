@@ -16,10 +16,8 @@ RUN dotnet publish Rednest.Api/Rednest.Api.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/nightly/aspnet:10.0 AS final
 WORKDIR /app
 
-# Copy backend binaries
 COPY --from=backend-builder /app/publish .
 
-# Copy frontend static files into wwwroot
 COPY --from=frontend-builder /app/dist ./wwwroot
 
 EXPOSE 8080
