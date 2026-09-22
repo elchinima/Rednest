@@ -133,6 +133,11 @@ const Database = () => {
       showError(`"${file.name}" exceeds ${MAX_SIZE_MB} MB.`);
       return false;
     }
+    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+    if (!nameWithoutExt || !/^[a-zA-Z0-9\s._\-()]+$/.test(nameWithoutExt) || !/[a-zA-Z0-9]/.test(nameWithoutExt)) {
+      showError(`"${file.name}": File name must contain only English letters and numbers. Russian/Cyrillic characters are not supported.`);
+      return false;
+    }
     return true;
   };
 
@@ -336,11 +341,12 @@ const Database = () => {
               <p className="database__dropzone-title">
                 {dragOver ? 'Release to upload' : 'Drop an image here or click to browse'}
               </p>
-              <p className="database__dropzone-hint">PNG, JPG, JPEG · max {MAX_SIZE_MB} MB</p>
+              <p className="database__dropzone-hint">PNG, JPG, JPEG · max {MAX_SIZE_MB} MB · English file names only</p>
               <div className="database__dropzone-badges">
                 <span className="database__badge">PNG</span>
                 <span className="database__badge">JPG</span>
                 <span className="database__badge">JPEG</span>
+                <span className="database__badge">A-Z only</span>
                 <span className="database__badge database__badge--arrow">→ WebP</span>
               </div>
             </div>

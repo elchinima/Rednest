@@ -30,6 +30,7 @@ const Cashbox = lazy(() => import('../components/Cashbox/Cashbox'));
 import ProtectedRoute from './ProtectedRoute';
 import ProfileSecurityGuard from './ProfileSecurityGuard';
 import AdminProtectedRoute from './AdminProtectedRoute';
+import CashboxProtectedRoute from './CashboxProtectedRoute';
 const ErrorPage = lazy(() => import('../components/PublicPages/ErrorPage/ErrorPage'));
 const Rules = lazy(() => import('../components/PublicPages/Rules/Rules'));
 const Reviews = lazy(() => import('../components/PublicPages/Reviews/Reviews'));
@@ -202,7 +203,11 @@ const AnimatedRoutes = () => {
             </AdminProtectedRoute>
           } />
 
-          <Route path="/cashbox" element={<Cashbox />} />
+          <Route path="/cashbox" element={
+            <CashboxProtectedRoute>
+              <Cashbox />
+            </CashboxProtectedRoute>
+          } />
 
           <Route path="/rules" element={<Rules />} />
           <Route path="/terms" element={<Navigate to="/rules" replace />} />

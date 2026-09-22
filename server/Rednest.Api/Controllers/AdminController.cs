@@ -851,6 +851,17 @@ public class AdminController : ControllerBase
         if (!AllowedExtensions.Contains(ext))
             return BadRequest(new { message = "Allowed formats: PNG, JPG, JPEG." });
 
+        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(fileNameWithoutExt) ||
+            !System.Text.RegularExpressions.Regex.IsMatch(fileNameWithoutExt, @"^[a-zA-Z0-9\s._\-()]+$") ||
+            !System.Text.RegularExpressions.Regex.IsMatch(fileNameWithoutExt, @"[a-zA-Z0-9]"))
+        {
+            return BadRequest(new
+            {
+                message = $"File name must contain only English letters and numbers. Russian/Cyrillic characters are not supported ('{file.FileName}')."
+            });
+        }
+
         await using var inputStream = file.OpenReadStream();
         using var image = await Image.LoadAsync(inputStream);
 
@@ -864,7 +875,6 @@ public class AdminController : ControllerBase
         var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
         var serviceKey = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_KEY");
 
-        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
         var uniqueName = $"{fileNameWithoutExt}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}.webp";
         var storagePath = $"database/{uniqueName}";
 
@@ -883,7 +893,7 @@ public class AdminController : ControllerBase
         if (!response.IsSuccessStatusCode)
         {
             var err = await response.Content.ReadAsStringAsync();
-            return StatusCode(500, new { message = $"Supabase upload error: {err}" });
+            return BadRequest(new { message = $"Supabase upload error: {err}" });
         }
 
         var publicUrl = $"{supabaseUrl}/storage/v1/object/public/admin-files/{storagePath}";

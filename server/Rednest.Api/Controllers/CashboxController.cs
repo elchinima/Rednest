@@ -1,5 +1,6 @@
 namespace Rednest.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class CashboxController : ControllerBase
@@ -13,10 +14,51 @@ public class CashboxController : ControllerBase
         _analyticsTrackingService = analyticsTrackingService;
     }
 
+    private static bool IsAllowedCashboxRole(UserRole role)
+    {
+        return role == UserRole.Staff || role == UserRole.Admin || role == UserRole.SuperAdmin;
+    }
+
+    private async Task<(bool Allowed, User? User, IActionResult? ErrorResult)> ValidateCashboxAccessAsync()
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        {
+            return (false, null, Unauthorized(new { message = "Authentication required." }));
+        }
+
+        var user = await _context.Users
+            .Include(u => u.Session)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return (false, null, Unauthorized(new { message = "User not found." }));
+        }
+
+        if (user.Session != null && !user.Session.IsActive)
+        {
+            return (false, null, Unauthorized(new { message = "Account suspended." }));
+        }
+
+        if (!IsAllowedCashboxRole(user.Role))
+        {
+            return (false, null, StatusCode(StatusCodes.Status403Forbidden, new { message = "Access denied. Cashbox access is restricted to Staff, Admin, and Super Admin." }));
+        }
+
+        return (true, user, null);
+    }
+
     [HttpGet("init")]
     [HttpGet("products")]
     public async Task<IActionResult> GetInitData([FromQuery] string? lang = "en")
     {
+        var (allowed, cashierUser, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed || cashierUser == null)
+        {
+            return errorResult!;
+        }
         var normalizedLang = (lang ?? "en").Trim().ToLowerInvariant();
 
         var products = await _context.Products
@@ -78,19 +120,8 @@ public class CashboxController : ControllerBase
             }
         }
 
-        var cashierName = "Anna K.";
-        string? cashierAvatar = null;
-
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (Guid.TryParse(userIdStr, out var userId))
-        {
-            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
-            if (user != null)
-            {
-                cashierName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : (user.Email ?? "Cashier");
-                cashierAvatar = user.ProfilePictureUrl;
-            }
-        }
+        var cashierName = !string.IsNullOrWhiteSpace(cashierUser.Name) ? cashierUser.Name : (cashierUser.Email ?? "Cashier");
+        var cashierAvatar = cashierUser.ProfilePictureUrl;
 
         return Ok(new
         {
@@ -107,6 +138,12 @@ public class CashboxController : ControllerBase
     [HttpGet("promos/search")]
     public async Task<IActionResult> SearchPromos([FromQuery] string? query)
     {
+        var (allowed, _, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed)
+        {
+            return errorResult!;
+        }
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return Ok(new List<object>());
@@ -165,6 +202,11 @@ public class CashboxController : ControllerBase
     [HttpPost("orders")]
     public async Task<IActionResult> CreateCashboxOrder([FromBody] CashboxOrderRequest request)
     {
+        var (allowed, _, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed)
+        {
+            return errorResult!;
+        }
         if (request == null || request.Products == null || request.Products.Count == 0)
         {
             return BadRequest(new { message = "Order must contain at least one item." });
