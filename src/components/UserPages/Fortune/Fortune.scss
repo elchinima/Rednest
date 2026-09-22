@@ -63,22 +63,23 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 300px;
+  max-width: 485px;
+  margin-top: 40px;
   filter: drop-shadow(0 6px 32px rgba(127, 29, 29, 0.5));
 
   @media (min-width: 769px) {
-    max-width: 300px;
+    max-width: min(58vh, 485px);
   }
 }
 
 .fortune-pointer {
   position: absolute;
-  top: 5px;
+  bottom: calc(100% + 25px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  width: 26px;
-  height: 32px;
+  width: 36px;
+  height: 44px;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
   pointer-events: none;
 }
