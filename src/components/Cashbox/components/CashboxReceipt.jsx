@@ -98,59 +98,57 @@ const CashboxReceipt = ({
           </div>
         )}
 
-        {cartItems.length > 0 && (
-          <div className="cashbox-receipt__promo-section">
-            {appliedPromo ? (
-              <div className="cashbox-receipt__promo-card">
-                <div className="cashbox-receipt__promo-header">
-                  <div className="cashbox-receipt__promo-badge">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
-                      <path d="M9 9h.01" />
-                      <path d="M15 15h.01" />
-                      <path d="M16 8L8 16" />
-                    </svg>
-                    <span>{appliedPromo.promoCode}</span>
-                  </div>
-                  {onRemovePromo && (
-                    <button
-                      type="button"
-                      className="cashbox-receipt__promo-remove"
-                      onClick={onRemovePromo}
-                      title="Remove promo code"
-                    >
-                      ✕
-                    </button>
-                  )}
+        <div className="cashbox-receipt__promo-section">
+          {appliedPromo ? (
+            <div className="cashbox-receipt__promo-card">
+              <div className="cashbox-receipt__promo-header">
+                <div className="cashbox-receipt__promo-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+                    <path d="M9 9h.01" />
+                    <path d="M15 15h.01" />
+                    <path d="M16 8L8 16" />
+                  </svg>
+                  <span>{appliedPromo.promoCode}</span>
                 </div>
-                <div className="cashbox-receipt__promo-details">
-                  <span className="cashbox-receipt__promo-prize">
-                    {appliedPromo.prizeName || 'Promo Discount'}
-                  </span>
-                  {promoDiscount > 0 && (
-                    <span className="cashbox-receipt__promo-amount">
-                      -{promoDiscount.toFixed(2)} ₼
-                    </span>
-                  )}
-                </div>
+                {onRemovePromo && (
+                  <button
+                    type="button"
+                    className="cashbox-receipt__promo-remove"
+                    onClick={onRemovePromo}
+                    title="Remove promo code"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
-            ) : (
-              <button
-                type="button"
-                className="cashbox-receipt__add-promo-btn"
-                onClick={onOpenPromoModal}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
-                  <path d="M9 9h.01" />
-                  <path d="M15 15h.01" />
-                  <path d="M16 8L8 16" />
-                </svg>
-                <span>Use Promo Code</span>
-              </button>
-            )}
-          </div>
-        )}
+              <div className="cashbox-receipt__promo-details">
+                <span className="cashbox-receipt__promo-prize">
+                  {appliedPromo.prizeName || 'Promo Discount'}
+                </span>
+                {promoDiscount > 0 && (
+                  <span className="cashbox-receipt__promo-amount">
+                    -{promoDiscount.toFixed(2)} ₼
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="cashbox-receipt__add-promo-btn"
+              onClick={onOpenPromoModal}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+                <path d="M9 9h.01" />
+                <path d="M15 15h.01" />
+                <path d="M16 8L8 16" />
+              </svg>
+              <span>Use Promo Code</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="cashbox-receipt__footer">
