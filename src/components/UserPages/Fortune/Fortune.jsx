@@ -138,7 +138,7 @@ const Fortune = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const resize = () => {
-      const size = Math.min(canvas.parentElement?.clientWidth ?? 485, 485);
+      const size = Math.min(canvas.parentElement?.clientWidth ?? 436, 436);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = size * dpr;
       canvas.height = size * dpr;
