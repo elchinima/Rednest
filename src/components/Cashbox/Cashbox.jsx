@@ -7,7 +7,6 @@ import CashboxTopBar from './components/CashboxTopBar';
 import CashboxSidebar from './components/CashboxSidebar';
 import CashboxProductGrid from './components/CashboxProductGrid';
 import CashboxReceipt from './components/CashboxReceipt';
-import CashboxNumpad from './components/CashboxNumpad';
 import CashboxPromoModal from './components/CashboxPromoModal';
 import './Cashbox.scss';
 
@@ -19,7 +18,6 @@ const Cashbox = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [cartItems, setCartItems] = useState([]);
-  const [receivedAmount, setReceivedAmount] = useState('50.00');
 
   const [toast, setToast] = useState('');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -129,61 +127,12 @@ const Cashbox = () => {
 
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
-  const handleNumpadPress = (char) => {
-    if (char === 'C') {
-      setReceivedAmount('0');
-      return;
-    }
-    if (char === '⌫') {
-      setReceivedAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
-      return;
-    }
-    setReceivedAmount((prev) => {
-      if (prev === '0' && char !== '.') return char;
-      if (char === '.' && prev.includes('.')) return prev;
-      if (prev.includes('.') && prev.split('.')[1]?.length >= 2) return prev;
-      return `${prev}${char}`;
-    });
-  };
-
-  const handleBanknoteClick = (amount) => {
-    setReceivedAmount(amount.toFixed(2));
-  };
-
-  const changeAmount = useMemo(() => {
-    const received = parseFloat(receivedAmount) || 0;
-    const diff = received - totalAmount;
-    return diff > 0 ? Number(diff.toFixed(2)) : 0;
-  }, [receivedAmount, totalAmount]);
-
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
 
-  const handlePayCard = async () => {
-    if (cartItems.length === 0) {
-      showToast('Receipt is empty! Please add products.');
-      return;
-    }
-    try {
-      await fetchWithRefresh(`${API_URL}/api/cashbox/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payMethod: 'Card',
-          products: cartItems.map((item) => ({ productId: item.productId, quantity: item.qty })),
-          initialAmount: totalAmount,
-          totalAmount: totalAmount,
-        }),
-      });
-    } catch {}
-    showToast(`Card Payment successful: ${totalAmount.toFixed(2)} ₼`);
-    clearCart();
-    setIsReceiptModalOpen(false);
-  };
-
-  const handlePayCash = async () => {
+  const handleConfirmOrder = async () => {
     if (cartItems.length === 0) {
       showToast('Receipt is empty! Please add products.');
       return;
@@ -200,7 +149,7 @@ const Cashbox = () => {
         }),
       });
     } catch {}
-    showToast(`Cash Payment successful: Received ${receivedAmount} ₼, Change ${changeAmount.toFixed(2)} ₼`);
+    showToast(`Order confirmed: ${totalAmount.toFixed(2)} ₼`);
     clearCart();
     setIsReceiptModalOpen(false);
   };
@@ -261,15 +210,18 @@ const Cashbox = () => {
             totalAmount={totalAmount}
           />
 
-          <CashboxNumpad
-            receivedAmount={receivedAmount}
-            changeAmount={changeAmount}
-            totalAmount={totalAmount}
-            onNumpadPress={handleNumpadPress}
-            onBanknoteClick={handleBanknoteClick}
-            onPayCard={handlePayCard}
-            onPayCash={handlePayCash}
-          />
+          <motion.button
+            type="button"
+            className="cashbox-confirm-btn"
+            whileTap={{ scale: 0.98 }}
+            onClick={handleConfirmOrder}
+            disabled={cartItems.length === 0}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <span>Confirm</span>
+          </motion.button>
         </aside>
       </div>
 
@@ -346,15 +298,18 @@ const Cashbox = () => {
                   totalAmount={totalAmount}
                 />
 
-                <CashboxNumpad
-                  receivedAmount={receivedAmount}
-                  changeAmount={changeAmount}
-                  totalAmount={totalAmount}
-                  onNumpadPress={handleNumpadPress}
-                  onBanknoteClick={handleBanknoteClick}
-                  onPayCard={handlePayCard}
-                  onPayCash={handlePayCash}
-                />
+                <motion.button
+                  type="button"
+                  className="cashbox-confirm-btn"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleConfirmOrder}
+                  disabled={cartItems.length === 0}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Confirm</span>
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>

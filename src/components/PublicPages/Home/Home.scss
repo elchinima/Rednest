@@ -256,23 +256,33 @@
     }
 
     .menu-info {
-      padding: $spacing-lg;
+      padding: 18px $spacing-lg 20px;
       display: flex;
       flex-direction: column;
       flex: 1;
       text-align: center;
+      min-height: 0;
 
       h4 {
         font-size: 1.25rem;
         margin-bottom: $spacing-xs;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       p {
         color: $color-text-muted;
         font-size: 0.9rem;
-        margin-bottom: $spacing-md;
-        line-height: 1.5;
-        flex: 1;
+        margin-bottom: $spacing-sm;
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        overflow-wrap: break-word;
+        word-break: break-word;
       }
 
       .home-price-container {
@@ -621,12 +631,16 @@
       scroll-snap-align: center;
 
       .menu-info {
+        padding: 14px $spacing-md 16px;
+
         h4 {
           font-size: 0.96rem;
         }
 
         p {
           font-size: 0.74rem;
+          line-height: 1.4;
+          -webkit-line-clamp: 4;
         }
       }
     }

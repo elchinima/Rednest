@@ -106,7 +106,9 @@ const CashboxPromoModal = ({ isOpen, onClose }) => {
       const res = await fetchWithRefresh(`${API_URL}/api/cashbox/promos/search?query=${encodeURIComponent(term)}`);
       if (res.ok) {
         const data = await res.json();
-        setResults(Array.isArray(data) ? data : []);
+        const promoList = Array.isArray(data) ? data : [];
+        const activePromos = promoList.filter((promo) => promo.isActive && !promo.isExpired);
+        setResults(activePromos);
       } else {
         const errData = await res.json().catch(() => ({}));
         setError(errData.message || 'Failed to search promo codes.');
@@ -262,9 +264,9 @@ const CashboxPromoModal = ({ isOpen, onClose }) => {
                       <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
                   </div>
-                  <p className="cashbox-promo-modal__empty-title">No promo code found</p>
+                  <p className="cashbox-promo-modal__empty-title">No active promo code found</p>
                   <p className="cashbox-promo-modal__empty-text">
-                    No active or past promo codes match &ldquo;{query}&rdquo;.
+                    No active promo codes match &ldquo;{query}&rdquo;.
                   </p>
                 </div>
               )}

@@ -268,8 +268,8 @@ const Home = () => {
                     loading="lazy"
                   />
                   <div className="menu-info">
-                    <h4>{prod.name}</h4>
-                    <p>{prod.description || 'Delicious handcrafted drink made with premium ingredients.'}</p>
+                    <h4 title={prod.name}>{prod.name}</h4>
+                    <p title={prod.description || ''}>{prod.description || 'Delicious handcrafted drink made with premium ingredients.'}</p>
                     <div className={`home-price-container ${hasDiscount ? 'has-discount' : 'no-discount'}`}>
                       {hasDiscount && (
                         <div className="home-old-price-pill">

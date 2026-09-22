@@ -113,16 +113,17 @@ public class CashboxController : ControllerBase
         var q = query.Trim();
         var qUpper = q.ToUpperInvariant();
 
+        var now = DateTime.UtcNow;
+
         var promos = await _context.UserPromos
             .Include(p => p.User)
             .AsNoTracking()
-            .Where(p => p.Codes.BarCode.Contains(q) || p.Codes.PromoCode.ToUpper().Contains(qUpper))
+            .Where(p => p.IsActive && p.Dates.ExpiresAt >= now && (p.Codes.BarCode.Contains(q) || p.Codes.PromoCode.ToUpper().Contains(qUpper)))
             .OrderByDescending(p => p.Dates.ActivatedAt)
             .Take(25)
             .ToListAsync();
 
         var pixel = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == "myrednest@gmail.com");
-        var now = DateTime.UtcNow;
 
         var results = promos.Select(p =>
         {
