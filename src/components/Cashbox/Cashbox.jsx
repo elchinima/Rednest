@@ -18,6 +18,7 @@ const Cashbox = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [cartItems, setCartItems] = useState([]);
+  const [appliedPromo, setAppliedPromo] = useState(null);
 
   const [toast, setToast] = useState('');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -76,6 +77,7 @@ const Cashbox = () => {
     const price = getProductPrice(product);
     const prodName = product.displayName || product.name || 'Item';
     const prodImg = product.imageUrl || product.image || '';
+    const prodCategory = product.category || 'General';
 
     setCartItems((prev) => {
       const existingIdx = prev.findIndex((i) => i.productId === prodId);
@@ -91,6 +93,7 @@ const Cashbox = () => {
           productId: prodId,
           name: prodName,
           image: prodImg,
+          category: prodCategory,
           price,
           qty: 1,
         },
@@ -118,18 +121,78 @@ const Cashbox = () => {
 
   const clearCart = () => {
     setCartItems([]);
+    setAppliedPromo(null);
   };
 
-  const totalAmount = useMemo(() => {
+  const subtotal = useMemo(() => {
     const sum = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
     return Number(sum.toFixed(2));
   }, [cartItems]);
+
+  const promoDiscount = useMemo(() => {
+    if (!appliedPromo || cartItems.length === 0 || subtotal <= 0) return 0;
+
+    const pType = String(appliedPromo.prizeType || '').toLowerCase();
+    const pName = String(appliedPromo.prizeName || '').toUpperCase();
+    const discPercent = appliedPromo.discountPercent || (
+      pType === 'discount25' || pName.includes('25%') ? 25 :
+      pType === 'discount50' || pName.includes('50%') ? 50 : 0
+    );
+
+    if (discPercent > 0) {
+      return Number(Math.min(subtotal, (subtotal * discPercent) / 100).toFixed(2));
+    }
+
+    if (pType === 'superprize' || pType === '0' || pName.includes('SUPER')) {
+      return Number(Math.min(subtotal, 25.00).toFixed(2));
+    }
+
+    if (pType === 'freedrink' || pType === '1' || pName.includes('DRINK')) {
+      const drinks = cartItems.filter((item) => {
+        const cat = (item.category || '').toLowerCase();
+        return cat.includes('drink') || cat.includes('coffee') || cat.includes('tea');
+      });
+      if (drinks.length === 0) return 0;
+      const totalDrinkQty = drinks.reduce((sum, x) => sum + x.qty, 0);
+      const totalDrinkPrice = drinks.reduce((sum, x) => sum + x.price * x.qty, 0);
+      const avgDrinkPrice = totalDrinkPrice / totalDrinkQty;
+      return Number(Math.min(subtotal, avgDrinkPrice).toFixed(2));
+    }
+
+    if (pType === 'freedessert' || pType === '2' || pName.includes('DESSERT')) {
+      const desserts = cartItems.filter((item) => {
+        const cat = (item.category || '').toLowerCase();
+        return cat.includes('dessert') || cat.includes('sweet') || cat.includes('cake') || cat.includes('bakery');
+      });
+      if (desserts.length === 0) return 0;
+      const totalDessertQty = desserts.reduce((sum, x) => sum + x.qty, 0);
+      const totalDessertPrice = desserts.reduce((sum, x) => sum + x.price * x.qty, 0);
+      const avgDessertPrice = totalDessertPrice / totalDessertQty;
+      return Number(Math.min(subtotal, avgDessertPrice).toFixed(2));
+    }
+
+    return 0;
+  }, [appliedPromo, cartItems, subtotal]);
+
+  const totalAmount = useMemo(() => {
+    return Number(Math.max(0, subtotal - promoDiscount).toFixed(2));
+  }, [subtotal, promoDiscount]);
 
   const totalItemsCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   const showToast = (msg) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setTimeout(() => setToast(''), 3500);
+  };
+
+  const handleApplyPromo = (promo) => {
+    setAppliedPromo(promo);
+    showToast(`Promo code ${promo.promoCode} applied!`);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    showToast('Promo code removed from receipt.');
   };
 
   const handleConfirmOrder = async () => {
@@ -138,20 +201,36 @@ const Cashbox = () => {
       return;
     }
     try {
-      await fetchWithRefresh(`${API_URL}/api/cashbox/orders`, {
+      const res = await fetchWithRefresh(`${API_URL}/api/cashbox/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payMethod: 'Cash',
           products: cartItems.map((item) => ({ productId: item.productId, quantity: item.qty })),
-          initialAmount: totalAmount,
+          initialAmount: subtotal,
+          promoCodeId: appliedPromo ? appliedPromo.promoCode : null,
           totalAmount: totalAmount,
         }),
       });
-    } catch {}
-    showToast(`Order confirmed: ${totalAmount.toFixed(2)} ₼`);
-    clearCart();
-    setIsReceiptModalOpen(false);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        showToast(errData.message || 'Failed to process order.');
+        return;
+      }
+
+      const usedCode = appliedPromo?.promoCode;
+      showToast(
+        usedCode
+          ? `Order confirmed: ${totalAmount.toFixed(2)} ₼ (Promo ${usedCode} redeemed)`
+          : `Order confirmed: ${totalAmount.toFixed(2)} ₼`
+      );
+      clearCart();
+      setIsReceiptModalOpen(false);
+    } catch (err) {
+      console.error('Failed to confirm cashbox order:', err);
+      showToast('Network error while processing order.');
+    }
   };
 
   return (
@@ -186,6 +265,7 @@ const Cashbox = () => {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
           onPromoClick={() => setIsPromoModalOpen(true)}
+          hasAppliedPromo={Boolean(appliedPromo)}
         />
 
         <main className="cashbox-view__catalog">
@@ -207,7 +287,12 @@ const Cashbox = () => {
             onUpdateQty={updateItemQty}
             onRemoveItem={removeCartItem}
             onClearCart={clearCart}
+            subtotal={subtotal}
+            promoDiscount={promoDiscount}
             totalAmount={totalAmount}
+            appliedPromo={appliedPromo}
+            onRemovePromo={handleRemovePromo}
+            onOpenPromoModal={() => setIsPromoModalOpen(true)}
           />
 
           <motion.button
@@ -295,7 +380,12 @@ const Cashbox = () => {
                   onUpdateQty={updateItemQty}
                   onRemoveItem={removeCartItem}
                   onClearCart={clearCart}
+                  subtotal={subtotal}
+                  promoDiscount={promoDiscount}
                   totalAmount={totalAmount}
+                  appliedPromo={appliedPromo}
+                  onRemovePromo={handleRemovePromo}
+                  onOpenPromoModal={() => setIsPromoModalOpen(true)}
                 />
 
                 <motion.button
@@ -319,6 +409,9 @@ const Cashbox = () => {
       <CashboxPromoModal
         isOpen={isPromoModalOpen}
         onClose={() => setIsPromoModalOpen(false)}
+        appliedPromo={appliedPromo}
+        onApplyPromo={handleApplyPromo}
+        onRemovePromo={handleRemovePromo}
       />
     </div>
   );

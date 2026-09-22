@@ -5,10 +5,12 @@ namespace Rednest.Api.Controllers;
 public class CashboxController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IAnalyticsTrackingService _analyticsTrackingService;
 
-    public CashboxController(AppDbContext context)
+    public CashboxController(AppDbContext context, IAnalyticsTrackingService analyticsTrackingService)
     {
         _context = context;
+        _analyticsTrackingService = analyticsTrackingService;
     }
 
     [HttpGet("init")]
@@ -168,6 +170,37 @@ public class CashboxController : ControllerBase
             return BadRequest(new { message = "Order must contain at least one item." });
         }
 
+        Rednest.Core.Entities.UserPromo? promo = null;
+        if (!string.IsNullOrWhiteSpace(request.PromoCodeId))
+        {
+            var rawCode = request.PromoCodeId.Trim();
+            var codeUpper = rawCode.ToUpperInvariant();
+
+            if (Guid.TryParse(rawCode, out var promoGuid))
+            {
+                promo = await _context.UserPromos.FirstOrDefaultAsync(p => p.Id == promoGuid);
+            }
+
+            if (promo == null)
+            {
+                promo = await _context.UserPromos.FirstOrDefaultAsync(p =>
+                    p.Codes.PromoCode.ToUpper() == codeUpper || p.Codes.BarCode == rawCode);
+            }
+
+            if (promo == null)
+            {
+                return BadRequest(new { message = "Promo code not found." });
+            }
+
+            if (!promo.IsActive || promo.Dates.ExpiresAt < DateTime.UtcNow)
+            {
+                return BadRequest(new { message = "Promo code is expired or has already been used." });
+            }
+
+            promo.IsActive = false;
+            _context.UserPromos.Update(promo);
+        }
+
         var cashboxRecord = new Rednest.Core.Entities.Cashbox
         {
             PayMethod = string.Equals(request.PayMethod, "Card", StringComparison.OrdinalIgnoreCase)
@@ -181,7 +214,7 @@ public class CashboxController : ControllerBase
             Paid = new CashboxPaidDetails
             {
                 InitialAmount = request.InitialAmount,
-                PromoCodeId = request.PromoCodeId,
+                PromoCodeId = promo?.Codes.PromoCode ?? request.PromoCodeId,
                 TotalAmount = request.TotalAmount
             },
             CreatedAt = DateTime.UtcNow
@@ -189,6 +222,8 @@ public class CashboxController : ControllerBase
 
         _context.Cashboxes.Add(cashboxRecord);
         await _context.SaveChangesAsync();
+
+        _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         return Ok(new { success = true, orderId = cashboxRecord.Id });
     }

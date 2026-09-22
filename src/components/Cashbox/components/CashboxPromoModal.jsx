@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '../../../utils/config';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import { encodeCode128 } from '../../../utils/code128';
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -24,47 +23,13 @@ const formatDate = (dateStr) => {
   }
 };
 
-const BarcodeVisual = ({ code }) => {
-  const binaryString = React.useMemo(() => {
-    return encodeCode128(code);
-  }, [code]);
-
-  if (!binaryString) return null;
-
-  const quietZone = 8;
-  const totalWidth = binaryString.length + quietZone * 2;
-  const height = 40;
-
-  return (
-    <div className="cashbox-promo-barcode" title={`Barcode: ${code}`}>
-      <svg
-        viewBox={`0 0 ${totalWidth} ${height}`}
-        className="cashbox-promo-barcode__svg"
-        preserveAspectRatio="none"
-      >
-        <rect width={totalWidth} height={height} fill="#ffffff" />
-        {binaryString.split('').map((bit, idx) => {
-          if (bit === '1') {
-            return (
-              <rect
-                key={idx}
-                x={quietZone + idx}
-                y={0}
-                width={1}
-                height={height}
-                fill="#000000"
-              />
-            );
-          }
-          return null;
-        })}
-      </svg>
-      <span className="cashbox-promo-barcode__number">{code}</span>
-    </div>
-  );
-};
-
-const CashboxPromoModal = ({ isOpen, onClose }) => {
+const CashboxPromoModal = ({
+  isOpen,
+  onClose,
+  appliedPromo = null,
+  onApplyPromo,
+  onRemovePromo,
+}) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
@@ -329,9 +294,18 @@ const CashboxPromoModal = ({ isOpen, onClose }) => {
 
                         <div className="cashbox-promo-card__codes">
                           <div className="cashbox-promo-card__code-box">
-                            <span className="cashbox-promo-card__code-label">Promo Code Number</span>
+                            <span className="cashbox-promo-card__code-label">Promo Code</span>
                             <span className="cashbox-promo-card__code-value">{promo.promoCode}</span>
                           </div>
+
+                          {promo.barCode && (
+                            <div className="cashbox-promo-card__code-box cashbox-promo-card__code-box--barcode">
+                              <span className="cashbox-promo-card__code-label">Barcode Number</span>
+                              <span className="cashbox-promo-card__code-value cashbox-promo-card__code-value--barcode">
+                                {promo.barCode}
+                              </span>
+                            </div>
+                          )}
 
                           {promo.discountPercent > 0 && (
                             <div className="cashbox-promo-card__discount-box">
@@ -348,9 +322,43 @@ const CashboxPromoModal = ({ isOpen, onClose }) => {
                           )}
                         </div>
 
-                        {promo.barCode && (
-                          <div className="cashbox-promo-card__barcode-section">
-                            <BarcodeVisual code={promo.barCode} />
+                        {isActive && (
+                          <div className="cashbox-promo-card__actions">
+                            {appliedPromo?.id === promo.id || (appliedPromo?.promoCode && String(appliedPromo.promoCode).toUpperCase() === String(promo.promoCode).toUpperCase()) ? (
+                              <div className="cashbox-promo-card__applied-row">
+                                <div className="cashbox-promo-card__applied-status">
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                  <span>Applied to Receipt</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="cashbox-promo-card__remove-btn"
+                                  onClick={() => onRemovePromo && onRemovePromo()}
+                                  title="Remove from receipt"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            ) : (
+                              <motion.button
+                                type="button"
+                                className="cashbox-promo-card__apply-btn"
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => {
+                                  if (onApplyPromo) {
+                                    onApplyPromo(promo);
+                                    onClose();
+                                  }
+                                }}
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <span>Apply to Order</span>
+                              </motion.button>
+                            )}
                           </div>
                         )}
 

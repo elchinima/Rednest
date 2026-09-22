@@ -57,6 +57,7 @@ const CashboxSidebar = ({
   selectedCategory,
   onSelectCategory,
   onPromoClick,
+  hasAppliedPromo = false,
 }) => {
   return (
     <aside className="cashbox-sidebar">
@@ -80,11 +81,12 @@ const CashboxSidebar = ({
       <div className="cashbox-sidebar__bottom">
         <button
           type="button"
-          className="cashbox-sidebar__btn cashbox-sidebar__promo-btn"
+          className={`cashbox-sidebar__btn cashbox-sidebar__promo-btn ${hasAppliedPromo ? 'cashbox-sidebar__promo-btn--active' : ''}`}
           onClick={onPromoClick}
-          title="Promo Codes"
+          title={hasAppliedPromo ? 'Promo code active' : 'Promo Codes'}
         >
           <div className="cashbox-sidebar__icon">
+            {hasAppliedPromo && <span className="cashbox-sidebar__promo-dot" />}
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -99,7 +101,9 @@ const CashboxSidebar = ({
               <path d="M16 8L8 16" />
             </svg>
           </div>
-          <span className="cashbox-sidebar__label">Promo Codes</span>
+          <span className="cashbox-sidebar__label">
+            {hasAppliedPromo ? 'Promo (1)' : 'Promo Codes'}
+          </span>
         </button>
       </div>
     </aside>
