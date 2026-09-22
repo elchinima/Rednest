@@ -64,7 +64,7 @@
   justify-content: center;
   width: 100%;
   max-width: 430px;
-  margin-top: 28px;
+  margin-top: 56px;
   filter: drop-shadow(0 6px 32px rgba(127, 29, 29, 0.5));
 
   @media (min-width: 769px) {
@@ -74,12 +74,12 @@
 
 .fortune-pointer {
   position: absolute;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
-  width: 36px;
-  height: 44px;
+  width: 25px;
+  height: 31px;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
   pointer-events: none;
 }
