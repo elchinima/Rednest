@@ -4,7 +4,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useBasket } from '../../../context/BasketContext';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
-import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import { useLang } from '../../../utils/useLang';
+import { getOrderTranslation } from './Lang';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import featureCashIcon from '../../../assets/icons/feature-cash.svg';
 import featureWalletIcon from '../../../assets/icons/feature-wallet.svg';
@@ -70,43 +71,56 @@ const FeaturePill = ({ icon, label }) => (
   </span>
 );
 
-const ONLINE_PAYMENT_SERVICES = [
+const getOnlinePaymentServices = (t) => [
   {
     id: 'OnlineStripe',
     name: 'Stripe',
-    title: 'Pay with Stripe',
-    desc: 'Fast and secure international payment',
+    title: t('serviceStripeTitle'),
+    desc: t('serviceStripeDesc'),
     icon: featureStripeIcon,
-    badge: 'Popular',
+    badge: t('popularBadge'),
   },
   {
     id: 'OnlineBalance',
     name: 'Rednest Balance',
-    title: 'Rednest Balance',
-    desc: 'Instant payment from your account balance',
+    title: t('serviceBalanceTitle'),
+    desc: t('serviceBalanceDesc'),
     icon: featureWalletIcon,
-    badge: 'Instant',
+    badge: t('instantSpeedBadge'),
     isBalance: true,
   },
   {
     id: 'OnlineCardDetails',
     name: 'Visa & Mastercard',
-    title: 'Visa or Mastercard',
-    desc: 'Debit or credit card payment',
+    title: t('serviceCardsTitle'),
+    desc: t('serviceCardsDesc'),
     icon: featureCardVisaMcIcon,
-    badge: 'Cards',
+    badge: t('cardsBadge'),
   },
   {
     id: 'OnlineGooglePay',
     name: 'Google Pay',
-    title: 'Google Pay',
-    desc: 'One-tap checkout with Google Pay',
+    title: t('serviceGPayTitle'),
+    desc: t('serviceGPayDesc'),
     icon: featureGPayIcon,
-    badge: '1-Tap',
+    badge: t('oneTapBadge'),
   },
 ];
 
 const Order = () => {
+  const lang = useLang();
+  const t = (id, params) => {
+    let str = getOrderTranslation(lang, id);
+    if (params && typeof str === 'string') {
+      Object.entries(params).forEach(([key, val]) => {
+        str = str.replace(new RegExp(`\\{${key}\\}`, 'g'), String(val));
+      });
+    }
+    return str;
+  };
+
+  const onlineServices = useMemo(() => getOnlinePaymentServices(t), [lang]);
+
   const { user, updateUser } = useAuth();
   const { items, clearBasket } = useBasket();
   const location = useLocation();
@@ -293,13 +307,13 @@ const Order = () => {
           cashbackEarned: data.cashbackEarned || 0,
         });
       } else {
-        const msg = data.message || 'Failed to place order. Please try again.';
+        const msg = data.message || t('orderFailed');
         setErrorMessage(msg);
         setOnlineModalError(msg);
       }
     } catch (err) {
       console.error('Error placing order:', err);
-      const msg = 'An error occurred while placing your order. Please check your connection.';
+      const msg = t('orderNetworkError');
       setErrorMessage(msg);
       setOnlineModalError(msg);
     } finally {
@@ -341,18 +355,18 @@ const Order = () => {
   const formatPaymentMethod = (pm) => {
     switch (pm) {
       case 'OnlineStripe':
-        return 'Stripe';
+        return t('methodStripe');
       case 'OnlineBalance':
-        return 'Rednest Account Balance';
+        return t('methodBalance');
       case 'OnlineCardDetails':
-        return 'Visa / Mastercard';
+        return t('methodCards');
       case 'OnlineGooglePay':
-        return 'Google Pay';
+        return t('methodGPay');
       case 'CashDeskCard':
-        return 'Pay at Cashier (Card / NFC)';
+        return t('methodCashierCard');
       case 'CashDeskCash':
       default:
-        return 'Pay at Cashier';
+        return t('methodCashierCash');
     }
   };
 
@@ -380,14 +394,14 @@ const Order = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, ...springTransition }}
             >
-              Checkout & Payment
+              {t('stepBadge')}
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.5, ease: smoothEase }}
             >
-              Choose Payment Method
+              {t('heroTitle')}
             </motion.h1>
             <motion.p
               className="order-hero-desc"
@@ -395,7 +409,7 @@ const Order = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.25, duration: 0.4 }}
             >
-              Select how you would like to pay for your order.
+              {t('heroDesc')}
             </motion.p>
           </motion.div>
 
@@ -405,9 +419,9 @@ const Order = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <p>Your basket is empty. Add items from the menu to place an order.</p>
+              <p>{t('emptyBasket')}</p>
               <Link to="/catalog" className="cta-btn sm order-empty-btn">
-                Browse Menu
+                {t('browseMenu')}
               </Link>
             </motion.div>
           ) : (
@@ -425,18 +439,18 @@ const Order = () => {
                 >
                   <div className="order-method-card__top">
                     <div className="order-method-card__icon-wrap">
-                      <img src={cashierIcon} alt="Pay at Cashier" className="order-method-card__icon" />
+                      <img src={cashierIcon} alt={t('payAtCashier')} className="order-method-card__icon" />
                     </div>
                     <div className="order-method-card__title-group">
-                      <span className="order-method-card__badge">In-Store Pickup</span>
-                      <h2 className="order-method-card__title">Pay at Cashier</h2>
-                      <span className="order-method-card__subtitle">Pay at Cashier Counter</span>
+                      <span className="order-method-card__badge">{t('inStoreBadge')}</span>
+                      <h2 className="order-method-card__title">{t('payAtCashier')}</h2>
+                      <span className="order-method-card__subtitle">{t('payAtCashierCounter')}</span>
                     </div>
                   </div>
 
                   <div className="order-method-card__details">
                     <p className="order-method-card__desc">
-                      Pay with cash or bank card in person when you pick up your fresh order at the barista counter.
+                      {t('cashierDesc')}
                     </p>
                     <AnimatePresence initial={false}>
                       {!selectedMethod && (
@@ -448,9 +462,9 @@ const Order = () => {
                           transition={{ duration: 0.35, ease: smoothEase }}
                         >
                           <div className="order-method-card__features">
-                            <FeaturePill icon={featureCashIcon} label="Cash Payment" />
-                            <FeaturePill icon={featureNfcIcon} label="Card & NFC" />
-                            <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                            <FeaturePill icon={featureCashIcon} label={t('cashPayment')} />
+                            <FeaturePill icon={featureNfcIcon} label={t('cardNfc')} />
+                            <FeaturePill icon={featurePromoIcon} label={t('usePromoCodes')} />
                           </div>
                         </motion.div>
                       )}
@@ -459,7 +473,7 @@ const Order = () => {
 
                   <div className="order-method-card__footer">
                     <span className={`order-method-card__radio-btn ${selectedMethod === 'cashier' ? 'selected' : ''}`}>
-                      {selectedMethod === 'cashier' ? '✓ Selected' : 'Choose Cashier'}
+                      {selectedMethod === 'cashier' ? t('selectedBadge') : t('chooseCashier')}
                     </span>
                   </div>
                 </motion.div>
@@ -476,18 +490,18 @@ const Order = () => {
                 >
                   <div className="order-method-card__top">
                     <div className="order-method-card__icon-wrap">
-                      <img src={onlineIcon} alt="Pay Online" className="order-method-card__icon" />
+                      <img src={onlineIcon} alt={t('payOnline')} className="order-method-card__icon" />
                     </div>
                     <div className="order-method-card__title-group">
-                      <span className="order-method-card__badge badge-online">Instant & Contactless</span>
-                      <h2 className="order-method-card__title">Pay Online</h2>
-                      <span className="order-method-card__subtitle">Pay Online Instantly</span>
+                      <span className="order-method-card__badge badge-online">{t('instantBadge')}</span>
+                      <h2 className="order-method-card__title">{t('payOnline')}</h2>
+                      <span className="order-method-card__subtitle">{t('payOnlineInstantly')}</span>
                     </div>
                   </div>
 
                   <div className="order-method-card__details">
                     <p className="order-method-card__desc">
-                      Pay securely online with your credit/debit card or Rednest balance for immediate preparation.
+                      {t('onlineDesc')}
                     </p>
                     <AnimatePresence initial={false}>
                       {!selectedMethod && (
@@ -499,12 +513,12 @@ const Order = () => {
                           transition={{ duration: 0.35, ease: smoothEase }}
                         >
                           <div className="order-method-card__features">
-                            <FeaturePill icon={featureCardVisaMcIcon} label="Visa or Mastercard" />
-                            <FeaturePill icon={featureWalletIcon} label="Pay via Balance" />
-                            <FeaturePill icon={featureStripeIcon} label="Pay via Stripe" />
-                            <FeaturePill icon={featureGPayIcon} label="Google Pay" />
-                            <FeaturePill icon={featureCashbackIcon} label="Earn Cashback" />
-                            <FeaturePill icon={featurePromoIcon} label="Use Promo Codes" />
+                            <FeaturePill icon={featureCardVisaMcIcon} label={t('visaMastercard')} />
+                            <FeaturePill icon={featureWalletIcon} label={t('payViaBalance')} />
+                            <FeaturePill icon={featureStripeIcon} label={t('payViaStripe')} />
+                            <FeaturePill icon={featureGPayIcon} label={t('googlePay')} />
+                            <FeaturePill icon={featureCashbackIcon} label={t('earnCashback')} />
+                            <FeaturePill icon={featurePromoIcon} label={t('usePromoCodes')} />
                           </div>
                         </motion.div>
                       )}
@@ -513,7 +527,7 @@ const Order = () => {
 
                   <div className="order-method-card__footer">
                     <span className={`order-method-card__radio-btn ${selectedMethod === 'online' ? 'selected' : ''}`}>
-                      {selectedMethod === 'online' ? '✓ Selected' : 'Choose Online'}
+                      {selectedMethod === 'online' ? t('selectedBadge') : t('chooseOnline')}
                     </span>
                   </div>
                 </motion.div>
@@ -535,11 +549,11 @@ const Order = () => {
                 <div className="order-step-box">
                   <div className="order-step-header">
                     <div className="order-step-info">
-                      <h3>Selected Payment: <span>{selectedMethod === 'cashier' ? 'Pay at Cashier' : 'Pay Online'}</span></h3>
+                      <h3>{t('selectedPayment')} <span>{selectedMethod === 'cashier' ? t('payAtCashier') : t('payOnline')}</span></h3>
                       <p>
                         {selectedMethod === 'cashier'
-                          ? 'Your order will be sent to the baristas and marked for in-store payment upon pickup.'
-                          : 'Proceeding with secure online payment for immediate order confirmation.'}
+                          ? t('cashierStepDesc')
+                          : t('onlineStepDesc')}
                       </p>
                     </div>
                     <button
@@ -547,15 +561,15 @@ const Order = () => {
                       className="order-change-btn"
                       onClick={() => setSelectedMethod(null)}
                     >
-                      Change Method
+                      {t('changeMethod')}
                     </button>
                   </div>
 
                   {userPromos.length >= 2 && (
                     <div className="order-promo-selector">
                       <div className="order-promo-label">
-                        <span>Select Promo Code to Apply:</span>
-                        <span className="count">{userPromos.length} available</span>
+                        <span>{t('selectPromo')}</span>
+                        <span className="count">{t('promosAvailable', { count: userPromos.length })}</span>
                       </div>
                       <select
                         value={selectedPromoCode}
@@ -567,24 +581,24 @@ const Order = () => {
                             {p.promoCode} — {p.prizeName}
                           </option>
                         ))}
-                        <option value="NONE">Don't use any promo code</option>
+                        <option value="NONE">{t('dontUsePromo')}</option>
                       </select>
                     </div>
                   )}
 
                   <div className="order-summary-pill-row">
                     <div className="order-summary-pill">
-                      <span className="label">Items:</span>
-                      <span className="value">{itemCount} items</span>
+                      <span className="label">{t('itemsCount')}</span>
+                      <span className="value">{itemCount} {t('itemsSuffix')}</span>
                     </div>
                     {promoDiscountAmount > 0 && (
                       <div className="order-summary-pill promo">
-                        <span className="label">Discount:</span>
+                        <span className="label">{t('discountLabel')}</span>
                         <span className="value">−{promoDiscountAmount.toFixed(2)} ₼</span>
                       </div>
                     )}
                     <div className="order-summary-pill total">
-                      <span className="label">Total to Pay:</span>
+                      <span className="label">{t('totalToPay')}</span>
                       <span className="value">
                         {finalAmount} ₼
                       </span>
@@ -613,14 +627,14 @@ const Order = () => {
                       {isSubmitting ? (
                         <span className="order-btn-loading">
                           <img src={loaderIconRed} alt="Loading" className="order-spinner" />
-                          Placing Order...
+                          {t('placingOrder')}
                         </span>
                       ) : (
-                        selectedMethod === 'cashier' ? 'Confirm & Place Order' : 'Continue to Online Payment'
+                        selectedMethod === 'cashier' ? t('confirmOrder') : t('continueOnline')
                       )}
                     </button>
                     <Link to="/basket" className="order-back-btn">
-                      Back to Basket
+                      {t('backToBasket')}
                     </Link>
                   </div>
                 </div>
@@ -655,14 +669,14 @@ const Order = () => {
                 <line x1="2" y1="10" x2="22" y2="10" />
               </svg>
             </div>
-            <h3 className="online-payment-modal__title">Online Payment Service</h3>
+            <h3 className="online-payment-modal__title">{t('onlineModalTitle')}</h3>
             <p className="online-payment-modal__desc">
-              Select a payment method <span className="online-payment-modal__amount">{finalAmount} ₼</span>
+              {t('onlineModalDesc')} <span className="online-payment-modal__amount">{finalAmount} ₼</span>
             </p>
           </div>
 
           <div className="online-payment-modal__services">
-            {ONLINE_PAYMENT_SERVICES.map((service) => {
+            {onlineServices.map((service) => {
               const isSelected = selectedOnlineService === service.id;
               const userBalance = typeof user?.balance === 'number' ? user.balance : parseFloat(user?.balance || '0');
 
@@ -684,7 +698,7 @@ const Order = () => {
                     {service.badge && (
                       <div className="online-payment-service-card__badge-row">
                         <span className="online-payment-service-card__badge">
-                          {service.isBalance ? `Balance: ${userBalance.toFixed(2)} ₼` : service.badge}
+                          {service.isBalance ? `${t('balancePrefix')} ${userBalance.toFixed(2)} ₼` : service.badge}
                         </span>
                       </div>
                     )}
@@ -706,14 +720,14 @@ const Order = () => {
               className="cta-btn sm online-payment-modal__btn online-payment-modal__btn--cancel"
               onClick={() => setIsOnlinePaymentModalOpen(false)}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="button"
               className="cta-btn sm online-payment-modal__btn online-payment-modal__btn--submit"
               onClick={handleSelectOnlineServiceSubmit}
             >
-              {selectedOnlineService === 'OnlineBalance' ? 'Pay with Balance' : 'Continue to Payment'}
+              {selectedOnlineService === 'OnlineBalance' ? t('payWithBalance') : t('continueToPayment')}
             </button>
           </div>
         </div>
@@ -747,19 +761,23 @@ const Order = () => {
 
               <div className="order-success-modal__status-badge">
                 <span className="pulsing-dot" />
-                {orderSuccessData.status || 'Pending Payment'}
+                {orderSuccessData.status === 'Paid Online'
+                  ? t('statusPaidOnline')
+                  : orderSuccessData.status === 'Pending Payment'
+                  ? t('statusPendingPayment')
+                  : orderSuccessData.status}
               </div>
 
-              <h2 className="order-success-modal__title">Order Placed Successfully!</h2>
+              <h2 className="order-success-modal__title">{t('orderSuccessTitle')}</h2>
               <p className="order-success-modal__desc">
-                Order sent to barista. Show your order number at the counter.
+                {t('orderSuccessDesc')}
               </p>
             </div>
 
             <div className="order-success-modal__number-card">
               <div className="order-success-modal__number-info">
-                <span className="order-success-modal__number-label">Order Number</span>
-                <span className="order-success-modal__number-sub">Mention this at counter</span>
+                <span className="order-success-modal__number-label">{t('orderNumberLabel')}</span>
+                <span className="order-success-modal__number-sub">{t('mentionAtCounter')}</span>
               </div>
               <span className="order-success-modal__number-value">
                 {orderSuccessData.id ? String(orderSuccessData.id).replace(/-/g, '').slice(-7).toUpperCase() : ''}
@@ -768,35 +786,35 @@ const Order = () => {
 
             <div className="order-success-modal__details">
               <div className="order-success-modal__detail-row">
-                <span className="order-success-modal__detail-label">Items</span>
+                <span className="order-success-modal__detail-label">{t('itemsCount').replace(':', '')}</span>
                 <span className="order-success-modal__detail-value">
-                  {orderSuccessData.items?.reduce((sum, p) => sum + p.quantity, 0) || 0} items
+                  {orderSuccessData.items?.reduce((sum, p) => sum + p.quantity, 0) || 0} {t('itemsSuffix')}
                 </span>
               </div>
 
               {orderSuccessData.payment?.discountAmount > 0 && (
                 <div className="order-success-modal__detail-row discount">
-                  <span className="order-success-modal__detail-label">Promo Discount</span>
+                  <span className="order-success-modal__detail-label">{t('promoDiscount')}</span>
                   <span className="order-success-modal__detail-value">−{orderSuccessData.payment.discountAmount.toFixed(2)} ₼</span>
                 </div>
               )}
 
               {orderSuccessData.cashbackEarned > 0 && (
                 <div className="order-success-modal__detail-row cashback">
-                  <span className="order-success-modal__detail-label">Cashback Added</span>
+                  <span className="order-success-modal__detail-label">{t('cashbackAdded')}</span>
                   <span className="order-success-modal__detail-value">+{Number(orderSuccessData.cashbackEarned).toFixed(2)} ₼</span>
                 </div>
               )}
 
               <div className="order-success-modal__detail-row">
-                <span className="order-success-modal__detail-label">Payment Method</span>
+                <span className="order-success-modal__detail-label">{t('paymentMethodLabel')}</span>
                 <span className="order-success-modal__detail-value">
                   {formatPaymentMethod(orderSuccessData.payment?.paymentMethod)}
                 </span>
               </div>
 
               <div className="order-success-modal__detail-row total">
-                <span className="order-success-modal__detail-label">Total to Pay</span>
+                <span className="order-success-modal__detail-label">{t('totalToPay').replace(':', '')}</span>
                 <span className="order-success-modal__detail-value">{orderSuccessData.payment?.totalAmount?.toFixed(2)} ₼</span>
               </div>
             </div>
@@ -807,7 +825,7 @@ const Order = () => {
                 className="cta-btn sm order-success-modal__btn order-success-modal__btn--cancel"
                 onClick={handleCloseSuccessModal}
               >
-                Back to Menu
+                {t('backToMenu')}
               </button>
               <button
                 type="button"
@@ -817,7 +835,7 @@ const Order = () => {
                   navigate('/orders');
                 }}
               >
-                View Orders
+                {t('viewOrders')}
               </button>
             </div>
           </div>

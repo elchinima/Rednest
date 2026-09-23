@@ -4,6 +4,8 @@ import loaderIcon from '../../../assets/icons/loader-animated.svg';
 import loaderIconRed from '../../../assets/icons/loader-animated-red.svg';
 import featureCardVisaMcIcon from '../../../assets/icons/feature-card-visa-mc.svg';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
+import { useLang } from '../../../utils/useLang';
+import { getOrderTranslation } from './Lang';
 import AnimatedModalWrapper from '../../Elements/AnimatedModalWrapper';
 import PaymentErrorModal from '../PaymentMethods/PaymentErrorModal';
 import './StripePaymentModal.scss';
@@ -46,6 +48,17 @@ const StripePaymentModal = ({
   promoCode,
   onOrderSuccess,
 }) => {
+  const lang = useLang();
+  const t = (id, params) => {
+    let str = getOrderTranslation(lang, id);
+    if (params && typeof str === 'string') {
+      Object.entries(params).forEach(([key, val]) => {
+        str = str.replace(new RegExp(`\\{${key}\\}`, 'g'), String(val));
+      });
+    }
+    return str;
+  };
+
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(true);
   const [viewMode, setViewMode] = useState('select');
@@ -147,45 +160,45 @@ const StripePaymentModal = ({
     const newErrors = {};
 
     if (!cleanDigits) {
-      newErrors.cardNumber = 'Card number is required.';
+      newErrors.cardNumber = t('errCardNumberRequired');
     } else if (cleanDigits.length !== 16) {
-      newErrors.cardNumber = 'Card number must be 16 digits.';
+      newErrors.cardNumber = t('errCardNumberDigits');
     } else if (!checkLuhn(cleanDigits)) {
-      newErrors.cardNumber = 'Invalid card number.';
+      newErrors.cardNumber = t('errCardNumberInvalid');
     } else if (!brand) {
-      newErrors.cardNumber = 'Only Visa and Mastercard are accepted.';
+      newErrors.cardNumber = t('errCardBrandUnsupported');
     }
 
     if (!expiryDate) {
-      newErrors.expiryDate = 'Expiry date is required.';
+      newErrors.expiryDate = t('errExpiryRequired');
     } else if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-      newErrors.expiryDate = 'Format must be MM/YY.';
+      newErrors.expiryDate = t('errExpiryFormat');
     } else {
       const [m, y] = expiryDate.split('/').map((x) => parseInt(x, 10));
       if (m < 1 || m > 12) {
-        newErrors.expiryDate = 'Invalid month.';
+        newErrors.expiryDate = t('errExpiryMonth');
       } else {
         const now = new Date();
         const currentYear = now.getFullYear() % 100;
         const currentMonth = now.getMonth() + 1;
         if (y < currentYear || (y === currentYear && m < currentMonth)) {
-          newErrors.expiryDate = 'Card has expired.';
+          newErrors.expiryDate = t('errCardExpired');
         }
       }
     }
 
     if (!cvc) {
-      newErrors.cvc = 'CVC is required.';
+      newErrors.cvc = t('errCvcRequired');
     } else if (cvc.length !== 3) {
-      newErrors.cvc = 'Must be 3 digits.';
+      newErrors.cvc = t('errCvcDigits');
     }
 
     if (cardholderName && cardholderName.trim().length < 3) {
-      newErrors.cardholderName = 'Please enter a valid cardholder name.';
+      newErrors.cardholderName = t('errCardholderInvalid');
     }
 
     if (!agreedToRules) {
-      newErrors.agreedToRules = 'You must agree to the payment rules.';
+      newErrors.agreedToRules = t('errAgreedRequired');
     }
 
     setErrors(newErrors);
@@ -213,12 +226,12 @@ const StripePaymentModal = ({
       if (res.ok && data.success) {
         onOrderSuccess(data);
       } else {
-        const msg = data.message || 'Payment failed. Please try again.';
+        const msg = data.message || t('errPaymentFailed');
         setErrorMessage(msg);
         setIsErrorModalOpen(true);
       }
     } catch (err) {
-      const msg = err.message || 'Payment processing error.';
+      const msg = err.message || t('errProcessingGeneral');
       setErrorMessage(msg);
       setIsErrorModalOpen(true);
     } finally {
@@ -244,7 +257,7 @@ const StripePaymentModal = ({
     try {
       if (saveCard) {
         if (savedCards.length >= 3) {
-          setErrorMessage('You can only save up to 3 payment cards. Please uncheck "Save card" or delete an existing card.');
+          setErrorMessage(t('errMaxCardsReached'));
           setIsErrorModalOpen(true);
           setIsProcessing(false);
           return;
@@ -291,12 +304,12 @@ const StripePaymentModal = ({
       if (orderRes.ok && orderData.success) {
         onOrderSuccess(orderData);
       } else {
-        const msg = orderData.message || 'Payment failed. Please check your card information.';
+        const msg = orderData.message || t('errPaymentCheckInfo');
         setErrorMessage(msg);
         setIsErrorModalOpen(true);
       }
     } catch (err) {
-      const msg = err.message || 'An error occurred during payment processing.';
+      const msg = err.message || t('errProcessingGeneral');
       setErrorMessage(msg);
       setIsErrorModalOpen(true);
     } finally {
@@ -327,21 +340,21 @@ const StripePaymentModal = ({
             <div className="stripe-modal__icon">
               <img src={featureCardVisaMcIcon} alt="Card Payment" />
             </div>
-            <h3 className="stripe-modal__title">Card & Online Payment</h3>
+            <h3 className="stripe-modal__title">{t('stripeModalTitle')}</h3>
             <p className="stripe-modal__desc">
-              Amount to pay: <span className="stripe-modal__amount">{finalAmount} ₼</span>
+              {t('stripeAmountToPay')} <span className="stripe-modal__amount">{finalAmount} ₼</span>
             </p>
           </div>
 
           {loadingCards ? (
             <div className="stripe-modal__loading">
               <img src={loaderIcon} alt="Loading" className="stripe-spinner-lg" />
-              <p>Loading payment options...</p>
+              <p>{t('loadingOptions')}</p>
             </div>
           ) : viewMode === 'select' && savedCards.length > 0 ? (
             <form onSubmit={handlePayWithSavedCard} className="saved-cards-form">
               <div className="saved-cards-header-row">
-                <span className="saved-cards-header-title">Select Saved Card</span>
+                <span className="saved-cards-header-title">{t('selectSavedCard')}</span>
                 <button
                   type="button"
                   className="add-new-card-link-btn"
@@ -352,7 +365,7 @@ const StripePaymentModal = ({
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  <span>Use New Card</span>
+                  <span>{t('useNewCard')}</span>
                 </button>
               </div>
 
@@ -385,7 +398,7 @@ const StripePaymentModal = ({
                       <div className="saved-card-item__info">
                         <div className="saved-card-item__title-row">
                           <span className="saved-card-item__title">{title}</span>
-                          {isDef && <span className="saved-card-item__badge-default">DEFAULT</span>}
+                          {isDef && <span className="saved-card-item__badge-default">{t('defaultBadge')}</span>}
                         </div>
                         <div className="saved-card-item__sub-row">
                           <span className="saved-card-item__number">•••• {last4}</span>
@@ -404,7 +417,7 @@ const StripePaymentModal = ({
                   onClick={onClose}
                   disabled={isProcessing}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -414,10 +427,10 @@ const StripePaymentModal = ({
                   {isProcessing ? (
                     <span className="stripe-btn-loading">
                       <img src={loaderIconRed} alt="Loading" className="stripe-spinner" />
-                      Processing...
+                      {t('processing')}
                     </span>
                   ) : (
-                    `Pay ${finalAmount} ₼`
+                    t('payAmount', { amount: finalAmount })
                   )}
                 </button>
               </div>
@@ -435,12 +448,12 @@ const StripePaymentModal = ({
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
-                  <span>Choose from saved cards</span>
+                  <span>{t('chooseFromSaved')}</span>
                 </button>
               )}
 
               <div className="form-group">
-                <label htmlFor="checkout-card-number">Card Number</label>
+                <label htmlFor="checkout-card-number">{t('cardNumberLabel')}</label>
                 <div className="input-with-brand">
                   <input
                     id="checkout-card-number"
@@ -466,7 +479,7 @@ const StripePaymentModal = ({
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="checkout-card-expiry">Expiry Date</label>
+                  <label htmlFor="checkout-card-expiry">{t('expiryDateLabel')}</label>
                   <input
                     id="checkout-card-expiry"
                     type="text"
@@ -485,7 +498,7 @@ const StripePaymentModal = ({
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="checkout-card-cvc">CVC / CVV</label>
+                  <label htmlFor="checkout-card-cvc">{t('cvcLabel')}</label>
                   <input
                     id="checkout-card-cvc"
                     type="password"
@@ -506,11 +519,11 @@ const StripePaymentModal = ({
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="checkout-cardholder-name">Cardholder (Optional)</label>
+                  <label htmlFor="checkout-cardholder-name">{t('cardholderLabel')}</label>
                   <input
                     id="checkout-cardholder-name"
                     type="text"
-                    placeholder="e.g. ELCHIN"
+                    placeholder={t('cardholderPlaceholder')}
                     value={cardholderName}
                     onChange={handleCardholderChange}
                     onBlur={() => handleBlur('cardholderName')}
@@ -521,11 +534,11 @@ const StripePaymentModal = ({
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="checkout-card-label">Card Label (Optional)</label>
+                  <label htmlFor="checkout-card-label">{t('cardLabelLabel')}</label>
                   <input
                     id="checkout-card-label"
                     type="text"
-                    placeholder="e.g. Salary Card"
+                    placeholder={t('cardLabelPlaceholder')}
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
                     className="form-input"
@@ -543,7 +556,7 @@ const StripePaymentModal = ({
                     disabled={isProcessing}
                   />
                   <span className="checkbox-box" />
-                  <span className="checkbox-text">Save card for future payments</span>
+                  <span className="checkbox-text">{t('saveCardCheckbox')}</span>
                 </label>
 
                 <label className="custom-checkbox-label terms-label">
@@ -560,9 +573,9 @@ const StripePaymentModal = ({
                   />
                   <span className="checkbox-box" />
                   <span className="checkbox-text">
-                    Agree to{' '}
+                    {t('agreeToRules')}{' '}
                     <Link to="/rules" target="_blank" rel="noopener noreferrer" className="terms-link">
-                      Payment Rules
+                      {t('paymentRulesLink')}
                     </Link>
                   </span>
                 </label>
@@ -578,7 +591,7 @@ const StripePaymentModal = ({
                   onClick={onClose}
                   disabled={isProcessing}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -588,10 +601,10 @@ const StripePaymentModal = ({
                   {isProcessing ? (
                     <span className="stripe-btn-loading">
                       <img src={loaderIconRed} alt="Loading" className="stripe-spinner" />
-                      Processing...
+                      {t('processing')}
                     </span>
                   ) : (
-                    `Pay ${finalAmount} ₼`
+                    t('payAmount', { amount: finalAmount })
                   )}
                 </button>
               </div>
@@ -604,7 +617,7 @@ const StripePaymentModal = ({
         isOpen={isErrorModalOpen}
         onClose={() => setIsErrorModalOpen(false)}
         message={errorMessage}
-        title="Payment Error"
+        title={t('paymentErrorTitle')}
       />
     </>
   );

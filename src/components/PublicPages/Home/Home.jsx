@@ -6,21 +6,38 @@ import premiumRoastIcon from '../../../assets/icons/premium_roast.svg';
 import cozyAtmosphereIcon from '../../../assets/icons/cozy_atmosphere.svg';
 import ecoFriendlyIcon from '../../../assets/icons/eco_friendly.svg';
 import homeCardLoader from '../../../assets/icons/home-product-card-loader.svg';
-import bgVideo from '../../../assets/video/media_1.mp4';
+import bgVideoUrl from '../../../assets/video/media_1.mp4';
 import aboutImage from '../../../assets/images/about_image.png';
 import SubscribeModal from './SubscribeModal';
 import SubscribeErrorModal from './SubscribeErrorModal';
 import SubscribeSuccessModal from './SubscribeSuccessModal';
-const STORAGE_BASE_URL = 'https://tlcehlxztgewbidcvwye.supabase.co/storage/v1/object/public/admin-files/database';
-const cappuccinoImg = `${STORAGE_BASE_URL}/cappuccino_8765432354.webp`;
-const redLatteImg = `${STORAGE_BASE_URL}/red_latte_9876543221.webp`;
-const nestCappuccinoImg = `${STORAGE_BASE_URL}/nest_cappuccino_9876543290.webp`;
-const hotChocolateImg = `${STORAGE_BASE_URL}/hot_chocolate_7690568000.webp`;
 import Footer from '../../Footer/Footer';
 import Navbar from '../../Elements/Navbar';
 import { useLang } from '../../../utils/useLang';
 import { getHomeTranslation } from './Lang';
 import './Home.scss';
+
+
+let cachedBlobUrl = null;
+let blobFetchPromise = null;
+
+function getVideoBlobUrl() {
+  if (cachedBlobUrl) return Promise.resolve(cachedBlobUrl);
+  if (blobFetchPromise) return blobFetchPromise;
+
+  blobFetchPromise = fetch(bgVideoUrl)
+    .then(res => res.blob())
+    .then(blob => {
+      cachedBlobUrl = URL.createObjectURL(blob);
+      return cachedBlobUrl;
+    })
+    .catch(() => {
+      blobFetchPromise = null;
+      return bgVideoUrl;
+    });
+
+  return blobFetchPromise;
+}
 
 const Home = () => {
   const navigate = useNavigate();
@@ -28,6 +45,123 @@ const Home = () => {
   const t = (dataId) => getHomeTranslation(lang, dataId);
 
   const videoRef = useRef(null);
+  const [videoBlobSrc, setVideoBlobSrc] = useState(cachedBlobUrl || '');
+  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+  const featuresGridRef = useRef(null);
+
+  const features = useMemo(() => [
+    {
+      id: 'feature_1',
+      icon: premiumRoastIcon,
+      alt: 'Premium Roast',
+      titleKey: 'home_feature_1_title',
+      descKey: 'home_feature_1_desc',
+    },
+    {
+      id: 'feature_2',
+      icon: cozyAtmosphereIcon,
+      alt: 'Cozy Atmosphere',
+      titleKey: 'home_feature_2_title',
+      descKey: 'home_feature_2_desc',
+    },
+    {
+      id: 'feature_3',
+      icon: ecoFriendlyIcon,
+      alt: 'Eco-Friendly',
+      titleKey: 'home_feature_3_title',
+      descKey: 'home_feature_3_desc',
+    },
+  ], []);
+
+  const handleFeaturesScroll = () => {
+    if (!featuresGridRef.current) return;
+    const container = featuresGridRef.current;
+    const cards = container.querySelectorAll('.feature-card');
+    if (!cards || cards.length === 0) return;
+
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    cards.forEach((card, index) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(containerCenter - cardCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    setActiveFeatureIndex(closestIndex);
+  };
+
+  const scrollFeatureToIndex = (idx) => {
+    if (!featuresGridRef.current) return;
+    const container = featuresGridRef.current;
+    const cards = container.querySelectorAll('.feature-card');
+    if (!cards[idx]) return;
+
+    const card = cards[idx];
+    const targetScroll = card.offsetLeft - (container.offsetWidth - card.offsetWidth) / 2;
+    container.scrollTo({
+      left: Math.max(0, targetScroll),
+      behavior: 'smooth'
+    });
+    setActiveFeatureIndex(idx);
+  };
+
+  useEffect(() => {
+    const el = featuresGridRef.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let hasMoved = false;
+
+    const onMouseDown = (e) => {
+      if (e.button !== 0) return;
+      isDown = true;
+      hasMoved = false;
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+      el.style.scrollSnapType = 'none';
+      el.style.scrollBehavior = 'auto';
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDown) return;
+      const x = e.pageX - el.offsetLeft;
+      const walk = x - startX;
+      if (Math.abs(walk) > 4) {
+        hasMoved = true;
+        el.style.cursor = 'grabbing';
+      }
+      el.scrollLeft = scrollLeft - walk;
+    };
+
+    const onMouseUp = () => {
+      if (!isDown) return;
+      isDown = false;
+      el.style.cursor = '';
+      el.style.scrollSnapType = 'x mandatory';
+      el.style.scrollBehavior = 'smooth';
+      if (hasMoved) {
+        handleFeaturesScroll();
+      }
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
+
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
@@ -65,6 +199,12 @@ const Home = () => {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!videoBlobSrc) {
+      getVideoBlobUrl().then(url => setVideoBlobSrc(url));
+    }
   }, []);
 
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -168,9 +308,9 @@ const Home = () => {
       <Navbar />
 
       <section className="hero-section">
-        <video ref={videoRef} autoPlay loop muted playsInline className="hero-video-bg">
-          <source src={bgVideo} type="video/mp4" />
-        </video>
+        {videoBlobSrc && (
+          <video ref={videoRef} autoPlay loop muted playsInline preload="auto" className="hero-video-bg" src={videoBlobSrc} />
+        )}
         <div className="hero-overlay"></div>
 
         <div className="hero-content">
@@ -196,29 +336,35 @@ const Home = () => {
         viewport={{ once: true, amount: 0.2 }} 
         transition={{ duration: 0.6 }}
       >
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">
-              <img src={premiumRoastIcon} alt="Premium Roast" className="feature-svg" />
+        <div 
+          className="features-grid"
+          ref={featuresGridRef}
+          onScroll={handleFeaturesScroll}
+        >
+          {features.map((feature) => (
+            <div key={feature.id} className="feature-card">
+              <div className="feature-icon">
+                <img src={feature.icon} alt={feature.alt} className="feature-svg" />
+              </div>
+              <h3 data-id={feature.titleKey}>{t(feature.titleKey)}</h3>
+              <p data-id={feature.descKey}>{t(feature.descKey)}</p>
             </div>
-            <h3 data-id="home_feature_1_title">{t('home_feature_1_title')}</h3>
-            <p data-id="home_feature_1_desc">{t('home_feature_1_desc')}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <img src={cozyAtmosphereIcon} alt="Cozy Atmosphere" className="feature-svg" />
-            </div>
-            <h3 data-id="home_feature_2_title">{t('home_feature_2_title')}</h3>
-            <p data-id="home_feature_2_desc">{t('home_feature_2_desc')}</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <img src={ecoFriendlyIcon} alt="Eco-Friendly" className="feature-svg" />
-            </div>
-            <h3 data-id="home_feature_3_title">{t('home_feature_3_title')}</h3>
-            <p data-id="home_feature_3_desc">{t('home_feature_3_desc')}</p>
-          </div>
+          ))}
         </div>
+
+        {features.length > 1 && (
+          <div className="features-carousel-dots">
+            {features.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                className={`dot ${i === activeFeatureIndex ? 'active' : ''}`}
+                onClick={() => scrollFeatureToIndex(i)}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </motion.section>
 
       <motion.section 

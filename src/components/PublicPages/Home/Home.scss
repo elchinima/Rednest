@@ -100,8 +100,10 @@
 
   .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: $spacing-xl;
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
   .feature-card {
@@ -138,6 +140,10 @@
       color: rgba(255, 255, 255, 0.7);
       line-height: 1.6;
     }
+  }
+
+  .features-carousel-dots {
+    display: none;
   }
 }
 
@@ -491,6 +497,75 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .features-section {
+    padding: $spacing-xxl 0 $spacing-lg;
+
+    .features-grid {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scroll-behavior: smooth;
+      gap: $spacing-lg;
+      padding: 0 $spacing-xl $spacing-md;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      cursor: grab;
+
+      &:active {
+        cursor: grabbing;
+      }
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      &::after {
+        content: '';
+        flex: 0 0 1px;
+      }
+    }
+
+    .feature-card {
+      flex: 0 0 clamp(280px, 46vw, 360px);
+      max-width: 380px;
+      scroll-snap-align: center;
+      user-select: none;
+    }
+
+    .features-carousel-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: $spacing-lg;
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &.active {
+          width: 24px;
+          border-radius: 12px;
+          background: $color-primary;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      }
+    }
+  }
+}
+
 @media (max-width: 768px) {
 
   .hero-section {
@@ -552,32 +627,17 @@
   }
 
   .features-section {
-    padding: $spacing-xxxl 0;
+    padding: $spacing-xl 0 $spacing-md;
 
     .features-grid {
-      display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      overscroll-behavior-x: contain;
       gap: $spacing-md;
-      padding: 0 $spacing-md $spacing-lg $spacing-md;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-
-      &::after {
-        content: '';
-        flex: 0 0 1px;
-      }
+      padding: 0 $spacing-md $spacing-sm $spacing-md;
     }
 
     .feature-card {
       flex: 0 0 85%;
-      max-width: 300px;
+      max-width: 320px;
+      padding: $spacing-lg $spacing-md;
       scroll-snap-align: center;
 
       h3 {
@@ -588,6 +648,10 @@
         font-size: 0.85rem;
         line-height: 1.5;
       }
+    }
+
+    .features-carousel-dots {
+      margin-top: $spacing-md;
     }
   }
 
