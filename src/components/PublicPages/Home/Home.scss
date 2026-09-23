@@ -607,6 +607,7 @@
     .menu-grid {
       display: flex;
       flex-wrap: nowrap;
+      align-items: stretch;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
       overscroll-behavior-x: contain;
@@ -625,13 +626,25 @@
       }
     }
 
+    .home-skeleton-card {
+      flex: 0 0 85%;
+      max-width: 300px;
+      height: 410px;
+      scroll-snap-align: center;
+    }
+
     .menu-item-card {
       flex: 0 0 85%;
       max-width: 300px;
+      height: auto;
+      align-self: stretch;
       scroll-snap-align: center;
 
       .menu-info {
         padding: 14px $spacing-md 16px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
 
         h4 {
           font-size: 0.96rem;
@@ -640,7 +653,12 @@
         p {
           font-size: 0.74rem;
           line-height: 1.4;
-          -webkit-line-clamp: 4;
+          -webkit-line-clamp: 3;
+          margin-bottom: $spacing-sm;
+        }
+
+        .home-price-container {
+          margin-top: auto;
         }
       }
     }
