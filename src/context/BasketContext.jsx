@@ -51,7 +51,6 @@ export const BasketProvider = ({ children }) => {
   const hasSynced = useRef(false);
   const apiUrl = API_URL;
 
-  // Synchronize across browser tabs instantly without websockets
   useEffect(() => {
     if (!basketChannel) return;
 
@@ -113,17 +112,15 @@ export const BasketProvider = ({ children }) => {
     } catch {}
   };
 
-  // Shared helper: applies a state transform, broadcasts, and persists to localStorage or API
   const applyUpdate = useCallback((transform, apiCall) => {
     let nextItems = null;
     setItems(prev => {
       const result = transform(prev);
-      if (result === prev) return prev; // no change
+      if (result === prev) return prev;
       nextItems = result;
       return result;
     });
 
-    // Persist happens after setItems
     if (nextItems) {
       broadcastSync(nextItems);
       if (isAuthenticated && user) {

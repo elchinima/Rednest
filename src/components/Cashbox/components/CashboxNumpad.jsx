@@ -14,34 +14,28 @@ const CashboxNumpad = ({
 }) => {
   return (
     <div className="cashbox-numpad">
-      {/* Keypad & Banknotes Matrix */}
       <div className="cashbox-numpad__grid">
-        {/* Row 1 */}
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('7')}>7</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('8')}>8</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('9')}>9</button>
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--note" onClick={() => onBanknoteClick(5)}>5₼</button>
 
-        {/* Row 2 */}
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('4')}>4</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('5')}>5</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('6')}>6</button>
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--note" onClick={() => onBanknoteClick(20)}>20₼</button>
 
-        {/* Row 3 */}
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('1')}>1</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('2')}>2</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('3')}>3</button>
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--note" onClick={() => onBanknoteClick(50)}>50₼</button>
 
-        {/* Row 4 */}
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--fn" onClick={() => onNumpadPress('.')}>.</button>
         <button type="button" className="cashbox-numpad__key" onClick={() => onNumpadPress('0')}>0</button>
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--fn" onClick={() => onNumpadPress('⌫')} title="Backspace">⌫</button>
         <button type="button" className="cashbox-numpad__key cashbox-numpad__key--note" onClick={() => onBanknoteClick(100)}>100₼</button>
       </div>
 
-      {/* Tender / Change Calculation Box */}
       <div className="cashbox-numpad__tender">
         <div className="cashbox-numpad__tender-row">
           <span className="cashbox-numpad__tender-label">Received:</span>
@@ -54,7 +48,6 @@ const CashboxNumpad = ({
         </div>
       </div>
 
-      {/* Payment Action CTA Buttons */}
       <div className="cashbox-numpad__actions">
         <motion.button
           type="button"

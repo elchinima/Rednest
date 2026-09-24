@@ -30,14 +30,12 @@ export const translations = {
     saved: 'Qənaət',
     artisanCoffee: 'Xüsusi Qəhvə',
     coffeeItem: 'Qəhvə Məhsulu',
-    // Statuses
     statusPaidOnline: 'Onlayn ödənilib',
     statusPending: 'Ödəniş gözlənilir',
     statusPreparing: 'Hazırlanır',
     statusReady: 'Götürülməyə hazırdır',
     statusCancelled: 'Ləğv edilib',
     statusCompleted: 'Tamamlanıb',
-    // Payment methods
     payCashDesk: 'Kassa (Nağd)',
     payCardRegister: 'Kassada kartla',
     payWalletBalance: 'Balans hesabı',
@@ -45,7 +43,6 @@ export const translations = {
     payStripe: 'Stripe',
     payGooglePay: 'Google Pay',
     payCashier: 'Kassada ödəniş',
-    // Receipt modal
     receiptTitle: 'REDNEST COFFEE',
     receiptSub: 'Xüsusi Qəhvə & Sənətkar Qovurma',
     receiptNumber: 'Qəbz nömrəsi:',
@@ -91,14 +88,12 @@ export const translations = {
     saved: 'Экономия',
     artisanCoffee: 'Авторский кофе',
     coffeeItem: 'Позиция кофе',
-    // Statuses
     statusPaidOnline: 'Оплачено онлайн',
     statusPending: 'Ожидает оплаты',
     statusPreparing: 'Готовится',
     statusReady: 'Готов к выдаче',
     statusCancelled: 'Отменен',
     statusCompleted: 'Завершен',
-    // Payment methods
     payCashDesk: 'Касса (Наличные)',
     payCardRegister: 'Картой на кассе',
     payWalletBalance: 'Баланс кошелька',
@@ -106,7 +101,6 @@ export const translations = {
     payStripe: 'Stripe',
     payGooglePay: 'Google Pay',
     payCashier: 'Оплата на кассе',
-    // Receipt modal
     receiptTitle: 'REDNEST COFFEE',
     receiptSub: 'Спешелти кофе & Авторская обжарка',
     receiptNumber: 'Номер чека:',
@@ -152,14 +146,12 @@ export const translations = {
     saved: 'Saved',
     artisanCoffee: 'Artisan Coffee',
     coffeeItem: 'Coffee Item',
-    // Statuses
     statusPaidOnline: 'Paid Online',
     statusPending: 'Pending Payment',
     statusPreparing: 'Preparing',
     statusReady: 'Ready for Pickup',
     statusCancelled: 'Cancelled',
     statusCompleted: 'Completed',
-    // Payment methods
     payCashDesk: 'Cash Desk',
     payCardRegister: 'Card at Register',
     payWalletBalance: 'Wallet Balance',
@@ -167,7 +159,6 @@ export const translations = {
     payStripe: 'Stripe',
     payGooglePay: 'Google Pay',
     payCashier: 'Pay at Cashier',
-    // Receipt modal
     receiptTitle: 'REDNEST COFFEE',
     receiptSub: 'Specialty Coffee & Artisan Roasts',
     receiptNumber: 'Receipt Number:',

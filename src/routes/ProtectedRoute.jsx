@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const AUTH_CHECK_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const AUTH_CHECK_TTL_MS = 5 * 60 * 1000;
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, authLoading, checkAuthStatus } = useAuth();

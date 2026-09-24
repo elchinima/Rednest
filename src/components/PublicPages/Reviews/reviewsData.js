@@ -115,29 +115,24 @@ export const detectCommentLanguage = (comment) => {
   const text = comment.trim();
   if (!text) return '';
 
-  // Cyrillic script -> Russian
   if (/[а-яёА-ЯЁ]/.test(text)) {
     return 'ru';
   }
 
-  // Azerbaijani specific letters (ə, ı, ö, ş, ğ, ç, ü)
   if (/[əıöşğçüƏIÖŞĞÇÜ]/i.test(text)) {
     return 'az';
   }
 
-  // Azerbaijani Latin transliterated keywords
   const azKeywords = /\b(cox|çox|ela|əla|dadli|dadlı|dadlidir|dadlıdır|qeseng|qəşəng|yaxsi|yaxşı|pis|sagol|sağol|sag|sağ|olun|tesekkur|təşəkkür|minnetdaram|minnətdaram|sifaris|sifariş|catdirilma|çatdırılma|baku|baki|bakı|men|mən|sen|sən|biz|siz|ve|və|amma|ancaq|ucun|üçün|hec|heç|her|hər|bir|kimi)\b/i;
   if (azKeywords.test(text)) {
     return 'az';
   }
 
-  // English common words
   const enKeywords = /\b(the|and|is|it|you|that|was|for|are|with|have|this|from|great|good|coffee|service|delivery|taste|delicious|fast|nice|friendly|best|place|food|drink|order)\b/i;
   if (enKeywords.test(text)) {
     return 'en';
   }
 
-  // Fallback: standard Latin text default to English
   if (/^[a-zA-Z0-9\s.,!?'"()#@%&*+/:;-]+$/.test(text)) {
     return 'en';
   }

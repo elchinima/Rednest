@@ -41,7 +41,6 @@ const CashboxProductGrid = ({
     );
   }
 
-  // Extract image or icon from any backend format (images.icon, images.image, etc.)
   const getProductImage = (item) => {
     if (!item) return null;
     if (item.images && typeof item.images === 'object') {
@@ -77,7 +76,6 @@ const CashboxProductGrid = ({
             whileTap={{ scale: 0.98 }}
             onClick={() => onAddToCart(item)}
           >
-            {/* Product Image */}
             <div className="cashbox-card__img-wrap">
               {img ? (
                 <img
@@ -100,7 +98,6 @@ const CashboxProductGrid = ({
               </div>
             </div>
 
-            {/* Product Info */}
             <div className="cashbox-card__info">
               <span className="cashbox-card__title" title={name}>
                 {name}

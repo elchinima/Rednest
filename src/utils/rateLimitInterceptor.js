@@ -42,8 +42,4 @@ export async function handleBackendErrorResponse(response) {
 }
 
 export function initGlobalRateLimitInterceptor() {
-  // Intentionally a no-op.
-  // Error handling for 429 / 5xx is handled inside fetchWithRefresh.
-  // Previously this monkey-patched window.fetch which broke
-  // third-party SDKs (Stripe, Google OAuth) and caused double-handling.
 }

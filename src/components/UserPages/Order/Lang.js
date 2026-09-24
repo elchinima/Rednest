@@ -1,12 +1,10 @@
 export const translations = {
   az: {
-    // Checkout hero
     stepBadge: 'Sifariş & Ödəniş',
     heroTitle: 'Ödəniş üsulunu seçin',
     heroDesc: 'Sifarişiniz üçün necə ödəmək istədiyinizi seçin.',
     emptyBasket: 'Səbətiniz boşdur. Sifariş vermək üçün menyudan məhsullar əlavə edin.',
     browseMenu: 'Menyuya bax',
-    // Cashier card
     inStoreBadge: 'Məkanda təhvil',
     payAtCashier: 'Kassada ödəniş',
     payAtCashierCounter: 'Kassa piştaxtasında ödəniş',
@@ -16,7 +14,6 @@ export const translations = {
     usePromoCodes: 'Promokodlardan istifadə',
     selectedBadge: '✓ Seçildi',
     chooseCashier: 'Kassanı seçin',
-    // Online card
     instantBadge: 'Sürətli və Təmassız',
     payOnline: 'Onlayn ödəniş',
     payOnlineInstantly: 'Dərhal onlayn ödəyin',
@@ -27,7 +24,6 @@ export const translations = {
     googlePay: 'Google Pay',
     earnCashback: 'Keşbek qazanın',
     chooseOnline: 'Onlaynı seçin',
-    // Step box
     selectedPayment: 'Seçilmiş ödəniş:',
     cashierStepDesc: 'Sifarişiniz baristalara göndəriləcək və təhvil alarkən məkanda ödənilmək üçün qeyd ediləcək.',
     onlineStepDesc: 'Sifarişin dərhal təsdiqlənməsi üçün təhlükəsiz onlayn ödənişə keçilir.',
@@ -45,7 +41,6 @@ export const translations = {
     backToBasket: 'Səbətə qayıt',
     orderFailed: 'Sifarişi rəsmiləşdirmək mümkün olmadı. Zəhmət olmasa yenidən cəhd edin.',
     orderNetworkError: 'Sifariş zamanı xəta baş verdi. Zəhmət olmasa internet bağlantınızı yoxlayın.',
-    // Online payment modal
     onlineModalTitle: 'Onlayn Ödəniş Xidməti',
     onlineModalDesc: 'Ödəniş üsulunu seçin',
     cancel: 'Ləğv et',
@@ -64,7 +59,6 @@ export const translations = {
     serviceCardsDesc: 'Debet və ya kredit kartı ilə ödəniş',
     serviceGPayTitle: 'Google Pay',
     serviceGPayDesc: 'Google Pay ilə bir toxunuşla ödəniş',
-    // Order Success Modal
     orderSuccessTitle: 'Sifariş Uğurla Rəsmiləşdirildi!',
     orderSuccessDesc: 'Sifariş baristaya göndərildi. Piştaxtada sifariş nömrənizi təqdim edin.',
     orderNumberLabel: 'Sifariş Nömrəsi',
@@ -76,14 +70,12 @@ export const translations = {
     viewOrders: 'Sifarişlərə bax',
     statusPaidOnline: 'Onlayn ödənilib',
     statusPendingPayment: 'Ödəniş gözlənilir',
-    // Formatted payment methods
     methodStripe: 'Stripe',
     methodBalance: 'Rednest Hesab Balansı',
     methodCards: 'Visa / Mastercard',
     methodGPay: 'Google Pay',
     methodCashierCard: 'Kassada ödəniş (Kart / NFC)',
     methodCashierCash: 'Kassada ödəniş',
-    // Stripe Modal
     stripeModalTitle: 'Kart və Onlayn Ödəniş',
     stripeAmountToPay: 'Ödəniləcək məbləğ:',
     loadingOptions: 'Ödəniş seçimləri yüklənir...',
@@ -104,7 +96,6 @@ export const translations = {
     agreeToRules: 'Razıyam: ',
     paymentRulesLink: 'Ödəniş Qaydaları',
     paymentErrorTitle: 'Ödəniş Xətası',
-    // Validation errors
     errCardNumberRequired: 'Kart nömrəsi tələb olunur.',
     errCardNumberDigits: 'Kart nömrəsi 16 rəqəmdən ibarət olmalıdır.',
     errCardNumberInvalid: 'Yanlış kart nömrəsi.',
@@ -123,13 +114,11 @@ export const translations = {
     errProcessingGeneral: 'Ödəniş icrası zamanı xəta baş verdi.',
   },
   ru: {
-    // Checkout hero
     stepBadge: 'Оформление & Оплата',
     heroTitle: 'Выберите способ оплаты',
     heroDesc: 'Выберите наиболее удобный способ оплаты вашего заказа.',
     emptyBasket: 'Ваша корзина пуста. Добавьте товары из меню, чтобы оформить заказ.',
     browseMenu: 'В меню',
-    // Cashier card
     inStoreBadge: 'Самовывоз',
     payAtCashier: 'Оплата на кассе',
     payAtCashierCounter: 'Оплата у стойки кассы',
@@ -139,7 +128,6 @@ export const translations = {
     usePromoCodes: 'Использование промокодов',
     selectedBadge: '✓ Выбрано',
     chooseCashier: 'Выбрать кассу',
-    // Online card
     instantBadge: 'Быстро и бесконтактно',
     payOnline: 'Оплатить онлайн',
     payOnlineInstantly: 'Мгновенная онлайн-оплата',
@@ -150,7 +138,6 @@ export const translations = {
     googlePay: 'Google Pay',
     earnCashback: 'Получайте кешбэк',
     chooseOnline: 'Выбрать онлайн',
-    // Step box
     selectedPayment: 'Выбранный способ:',
     cashierStepDesc: 'Ваш заказ будет отправлен бариста и отмечен для оплаты при получении в кофейне.',
     onlineStepDesc: 'Переход к безопасной онлайн-оплате для моментального подтверждения заказа.',
@@ -168,7 +155,6 @@ export const translations = {
     backToBasket: 'Назад в корзину',
     orderFailed: 'Не удалось оформить заказ. Пожалуйста, попробуйте снова.',
     orderNetworkError: 'Произошла ошибка при оформлении заказа. Проверьте интернет-соединение.',
-    // Online payment modal
     onlineModalTitle: 'Онлайн-сервис оплаты',
     onlineModalDesc: 'Выберите способ оплаты',
     cancel: 'Отмена',
@@ -187,7 +173,6 @@ export const translations = {
     serviceCardsDesc: 'Оплата дебетовой или кредитной картой',
     serviceGPayTitle: 'Google Pay',
     serviceGPayDesc: 'Оплата в одно касание через Google Pay',
-    // Order Success Modal
     orderSuccessTitle: 'Заказ успешно оформлен!',
     orderSuccessDesc: 'Заказ отправлен бариста. Назовите номер заказа у стойки выдачи.',
     orderNumberLabel: 'Номер заказа',
@@ -199,14 +184,12 @@ export const translations = {
     viewOrders: 'Мои заказы',
     statusPaidOnline: 'Оплачено онлайн',
     statusPendingPayment: 'Ожидает оплаты',
-    // Formatted payment methods
     methodStripe: 'Stripe',
     methodBalance: 'Баланс аккаунта Rednest',
     methodCards: 'Visa / Mastercard',
     methodGPay: 'Google Pay',
     methodCashierCard: 'Оплата на кассе (Карта / NFC)',
     methodCashierCash: 'Оплата на кассе',
-    // Stripe Modal
     stripeModalTitle: 'Оплата картой онлайн',
     stripeAmountToPay: 'Сумма к оплате:',
     loadingOptions: 'Загрузка вариантов оплаты...',
@@ -227,7 +210,6 @@ export const translations = {
     agreeToRules: 'Согласен с ',
     paymentRulesLink: 'Правилами оплаты',
     paymentErrorTitle: 'Ошибка оплаты',
-    // Validation errors
     errCardNumberRequired: 'Введите номер карты.',
     errCardNumberDigits: 'Номер карты должен состоять из 16 цифр.',
     errCardNumberInvalid: 'Неверный номер карты.',
@@ -246,13 +228,11 @@ export const translations = {
     errProcessingGeneral: 'Произошла ошибка при обработке платежа.',
   },
   en: {
-    // Checkout hero
     stepBadge: 'Checkout & Payment',
     heroTitle: 'Choose Payment Method',
     heroDesc: 'Select how you would like to pay for your order.',
     emptyBasket: 'Your basket is empty. Add items from the menu to place an order.',
     browseMenu: 'Browse Menu',
-    // Cashier card
     inStoreBadge: 'In-Store Pickup',
     payAtCashier: 'Pay at Cashier',
     payAtCashierCounter: 'Pay at Cashier Counter',
@@ -262,7 +242,6 @@ export const translations = {
     usePromoCodes: 'Use Promo Codes',
     selectedBadge: '✓ Selected',
     chooseCashier: 'Choose Cashier',
-    // Online card
     instantBadge: 'Instant & Contactless',
     payOnline: 'Pay Online',
     payOnlineInstantly: 'Pay Online Instantly',
@@ -273,7 +252,6 @@ export const translations = {
     googlePay: 'Google Pay',
     earnCashback: 'Earn Cashback',
     chooseOnline: 'Choose Online',
-    // Step box
     selectedPayment: 'Selected Payment:',
     cashierStepDesc: 'Your order will be sent to the baristas and marked for in-store payment upon pickup.',
     onlineStepDesc: 'Proceeding with secure online payment for immediate order confirmation.',
@@ -291,7 +269,6 @@ export const translations = {
     backToBasket: 'Back to Basket',
     orderFailed: 'Failed to place order. Please try again.',
     orderNetworkError: 'An error occurred while placing your order. Please check your connection.',
-    // Online payment modal
     onlineModalTitle: 'Online Payment Service',
     onlineModalDesc: 'Select a payment method',
     cancel: 'Cancel',
@@ -310,7 +287,6 @@ export const translations = {
     serviceCardsDesc: 'Debit or credit card payment',
     serviceGPayTitle: 'Google Pay',
     serviceGPayDesc: 'One-tap checkout with Google Pay',
-    // Order Success Modal
     orderSuccessTitle: 'Order Placed Successfully!',
     orderSuccessDesc: 'Order sent to barista. Show your order number at the counter.',
     orderNumberLabel: 'Order Number',
@@ -322,14 +298,12 @@ export const translations = {
     viewOrders: 'View Orders',
     statusPaidOnline: 'Paid Online',
     statusPendingPayment: 'Pending Payment',
-    // Formatted payment methods
     methodStripe: 'Stripe',
     methodBalance: 'Rednest Account Balance',
     methodCards: 'Visa / Mastercard',
     methodGPay: 'Google Pay',
     methodCashierCard: 'Pay at Cashier (Card / NFC)',
     methodCashierCash: 'Pay at Cashier',
-    // Stripe Modal
     stripeModalTitle: 'Card & Online Payment',
     stripeAmountToPay: 'Amount to pay:',
     loadingOptions: 'Loading payment options...',
@@ -350,7 +324,6 @@ export const translations = {
     agreeToRules: 'Agree to ',
     paymentRulesLink: 'Payment Rules',
     paymentErrorTitle: 'Payment Error',
-    // Validation errors
     errCardNumberRequired: 'Card number is required.',
     errCardNumberDigits: 'Card number must be 16 digits.',
     errCardNumberInvalid: 'Invalid card number.',

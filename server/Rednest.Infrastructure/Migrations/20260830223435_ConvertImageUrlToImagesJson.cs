@@ -19,7 +19,6 @@ namespace Rednest.Infrastructure.Migrations
                 nullable: false,
                 defaultValue: "{}");
 
-            // Migrate existing ImageUrl data → Images.Image, and set known Icon URLs per product ID
             migrationBuilder.Sql($@"
                 UPDATE ""Products"" SET ""Images"" = jsonb_build_object(
                     'Image', COALESCE(""ImageUrl"", ''),
