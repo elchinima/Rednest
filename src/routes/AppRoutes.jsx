@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
+import loaderIconRed from '../assets/icons/loader-animated-red.svg';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
@@ -79,9 +80,8 @@ const AnimatedRoutes = () => {
 
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,0.15)', borderTopColor: '#ef4444', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top right, rgba(239,68,68,0.15) 0%, transparent 50%), radial-gradient(circle at bottom left, #0a0a0a 0%, #111111 100%)' }}>
+        <img src={loaderIconRed} alt="Loading..." style={{ width: 48, height: 48 }} />
       </div>
     }>
       <AnimatePresence mode="wait">
