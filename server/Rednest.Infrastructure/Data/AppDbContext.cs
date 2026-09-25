@@ -322,6 +322,16 @@ public class AppDbContext : DbContext
                   .HasColumnType("jsonb")
                   .HasDefaultValueSql("'{}'::jsonb");
 
+            entity.Property(e => e.Status)
+                  .HasConversion<string>()
+                  .HasColumnType("text")
+                  .HasDefaultValue(CashboxStatus.Success)
+                  .IsRequired();
+
+            entity.Property(e => e.Description)
+                  .HasColumnType("jsonb")
+                  .HasDefaultValueSql("'{\"Note\": null, \"Edited\": null}'::jsonb");
+
             entity.Property(e => e.CreatedAt)
                   .HasColumnType("timestamp with time zone")
                   .HasDefaultValueSql("NOW()");

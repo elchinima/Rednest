@@ -243,6 +243,12 @@ public class CashboxController : ControllerBase
             _context.UserPromos.Update(promo);
         }
 
+        var status = CashboxStatus.Success;
+        if (!string.IsNullOrWhiteSpace(request.Status) && Enum.TryParse<CashboxStatus>(request.Status.Trim(), true, out var parsedStatus))
+        {
+            status = parsedStatus;
+        }
+
         var cashboxRecord = new Rednest.Core.Entities.Cashbox
         {
             PayMethod = string.Equals(request.PayMethod, "Card", StringComparison.OrdinalIgnoreCase)
@@ -259,6 +265,12 @@ public class CashboxController : ControllerBase
                 PromoCodeId = promo?.Codes.PromoCode ?? request.PromoCodeId,
                 TotalAmount = request.TotalAmount
             },
+            Status = status,
+            Description = new CashboxDescription
+            {
+                Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim(),
+                Edited = null
+            },
             CreatedAt = DateTime.UtcNow
         };
 
@@ -269,6 +281,51 @@ public class CashboxController : ControllerBase
 
         return Ok(new { success = true, orderId = cashboxRecord.Id });
     }
+
+    [HttpPatch("orders/{id:guid}")]
+    public async Task<IActionResult> UpdateCashboxOrder(Guid id, [FromBody] UpdateCashboxOrderRequest request)
+    {
+        var (allowed, cashierUser, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed || cashierUser == null)
+        {
+            return errorResult!;
+        }
+
+        var cashboxRecord = await _context.Cashboxes.FirstOrDefaultAsync(c => c.Id == id);
+        if (cashboxRecord == null)
+        {
+            return NotFound(new { message = "Cashbox order not found." });
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (Enum.TryParse<CashboxStatus>(request.Status.Trim(), true, out var newStatus))
+            {
+                cashboxRecord.Status = newStatus;
+            }
+            else
+            {
+                return BadRequest(new { message = $"Invalid status. Allowed values: {string.Join(", ", Enum.GetNames<CashboxStatus>())}" });
+            }
+        }
+
+        cashboxRecord.Description ??= new CashboxDescription();
+
+        if (request.Note != null)
+        {
+            cashboxRecord.Description.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+        }
+
+        cashboxRecord.Description.Edited = new CashboxEditedInfo
+        {
+            UserId = cashierUser.Id,
+            Date = DateTime.UtcNow
+        };
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { success = true, order = cashboxRecord });
+    }
 }
 
 public class CashboxOrderRequest
@@ -278,6 +335,14 @@ public class CashboxOrderRequest
     public decimal InitialAmount { get; set; }
     public string? PromoCodeId { get; set; }
     public decimal TotalAmount { get; set; }
+    public string? Status { get; set; }
+    public string? Note { get; set; }
+}
+
+public class UpdateCashboxOrderRequest
+{
+    public string? Status { get; set; }
+    public string? Note { get; set; }
 }
 
 public class CashboxProductItemRequest
