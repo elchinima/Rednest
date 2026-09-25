@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '../../utils/config';
 import { fetchWithRefresh } from '../../utils/fetchWithRefresh';
 import { useAuth } from '../../context/AuthContext';
+import { useLang } from '../../utils/useLang';
 import CashboxTopBar from './components/CashboxTopBar';
 import CashboxSidebar from './components/CashboxSidebar';
 import CashboxProductGrid from './components/CashboxProductGrid';
@@ -12,6 +13,7 @@ import './Cashbox.scss';
 
 const Cashbox = () => {
   const { user } = useAuth();
+  const lang = useLang();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All', 'Main Drinks', 'Specialty Drinks', 'Desserts']);
   const [loading, setLoading] = useState(true);
@@ -23,8 +25,10 @@ const Cashbox = () => {
   const [toast, setToast] = useState('');
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+  const [isDesktopSplit, setIsDesktopSplit] = useState(false);
+  const [isMobilePaymentModalOpen, setIsMobilePaymentModalOpen] = useState(false);
 
-  const cashierName = user?.name || user?.username || user?.Name || 'Anna K.';
+  const cashierName = user?.name || user?.username || user?.Name || 'Unknown User';
   const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
 
   const fetchInitData = useCallback(async () => {
@@ -195,7 +199,62 @@ const Cashbox = () => {
     showToast('Promo code removed from receipt.');
   };
 
-  const handleConfirmOrder = async () => {
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      setIsDesktopSplit(false);
+      setIsMobilePaymentModalOpen(false);
+    }
+  }, [cartItems.length]);
+
+  const labels = useMemo(() => {
+    switch (lang) {
+      case 'ru':
+        return {
+          confirm: 'Подтвердить',
+          cash: 'Наличными',
+          card: 'Безналичными',
+          cashDesc: 'Оплата наличными средствами',
+          cardDesc: 'Банковской картой или терминалом',
+          selectPayMethod: 'Способ оплаты',
+          total: 'Сумма к оплате',
+          orderConfirmedCash: (amt, promo) =>
+            promo ? `Заказ оформлен (Наличные): ${amt} ₼ (Промокод ${promo})` : `Заказ оформлен (Наличные): ${amt} ₼`,
+          orderConfirmedCard: (amt, promo) =>
+            promo ? `Заказ оформлен (Безналичные): ${amt} ₼ (Промокод ${promo})` : `Заказ оформлен (Безналичные): ${amt} ₼`,
+        };
+      case 'az':
+        return {
+          confirm: 'Təsdiqlə',
+          cash: 'Nağd',
+          card: 'Qeyri-nağd',
+          cashDesc: 'Nağd pulla ödəniş',
+          cardDesc: 'Bank kartı və ya terminal ilə',
+          selectPayMethod: 'Ödəniş üsulu',
+          total: 'Yekun məbləğ',
+          orderConfirmedCash: (amt, promo) =>
+            promo ? `Sifariş təsdiqləndi (Nağd): ${amt} ₼ (${promo})` : `Sifariş təsdiqləndi (Nağd): ${amt} ₼`,
+          orderConfirmedCard: (amt, promo) =>
+            promo ? `Sifariş təsdiqləndi (Qeyri-nağd): ${amt} ₼ (${promo})` : `Sifariş təsdiqləndi (Qeyri-nağd): ${amt} ₼`,
+        };
+      case 'en':
+      default:
+        return {
+          confirm: 'Confirm',
+          cash: 'Cash',
+          card: 'Card',
+          cashDesc: 'Cash payment with banknotes or coins',
+          cardDesc: 'Debit / Credit card or POS terminal',
+          selectPayMethod: 'Payment Method',
+          total: 'Total amount',
+          orderConfirmedCash: (amt, promo) =>
+            promo ? `Order confirmed (Cash): ${amt} ₼ (Promo ${promo} redeemed)` : `Order confirmed (Cash): ${amt} ₼`,
+          orderConfirmedCard: (amt, promo) =>
+            promo ? `Order confirmed (Card): ${amt} ₼ (Promo ${promo} redeemed)` : `Order confirmed (Card): ${amt} ₼`,
+        };
+    }
+  }, [lang]);
+
+  const handleConfirmOrder = async (payMethod = 'Cash') => {
     if (cartItems.length === 0) {
       showToast('Receipt is empty! Please add products.');
       return;
@@ -205,7 +264,7 @@ const Cashbox = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          payMethod: 'Cash',
+          payMethod: payMethod,
           products: cartItems.map((item) => ({ productId: item.productId, quantity: item.qty })),
           initialAmount: subtotal,
           promoCodeId: appliedPromo ? appliedPromo.promoCode : null,
@@ -220,13 +279,15 @@ const Cashbox = () => {
       }
 
       const usedCode = appliedPromo?.promoCode;
-      showToast(
-        usedCode
-          ? `Order confirmed: ${totalAmount.toFixed(2)} ₼ (Promo ${usedCode} redeemed)`
-          : `Order confirmed: ${totalAmount.toFixed(2)} ₼`
-      );
+      const successMsg = payMethod === 'Card'
+        ? labels.orderConfirmedCard(totalAmount.toFixed(2), usedCode)
+        : labels.orderConfirmedCash(totalAmount.toFixed(2), usedCode);
+
+      showToast(successMsg);
       clearCart();
       setIsReceiptModalOpen(false);
+      setIsMobilePaymentModalOpen(false);
+      setIsDesktopSplit(false);
     } catch (err) {
       console.error('Failed to confirm cashbox order:', err);
       showToast('Network error while processing order.');
@@ -295,18 +356,100 @@ const Cashbox = () => {
             onOpenPromoModal={() => setIsPromoModalOpen(true)}
           />
 
-          <motion.button
-            type="button"
-            className="cashbox-confirm-btn"
-            whileTap={{ scale: 0.98 }}
-            onClick={handleConfirmOrder}
-            disabled={cartItems.length === 0}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            <span>Confirm</span>
-          </motion.button>
+          <div className="cashbox-confirm-container">
+            <AnimatePresence mode="wait">
+              {!isDesktopSplit ? (
+                <motion.button
+                  key="confirm-single"
+                  type="button"
+                  className="cashbox-confirm-btn"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    if (cartItems.length === 0) {
+                      showToast('Receipt is empty! Please add products.');
+                      return;
+                    }
+                    setIsDesktopSplit(true);
+                  }}
+                  disabled={cartItems.length === 0}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>{labels.confirm}</span>
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="confirm-split"
+                  className="cashbox-confirm-split-wrap"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <motion.button
+                    type="button"
+                    className="cashbox-confirm-split-btn cashbox-confirm-split-btn--cash"
+                    initial={{ x: -24, opacity: 0, scale: 0.92 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleConfirmOrder('Cash')}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="6" width="20" height="12" rx="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <path d="M6 12h.01M18 12h.01" />
+                    </svg>
+                    <span>{labels.cash}</span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    className="cashbox-confirm-split-btn cashbox-confirm-split-btn--card"
+                    initial={{ x: 24, opacity: 0, scale: 0.92 }}
+                    animate={{ x: 0, opacity: 1, scale: 1 }}
+                    exit={{ x: 20, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 450, damping: 26 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handleConfirmOrder('Card')}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                    <span>{labels.card}</span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    className="cashbox-confirm-split-cancel"
+                    onClick={() => setIsDesktopSplit(false)}
+                    title="Cancel"
+                    aria-label="Cancel split"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    whileHover={{ scale: 1.08 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </aside>
       </div>
 
@@ -332,16 +475,22 @@ const Cashbox = () => {
         </div>
 
         <div className="cashbox-mobile-trigger__right">
-          <span className="cashbox-mobile-trigger__amount">{totalAmount.toFixed(2)} ₼</span>
-          <svg
-            className="cashbox-mobile-trigger__chevron"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
-            <polyline points="18 15 12 9 6 15" />
-          </svg>
+          <span className="cashbox-mobile-trigger__amount">
+            {totalAmount.toFixed(2)} <span className="currency-symbol">₼</span>
+          </span>
+          <div className="cashbox-mobile-trigger__chevron-wrap">
+            <svg
+              className="cashbox-mobile-trigger__chevron"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="18 15 12 9 6 15" />
+            </svg>
+          </div>
         </div>
       </motion.button>
 
@@ -363,14 +512,25 @@ const Cashbox = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="cashbox-modal__header">
-                <h3>Current Order</h3>
+                <div className="cashbox-modal__title-group">
+                  <h3 className="cashbox-modal__title">Current Order</h3>
+                  {cartItems.length > 0 && (
+                    <span className="cashbox-modal__items-count">
+                      {cartItems.reduce((acc, it) => acc + it.quantity, 0)}
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
-                  className="cashbox-modal__close"
+                  className="cashbox-modal__close-btn"
                   onClick={() => setIsReceiptModalOpen(false)}
                   title="Close receipt"
+                  aria-label="Close receipt"
                 >
-                  ✕
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
 
@@ -392,13 +552,118 @@ const Cashbox = () => {
                   type="button"
                   className="cashbox-confirm-btn"
                   whileTap={{ scale: 0.98 }}
-                  onClick={handleConfirmOrder}
+                  onClick={() => {
+                    if (cartItems.length === 0) {
+                      showToast('Receipt is empty! Please add products.');
+                      return;
+                    }
+                    setIsMobilePaymentModalOpen(true);
+                  }}
                   disabled={cartItems.length === 0}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>Confirm</span>
+                  <span>{labels.confirm}</span>
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isMobilePaymentModalOpen && (
+          <motion.div
+            className="cashbox-modal-backdrop cashbox-paymethod-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobilePaymentModalOpen(false)}
+          >
+            <motion.div
+              className="cashbox-paymethod-modal"
+              initial={{ opacity: 0, y: 50, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.94 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="cashbox-paymethod-modal__header">
+                <div className="cashbox-paymethod-modal__title-group">
+                  <div className="cashbox-paymethod-modal__icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="cashbox-paymethod-modal__title">{labels.selectPayMethod}</h3>
+                    <p className="cashbox-paymethod-modal__total">
+                      {labels.total}: <span>{totalAmount.toFixed(2)} ₼</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="cashbox-modal__close-btn"
+                  onClick={() => setIsMobilePaymentModalOpen(false)}
+                  title="Close"
+                  aria-label="Close"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="cashbox-paymethod-modal__options">
+                <motion.button
+                  type="button"
+                  className="cashbox-paymethod-card cashbox-paymethod-card--cash"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleConfirmOrder('Cash')}
+                >
+                  <div className="cashbox-paymethod-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="6" width="20" height="12" rx="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <path d="M6 12h.01M18 12h.01" />
+                    </svg>
+                  </div>
+                  <div className="cashbox-paymethod-card__info">
+                    <span className="cashbox-paymethod-card__title">{labels.cash}</span>
+                    <span className="cashbox-paymethod-card__desc">{labels.cashDesc}</span>
+                  </div>
+                  <div className="cashbox-paymethod-card__arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
+                </motion.button>
+
+                <motion.button
+                  type="button"
+                  className="cashbox-paymethod-card cashbox-paymethod-card--card"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleConfirmOrder('Card')}
+                >
+                  <div className="cashbox-paymethod-card__icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                  </div>
+                  <div className="cashbox-paymethod-card__info">
+                    <span className="cashbox-paymethod-card__title">{labels.card}</span>
+                    <span className="cashbox-paymethod-card__desc">{labels.cardDesc}</span>
+                  </div>
+                  <div className="cashbox-paymethod-card__arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </div>
                 </motion.button>
               </div>
             </motion.div>

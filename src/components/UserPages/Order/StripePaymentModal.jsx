@@ -93,15 +93,18 @@ const StripePaymentModal = ({
         setSavedCards(list);
         if (list.length > 0) {
           const def = list.find((c) => c.isDefault || c.IsDefault) || list[0];
-          setSelectedCardId(def.id || def.Id);
+          const defId = def.id !== undefined && def.id !== null ? def.id : def.Id;
+          setSelectedCardId(defId);
           setViewMode('select');
         } else {
           setViewMode('new');
         }
       } else {
+        console.warn('Failed to fetch payment methods in modal:', res.status);
         setViewMode('new');
       }
-    } catch {
+    } catch (err) {
+      console.error('Error fetching payment methods in modal:', err);
       setViewMode('new');
     } finally {
       setLoadingCards(false);
@@ -207,7 +210,7 @@ const StripePaymentModal = ({
 
   const handlePayWithSavedCard = async (e) => {
     e.preventDefault();
-    if (!selectedCardId || isProcessing) return;
+    if (selectedCardId === null || selectedCardId === undefined || isProcessing) return;
 
     setIsProcessing(true);
     setErrorMessage('');
@@ -371,11 +374,11 @@ const StripePaymentModal = ({
 
               <div className="saved-cards-list">
                 {savedCards.map((card) => {
-                  const id = card.id || card.Id;
-                  const isSelected = selectedCardId === id;
+                  const id = card.id !== undefined && card.id !== null ? card.id : card.Id;
+                  const isSelected = String(selectedCardId) === String(id);
                   const isDef = card.isDefault || card.IsDefault;
                   const cardBrand = (card.cardBrand || card.CardBrand || 'Card').toLowerCase();
-                  const last4 = id ? String(id).padStart(4, '0') : '••••';
+                  const last4 = id !== undefined && id !== null ? String(id).padStart(4, '0') : '••••';
                   const title = card.cardName || card.CardName || (cardBrand === 'visa' ? 'Visa Card' : cardBrand === 'mastercard' ? 'Mastercard' : 'Bank Card');
                   const expiry = card.expiryDate || card.ExpiryDate || 'MM/YY';
 
@@ -422,7 +425,7 @@ const StripePaymentModal = ({
                 <button
                   type="submit"
                   className="cta-btn sm stripe-modal-btn stripe-modal-btn--submit"
-                  disabled={!selectedCardId || isProcessing}
+                  disabled={selectedCardId === null || selectedCardId === undefined || isProcessing}
                 >
                   {isProcessing ? (
                     <span className="stripe-btn-loading">

@@ -46,7 +46,6 @@ const Home = () => {
 
   const videoRef = useRef(null);
   const [videoBlobSrc, setVideoBlobSrc] = useState(cachedBlobUrl || '');
-  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
   const featuresGridRef = useRef(null);
 
   const features = useMemo(() => [
@@ -73,42 +72,6 @@ const Home = () => {
     },
   ], []);
 
-  const handleFeaturesScroll = () => {
-    if (!featuresGridRef.current) return;
-    const container = featuresGridRef.current;
-    const cards = container.querySelectorAll('.feature-card');
-    if (!cards || cards.length === 0) return;
-
-    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
-    let closestIndex = 0;
-    let minDistance = Infinity;
-
-    cards.forEach((card, index) => {
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(containerCenter - cardCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestIndex = index;
-      }
-    });
-
-    setActiveFeatureIndex(closestIndex);
-  };
-
-  const scrollFeatureToIndex = (idx) => {
-    if (!featuresGridRef.current) return;
-    const container = featuresGridRef.current;
-    const cards = container.querySelectorAll('.feature-card');
-    if (!cards[idx]) return;
-
-    const card = cards[idx];
-    const targetScroll = card.offsetLeft - (container.offsetWidth - card.offsetWidth) / 2;
-    container.scrollTo({
-      left: Math.max(0, targetScroll),
-      behavior: 'smooth'
-    });
-    setActiveFeatureIndex(idx);
-  };
 
   useEffect(() => {
     const el = featuresGridRef.current;
@@ -146,9 +109,6 @@ const Home = () => {
       el.style.cursor = '';
       el.style.scrollSnapType = 'x mandatory';
       el.style.scrollBehavior = 'smooth';
-      if (hasMoved) {
-        handleFeaturesScroll();
-      }
     };
 
     el.addEventListener('mousedown', onMouseDown);
@@ -339,7 +299,6 @@ const Home = () => {
         <div 
           className="features-grid"
           ref={featuresGridRef}
-          onScroll={handleFeaturesScroll}
         >
           {features.map((feature) => (
             <div key={feature.id} className="feature-card">
@@ -351,20 +310,6 @@ const Home = () => {
             </div>
           ))}
         </div>
-
-        {features.length > 1 && (
-          <div className="features-carousel-dots">
-            {features.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                className={`dot ${i === activeFeatureIndex ? 'active' : ''}`}
-                onClick={() => scrollFeatureToIndex(i)}
-                aria-label={`Go to slide ${i + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </motion.section>
 
       <motion.section 

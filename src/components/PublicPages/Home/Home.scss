@@ -142,9 +142,6 @@
     }
   }
 
-  .features-carousel-dots {
-    display: none;
-  }
 }
 
 .popular-menu-section {
@@ -535,34 +532,6 @@
       user-select: none;
     }
 
-    .features-carousel-dots {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      margin-top: $spacing-lg;
-
-      .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.25);
-        border: none;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-        &.active {
-          width: 24px;
-          border-radius: 12px;
-          background: $color-primary;
-        }
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.5);
-        }
-      }
-    }
   }
 }
 
@@ -650,9 +619,6 @@
       }
     }
 
-    .features-carousel-dots {
-      margin-top: $spacing-md;
-    }
   }
 
   .popular-menu-section {

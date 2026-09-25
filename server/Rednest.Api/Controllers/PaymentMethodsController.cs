@@ -3,7 +3,6 @@ namespace Rednest.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[RequireSecurityVerification]
 [Route("api/payment-methods")]
 [Route("api/paymentmethods")]
 public class PaymentMethodsController : ControllerBase
@@ -270,6 +269,7 @@ public class PaymentMethodsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [RequireSecurityVerification]
     public async Task<IActionResult> DeletePaymentMethod(int id)
     {
         var userId = GetUserId();
