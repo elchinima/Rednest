@@ -7,6 +7,7 @@ const CashboxProductGrid = ({
   onAddToCart,
   getProductPrice,
   onResetSearch,
+  t,
 }) => {
   if (loading) {
     return (
@@ -26,15 +27,15 @@ const CashboxProductGrid = ({
     return (
       <div className="cashbox-grid__empty">
         <div className="cashbox-grid__empty-icon">☕</div>
-        <h3>No Products Found</h3>
-        <p>Try adjusting your search query or select a different category</p>
+        <h3>{t?.noProductsFound || 'No Products Found'}</h3>
+        <p>{t?.noProductsDesc || 'Try adjusting your search query or select a different category'}</p>
         {onResetSearch && (
           <button
             type="button"
             className="cashbox-grid__empty-btn"
             onClick={onResetSearch}
           >
-            Reset Filters
+            {t?.resetFilters || 'Reset Filters'}
           </button>
         )}
       </div>
@@ -66,7 +67,7 @@ const CashboxProductGrid = ({
       {products.map((item) => {
         const prodId = item._id || item.id;
         const price = getProductPrice(item);
-        const name = item.displayName || item.name || 'Product';
+        const name = item.displayName || item.name || t?.productDefault || 'Product';
         const img = getProductImage(item);
 
         return (

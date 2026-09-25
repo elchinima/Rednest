@@ -11,6 +11,7 @@ const CashboxReceipt = ({
   appliedPromo = null,
   onRemovePromo,
   onOpenPromoModal,
+  t,
 }) => {
   return (
     <div className="cashbox-receipt">
@@ -18,15 +19,15 @@ const CashboxReceipt = ({
 
       <div className="cashbox-receipt__header">
         <div className="cashbox-receipt__header-top">
-          <span className="cashbox-receipt__title">Electronic Receipt</span>
+          <span className="cashbox-receipt__title">{t?.electronicReceipt || 'Electronic Receipt'}</span>
           {cartItems.length > 0 && (
             <button
               type="button"
               className="cashbox-receipt__clear-btn"
               onClick={onClearCart}
-              title="Clear receipt"
+              title={t?.clearReceiptTitle || 'Clear receipt'}
             >
-              Clear
+              {t?.clearReceipt || 'Clear'}
             </button>
           )}
         </div>
@@ -36,8 +37,8 @@ const CashboxReceipt = ({
       <div className="cashbox-receipt__body">
         {cartItems.length === 0 ? (
           <div className="cashbox-receipt__empty">
-            <span>Receipt is empty</span>
-            <small>Select beverages or desserts from the catalog</small>
+            <span>{t?.receiptEmpty || 'Receipt is empty'}</span>
+            <small>{t?.receiptEmptyDesc || 'Select beverages or desserts from the catalog'}</small>
           </div>
         ) : (
           <div className="cashbox-receipt__items">
@@ -66,7 +67,7 @@ const CashboxReceipt = ({
                         type="button"
                         onClick={() => onUpdateQty(item.id, -1)}
                         className="cashbox-receipt__step-btn"
-                        title="Decrease quantity"
+                        title={t?.decreaseQty || 'Decrease quantity'}
                       >
                         -
                       </button>
@@ -75,7 +76,7 @@ const CashboxReceipt = ({
                         type="button"
                         onClick={() => onUpdateQty(item.id, 1)}
                         className="cashbox-receipt__step-btn"
-                        title="Increase quantity"
+                        title={t?.increaseQty || 'Increase quantity'}
                       >
                         +
                       </button>
@@ -83,7 +84,7 @@ const CashboxReceipt = ({
                         type="button"
                         onClick={() => onRemoveItem(item.id)}
                         className="cashbox-receipt__del-btn"
-                        title="Remove item"
+                        title={t?.removeItem || 'Remove item'}
                       >
                         ✕
                       </button>
@@ -116,7 +117,7 @@ const CashboxReceipt = ({
                     type="button"
                     className="cashbox-receipt__promo-remove"
                     onClick={onRemovePromo}
-                    title="Remove promo code"
+                    title={t?.removePromo || 'Remove promo code'}
                   >
                     ✕
                   </button>
@@ -124,7 +125,7 @@ const CashboxReceipt = ({
               </div>
               <div className="cashbox-receipt__promo-details">
                 <span className="cashbox-receipt__promo-prize">
-                  {appliedPromo.prizeName || 'Promo Discount'}
+                  {appliedPromo.prizeName || t?.promoDiscount || 'Promo Discount'}
                 </span>
                 {promoDiscount > 0 && (
                   <span className="cashbox-receipt__promo-amount">
@@ -145,7 +146,7 @@ const CashboxReceipt = ({
                 <path d="M15 15h.01" />
                 <path d="M16 8L8 16" />
               </svg>
-              <span>Use Promo Code</span>
+              <span>{t?.usePromoCode || 'Use Promo Code'}</span>
             </button>
           )}
         </div>
@@ -156,19 +157,19 @@ const CashboxReceipt = ({
         {promoDiscount > 0 && (
           <div className="cashbox-receipt__subtotal-group">
             <div className="cashbox-receipt__summary-row">
-              <span className="cashbox-receipt__summary-label">Subtotal:</span>
+              <span className="cashbox-receipt__summary-label">{t?.subtotal || 'Subtotal:'}</span>
               <span className="cashbox-receipt__summary-val">{subtotal.toFixed(2)} ₼</span>
             </div>
             <div className="cashbox-receipt__summary-row cashbox-receipt__summary-row--discount">
               <span className="cashbox-receipt__summary-label">
-                Promo Discount {appliedPromo ? `(${appliedPromo.promoCode})` : ''}:
+                {t?.promoDiscountLabel ? t.promoDiscountLabel(appliedPromo?.promoCode) : `Promo Discount ${appliedPromo ? `(${appliedPromo.promoCode})` : ''}:`}
               </span>
               <span className="cashbox-receipt__summary-val">-{promoDiscount.toFixed(2)} ₼</span>
             </div>
           </div>
         )}
         <div className="cashbox-receipt__total-row">
-          <span className="cashbox-receipt__total-label">Total:</span>
+          <span className="cashbox-receipt__total-label">{t?.total || 'Total:'}</span>
           <span className="cashbox-receipt__total-val">
             {totalAmount.toFixed(2)} ₼
           </span>

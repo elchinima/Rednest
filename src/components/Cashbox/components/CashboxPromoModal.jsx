@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '../../../utils/config';
 import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr, lang = 'az') => {
   if (!dateStr) return '—';
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return '—';
-    const formatter = new Intl.DateTimeFormat('en-GB', {
+    const locale = lang === 'az' ? 'az-AZ' : lang === 'ru' ? 'ru-RU' : 'en-GB';
+    const formatter = new Intl.DateTimeFormat(locale, {
       timeZone: 'Asia/Baku',
       day: '2-digit',
       month: 'short',
@@ -29,6 +30,8 @@ const CashboxPromoModal = ({
   appliedPromo = null,
   onApplyPromo,
   onRemovePromo,
+  lang = 'az',
+  t,
 }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,19 +79,30 @@ const CashboxPromoModal = ({
         setResults(activePromos);
       } else {
         const errData = await res.json().catch(() => ({}));
-        setError(errData.message || 'Failed to search promo codes.');
+        setError(errData.message || t?.promoSearchError || 'Failed to search promo codes.');
       }
     } catch (err) {
       console.error('Error searching promo codes in cashbox:', err);
-      setError('Network error while searching promo codes.');
+      setError(t?.promoNetworkError || 'Network error while searching promo codes.');
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, t]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     handleSearch();
+  };
+
+  const getTranslatedPrize = (name) => {
+    if (!name) return t?.promoDiscount || 'Promo Discount';
+    const n = String(name).toLowerCase();
+    if (n.includes('free drink')) return t?.freeDrink || name;
+    if (n.includes('free dessert')) return t?.freeDessert || name;
+    if (n.includes('super prize')) return t?.superPrize || name;
+    if (n.includes('25%')) return t?.discount25 || name;
+    if (n.includes('50%')) return t?.discount50 || name;
+    return name;
   };
 
   return (
@@ -120,8 +134,8 @@ const CashboxPromoModal = ({
                   </svg>
                 </div>
                 <div>
-                  <h3 className="cashbox-promo-modal__title">Promo Code Lookup</h3>
-                  <p className="cashbox-promo-modal__subtitle">Search by barcode or promo code number</p>
+                  <h3 className="cashbox-promo-modal__title">{t?.promoModalTitle || 'Promo Code Lookup'}</h3>
+                  <p className="cashbox-promo-modal__subtitle">{t?.promoModalSubtitle || 'Search by barcode or promo code number'}</p>
                 </div>
               </div>
 
@@ -129,8 +143,8 @@ const CashboxPromoModal = ({
                 type="button"
                 className="cashbox-promo-modal__close-btn"
                 onClick={onClose}
-                title="Close modal"
-                aria-label="Close modal"
+                title={t?.closeModal || 'Close modal'}
+                aria-label={t?.closeModal || 'Close modal'}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -157,7 +171,7 @@ const CashboxPromoModal = ({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Scan barcode or enter promo code..."
+                  placeholder={t?.promoInputPlaceholder || 'Scan barcode or enter promo code...'}
                   className="cashbox-promo-modal__input"
                 />
 
@@ -171,7 +185,7 @@ const CashboxPromoModal = ({
                       setHasSearched(false);
                       inputRef.current?.focus();
                     }}
-                    title="Clear search"
+                    title={t?.clearSearch || 'Clear search'}
                   >
                     ✕
                   </button>
@@ -183,7 +197,7 @@ const CashboxPromoModal = ({
                 className="cashbox-promo-modal__submit-btn"
                 disabled={loading || !query.trim()}
               >
-                {loading ? 'Searching...' : 'Search'}
+                {loading ? (t?.searching || 'Searching...') : (t?.search || 'Search')}
               </button>
             </form>
 
@@ -210,9 +224,9 @@ const CashboxPromoModal = ({
                       <line x1="17" y1="8" x2="17" y2="16" />
                     </svg>
                   </div>
-                  <p className="cashbox-promo-modal__empty-title">Scan or enter barcode / code</p>
+                  <p className="cashbox-promo-modal__empty-title">{t?.scanOrEnter || 'Scan or enter barcode / code'}</p>
                   <p className="cashbox-promo-modal__empty-text">
-                    Enter customer's promo code or barcode to check validity, discount amount, and account owner.
+                    {t?.scanOrEnterDesc || 'Enter customer\'s promo code or barcode to check validity, discount amount, and account owner.'}
                   </p>
                 </div>
               )}
@@ -220,7 +234,7 @@ const CashboxPromoModal = ({
               {loading && (
                 <div className="cashbox-promo-modal__loading">
                   <div className="cashbox-promo-modal__spinner" />
-                  <span>Searching promo codes in database...</span>
+                  <span>{t?.searchingDb || 'Searching promo codes in database...'}</span>
                 </div>
               )}
 
@@ -233,9 +247,9 @@ const CashboxPromoModal = ({
                       <line x1="9" y1="9" x2="15" y2="15" />
                     </svg>
                   </div>
-                  <p className="cashbox-promo-modal__empty-title">No active promo code found</p>
+                  <p className="cashbox-promo-modal__empty-title">{t?.noActivePromo || 'No active promo code found'}</p>
                   <p className="cashbox-promo-modal__empty-text">
-                    No active promo codes match &ldquo;{query}&rdquo;.
+                    {t?.noActivePromoDesc ? t.noActivePromoDesc(query) : `No active promo codes match "${query}".`}
                   </p>
                 </div>
               )}
@@ -245,6 +259,13 @@ const CashboxPromoModal = ({
                   {results.map((promo) => {
                     const isExpired = promo.isExpired;
                     const isActive = promo.isActive && !isExpired;
+                    const prizeTitle = getTranslatedPrize(promo.prizeName);
+
+                    const ownerDisplay = promo.userName === 'Unclaimed (Public Promo)'
+                      ? (t?.unclaimedPublic || promo.userName)
+                      : promo.userName === 'Anonymous Customer'
+                        ? (t?.anonymousCustomer || promo.userName)
+                        : (promo.userName || t?.accountOwner || 'User');
 
                     return (
                       <div
@@ -253,7 +274,7 @@ const CashboxPromoModal = ({
                       >
                         <div className="cashbox-promo-card__header">
                           <div className="cashbox-promo-card__prize-title">
-                            <h4>{promo.prizeName}</h4>
+                            <h4>{prizeTitle}</h4>
                             {promo.prizeDescription && (
                               <p className="cashbox-promo-card__prize-desc">{promo.prizeDescription}</p>
                             )}
@@ -263,17 +284,17 @@ const CashboxPromoModal = ({
                             {isActive ? (
                               <span className="cashbox-promo-badge cashbox-promo-badge--active">
                                 <span className="cashbox-promo-badge__dot" />
-                                Active
+                                {t?.active || 'Active'}
                               </span>
                             ) : isExpired ? (
                               <span className="cashbox-promo-badge cashbox-promo-badge--expired">
                                 <span className="cashbox-promo-badge__dot" />
-                                Expired
+                                {t?.expired || 'Expired'}
                               </span>
                             ) : (
                               <span className="cashbox-promo-badge cashbox-promo-badge--inactive">
                                 <span className="cashbox-promo-badge__dot" />
-                                Inactive
+                                {t?.inactive || 'Inactive'}
                               </span>
                             )}
                           </div>
@@ -282,14 +303,14 @@ const CashboxPromoModal = ({
                         <div className="cashbox-promo-card__owner">
                           <div className="cashbox-promo-card__owner-avatar">
                             {promo.userAvatar ? (
-                              <img src={promo.userAvatar} alt={promo.userName} />
+                              <img src={promo.userAvatar} alt={ownerDisplay} />
                             ) : (
                               <span>{promo.userName?.charAt(0)?.toUpperCase() || 'U'}</span>
                             )}
                           </div>
                           <div className="cashbox-promo-card__owner-info">
-                            <span className="cashbox-promo-card__owner-label">Account Owner</span>
-                            <span className="cashbox-promo-card__owner-name">{promo.userName}</span>
+                            <span className="cashbox-promo-card__owner-label">{t?.accountOwner || 'Account Owner'}</span>
+                            <span className="cashbox-promo-card__owner-name">{ownerDisplay}</span>
                             {promo.userEmail && (
                               <span className="cashbox-promo-card__owner-email">{promo.userEmail}</span>
                             )}
@@ -298,13 +319,13 @@ const CashboxPromoModal = ({
 
                         <div className="cashbox-promo-card__codes">
                           <div className="cashbox-promo-card__code-box">
-                            <span className="cashbox-promo-card__code-label">Promo Code</span>
+                            <span className="cashbox-promo-card__code-label">{t?.promoCodeLabel || 'Promo Code'}</span>
                             <span className="cashbox-promo-card__code-value">{promo.promoCode}</span>
                           </div>
 
                           {promo.barCode && (
                             <div className="cashbox-promo-card__code-box cashbox-promo-card__code-box--barcode">
-                              <span className="cashbox-promo-card__code-label">Barcode Number</span>
+                              <span className="cashbox-promo-card__code-label">{t?.barcodeLabel || 'Barcode Number'}</span>
                               <span className="cashbox-promo-card__code-value cashbox-promo-card__code-value--barcode">
                                 {promo.barCode}
                               </span>
@@ -313,14 +334,14 @@ const CashboxPromoModal = ({
 
                           {promo.discountPercent > 0 && (
                             <div className="cashbox-promo-card__discount-box">
-                              <span className="cashbox-promo-card__code-label">Discount</span>
+                              <span className="cashbox-promo-card__code-label">{t?.discountLabel || 'Discount'}</span>
                               <span className="cashbox-promo-card__discount-value">-{promo.discountPercent}%</span>
                             </div>
                           )}
 
                           {promo.cashbackPercent > 0 && (
                             <div className="cashbox-promo-card__discount-box">
-                              <span className="cashbox-promo-card__code-label">Cashback</span>
+                              <span className="cashbox-promo-card__code-label">{t?.cashbackLabel || 'Cashback'}</span>
                               <span className="cashbox-promo-card__discount-value">+{promo.cashbackPercent}%</span>
                             </div>
                           )}
@@ -334,15 +355,15 @@ const CashboxPromoModal = ({
                                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <polyline points="20 6 9 17 4 12" />
                                   </svg>
-                                  <span>Applied to Receipt</span>
+                                  <span>{t?.appliedToReceipt || 'Applied to Receipt'}</span>
                                 </div>
                                 <button
                                   type="button"
                                   className="cashbox-promo-card__remove-btn"
                                   onClick={() => onRemovePromo && onRemovePromo()}
-                                  title="Remove from receipt"
+                                  title={t?.removeFromReceipt || 'Remove from receipt'}
                                 >
-                                  Remove
+                                  {t?.remove || 'Remove'}
                                 </button>
                               </div>
                             ) : (
@@ -360,16 +381,16 @@ const CashboxPromoModal = ({
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                                   <polyline points="20 6 9 17 4 12" />
                                 </svg>
-                                <span>Apply to Order</span>
+                                <span>{t?.applyToOrder || 'Apply to Order'}</span>
                               </motion.button>
                             )}
                           </div>
                         )}
 
                         <div className="cashbox-promo-card__footer">
-                          <span>Activated: {formatDate(promo.activatedAt)}</span>
+                          <span>{t?.activated || 'Activated:'} {formatDate(promo.activatedAt, lang)}</span>
                           <span className={isExpired ? 'cashbox-promo-card__date--expired' : ''}>
-                            Expires: {formatDate(promo.expiresAt)}
+                            {t?.expires || 'Expires:'} {formatDate(promo.expiresAt, lang)}
                           </span>
                         </div>
                       </div>

@@ -4,6 +4,7 @@ import { API_URL } from '../../utils/config';
 import { fetchWithRefresh } from '../../utils/fetchWithRefresh';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../utils/useLang';
+import { getCashboxTranslation } from './Lang';
 import CashboxTopBar from './components/CashboxTopBar';
 import CashboxSidebar from './components/CashboxSidebar';
 import CashboxProductGrid from './components/CashboxProductGrid';
@@ -14,6 +15,7 @@ import './Cashbox.scss';
 const Cashbox = () => {
   const { user } = useAuth();
   const lang = useLang();
+  const t = useMemo(() => getCashboxTranslation(lang), [lang]);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All', 'Main Drinks', 'Specialty Drinks', 'Desserts']);
   const [loading, setLoading] = useState(true);
@@ -28,13 +30,13 @@ const Cashbox = () => {
   const [isDesktopSplit, setIsDesktopSplit] = useState(false);
   const [isMobilePaymentModalOpen, setIsMobilePaymentModalOpen] = useState(false);
 
-  const cashierName = user?.name || user?.username || user?.Name || 'Unknown User';
+  const cashierName = user?.name || user?.username || user?.Name || t.unknownUser || 'Unknown User';
   const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
 
   const fetchInitData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchWithRefresh(`${API_URL}/api/cashbox/init`);
+      const res = await fetchWithRefresh(`${API_URL}/api/cashbox/init?lang=${encodeURIComponent(lang || 'az')}`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.products)) {
@@ -49,11 +51,29 @@ const Cashbox = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     fetchInitData();
   }, [fetchInitData]);
+
+  useEffect(() => {
+    if (products.length > 0 && cartItems.length > 0) {
+      setCartItems((prev) =>
+        prev.map((item) => {
+          const prod = products.find((p) => (p._id || p.id) === item.productId);
+          if (prod) {
+            return {
+              ...item,
+              name: prod.displayName || prod.name || item.name,
+              category: prod.category || item.category,
+            };
+          }
+          return item;
+        })
+      );
+    }
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -191,12 +211,12 @@ const Cashbox = () => {
 
   const handleApplyPromo = (promo) => {
     setAppliedPromo(promo);
-    showToast(`Promo code ${promo.promoCode} applied!`);
+    showToast(t.promoAppliedToast ? t.promoAppliedToast(promo.promoCode) : `Promo code ${promo.promoCode} applied!`);
   };
 
   const handleRemovePromo = () => {
     setAppliedPromo(null);
-    showToast('Promo code removed from receipt.');
+    showToast(t.promoRemovedToast || 'Promo code removed from receipt.');
   };
 
   useEffect(() => {
@@ -206,57 +226,9 @@ const Cashbox = () => {
     }
   }, [cartItems.length]);
 
-  const labels = useMemo(() => {
-    switch (lang) {
-      case 'ru':
-        return {
-          confirm: 'Подтвердить',
-          cash: 'Наличными',
-          card: 'Безналичными',
-          cashDesc: 'Оплата наличными средствами',
-          cardDesc: 'Банковской картой или терминалом',
-          selectPayMethod: 'Способ оплаты',
-          total: 'Сумма к оплате',
-          orderConfirmedCash: (amt, promo) =>
-            promo ? `Заказ оформлен (Наличные): ${amt} ₼ (Промокод ${promo})` : `Заказ оформлен (Наличные): ${amt} ₼`,
-          orderConfirmedCard: (amt, promo) =>
-            promo ? `Заказ оформлен (Безналичные): ${amt} ₼ (Промокод ${promo})` : `Заказ оформлен (Безналичные): ${amt} ₼`,
-        };
-      case 'az':
-        return {
-          confirm: 'Təsdiqlə',
-          cash: 'Nağd',
-          card: 'Qeyri-nağd',
-          cashDesc: 'Nağd pulla ödəniş',
-          cardDesc: 'Bank kartı və ya terminal ilə',
-          selectPayMethod: 'Ödəniş üsulu',
-          total: 'Yekun məbləğ',
-          orderConfirmedCash: (amt, promo) =>
-            promo ? `Sifariş təsdiqləndi (Nağd): ${amt} ₼ (${promo})` : `Sifariş təsdiqləndi (Nağd): ${amt} ₼`,
-          orderConfirmedCard: (amt, promo) =>
-            promo ? `Sifariş təsdiqləndi (Qeyri-nağd): ${amt} ₼ (${promo})` : `Sifariş təsdiqləndi (Qeyri-nağd): ${amt} ₼`,
-        };
-      case 'en':
-      default:
-        return {
-          confirm: 'Confirm',
-          cash: 'Cash',
-          card: 'Card',
-          cashDesc: 'Cash payment with banknotes or coins',
-          cardDesc: 'Debit / Credit card or POS terminal',
-          selectPayMethod: 'Payment Method',
-          total: 'Total amount',
-          orderConfirmedCash: (amt, promo) =>
-            promo ? `Order confirmed (Cash): ${amt} ₼ (Promo ${promo} redeemed)` : `Order confirmed (Cash): ${amt} ₼`,
-          orderConfirmedCard: (amt, promo) =>
-            promo ? `Order confirmed (Card): ${amt} ₼ (Promo ${promo} redeemed)` : `Order confirmed (Card): ${amt} ₼`,
-        };
-    }
-  }, [lang]);
-
   const handleConfirmOrder = async (payMethod = 'Cash') => {
     if (cartItems.length === 0) {
-      showToast('Receipt is empty! Please add products.');
+      showToast(t.receiptEmptyToast || 'Receipt is empty! Please add products.');
       return;
     }
     try {
@@ -274,14 +246,14 @@ const Cashbox = () => {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        showToast(errData.message || 'Failed to process order.');
+        showToast(errData.message || t.orderFailedToast || 'Failed to process order.');
         return;
       }
 
       const usedCode = appliedPromo?.promoCode;
       const successMsg = payMethod === 'Card'
-        ? labels.orderConfirmedCard(totalAmount.toFixed(2), usedCode)
-        : labels.orderConfirmedCash(totalAmount.toFixed(2), usedCode);
+        ? (t.orderConfirmedCard ? t.orderConfirmedCard(totalAmount.toFixed(2), usedCode) : `Order confirmed (Card): ${totalAmount.toFixed(2)} ₼`)
+        : (t.orderConfirmedCash ? t.orderConfirmedCash(totalAmount.toFixed(2), usedCode) : `Order confirmed (Cash): ${totalAmount.toFixed(2)} ₼`);
 
       showToast(successMsg);
       clearCart();
@@ -290,7 +262,7 @@ const Cashbox = () => {
       setIsDesktopSplit(false);
     } catch (err) {
       console.error('Failed to confirm cashbox order:', err);
-      showToast('Network error while processing order.');
+      showToast(t.orderNetworkErrorToast || 'Network error while processing order.');
     }
   };
 
@@ -318,6 +290,7 @@ const Cashbox = () => {
         cashierAvatar={cashierAvatar}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+        t={t}
       />
 
       <div className="cashbox-view__workspace">
@@ -327,6 +300,7 @@ const Cashbox = () => {
           onSelectCategory={setSelectedCategory}
           onPromoClick={() => setIsPromoModalOpen(true)}
           hasAppliedPromo={Boolean(appliedPromo)}
+          t={t}
         />
 
         <main className="cashbox-view__catalog">
@@ -339,6 +313,7 @@ const Cashbox = () => {
               setSearchQuery('');
               setSelectedCategory('All');
             }}
+            t={t}
           />
         </main>
 
@@ -354,6 +329,7 @@ const Cashbox = () => {
             appliedPromo={appliedPromo}
             onRemovePromo={handleRemovePromo}
             onOpenPromoModal={() => setIsPromoModalOpen(true)}
+            t={t}
           />
 
           <div className="cashbox-confirm-container">
@@ -366,7 +342,7 @@ const Cashbox = () => {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     if (cartItems.length === 0) {
-                      showToast('Receipt is empty! Please add products.');
+                      showToast(t.receiptEmptyToast || 'Receipt is empty! Please add products.');
                       return;
                     }
                     setIsDesktopSplit(true);
@@ -380,7 +356,7 @@ const Cashbox = () => {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>{labels.confirm}</span>
+                  <span>{t.confirm}</span>
                 </motion.button>
               ) : (
                 <motion.div
@@ -407,7 +383,7 @@ const Cashbox = () => {
                       <circle cx="12" cy="12" r="2" />
                       <path d="M6 12h.01M18 12h.01" />
                     </svg>
-                    <span>{labels.cash}</span>
+                    <span>{t.cash}</span>
                   </motion.button>
 
                   <motion.button
@@ -425,15 +401,15 @@ const Cashbox = () => {
                       <rect x="2" y="5" width="20" height="14" rx="2" />
                       <line x1="2" y1="10" x2="22" y2="10" />
                     </svg>
-                    <span>{labels.card}</span>
+                    <span>{t.card}</span>
                   </motion.button>
 
                   <motion.button
                     type="button"
                     className="cashbox-confirm-split-cancel"
                     onClick={() => setIsDesktopSplit(false)}
-                    title="Cancel"
-                    aria-label="Cancel split"
+                    title={t.cancel}
+                    aria-label={t.cancelSplit || t.cancel}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
@@ -458,7 +434,7 @@ const Cashbox = () => {
         className="cashbox-mobile-trigger"
         onClick={() => setIsReceiptModalOpen(true)}
         whileTap={{ scale: 0.96 }}
-        aria-label="Open electronic receipt"
+        aria-label={t.electronicReceipt || 'Electronic Receipt'}
       >
         <div className="cashbox-mobile-trigger__left">
           <div className="cashbox-mobile-trigger__icon-wrap">
@@ -471,7 +447,7 @@ const Cashbox = () => {
               <span className="cashbox-mobile-trigger__badge">{totalItemsCount}</span>
             )}
           </div>
-          <span className="cashbox-mobile-trigger__label">Electronic Receipt</span>
+          <span className="cashbox-mobile-trigger__label">{t.electronicReceipt || 'Electronic Receipt'}</span>
         </div>
 
         <div className="cashbox-mobile-trigger__right">
@@ -513,10 +489,10 @@ const Cashbox = () => {
             >
               <div className="cashbox-modal__header">
                 <div className="cashbox-modal__title-group">
-                  <h3 className="cashbox-modal__title">Current Order</h3>
+                  <h3 className="cashbox-modal__title">{t.currentOrder || 'Current Order'}</h3>
                   {cartItems.length > 0 && (
                     <span className="cashbox-modal__items-count">
-                      {cartItems.reduce((acc, it) => acc + it.quantity, 0)}
+                      {cartItems.reduce((acc, it) => acc + (it.qty || it.quantity || 1), 0)}
                     </span>
                   )}
                 </div>
@@ -524,8 +500,8 @@ const Cashbox = () => {
                   type="button"
                   className="cashbox-modal__close-btn"
                   onClick={() => setIsReceiptModalOpen(false)}
-                  title="Close receipt"
-                  aria-label="Close receipt"
+                  title={t.closeReceipt || 'Close receipt'}
+                  aria-label={t.closeReceipt || 'Close receipt'}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -546,6 +522,7 @@ const Cashbox = () => {
                   appliedPromo={appliedPromo}
                   onRemovePromo={handleRemovePromo}
                   onOpenPromoModal={() => setIsPromoModalOpen(true)}
+                  t={t}
                 />
 
                 <motion.button
@@ -554,7 +531,7 @@ const Cashbox = () => {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     if (cartItems.length === 0) {
-                      showToast('Receipt is empty! Please add products.');
+                      showToast(t.receiptEmptyToast || 'Receipt is empty! Please add products.');
                       return;
                     }
                     setIsMobilePaymentModalOpen(true);
@@ -564,7 +541,7 @@ const Cashbox = () => {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span>{labels.confirm}</span>
+                  <span>{t.confirm}</span>
                 </motion.button>
               </div>
             </motion.div>
@@ -598,9 +575,9 @@ const Cashbox = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="cashbox-paymethod-modal__title">{labels.selectPayMethod}</h3>
+                    <h3 className="cashbox-paymethod-modal__title">{t.selectPayMethod || 'Payment Method'}</h3>
                     <p className="cashbox-paymethod-modal__total">
-                      {labels.total}: <span>{totalAmount.toFixed(2)} ₼</span>
+                      {(t.totalToPay || t.total || 'Total:')} <span>{totalAmount.toFixed(2)} ₼</span>
                     </p>
                   </div>
                 </div>
@@ -608,8 +585,8 @@ const Cashbox = () => {
                   type="button"
                   className="cashbox-modal__close-btn"
                   onClick={() => setIsMobilePaymentModalOpen(false)}
-                  title="Close"
-                  aria-label="Close"
+                  title={t.closeModal || 'Close'}
+                  aria-label={t.closeModal || 'Close'}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -633,8 +610,8 @@ const Cashbox = () => {
                     </svg>
                   </div>
                   <div className="cashbox-paymethod-card__info">
-                    <span className="cashbox-paymethod-card__title">{labels.cash}</span>
-                    <span className="cashbox-paymethod-card__desc">{labels.cashDesc}</span>
+                    <span className="cashbox-paymethod-card__title">{t.cash}</span>
+                    <span className="cashbox-paymethod-card__desc">{t.cashDesc}</span>
                   </div>
                   <div className="cashbox-paymethod-card__arrow">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -656,8 +633,8 @@ const Cashbox = () => {
                     </svg>
                   </div>
                   <div className="cashbox-paymethod-card__info">
-                    <span className="cashbox-paymethod-card__title">{labels.card}</span>
-                    <span className="cashbox-paymethod-card__desc">{labels.cardDesc}</span>
+                    <span className="cashbox-paymethod-card__title">{t.card}</span>
+                    <span className="cashbox-paymethod-card__desc">{t.cardDesc}</span>
                   </div>
                   <div className="cashbox-paymethod-card__arrow">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -677,6 +654,8 @@ const Cashbox = () => {
         appliedPromo={appliedPromo}
         onApplyPromo={handleApplyPromo}
         onRemovePromo={handleRemovePromo}
+        lang={lang}
+        t={t}
       />
     </div>
   );

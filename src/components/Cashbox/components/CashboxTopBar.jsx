@@ -7,6 +7,7 @@ const CashboxTopBar = ({
   cashierAvatar,
   searchQuery,
   setSearchQuery,
+  t,
 }) => {
   const navigate = useNavigate();
 
@@ -33,7 +34,7 @@ const CashboxTopBar = ({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search products by name or category..."
+          placeholder={t?.searchPlaceholder || 'Search products by name or category...'}
           className="cashbox-topbar__search-input"
         />
         {searchQuery && (
@@ -41,7 +42,7 @@ const CashboxTopBar = ({
             type="button"
             className="cashbox-topbar__search-clear"
             onClick={() => setSearchQuery('')}
-            title="Clear search"
+            title={t?.clearSearch || 'Clear search'}
           >
             ✕
           </button>
@@ -70,7 +71,7 @@ const CashboxTopBar = ({
               {cashierName?.charAt(0)?.toUpperCase() || 'C'}
             </span>
           </div>
-          <span>Cashier: <strong>{cashierName}</strong></span>
+          <span>{t?.cashier || 'Cashier:'} <strong>{cashierName}</strong></span>
         </div>
       </div>
     </header>

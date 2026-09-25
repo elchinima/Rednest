@@ -58,12 +58,14 @@ const CashboxSidebar = ({
   onSelectCategory,
   onPromoClick,
   hasAppliedPromo = false,
+  t,
 }) => {
   return (
     <aside className="cashbox-sidebar">
       <nav className="cashbox-sidebar__nav">
         {categories.map((cat) => {
           const isActive = selectedCategory === cat;
+          const displayLabel = t?.categories?.[cat] || cat;
           return (
             <button
               key={cat}
@@ -72,7 +74,7 @@ const CashboxSidebar = ({
               onClick={() => onSelectCategory(cat)}
             >
               <div className="cashbox-sidebar__icon">{getCategoryIcon(cat)}</div>
-              <span className="cashbox-sidebar__label">{cat}</span>
+              <span className="cashbox-sidebar__label">{displayLabel}</span>
             </button>
           );
         })}
@@ -83,7 +85,7 @@ const CashboxSidebar = ({
           type="button"
           className={`cashbox-sidebar__btn cashbox-sidebar__promo-btn ${hasAppliedPromo ? 'cashbox-sidebar__promo-btn--active' : ''}`}
           onClick={onPromoClick}
-          title={hasAppliedPromo ? 'Promo code active' : 'Promo Codes'}
+          title={hasAppliedPromo ? (t?.promoActive || 'Promo code active') : (t?.promoCodes || 'Promo Codes')}
         >
           <div className="cashbox-sidebar__icon">
             {hasAppliedPromo && <span className="cashbox-sidebar__promo-dot" />}
@@ -102,7 +104,7 @@ const CashboxSidebar = ({
             </svg>
           </div>
           <span className="cashbox-sidebar__label">
-            {hasAppliedPromo ? 'Promo (1)' : 'Promo Codes'}
+            {hasAppliedPromo ? (t?.promoActiveCount ? t.promoActiveCount(1) : 'Promo (1)') : (t?.promoCodes || 'Promo Codes')}
           </span>
         </button>
       </div>
