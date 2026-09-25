@@ -149,6 +149,10 @@
     height: 34px;
     width: auto;
     filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.3));
+
+    @media (max-width: 900px) {
+      display: none !important;
+    }
   }
 
   &__brand-text {
@@ -1840,19 +1844,21 @@
 
   &__search-form {
     display: flex;
+    align-items: center;
     gap: 10px;
     padding: 14px 20px;
     background: rgba(0, 0, 0, 0.25);
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 
     @media (max-width: 480px) {
-      flex-direction: column;
       padding: 12px 14px;
+      gap: 8px;
     }
   }
 
   &__input-wrap {
     flex: 1;
+    min-width: 0;
     position: relative;
     display: flex;
     align-items: center;
@@ -1865,6 +1871,12 @@
     height: 18px;
     color: rgba(255, 255, 255, 0.45);
     pointer-events: none;
+
+    @media (max-width: 480px) {
+      left: 12px;
+      width: 16px;
+      height: 16px;
+    }
   }
 
   &__input {
@@ -1879,6 +1891,12 @@
     font-family: inherit;
     outline: none;
     transition: all 0.2s ease;
+
+    @media (max-width: 480px) {
+      height: 40px;
+      font-size: 0.85rem;
+      padding: 0 32px 0 36px;
+    }
 
     &::placeholder {
       color: rgba(255, 255, 255, 0.4);
@@ -1907,6 +1925,13 @@
     border-radius: 50%;
     transition: all 0.2s ease;
 
+    @media (max-width: 480px) {
+      right: 8px;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+    }
+
     &:hover {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.12);
@@ -1925,6 +1950,13 @@
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+      height: 40px;
+      padding: 0 16px;
+      font-size: 0.84rem;
+    }
 
     &:hover:not(:disabled) {
       box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);

@@ -6,6 +6,7 @@ import { useLang } from '../../utils/useLang';
 import { getWidgetTranslation } from './Lang';
 import LogoutModal from './LogoutModal';
 import loaderIcon from '../../assets/icons/loader-animated.svg';
+import { isAllowedCashboxRole } from '../../routes/CashboxProtectedRoute';
 import './UserNavPills.scss';
 
 const UserNavPills = ({ onMenuClose }) => {
@@ -78,6 +79,8 @@ const UserNavPills = ({ onMenuClose }) => {
   const userName = user?.name || user?.Name || 'User';
   const rawBalance = user?.balance ?? user?.Balance ?? 0;
   const formattedBalance = Number(rawBalance || 0).toFixed(2);
+  const userRole = user?.role || user?.Role;
+  const canAccessCashbox = isAllowedCashboxRole(userRole);
 
   const handleProfileClick = () => {
     setIsUserMenuOpen(false);
@@ -169,6 +172,15 @@ const UserNavPills = ({ onMenuClose }) => {
               >
                 {t('user_nav_admin')}
               </Link>
+              {canAccessCashbox && (
+                <Link
+                  to="/cashbox"
+                  className="user-nav-capsule__dropdown-item"
+                  onClick={handleProfileClick}
+                >
+                  {t('user_nav_pos')}
+                </Link>
+              )}
               <button
                 type="button"
                 className="user-nav-capsule__dropdown-item"

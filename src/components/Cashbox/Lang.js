@@ -60,7 +60,7 @@ export const translations = {
 
     promoModalTitle: 'Promokod axtarışı',
     promoModalSubtitle: 'Barkod və ya promokod nömrəsi ilə axtarış',
-    promoInputPlaceholder: 'Barkodu skan edin və ya promokodu daxil edin...',
+    promoInputPlaceholder: 'Barkod və ya promokod...',
     search: 'Axtar',
     searching: 'Axtarılır...',
     searchingDb: 'Bazada promokodlar axtarılır...',
@@ -171,7 +171,7 @@ export const translations = {
 
     promoModalTitle: 'Поиск промокода',
     promoModalSubtitle: 'Поиск по штрихкоду или номеру промокода',
-    promoInputPlaceholder: 'Сканируйте штрихкод или введите промокод...',
+    promoInputPlaceholder: 'Штрихкод или промокод...',
     search: 'Поиск',
     searching: 'Поиск...',
     searchingDb: 'Поиск промокодов в базе данных...',
@@ -282,7 +282,7 @@ export const translations = {
 
     promoModalTitle: 'Promo Code Lookup',
     promoModalSubtitle: 'Search by barcode or promo code number',
-    promoInputPlaceholder: 'Scan barcode or enter promo code...',
+    promoInputPlaceholder: 'Barcode or promo code...',
     search: 'Search',
     searching: 'Searching...',
     searchingDb: 'Searching promo codes in database...',

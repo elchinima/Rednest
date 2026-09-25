@@ -171,7 +171,7 @@ const CashboxPromoModal = ({
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={t?.promoInputPlaceholder || 'Scan barcode or enter promo code...'}
+                  placeholder={t?.promoInputPlaceholder || 'Barcode or promo code...'}
                   className="cashbox-promo-modal__input"
                 />
 

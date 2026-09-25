@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/icons/rednest_logo.png';
 
@@ -10,11 +10,27 @@ const CashboxTopBar = ({
   t,
 }) => {
   const navigate = useNavigate();
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 900;
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth > 900);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <header className="cashbox-topbar">
       <div className="cashbox-topbar__brand" onClick={() => navigate('/')}>
-        <img src={logo} alt="Rednest" className="cashbox-topbar__logo" />
+        {isDesktop && (
+          <img src={logo} alt="Rednest" className="cashbox-topbar__logo" />
+        )}
         <span className="cashbox-topbar__brand-text">Rednest</span>
         <span className="cashbox-topbar__badge">POS</span>
       </div>
