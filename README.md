@@ -227,4 +227,3 @@ docker run -d -p 8080:8080 --name rednest-container \
   -e BREVO_API_KEY="your_brevo_api_key" \
   rednest-app
 ```
-> Access the complete application at `http://localhost:8080`.
