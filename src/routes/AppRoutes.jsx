@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import loaderIconRed from '../assets/icons/loader-animated-red.svg';
+import loaderIcon from '../assets/icons/loader-animated.svg';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
@@ -28,6 +28,7 @@ const AdminPromos = lazy(() => import('../components/AdminPages/Promos/Promos'))
 const AdminNewsletter = lazy(() => import('../components/AdminPages/Newsletter/Newsletter'));
 const AdminLogs = lazy(() => import('../components/AdminPages/AdminLogs/AdminLogs'));
 const Cashbox = lazy(() => import('../components/Cashbox/Cashbox'));
+const CashboxHistory = lazy(() => import('../components/Cashbox/History/CashboxHistory'));
 import ProtectedRoute from './ProtectedRoute';
 import ProfileSecurityGuard from './ProfileSecurityGuard';
 import AdminProtectedRoute from './AdminProtectedRoute';
@@ -80,8 +81,8 @@ const AnimatedRoutes = () => {
 
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at top right, rgba(239,68,68,0.15) 0%, transparent 50%), radial-gradient(circle at bottom left, #0a0a0a 0%, #111111 100%)' }}>
-        <img src={loaderIconRed} alt="Loading..." style={{ width: 48, height: 48 }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={loaderIcon} alt="Loading..." style={{ width: 48, height: 48 }} />
       </div>
     }>
       <AnimatePresence mode="wait">
@@ -206,6 +207,12 @@ const AnimatedRoutes = () => {
           <Route path="/cashbox" element={
             <CashboxProtectedRoute>
               <Cashbox />
+            </CashboxProtectedRoute>
+          } />
+
+          <Route path="/cashbox/history" element={
+            <CashboxProtectedRoute allowedRoles={['leadstaff', 'admin', 'superadmin']}>
+              <CashboxHistory />
             </CashboxProtectedRoute>
           } />
 

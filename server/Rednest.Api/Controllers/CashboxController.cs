@@ -16,7 +16,12 @@ public class CashboxController : ControllerBase
 
     private static bool IsAllowedCashboxRole(UserRole role)
     {
-        return role == UserRole.Staff || role == UserRole.Admin || role == UserRole.SuperAdmin;
+        return role == UserRole.Staff || role == UserRole.LeadStaff || role == UserRole.Admin || role == UserRole.SuperAdmin;
+    }
+
+    private static bool IsAllowedCashboxHistoryRole(UserRole role)
+    {
+        return role == UserRole.LeadStaff || role == UserRole.Admin || role == UserRole.SuperAdmin;
     }
 
     private async Task<(bool Allowed, User? User, IActionResult? ErrorResult)> ValidateCashboxAccessAsync()
@@ -44,7 +49,23 @@ public class CashboxController : ControllerBase
 
         if (!IsAllowedCashboxRole(user.Role))
         {
-            return (false, null, StatusCode(StatusCodes.Status403Forbidden, new { message = "Access denied. Cashbox access is restricted to Staff, Admin, and Super Admin." }));
+            return (false, null, StatusCode(StatusCodes.Status403Forbidden, new { message = "Access denied. Cashbox access is restricted to Staff, Lead Staff, Admin, and Super Admin." }));
+        }
+
+        return (true, user, null);
+    }
+
+    private async Task<(bool Allowed, User? User, IActionResult? ErrorResult)> ValidateCashboxHistoryAccessAsync()
+    {
+        var (allowed, user, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed || user == null)
+        {
+            return (false, null, errorResult);
+        }
+
+        if (!IsAllowedCashboxHistoryRole(user.Role))
+        {
+            return (false, null, StatusCode(StatusCodes.Status403Forbidden, new { message = "Access denied. Cashbox history is restricted to Lead Staff, Admin, and Super Admin." }));
         }
 
         return (true, user, null);
@@ -202,8 +223,8 @@ public class CashboxController : ControllerBase
     [HttpPost("orders")]
     public async Task<IActionResult> CreateCashboxOrder([FromBody] CashboxOrderRequest request)
     {
-        var (allowed, _, errorResult) = await ValidateCashboxAccessAsync();
-        if (!allowed)
+        var (allowed, cashierUser, errorResult) = await ValidateCashboxAccessAsync();
+        if (!allowed || cashierUser == null)
         {
             return errorResult!;
         }
@@ -249,6 +270,8 @@ public class CashboxController : ControllerBase
             status = parsedStatus;
         }
 
+        var cashierName = !string.IsNullOrWhiteSpace(cashierUser.Name) ? cashierUser.Name : (cashierUser.Email ?? "Cashier");
+
         var cashboxRecord = new Rednest.Core.Entities.Cashbox
         {
             PayMethod = string.Equals(request.PayMethod, "Card", StringComparison.OrdinalIgnoreCase)
@@ -269,7 +292,9 @@ public class CashboxController : ControllerBase
             Description = new CashboxDescription
             {
                 Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim(),
-                Edited = null
+                Edited = null,
+                CashierId = cashierUser.Id,
+                CashierName = cashierName
             },
             CreatedAt = DateTime.UtcNow
         };
@@ -280,6 +305,214 @@ public class CashboxController : ControllerBase
         _ = Task.Run(() => _analyticsTrackingService.TrackAnalyticsAsync());
 
         return Ok(new { success = true, orderId = cashboxRecord.Id });
+    }
+
+    [HttpGet("history")]
+    public async Task<IActionResult> GetCashboxHistory(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? payMethod = null,
+        [FromQuery] string? dateRange = null,
+        [FromQuery] string? lang = "en")
+    {
+        var (allowed, _, errorResult) = await ValidateCashboxHistoryAccessAsync();
+        if (!allowed)
+        {
+            return errorResult!;
+        }
+
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        var normalizedLang = (lang ?? "en").Trim().ToLowerInvariant();
+
+        var query = _context.Cashboxes.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status) && !string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Enum.TryParse<CashboxStatus>(status.Trim(), true, out var parsedStatus))
+            {
+                query = query.Where(c => c.Status == parsedStatus);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(payMethod) && !string.Equals(payMethod, "all", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Enum.TryParse<CashboxPayMethod>(payMethod.Trim(), true, out var parsedPayMethod))
+            {
+                query = query.Where(c => c.PayMethod == parsedPayMethod);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(dateRange))
+        {
+            var now = DateTime.UtcNow;
+            if (string.Equals(dateRange, "today", StringComparison.OrdinalIgnoreCase))
+            {
+                var todayStart = now.Date;
+                query = query.Where(c => c.CreatedAt >= todayStart);
+            }
+            else if (string.Equals(dateRange, "yesterday", StringComparison.OrdinalIgnoreCase))
+            {
+                var yesterdayStart = now.Date.AddDays(-1);
+                var todayStart = now.Date;
+                query = query.Where(c => c.CreatedAt >= yesterdayStart && c.CreatedAt < todayStart);
+            }
+            else if (string.Equals(dateRange, "week", StringComparison.OrdinalIgnoreCase))
+            {
+                var weekStart = now.Date.AddDays(-7);
+                query = query.Where(c => c.CreatedAt >= weekStart);
+            }
+            else if (string.Equals(dateRange, "month", StringComparison.OrdinalIgnoreCase))
+            {
+                var monthStart = now.Date.AddDays(-30);
+                query = query.Where(c => c.CreatedAt >= monthStart);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var sLower = search.Trim().ToLowerInvariant();
+            query = query.Where(c =>
+                c.Id.ToString().ToLower().Contains(sLower) ||
+                (c.Paid.PromoCodeId != null && c.Paid.PromoCodeId.ToLower().Contains(sLower)) ||
+                (c.Description.Note != null && c.Description.Note.ToLower().Contains(sLower)) ||
+                (c.Description.CashierName != null && c.Description.CashierName.ToLower().Contains(sLower))
+            );
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var allFiltered = await query.Select(c => new
+        {
+            c.Paid.TotalAmount,
+            c.PayMethod,
+            c.Status
+        }).ToListAsync();
+
+        var totalRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success).Sum(c => c.TotalAmount);
+        var cashRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Cash).Sum(c => c.TotalAmount);
+        var cardRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Card).Sum(c => c.TotalAmount);
+        var successCount = allFiltered.Count(c => c.Status == CashboxStatus.Success);
+        var refundedCount = allFiltered.Count(c => c.Status == CashboxStatus.Refunded);
+        var cancelledCount = allFiltered.Count(c => c.Status == CashboxStatus.Cancelled);
+
+        var pagedRecords = await query
+            .OrderByDescending(c => c.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var productIds = pagedRecords.SelectMany(c => c.Products).Select(p => p.ProductId).Distinct().ToList();
+        var products = await _context.Products
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToListAsync();
+        var productDict = products.ToDictionary(p => p.Id);
+
+        var editorIds = pagedRecords
+            .Where(c => c.Description?.Edited?.UserId != null && c.Description.Edited.UserId != Guid.Empty)
+            .Select(c => c.Description.Edited!.UserId)
+            .Distinct()
+            .ToList();
+        var editors = await _context.Users
+            .AsNoTracking()
+            .Where(u => editorIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.Name ?? u.Email);
+
+        var orders = pagedRecords.Select(c =>
+        {
+            var editorName = (c.Description?.Edited?.UserId != null && editors.TryGetValue(c.Description.Edited.UserId, out var edName))
+                ? edName
+                : null;
+
+            var items = c.Products.Select(pi =>
+            {
+                productDict.TryGetValue(pi.ProductId, out var prod);
+
+                var name = normalizedLang switch
+                {
+                    "az" => !string.IsNullOrEmpty(prod?.Name.AZ) ? prod.Name.AZ : (!string.IsNullOrEmpty(prod?.Name.EN) ? prod.Name.EN : prod?.Name.RU ?? "Məhsul"),
+                    "ru" => !string.IsNullOrEmpty(prod?.Name.RU) ? prod.Name.RU : (!string.IsNullOrEmpty(prod?.Name.EN) ? prod.Name.EN : prod?.Name.AZ ?? "Товар"),
+                    _ => !string.IsNullOrEmpty(prod?.Name.EN) ? prod.Name.EN : (!string.IsNullOrEmpty(prod?.Name.AZ) ? prod.Name.AZ : prod?.Name.RU ?? "Product"),
+                };
+
+                return new
+                {
+                    productId = pi.ProductId,
+                    quantity = pi.Quantity,
+                    name = name,
+                    nameAZ = prod?.Name.AZ,
+                    nameRU = prod?.Name.RU,
+                    nameEN = prod?.Name.EN,
+                    price = prod?.Prices != null ? (prod.Prices.DiscountPrice ?? prod.Prices.Price) : 0m,
+                    originalPrice = prod?.Prices?.Price ?? 0m,
+                    discountPrice = prod?.Prices?.DiscountPrice,
+                    imageUrl = !string.IsNullOrEmpty(prod?.Images?.Icon) ? prod.Images.Icon : prod?.Images?.Image,
+                    category = prod?.Category ?? "General"
+                };
+            }).ToList();
+
+            return new
+            {
+                id = c.Id,
+                payMethod = c.PayMethod.ToString(),
+                status = c.Status.ToString(),
+                initialAmount = c.Paid.InitialAmount,
+                promoCode = c.Paid.PromoCodeId,
+                totalAmount = c.Paid.TotalAmount,
+                discountAmount = Math.Max(0m, c.Paid.InitialAmount - c.Paid.TotalAmount),
+                note = c.Description?.Note,
+                cashierId = c.Description?.CashierId,
+                cashierName = c.Description?.CashierName,
+                editedBy = editorName,
+                editedAt = c.Description?.Edited?.Date,
+                createdAt = c.CreatedAt,
+                itemCount = c.Products.Sum(p => p.Quantity),
+                products = items
+            };
+        }).ToList();
+
+        return Ok(new
+        {
+            orders,
+            totalCount,
+            page,
+            pageSize,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize),
+            summary = new
+            {
+                totalRevenue,
+                cashRevenue,
+                cardRevenue,
+                totalOrders = totalCount,
+                successCount,
+                refundedCount,
+                cancelledCount
+            }
+        });
+    }
+
+    [HttpDelete("orders/{id:guid}")]
+    public async Task<IActionResult> DeleteCashboxOrder(Guid id)
+    {
+        var (allowed, user, errorResult) = await ValidateCashboxHistoryAccessAsync();
+        if (!allowed || user == null) return errorResult!;
+
+        if (user.Role != UserRole.Admin && user.Role != UserRole.SuperAdmin)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Only Admin and Super Admin can delete cashbox records." });
+        }
+
+        var record = await _context.Cashboxes.FirstOrDefaultAsync(c => c.Id == id);
+        if (record == null) return NotFound(new { message = "Cashbox order not found." });
+
+        _context.Cashboxes.Remove(record);
+        await _context.SaveChangesAsync();
+        return Ok(new { success = true, message = "Cashbox order deleted successfully." });
     }
 
     [HttpPatch("orders/{id:guid}")]

@@ -85,7 +85,7 @@ const CashboxSidebar = ({
           type="button"
           className={`cashbox-sidebar__btn cashbox-sidebar__promo-btn ${hasAppliedPromo ? 'cashbox-sidebar__promo-btn--active' : ''}`}
           onClick={onPromoClick}
-          title={hasAppliedPromo ? (t?.promoActive || 'Promo code active') : (t?.promoCodes || 'Promo Codes')}
+          title={hasAppliedPromo ? (t?.promoActive || 'Promo code active') : (t?.promoCodes || 'Promo')}
         >
           <div className="cashbox-sidebar__icon">
             {hasAppliedPromo && <span className="cashbox-sidebar__promo-dot" />}
@@ -104,7 +104,7 @@ const CashboxSidebar = ({
             </svg>
           </div>
           <span className="cashbox-sidebar__label">
-            {hasAppliedPromo ? (t?.promoActiveCount ? t.promoActiveCount(1) : 'Promo (1)') : (t?.promoCodes || 'Promo Codes')}
+            {hasAppliedPromo ? (t?.promoActiveCount ? t.promoActiveCount(1) : 'Promo (1)') : (t?.promoCodes || 'Promo')}
           </span>
         </button>
       </div>

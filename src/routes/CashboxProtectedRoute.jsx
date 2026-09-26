@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import loaderIcon from '../assets/icons/loader-animated.svg';
 import './AdminProtectedRoute.scss';
 
-const ALLOWED_CASHBOX_ROLES = ['staff', 'admin', 'superadmin'];
+const ALLOWED_CASHBOX_ROLES = ['staff', 'leadstaff', 'admin', 'superadmin'];
+const ALLOWED_HISTORY_ROLES = ['leadstaff', 'admin', 'superadmin'];
 
 const cleanRole = (role) => (role || '').toLowerCase().replace(/[\s_-]+/g, '');
 
@@ -13,7 +14,12 @@ export const isAllowedCashboxRole = (role) => {
   return ALLOWED_CASHBOX_ROLES.includes(cleanRole(role));
 };
 
-const CashboxProtectedRoute = ({ children }) => {
+export const isAllowedCashboxHistoryRole = (role) => {
+  if (!role) return false;
+  return ALLOWED_HISTORY_ROLES.includes(cleanRole(role));
+};
+
+const CashboxProtectedRoute = ({ children, allowedRoles = ALLOWED_CASHBOX_ROLES }) => {
   const { isAuthenticated, user, authLoading, fetchCurrentUser } = useAuth();
   const location = useLocation();
   const [checking, setChecking] = useState(false);
@@ -39,7 +45,8 @@ const CashboxProtectedRoute = ({ children }) => {
   }
 
   const role = user?.role || user?.Role;
-  if (!isAllowedCashboxRole(role)) {
+  const isAllowed = allowedRoles.map(cleanRole).includes(cleanRole(role));
+  if (!isAllowed) {
     return <Navigate to="/error?code=403" state={{ from: location }} replace />;
   }
 

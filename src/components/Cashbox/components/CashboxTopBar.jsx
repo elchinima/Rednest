@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { isAllowedCashboxHistoryRole } from '../../../routes/CashboxProtectedRoute';
 import logo from '../../../assets/icons/rednest_logo.png';
 
 const CashboxTopBar = ({
@@ -10,6 +12,8 @@ const CashboxTopBar = ({
   t,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canAccessHistory = isAllowedCashboxHistoryRole(user?.role || user?.Role);
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth > 900;
@@ -66,6 +70,20 @@ const CashboxTopBar = ({
       </div>
 
       <div className="cashbox-topbar__meta">
+        {canAccessHistory && (
+          <button
+            type="button"
+            className="cashbox-topbar__history-btn"
+            onClick={() => navigate('/cashbox/history')}
+            title={t?.history?.title || 'Cashbox History'}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span className="cashbox-topbar__history-text">{t?.history?.historyButton || 'History'}</span>
+          </button>
+        )}
         <div className="cashbox-topbar__chip">
           <div className="cashbox-topbar__avatar">
             {cashierAvatar ? (
@@ -87,7 +105,10 @@ const CashboxTopBar = ({
               {cashierName?.charAt(0)?.toUpperCase() || 'C'}
             </span>
           </div>
-          <span>{t?.cashier || 'Cashier:'} <strong>{cashierName}</strong></span>
+          <span>
+            <span className="cashbox-topbar__cashier-label">{t?.cashier || 'Cashier:'} </span>
+            <strong>{cashierName}</strong>
+          </span>
         </div>
       </div>
     </header>

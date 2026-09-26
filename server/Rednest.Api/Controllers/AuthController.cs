@@ -74,7 +74,7 @@ public class AuthController : ControllerBase
                     email = user.Email,
                     profilePictureUrl = user.ProfilePictureUrl,
                     balance = user.Balance,
-                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
                     twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
                 }
             });
@@ -135,7 +135,7 @@ public class AuthController : ControllerBase
                     email = user.Email,
                     profilePictureUrl = user.ProfilePictureUrl,
                     balance = user.Balance,
-                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
                     twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
                 }
             });
@@ -177,7 +177,7 @@ public class AuthController : ControllerBase
                     email = result.User.Email,
                     profilePictureUrl = result.User.ProfilePictureUrl,
                     balance = result.User.Balance,
-                    role = result.User.Role == UserRole.SuperAdmin ? "Super Admin" : result.User.Role.ToString(),
+                    role = result.User.Role == UserRole.SuperAdmin ? "Super Admin" : (result.User.Role == UserRole.LeadStaff ? "Lead Staff" : result.User.Role.ToString()),
                     twoFactorEnabled = true
                 }
             });
@@ -373,7 +373,7 @@ public class AuthController : ControllerBase
                     email = user.Email,
                     profilePictureUrl = user.ProfilePictureUrl,
                     balance = user.Balance,
-                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                    role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
                     twoFactorEnabled = userSession?.TwoFactorEnabled ?? false
                 }
             });
@@ -516,7 +516,7 @@ public class AuthController : ControllerBase
                 Email = user.Email,
                 ProfilePictureUrl = user.ProfilePictureUrl,
                 Balance = user.Balance,
-                Role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                Role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
                 TwoFactorEnabled = userSession?.TwoFactorEnabled ?? false
             });
         }

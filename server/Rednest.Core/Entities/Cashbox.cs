@@ -38,6 +38,8 @@ public class CashboxDescription
 {
     public string? Note { get; set; }
     public CashboxEditedInfo? Edited { get; set; }
+    public Guid? CashierId { get; set; }
+    public string? CashierName { get; set; }
 }
 
 public class Cashbox

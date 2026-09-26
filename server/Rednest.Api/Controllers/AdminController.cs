@@ -81,7 +81,7 @@ public class AdminController : ControllerBase
         return Ok(new
         {
             authenticated = true,
-            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
             userId = user.Id,
             name = user.Name,
             email = user.Email
@@ -272,7 +272,7 @@ public class AdminController : ControllerBase
                 name = u.Name,
                 profilePictureUrl = u.ProfilePictureUrl,
                 balance = u.Balance,
-                role = u.Role == UserRole.SuperAdmin ? "Super Admin" : u.Role.ToString(),
+                role = u.Role == UserRole.SuperAdmin ? "Super Admin" : (u.Role == UserRole.LeadStaff ? "Lead Staff" : u.Role.ToString()),
                 isActive = u.Session?.IsActive ?? true,
                 twoFactorEnabled = u.Session?.TwoFactorEnabled ?? false,
                 subscribe = u.Session?.Subscribe ?? false,
@@ -320,7 +320,7 @@ public class AdminController : ControllerBase
             name = user.Name,
             profilePictureUrl = user.ProfilePictureUrl,
             balance = user.Balance,
-            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+            role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
             addresses = user.Addresses ?? new List<UserAddress>(),
             paymentMethods = (user.PaymentMethods ?? new List<UserPaymentMethod>()).Select(pm => new
             {
@@ -433,7 +433,8 @@ public class AdminController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(request.Role))
         {
-            if (Enum.TryParse<UserRole>(request.Role, true, out var parsedRole))
+            var cleanRoleStr = request.Role.Replace(" ", "");
+            if (Enum.TryParse<UserRole>(cleanRoleStr, true, out var parsedRole))
             {
                 if (user.Role != parsedRole)
                 {
@@ -531,7 +532,7 @@ public class AdminController : ControllerBase
                 user.Name,
                 user.Email,
                 user.Balance,
-                role = user.Role == UserRole.SuperAdmin ? "Super Admin" : user.Role.ToString(),
+                role = user.Role == UserRole.SuperAdmin ? "Super Admin" : (user.Role == UserRole.LeadStaff ? "Lead Staff" : user.Role.ToString()),
                 isActive = user.Session.IsActive,
                 twoFactorEnabled = user.Session.TwoFactorEnabled,
                 subscribe = user.Session.Subscribe
@@ -1961,7 +1962,7 @@ public class AdminController : ControllerBase
             id = u.Id,
             email = u.Email,
             name = u.Name,
-            role = u.Role == UserRole.SuperAdmin ? "Super Admin" : u.Role.ToString(),
+            role = u.Role == UserRole.SuperAdmin ? "Super Admin" : (u.Role == UserRole.LeadStaff ? "Lead Staff" : u.Role.ToString()),
             isActive = u.Session?.IsActive ?? true,
             subscribe = u.Session?.Subscribe ?? false
         }).ToList();
@@ -2475,10 +2476,11 @@ public class AdminController : ControllerBase
 
     private static int GetUserRoleLevel(UserRole role) => role switch
     {
-        UserRole.SuperAdmin => 5,
-        UserRole.Admin => 4,
-        UserRole.Moderator => 3,
-        UserRole.Support => 2,
+        UserRole.SuperAdmin => 6,
+        UserRole.Admin => 5,
+        UserRole.Moderator => 4,
+        UserRole.Support => 3,
+        UserRole.LeadStaff => 2,
         UserRole.Staff => 1,
         UserRole.Bot => 0,
         UserRole.AI => 0,
