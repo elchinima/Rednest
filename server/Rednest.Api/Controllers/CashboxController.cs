@@ -328,6 +328,7 @@ public class CashboxController : ControllerBase
         if (pageSize > 100) pageSize = 100;
 
         var normalizedLang = (lang ?? "en").Trim().ToLowerInvariant();
+        var now = DateTime.UtcNow;
 
         var query = _context.Cashboxes.AsNoTracking().AsQueryable();
 
@@ -349,7 +350,6 @@ public class CashboxController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(dateRange))
         {
-            var now = DateTime.UtcNow;
             if (string.Equals(dateRange, "today", StringComparison.OrdinalIgnoreCase))
             {
                 var todayStart = now.Date;
@@ -386,19 +386,26 @@ public class CashboxController : ControllerBase
 
         var totalCount = await query.CountAsync();
 
-        var allFiltered = await query.Select(c => new
-        {
-            c.Paid.TotalAmount,
-            c.PayMethod,
-            c.Status
-        }).ToListAsync();
+        var currentMonthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var nextMonthStart = currentMonthStart.AddMonths(1);
 
-        var totalRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success).Sum(c => c.TotalAmount);
-        var cashRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Cash).Sum(c => c.TotalAmount);
-        var cardRevenue = allFiltered.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Card).Sum(c => c.TotalAmount);
-        var successCount = allFiltered.Count(c => c.Status == CashboxStatus.Success);
-        var refundedCount = allFiltered.Count(c => c.Status == CashboxStatus.Refunded);
-        var cancelledCount = allFiltered.Count(c => c.Status == CashboxStatus.Cancelled);
+        var monthRecords = await _context.Cashboxes
+            .AsNoTracking()
+            .Where(c => c.CreatedAt >= currentMonthStart && c.CreatedAt < nextMonthStart)
+            .Select(c => new
+            {
+                c.Paid.TotalAmount,
+                c.PayMethod,
+                c.Status
+            })
+            .ToListAsync();
+
+        var totalRevenue = monthRecords.Where(c => c.Status == CashboxStatus.Success).Sum(c => c.TotalAmount);
+        var cashRevenue = monthRecords.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Cash).Sum(c => c.TotalAmount);
+        var cardRevenue = monthRecords.Where(c => c.Status == CashboxStatus.Success && c.PayMethod == CashboxPayMethod.Card).Sum(c => c.TotalAmount);
+        var successCount = monthRecords.Count(c => c.Status == CashboxStatus.Success);
+        var refundedCount = monthRecords.Count(c => c.Status == CashboxStatus.Refunded);
+        var cancelledCount = monthRecords.Count(c => c.Status == CashboxStatus.Cancelled);
 
         var pagedRecords = await query
             .OrderByDescending(c => c.CreatedAt)
@@ -488,10 +495,11 @@ public class CashboxController : ControllerBase
                 totalRevenue,
                 cashRevenue,
                 cardRevenue,
-                totalOrders = totalCount,
+                totalOrders = successCount,
                 successCount,
                 refundedCount,
-                cancelledCount
+                cancelledCount,
+                currentMonth = now.ToString("yyyy-MM")
             }
         });
     }

@@ -151,7 +151,7 @@
     filter: drop-shadow(0 2px 8px rgba(239, 68, 68, 0.3));
 
     @media (max-width: 900px) {
-      display: none !important;
+      height: 30px;
     }
   }
 
@@ -162,6 +162,10 @@
     background: linear-gradient(135deg, #ffffff 40%, #fca5a5 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+
+    @media (max-width: 900px) {
+      display: none !important;
+    }
   }
 
   &__badge {
@@ -174,6 +178,10 @@
     border: 1px solid rgba(239, 68, 68, 0.4);
     padding: 2px 7px;
     border-radius: 6px;
+
+    @media (max-width: 900px) {
+      display: none !important;
+    }
   }
 
   &__search {

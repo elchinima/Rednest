@@ -91,7 +91,7 @@ const CashboxOrderDetailModal = ({
               <div className="cb-detail-meta-item">
                 <span className="cb-detail-meta-label">{t?.history?.payment || 'Payment'}</span>
                 <span className="cb-detail-meta-val">
-                  {order.payMethod === 'Card' ? '💳 ' + (t?.history?.card || 'Card') : '💵 ' + (t?.history?.cash || 'Cash')}
+                  {order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}
                 </span>
               </div>
               <div className="cb-detail-meta-item">
@@ -101,7 +101,7 @@ const CashboxOrderDetailModal = ({
               {order.promoCode && (
                 <div className="cb-detail-meta-item">
                   <span className="cb-detail-meta-label">{t?.promoCodeLabel || 'Promo Code'}</span>
-                  <span className="cb-detail-meta-val cb-detail-promo-tag">🎟️ {order.promoCode}</span>
+                  <span className="cb-detail-meta-val cb-detail-promo-tag">{order.promoCode}</span>
                 </div>
               )}
             </div>
@@ -117,7 +117,15 @@ const CashboxOrderDetailModal = ({
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.name} className="cb-detail-prod-img" />
                       ) : (
-                        <div className="cb-detail-prod-fallback">☕</div>
+                        <div className="cb-detail-prod-fallback">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                            <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                            <line x1="6" y1="1" x2="6" y2="4" />
+                            <line x1="10" y1="1" x2="10" y2="4" />
+                            <line x1="14" y1="1" x2="14" y2="4" />
+                          </svg>
+                        </div>
                       )}
                       <div>
                         <div className="cb-detail-prod-name">{item.name}</div>
@@ -192,7 +200,7 @@ const CashboxOrderDetailModal = ({
 
                 {order.editedBy && (
                   <div className="cb-detail-edited-info">
-                    ℹ️ {t?.history?.editedBy || 'Edited by:'} <strong>{order.editedBy}</strong>
+                    {t?.history?.editedBy || 'Edited by:'} <strong>{order.editedBy}</strong>
                     {order.editedAt && ` (${new Date(order.editedAt).toLocaleString()})`}
                   </div>
                 )}

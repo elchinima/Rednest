@@ -6,8 +6,8 @@ import { fetchWithRefresh } from '../../../utils/fetchWithRefresh';
 import { useAuth } from '../../../context/AuthContext';
 import { useLang } from '../../../utils/useLang';
 import { getCashboxTranslation } from '../Lang';
-import logo from '../../../assets/icons/rednest_logo.png';
 import loaderIcon from '../../../assets/icons/loader-animated.svg';
+import CashboxTopBar from '../components/CashboxTopBar';
 import CashboxOrderDetailModal from './CashboxOrderDetailModal';
 import './CashboxHistory.scss';
 
@@ -24,12 +24,6 @@ const CashboxHistory = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
 
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [payMethodFilter, setPayMethodFilter] = useState('all');
-  const [dateRange, setDateRange] = useState('all');
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState('');
@@ -40,14 +34,8 @@ const CashboxHistory = () => {
 
   const userRole = (user?.role || user?.Role || '').toLowerCase().replace(/[\s_-]+/g, '');
   const isAdminOrSuperAdmin = userRole === 'admin' || userRole === 'superadmin';
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 350);
-    return () => clearTimeout(handler);
-  }, [search]);
+  const cashierName = user?.name || user?.username || user?.Name || t?.unknownUser || 'Unknown User';
+  const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
 
   const showToast = (msg) => {
     setToast(msg);
@@ -63,11 +51,6 @@ const CashboxHistory = () => {
         pageSize: pageSize.toString(),
         lang: lang || 'az',
       });
-
-      if (debouncedSearch) params.append('search', debouncedSearch);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (payMethodFilter !== 'all') params.append('payMethod', payMethodFilter);
-      if (dateRange !== 'all') params.append('dateRange', dateRange);
 
       const res = await fetchWithRefresh(`${API_URL}/api/cashbox/history?${params.toString()}`);
       if (!res.ok) {
@@ -88,7 +71,7 @@ const CashboxHistory = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, debouncedSearch, statusFilter, payMethodFilter, dateRange, lang, t]);
+  }, [page, pageSize, lang, t]);
 
   useEffect(() => {
     fetchHistory();
@@ -171,54 +154,23 @@ const CashboxHistory = () => {
         )}
       </AnimatePresence>
 
-      <header className="cb-history-header">
-        <div className="cb-history-header__left">
-          <div className="cb-history-brand" onClick={() => navigate('/cashbox')}>
-            <img src={logo} alt="Rednest" className="cb-history-brand__logo" />
-            <div className="cb-history-brand__text-group">
-              <div className="cb-history-brand__title-row">
-                <span className="cb-history-brand__name">Rednest</span>
-                <span className="cb-history-brand__badge">POS</span>
-              </div>
-              <span className="cb-history-brand__subtitle">{t?.history?.title || 'Cashbox History'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="cb-history-header__right">
-          <button
-            type="button"
-            className="cb-history-back-btn"
-            onClick={() => navigate('/cashbox')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            <span>{t?.history?.backToCashbox || 'Back to Cashbox'}</span>
-          </button>
-
-          <div className="cb-history-user-chip">
-            <div className="cb-history-user-avatar">
-              {user?.profilePictureUrl ? (
-                <img src={user.profilePictureUrl} alt={user?.name || 'User'} />
-              ) : (
-                <span>{(user?.name || user?.username || 'U')[0].toUpperCase()}</span>
-              )}
-            </div>
-            <div className="cb-history-user-details">
-              <span className="cb-history-user-name">{user?.name || user?.username || 'Staff'}</span>
-              <span className="cb-history-user-role">{user?.role || user?.Role || 'Lead Staff'}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <CashboxTopBar
+        cashierName={cashierName}
+        cashierAvatar={cashierAvatar}
+        t={t}
+        isHistory={true}
+      />
 
       <main className="cb-history-main">
         {summary && (
           <div className="cb-history-metrics">
             <div className="cb-metric-card">
-              <div className="cb-metric-card__icon cb-metric-card__icon--rev">💰</div>
+              <div className="cb-metric-card__icon cb-metric-card__icon--rev">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              </div>
               <div className="cb-metric-card__info">
                 <span className="cb-metric-card__label">{t?.history?.totalRevenue || 'Total Revenue'}</span>
                 <span className="cb-metric-card__value">{summary.totalRevenue?.toFixed(2)} ₼</span>
@@ -226,7 +178,14 @@ const CashboxHistory = () => {
             </div>
 
             <div className="cb-metric-card">
-              <div className="cb-metric-card__icon cb-metric-card__icon--orders">📋</div>
+              <div className="cb-metric-card__icon cb-metric-card__icon--orders">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
               <div className="cb-metric-card__info">
                 <span className="cb-metric-card__label">{t?.history?.totalOrders || 'Total Orders'}</span>
                 <span className="cb-metric-card__value">{summary.totalOrders}</span>
@@ -234,7 +193,13 @@ const CashboxHistory = () => {
             </div>
 
             <div className="cb-metric-card">
-              <div className="cb-metric-card__icon cb-metric-card__icon--cash">💵</div>
+              <div className="cb-metric-card__icon cb-metric-card__icon--cash">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M6 12h.01M18 12h.01" />
+                </svg>
+              </div>
               <div className="cb-metric-card__info">
                 <span className="cb-metric-card__label">{t?.history?.cashTotal || 'Cash'}</span>
                 <span className="cb-metric-card__value">{summary.cashRevenue?.toFixed(2)} ₼</span>
@@ -242,7 +207,12 @@ const CashboxHistory = () => {
             </div>
 
             <div className="cb-metric-card">
-              <div className="cb-metric-card__icon cb-metric-card__icon--card">💳</div>
+              <div className="cb-metric-card__icon cb-metric-card__icon--card">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+              </div>
               <div className="cb-metric-card__info">
                 <span className="cb-metric-card__label">{t?.history?.cardTotal || 'Card'}</span>
                 <span className="cb-metric-card__value">{summary.cardRevenue?.toFixed(2)} ₼</span>
@@ -251,99 +221,7 @@ const CashboxHistory = () => {
           </div>
         )}
 
-        <div className="cb-history-toolbar">
-          <div className="cb-history-search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="cb-history-search__icon">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-            <input
-              type="text"
-              className="cb-history-search__input"
-              placeholder={t?.history?.searchPlaceholder || 'Search Order ID, promo code, note...'}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button type="button" className="cb-history-search__clear" onClick={() => setSearch('')}>
-                ✕
-              </button>
-            )}
-          </div>
 
-          <div className="cb-history-filters">
-            <select
-              className="cb-history-select"
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="all">{t?.history?.allStatuses || 'All Statuses'}</option>
-              <option value="Success">{t?.history?.statusSuccess || 'Success'}</option>
-              <option value="Cancelled">{t?.history?.statusCancelled || 'Cancelled'}</option>
-              <option value="Refunded">{t?.history?.statusRefunded || 'Refunded'}</option>
-              <option value="Pending">{t?.history?.statusPending || 'Pending'}</option>
-            </select>
-
-            <select
-              className="cb-history-select"
-              value={payMethodFilter}
-              onChange={(e) => {
-                setPayMethodFilter(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="all">{t?.history?.allMethods || 'All Methods'}</option>
-              <option value="Cash">💵 {t?.history?.cash || 'Cash'}</option>
-              <option value="Card">💳 {t?.history?.card || 'Card'}</option>
-            </select>
-
-            <div className="cb-history-date-chips">
-              {[
-                { id: 'all', label: t?.history?.allTime || 'All' },
-                { id: 'today', label: t?.history?.today || 'Today' },
-                { id: 'yesterday', label: t?.history?.yesterday || 'Yesterday' },
-                { id: 'week', label: t?.history?.thisWeek || '7 Days' },
-                { id: 'month', label: t?.history?.thisMonth || '30 Days' },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  className={`cb-history-chip ${dateRange === chip.id ? 'cb-history-chip--active' : ''}`}
-                  onClick={() => {
-                    setDateRange(chip.id);
-                    setPage(1);
-                  }}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              className="cb-history-refresh-btn"
-              onClick={fetchHistory}
-              title={t?.history?.refresh || 'Refresh'}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={loading ? 'cb-history-spin' : ''}
-              >
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            </button>
-          </div>
-        </div>
 
         {loading && orders.length === 0 ? (
           <div className="cb-history-loading">
@@ -352,7 +230,13 @@ const CashboxHistory = () => {
           </div>
         ) : error ? (
           <div className="cb-history-error">
-            <div className="cb-history-error__icon">⚠️</div>
+            <div className="cb-history-error__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 44, height: 44 }}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
             <h3>{error}</h3>
             <button type="button" className="cb-history-retry-btn" onClick={fetchHistory}>
               {t?.history?.refresh || 'Retry'}
@@ -360,9 +244,15 @@ const CashboxHistory = () => {
           </div>
         ) : orders.length === 0 ? (
           <div className="cb-history-empty">
-            <div className="cb-history-empty__icon">🧾</div>
+            <div className="cb-history-empty__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 48, height: 48 }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </div>
             <h3>{t?.history?.noOrdersFound || 'No Orders Found'}</h3>
-            <p>{t?.history?.noOrdersDesc || 'Try adjusting your search query or filters.'}</p>
           </div>
         ) : (
           <div className="cb-history-table-container">
@@ -422,7 +312,7 @@ const CashboxHistory = () => {
 
                       <td className="cb-history-cell-pay">
                         <span className={`cb-hist-pay-badge cb-hist-pay-badge--${order.payMethod.toLowerCase()}`}>
-                          {order.payMethod === 'Card' ? '💳 ' + (t?.history?.card || 'Card') : '💵 ' + (t?.history?.cash || 'Cash')}
+                          {order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}
                         </span>
                       </td>
 
@@ -433,7 +323,7 @@ const CashboxHistory = () => {
                           <span className="cb-history-amount">{order.totalAmount?.toFixed(2)} ₼</span>
                           {order.promoCode && (
                             <span className="cb-history-promo-applied" title={`Promo: ${order.promoCode}`}>
-                              🎟️ {order.promoCode}
+                              {order.promoCode}
                             </span>
                           )}
                         </div>
@@ -449,7 +339,11 @@ const CashboxHistory = () => {
                           }}
                           title={t?.history?.viewDetails || 'Details'}
                         >
-                          👁️ {t?.history?.viewDetails || 'Details'}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                          <span>{t?.history?.viewDetails || 'Details'}</span>
                         </button>
 
                         {isAdminOrSuperAdmin && (
@@ -462,7 +356,10 @@ const CashboxHistory = () => {
                             }}
                             title={t?.history?.deleteOrder || 'Delete'}
                           >
-                            🗑️
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
                           </button>
                         )}
                       </td>
@@ -496,7 +393,7 @@ const CashboxHistory = () => {
                       <div className="cb-history-card__meta">
                         <span>{dateStr}</span>
                         <span>•</span>
-                        <span>{order.payMethod === 'Card' ? '💳 ' + (t?.history?.card || 'Card') : '💵 ' + (t?.history?.cash || 'Cash')}</span>
+                        <span>{order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}</span>
                       </div>
                       <div className="cb-history-card__amount">
                         {order.totalAmount?.toFixed(2)} ₼
@@ -553,7 +450,14 @@ const CashboxHistory = () => {
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="cb-delete-icon">⚠️</div>
+              <div className="cb-delete-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 44, height: 44 }}>
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </div>
               <h3>{t?.history?.confirmDelete || 'Delete this order?'}</h3>
               <p>
                 #{orderToDelete.id.slice(0, 8)} ({orderToDelete.totalAmount?.toFixed(2)} ₼)
