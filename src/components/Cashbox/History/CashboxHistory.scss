@@ -133,12 +133,30 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   backdrop-filter: blur(12px);
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    &:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+  }
 }
 
 .cb-history-table {
   width: 100%;
+  min-width: 880px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.9rem;
@@ -610,6 +628,30 @@
     code {
       color: #f87171;
       font-family: monospace;
+      cursor: pointer;
+      transition: color 0.15s ease;
+
+      &:hover {
+        color: #ef4444;
+      }
+    }
+
+    .cb-detail-id-full {
+      display: inline;
+    }
+
+    .cb-detail-id-short {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .cb-detail-id-full {
+        display: none;
+      }
+
+      .cb-detail-id-short {
+        display: inline;
+      }
     }
   }
 }

@@ -90,7 +90,15 @@ const CashboxOrderDetailModal = ({
                 {getStatusBadge(order.status)}
               </div>
               <p className="cb-detail-sub">
-                ID: <code>{order.id}</code>
+                ID:{' '}
+                <code
+                  className="cb-detail-id-code"
+                  title="Click to copy full ID"
+                  onClick={() => navigator.clipboard?.writeText(order.id)}
+                >
+                  <span className="cb-detail-id-full">{order.id}</span>
+                  <span className="cb-detail-id-short">#{order.id.slice(0, 8)}</span>
+                </code>
               </p>
             </div>
             <button type="button" className="cb-detail-close-btn" onClick={onClose}>

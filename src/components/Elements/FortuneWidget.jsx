@@ -137,8 +137,8 @@ const FortuneWidget = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  const hiddenPaths = ['/login', '/fortune', '/basket', '/profile', '/sessions', '/promos', '/order', '/orders', '/rules', '/terms', '/error', '/cashbox'];
-  if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith('/admin')) {
+  const hiddenPaths = ['/login', '/fortune', '/basket', '/profile', '/sessions', '/promos', '/order', '/orders', '/rules', '/terms', '/error'];
+  if (hiddenPaths.includes(location.pathname) || location.pathname.startsWith('/admin') || location.pathname.startsWith('/cashbox')) {
     return null;
   }
 
