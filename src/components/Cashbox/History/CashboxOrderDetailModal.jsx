@@ -159,98 +159,102 @@ const CashboxOrderDetailModal = ({
                 className="cb-tab-pane"
               >
                 <div className="cb-detail-meta-grid">
-                  <div className="cb-detail-meta-item">
-                    <span className="cb-detail-meta-label">{t?.history?.status || 'Status'}</span>
-                    <div className="cb-detail-status-inline">
-                      {getStatusBadge(order.status)}
-                    </div>
-                  </div>
-
-                  <div className="cb-detail-meta-item">
-                    <span className="cb-detail-meta-label">{t?.history?.date || 'Date'}</span>
-                    <span className="cb-detail-meta-val">{formattedDate}</span>
-                  </div>
-
-                  <div className="cb-detail-meta-item">
-                    <span className="cb-detail-meta-label">{t?.history?.payment || 'Payment'}</span>
-                    <span className="cb-detail-meta-val">
-                      {order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}
-                    </span>
-                  </div>
-
-                  <div className="cb-detail-meta-item">
-                    <span className="cb-detail-meta-label">{t?.history?.createdBy || t?.history?.cashier || 'Cashier'}</span>
-                    <div className="cb-detail-user-pill">
-                      {order.cashierAvatar ? (
-                        <img
-                          src={order.cashierAvatar}
-                          alt={order.cashierName || 'Cashier'}
-                          className="cb-detail-user-avatar"
-                        />
-                      ) : (
-                        <span className="cb-detail-user-avatar-fallback">
-                          {(order.cashierName || 'C')[0]?.toUpperCase()}
-                        </span>
-                      )}
-                      <div className="cb-detail-user-info">
-                        <span className="cb-detail-user-name">{order.cashierName || '—'}</span>
-                        {order.userId && (
-                          <button
-                            type="button"
-                            className="cb-detail-user-id-btn"
-                            onClick={(e) => handleCopyUserId(e, order.userId)}
-                            title={`Click to copy: ${order.userId}`}
-                          >
-                            <span>ID: {order.userId.slice(0, 8)}...</span>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}>
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
-                            {copiedUserId && <span className="cb-detail-copied-badge">Copied</span>}
-                          </button>
-                        )}
+                  <div className="cb-detail-meta-top">
+                    <div className="cb-detail-meta-item">
+                      <span className="cb-detail-meta-label">{t?.history?.status || 'Status'}</span>
+                      <div className="cb-detail-status-inline">
+                        {getStatusBadge(order.status)}
                       </div>
                     </div>
+
+                    <div className="cb-detail-meta-item">
+                      <span className="cb-detail-meta-label">{t?.history?.payment || 'Payment'}</span>
+                      <span className="cb-detail-meta-val">
+                        {order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}
+                      </span>
+                    </div>
+
+                    <div className="cb-detail-meta-item cb-detail-meta-item--date">
+                      <span className="cb-detail-meta-label">{t?.history?.date || 'Date'}</span>
+                      <span className="cb-detail-meta-val">{formattedDate}</span>
+                    </div>
+
+                    {order.promoCode && (
+                      <div className="cb-detail-meta-item">
+                        <span className="cb-detail-meta-label">{t?.promoCodeLabel || 'Promo Code'}</span>
+                        <span className="cb-detail-meta-val cb-detail-promo-tag">{order.promoCode}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {order.editedBy && (
-                    <div className="cb-detail-meta-item cb-detail-meta-item--edited">
-                      <span className="cb-detail-meta-label">{t?.history?.editedBy || 'Edited by'}</span>
+                  <div className="cb-detail-users-row">
+                    <div className="cb-detail-meta-item">
+                      <span className="cb-detail-meta-label">{t?.history?.createdBy || t?.history?.cashier || 'Cashier'}</span>
                       <div className="cb-detail-user-pill">
-                        {order.editorAvatar ? (
+                        {order.cashierAvatar ? (
                           <img
-                            src={order.editorAvatar}
-                            alt={order.editedBy}
+                            src={order.cashierAvatar}
+                            alt={order.cashierName || 'Cashier'}
                             className="cb-detail-user-avatar"
                           />
                         ) : (
-                          <span className="cb-detail-user-avatar-fallback cb-detail-user-avatar-fallback--editor">
-                            {(order.editedBy || 'E')[0]?.toUpperCase()}
+                          <span className="cb-detail-user-avatar-fallback">
+                            {(order.cashierName || 'C')[0]?.toUpperCase()}
                           </span>
                         )}
                         <div className="cb-detail-user-info">
-                          <span className="cb-detail-user-name">{order.editedBy}</span>
-                          {order.editedAt && (
-                            <span className="cb-detail-user-sub">
-                              {new Date(order.editedAt).toLocaleString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
+                          <span className="cb-detail-user-name">{order.cashierName || '—'}</span>
+                          {order.userId && (
+                            <button
+                              type="button"
+                              className="cb-detail-user-id-btn"
+                              onClick={(e) => handleCopyUserId(e, order.userId)}
+                              title={`Click to copy: ${order.userId}`}
+                            >
+                              <span>ID: {order.userId.slice(0, 8)}...</span>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 11, height: 11 }}>
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </svg>
+                              {copiedUserId && <span className="cb-detail-copied-badge">Copied</span>}
+                            </button>
                           )}
                         </div>
                       </div>
                     </div>
-                  )}
 
-                  {order.promoCode && (
-                    <div className="cb-detail-meta-item">
-                      <span className="cb-detail-meta-label">{t?.promoCodeLabel || 'Promo Code'}</span>
-                      <span className="cb-detail-meta-val cb-detail-promo-tag">{order.promoCode}</span>
-                    </div>
-                  )}
+                    {order.editedBy && (
+                      <div className="cb-detail-meta-item">
+                        <span className="cb-detail-meta-label">{t?.history?.editedBy || 'Edited by'}</span>
+                        <div className="cb-detail-user-pill">
+                          {order.editorAvatar ? (
+                            <img
+                              src={order.editorAvatar}
+                              alt={order.editedBy}
+                              className="cb-detail-user-avatar"
+                            />
+                          ) : (
+                            <span className="cb-detail-user-avatar-fallback cb-detail-user-avatar-fallback--editor">
+                              {(order.editedBy || 'E')[0]?.toUpperCase()}
+                            </span>
+                          )}
+                          <div className="cb-detail-user-info">
+                            <span className="cb-detail-user-name">{order.editedBy}</span>
+                            {order.editedAt && (
+                              <span className="cb-detail-user-sub">
+                                {new Date(order.editedAt).toLocaleString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {order.note && (
