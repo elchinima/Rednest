@@ -1,6 +1,3 @@
-using System.Net.Http.Headers;
-using System.Text.Json;
-
 namespace Rednest.Infrastructure.Services;
 
 public class AuthService : IAuthService

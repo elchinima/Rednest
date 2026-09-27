@@ -29,11 +29,6 @@ const CashboxHistory = () => {
   const [toast, setToast] = useState('');
 
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [orderToDelete, setOrderToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const userRole = (user?.role || user?.Role || '').toLowerCase().replace(/[\s_-]+/g, '');
-  const isAdminOrSuperAdmin = userRole === 'admin' || userRole === 'superadmin';
   const cashierName = user?.name || user?.username || user?.Name || t?.unknownUser || 'Unknown User';
   const cashierAvatar = user?.profilePictureUrl || user?.ProfilePictureUrl || user?.avatarUrl || user?.avatar || null;
 
@@ -93,28 +88,7 @@ const CashboxHistory = () => {
     fetchHistory();
   };
 
-  const handleDeleteOrder = async () => {
-    if (!orderToDelete) return;
-    setIsDeleting(true);
-    try {
-      const res = await fetchWithRefresh(`${API_URL}/api/cashbox/orders/${orderToDelete.id}`, {
-        method: 'DELETE',
-      });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to delete order');
-      }
-
-      showToast(t?.history?.orderDeleted || 'Order deleted successfully');
-      setOrderToDelete(null);
-      fetchHistory();
-    } catch (err) {
-      alert(err.message || 'Failed to delete order');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard?.writeText(text);
@@ -296,7 +270,23 @@ const CashboxHistory = () => {
                       <td className="cb-history-cell-date">{dateStr}</td>
 
                       <td className="cb-history-cell-cashier">
-                        <span className="cb-history-cashier-pill">{order.cashierName || '—'}</span>
+                        <div
+                          className="cb-history-cashier-pill"
+                          title={order.userId ? `User ID: ${order.userId}${order.cashierEmail ? ` (${order.cashierEmail})` : ''}` : (order.cashierEmail || '')}
+                        >
+                          {order.cashierAvatar ? (
+                            <img
+                              src={order.cashierAvatar}
+                              alt={order.cashierName || 'Cashier'}
+                              className="cb-history-cashier-avatar"
+                            />
+                          ) : (
+                            <span className="cb-history-cashier-avatar-fallback">
+                              {(order.cashierName || 'C')[0]?.toUpperCase()}
+                            </span>
+                          )}
+                          <span className="cb-history-cashier-name">{order.cashierName || '—'}</span>
+                        </div>
                       </td>
 
                       <td className="cb-history-cell-items">
@@ -329,39 +319,24 @@ const CashboxHistory = () => {
                         </div>
                       </td>
 
-                      <td className="cb-history-cell-actions" style={{ textAlign: 'right' }}>
-                        <button
-                          type="button"
-                          className="cb-history-action-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedOrder(order);
-                          }}
-                          title={t?.history?.viewDetails || 'Details'}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                          <span>{t?.history?.viewDetails || 'Details'}</span>
-                        </button>
-
-                        {isAdminOrSuperAdmin && (
+                      <td className="cb-history-cell-actions-td" style={{ textAlign: 'right' }}>
+                        <div className="cb-history-cell-actions">
                           <button
                             type="button"
-                            className="cb-history-action-btn cb-history-action-btn--delete"
+                            className="cb-history-action-btn"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOrderToDelete(order);
+                              setSelectedOrder(order);
                             }}
-                            title={t?.history?.deleteOrder || 'Delete'}
+                            title={t?.history?.viewDetails || 'Details'}
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
                             </svg>
+                            <span>{t?.history?.viewDetails || 'Details'}</span>
                           </button>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -391,6 +366,21 @@ const CashboxHistory = () => {
 
                     <div className="cb-history-card__footer">
                       <div className="cb-history-card__meta">
+                        <div className="cb-history-card__cashier" title={order.userId ? `User ID: ${order.userId}` : ''}>
+                          {order.cashierAvatar ? (
+                            <img
+                              src={order.cashierAvatar}
+                              alt={order.cashierName || ''}
+                              className="cb-history-card__cashier-avatar"
+                            />
+                          ) : (
+                            <span className="cb-history-card__cashier-avatar-fallback">
+                              {(order.cashierName || 'C')[0]?.toUpperCase()}
+                            </span>
+                          )}
+                          <span>{order.cashierName || '—'}</span>
+                        </div>
+                        <span>•</span>
                         <span>{dateStr}</span>
                         <span>•</span>
                         <span>{order.payMethod === 'Card' ? (t?.history?.card || 'Card') : (t?.history?.cash || 'Cash')}</span>
@@ -439,52 +429,6 @@ const CashboxHistory = () => {
         t={t}
         canEdit={true}
       />
-
-      <AnimatePresence>
-        {orderToDelete && (
-          <div className="cb-detail-overlay" onClick={() => setOrderToDelete(null)}>
-            <motion.div
-              className="cb-delete-modal"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="cb-delete-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 44, height: 44 }}>
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  <line x1="10" y1="11" x2="10" y2="17" />
-                  <line x1="14" y1="11" x2="14" y2="17" />
-                </svg>
-              </div>
-              <h3>{t?.history?.confirmDelete || 'Delete this order?'}</h3>
-              <p>
-                #{orderToDelete.id.slice(0, 8)} ({orderToDelete.totalAmount?.toFixed(2)} ₼)
-              </p>
-              <p className="cb-delete-sub">{t?.history?.deleteWarning || 'This action cannot be undone.'}</p>
-              <div className="cb-delete-actions">
-                <button
-                  type="button"
-                  className="cb-detail-cancel-btn"
-                  onClick={() => setOrderToDelete(null)}
-                  disabled={isDeleting}
-                >
-                  {t?.cancel || 'Cancel'}
-                </button>
-                <button
-                  type="button"
-                  className="cb-detail-delete-confirm-btn"
-                  onClick={handleDeleteOrder}
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : (t?.history?.deleteOrder || 'Delete')}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

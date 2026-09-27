@@ -43,6 +43,9 @@ builder.Services.AddHostedService<KeepAliveService>();
 builder.Services.AddSingleton<AnalyticsTrackingService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<AnalyticsTrackingService>());
 builder.Services.AddSingleton<IAnalyticsTrackingService>(sp => sp.GetRequiredService<AnalyticsTrackingService>());
+builder.Services.AddSingleton<PromoCleanupService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<PromoCleanupService>());
+builder.Services.AddSingleton<IPromoCleanupService>(sp => sp.GetRequiredService<PromoCleanupService>());
 
 builder.Services.AddCors(options =>
 {

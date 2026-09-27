@@ -29,48 +29,67 @@ public class ReviewsController : ControllerBase
     {
         var currentUserId = GetUserId();
 
+        var blockedUserIds = await _db.UserSessions
+            .AsNoTracking()
+            .Where(s => !s.IsActive)
+            .Select(s => s.UserId)
+            .ToListAsync();
+
         var reviews = await _db.Reviews
             .AsNoTracking()
-            .Where(r => r.Status.Status == ReviewStatus.Published)
+            .Where(r => r.Status.Status == ReviewStatus.Published && !blockedUserIds.Contains(r.UserId))
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
         var userIds = reviews.Select(r => r.UserId).Distinct().ToList();
         var users = await _db.Users
+            .Include(u => u.Session)
             .Where(u => userIds.Contains(u.Id))
             .AsNoTracking()
             .ToDictionaryAsync(u => u.Id);
 
-        var result = reviews.Select(r =>
-        {
-            users.TryGetValue(r.UserId, out var user);
-            var authorName = !string.IsNullOrWhiteSpace(user?.Name)
-                ? user.Name.Trim().Split(' ')[0]
-                : "Customer";
-
-            var likesList = r.Likes ?? new List<Guid>();
-            var isLiked = currentUserId.HasValue && likesList.Contains(currentUserId.Value);
-            var isOwner = currentUserId.HasValue && r.UserId == currentUserId.Value;
-
-            return new
+        var result = reviews
+            .Where(r =>
             {
-                id = r.Id,
-                userId = r.UserId,
-                orderId = r.OrderId,
-                author = authorName,
-                initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
-                avatarUrl = user?.ProfilePictureUrl,
-                category = r.Category.ToString(),
-                status = r.Status.Status.ToString(),
-                language = r.Language?.ToString(),
-                rating = r.ReviewData.Rating,
-                comment = r.ReviewData.Comment,
-                likes = likesList.Count,
-                userLiked = isLiked,
-                isOwner = isOwner,
-                createdAt = r.CreatedAt
-            };
-        }).ToList();
+                if (!users.TryGetValue(r.UserId, out var user))
+                    return false;
+
+                if (user.Session != null && !user.Session.IsActive)
+                    return false;
+
+                return true;
+            })
+            .Select(r =>
+            {
+                users.TryGetValue(r.UserId, out var user);
+                var authorName = !string.IsNullOrWhiteSpace(user?.Name)
+                    ? user.Name.Trim().Split(' ')[0]
+                    : "Customer";
+
+                var likesList = r.Likes ?? new List<Guid>();
+                var isLiked = currentUserId.HasValue && likesList.Contains(currentUserId.Value);
+                var isOwner = currentUserId.HasValue && r.UserId == currentUserId.Value;
+
+                return new
+                {
+                    id = r.Id,
+                    userId = r.UserId,
+                    orderId = r.OrderId,
+                    author = authorName,
+                    initials = !string.IsNullOrEmpty(authorName) ? authorName[0].ToString().ToUpperInvariant() : "C",
+                    avatarUrl = user?.ProfilePictureUrl,
+                    category = r.Category.ToString(),
+                    status = r.Status.Status.ToString(),
+                    language = r.Language?.ToString(),
+                    rating = r.ReviewData.Rating,
+                    comment = r.ReviewData.Comment,
+                    likes = likesList.Count,
+                    userLiked = isLiked,
+                    isOwner = isOwner,
+                    userIsActive = user?.Session?.IsActive ?? true,
+                    createdAt = r.CreatedAt
+                };
+            }).ToList();
 
         return Ok(result);
     }
@@ -194,6 +213,10 @@ public class ReviewsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        var isBlocked = await _db.UserSessions.AsNoTracking().AnyAsync(s => s.UserId == userId.Value && !s.IsActive);
+        if (isBlocked)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Your account has been suspended or blocked." });
+
         if (request.Rating < 1.0m || request.Rating > 5.0m)
             return BadRequest(new { message = "Rating must be between 1.00 and 5.00." });
 
@@ -283,6 +306,10 @@ public class ReviewsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        var isBlocked = await _db.UserSessions.AsNoTracking().AnyAsync(s => s.UserId == userId.Value && !s.IsActive);
+        if (isBlocked)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Your account has been suspended or blocked." });
 
         var review = await _db.Reviews.FirstOrDefaultAsync(r => r.Id == id);
         if (review == null)

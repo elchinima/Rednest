@@ -1492,6 +1492,36 @@ public class AdminController : ControllerBase
         return Ok(new { message = "Promo code deleted successfully." });
     }
 
+    [HttpPost("promos/cleanup-expired")]
+    public async Task<IActionResult> CleanupExpiredPromos([FromServices] IPromoCleanupService promoCleanupService)
+    {
+        if (!await IsSuperAdminAuthenticatedAsync())
+            return StatusCode(403, new { message = "Access denied. Only Super Admin can run promo cleanup." });
+
+        var count = await promoCleanupService.CleanupExpiredPromosAsync();
+
+        var (auth, adminUser) = await GetAdminUserAsync();
+        await LogAdminActionAsync(
+            adminUser?.Id,
+            adminUser?.Role.ToString() ?? "Admin",
+            "Promos",
+            "CLEANUP",
+            new
+            {
+                action = "CleanupExpiredPromos",
+                deletedCount = count,
+                executedAtUtc = DateTime.UtcNow
+            });
+
+        return Ok(new
+        {
+            message = count > 0
+                ? $"Deleted {count} promo code(s) older than 7 days past expiration."
+                : "No promo codes older than 7 days past expiration were found.",
+            deletedCount = count
+        });
+    }
+
     [HttpGet("products")]
     public async Task<IActionResult> GetProducts()
     {

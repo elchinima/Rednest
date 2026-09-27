@@ -43,7 +43,7 @@ const Reviews = () => {
         throw new Error('Failed to load your reviews.');
       }
       const data = await res.json();
-      const list = Array.isArray(data) ? data : [];
+      const list = (Array.isArray(data) ? data : []).filter(r => r.userIsActive !== false);
       const myReviews = list.filter(r => r.isOwner || (user && (r.userId === user.id || r.userId === user.Id)));
       setReviews(myReviews);
     } catch (err) {

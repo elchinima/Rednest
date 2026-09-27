@@ -274,6 +274,7 @@ public class CashboxController : ControllerBase
 
         var cashboxRecord = new Rednest.Core.Entities.Cashbox
         {
+            UserId = cashierUser.Id,
             PayMethod = string.Equals(request.PayMethod, "Card", StringComparison.OrdinalIgnoreCase)
                 ? CashboxPayMethod.Card
                 : CashboxPayMethod.Cash,
@@ -420,21 +421,42 @@ public class CashboxController : ControllerBase
             .ToListAsync();
         var productDict = products.ToDictionary(p => p.Id);
 
+        var creatorIds = pagedRecords
+            .Select(c => c.UserId ?? c.Description?.CashierId)
+            .Where(id => id.HasValue && id.Value != Guid.Empty)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
         var editorIds = pagedRecords
             .Where(c => c.Description?.Edited?.UserId != null && c.Description.Edited.UserId != Guid.Empty)
             .Select(c => c.Description.Edited!.UserId)
             .Distinct()
             .ToList();
-        var editors = await _context.Users
+
+        var allUserIds = creatorIds.Concat(editorIds).Distinct().ToList();
+        var userDict = await _context.Users
             .AsNoTracking()
-            .Where(u => editorIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => u.Name ?? u.Email);
+            .Where(u => allUserIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id);
 
         var orders = pagedRecords.Select(c =>
         {
-            var editorName = (c.Description?.Edited?.UserId != null && editors.TryGetValue(c.Description.Edited.UserId, out var edName))
-                ? edName
-                : null;
+            var creatorId = c.UserId ?? c.Description?.CashierId;
+            userDict.TryGetValue(creatorId ?? Guid.Empty, out var creatorUser);
+
+            var editorId = c.Description?.Edited?.UserId;
+            userDict.TryGetValue(editorId ?? Guid.Empty, out var editorUser);
+
+            var cashierName = !string.IsNullOrWhiteSpace(creatorUser?.Name)
+                ? creatorUser.Name
+                : (!string.IsNullOrWhiteSpace(c.Description?.CashierName)
+                    ? c.Description.CashierName
+                    : (creatorUser?.Email ?? "Cashier"));
+
+            var editorName = !string.IsNullOrWhiteSpace(editorUser?.Name)
+                ? editorUser.Name
+                : editorUser?.Email;
 
             var items = c.Products.Select(pi =>
             {
@@ -466,6 +488,7 @@ public class CashboxController : ControllerBase
             return new
             {
                 id = c.Id,
+                userId = c.UserId ?? creatorId,
                 payMethod = c.PayMethod.ToString(),
                 status = c.Status.ToString(),
                 initialAmount = c.Paid.InitialAmount,
@@ -473,9 +496,13 @@ public class CashboxController : ControllerBase
                 totalAmount = c.Paid.TotalAmount,
                 discountAmount = Math.Max(0m, c.Paid.InitialAmount - c.Paid.TotalAmount),
                 note = c.Description?.Note,
-                cashierId = c.Description?.CashierId,
-                cashierName = c.Description?.CashierName,
+                cashierId = creatorId,
+                cashierName = cashierName,
+                cashierAvatar = creatorUser?.ProfilePictureUrl,
+                cashierEmail = creatorUser?.Email,
                 editedBy = editorName,
+                editorAvatar = editorUser?.ProfilePictureUrl,
+                editorEmail = editorUser?.Email,
                 editedAt = c.Description?.Edited?.Date,
                 createdAt = c.CreatedAt,
                 itemCount = c.Products.Sum(p => p.Quantity),

@@ -38,8 +38,9 @@ const Reviews = () => {
       const res = await fetchWithRefresh(`${apiUrl}/api/reviews`);
       if (res.ok) {
         const data = await res.json();
-        setReviews(data || []);
-        const initialSet = new Set((data || []).filter(r => r.userLiked).map(r => r.id));
+        const activeReviews = (data || []).filter(r => r.userIsActive !== false);
+        setReviews(activeReviews);
+        const initialSet = new Set(activeReviews.filter(r => r.userLiked).map(r => r.id));
         setInitialLikedReviews(initialSet);
       }
     } catch (err) {
@@ -180,7 +181,9 @@ const Reviews = () => {
   };
 
   const handleAddNewReview = (newReview) => {
-    setReviews(prev => [newReview, ...prev]);
+    if (newReview && newReview.userIsActive !== false) {
+      setReviews(prev => [newReview, ...prev]);
+    }
     showToast('🎉 Thank you! Your review was published successfully.');
   };
 

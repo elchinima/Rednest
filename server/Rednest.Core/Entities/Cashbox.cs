@@ -45,11 +45,14 @@ public class CashboxDescription
 public class Cashbox
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid? UserId { get; set; }
     public CashboxPayMethod PayMethod { get; set; }
     public List<CashboxProductItem> Products { get; set; } = new();
     public CashboxPaidDetails Paid { get; set; } = new();
     public CashboxStatus Status { get; set; } = CashboxStatus.Success;
     public CashboxDescription Description { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public User? User { get; set; }
 }
 
