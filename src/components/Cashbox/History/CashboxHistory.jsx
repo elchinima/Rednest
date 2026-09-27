@@ -84,8 +84,16 @@ const CashboxHistory = () => {
       throw new Error(data.message || 'Failed to update order');
     }
 
+    const data = await res.json().catch(() => ({}));
+    if (data.order) {
+      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, ...data.order } : prev));
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, ...data.order } : o))
+      );
+    }
+
     showToast(t?.history?.statusUpdated || 'Status successfully updated');
-    fetchHistory();
+    await fetchHistory();
   };
 
 

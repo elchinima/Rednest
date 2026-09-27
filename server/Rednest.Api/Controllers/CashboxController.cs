@@ -577,22 +577,49 @@ public class CashboxController : ControllerBase
             }
         }
 
-        cashboxRecord.Description ??= new CashboxDescription();
-
+        var existingDesc = cashboxRecord.Description;
+        var newNote = existingDesc?.Note;
         if (request.Note != null)
         {
-            cashboxRecord.Description.Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
+            newNote = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim();
         }
 
-        cashboxRecord.Description.Edited = new CashboxEditedInfo
+        var editDate = DateTime.UtcNow;
+
+        cashboxRecord.Description = new CashboxDescription
         {
-            UserId = cashierUser.Id,
-            Date = DateTime.UtcNow
+            CashierId = existingDesc?.CashierId ?? cashboxRecord.UserId,
+            CashierName = existingDesc?.CashierName,
+            Note = newNote,
+            Edited = new CashboxEditedInfo
+            {
+                UserId = cashierUser.Id,
+                Date = editDate
+            }
         };
+
+        _context.Entry(cashboxRecord).Property(c => c.Description).IsModified = true;
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { success = true, order = cashboxRecord });
+        var editorName = !string.IsNullOrWhiteSpace(cashierUser.Name)
+            ? cashierUser.Name
+            : cashierUser.Email;
+
+        return Ok(new
+        {
+            success = true,
+            order = new
+            {
+                id = cashboxRecord.Id,
+                status = cashboxRecord.Status.ToString(),
+                note = newNote,
+                editedBy = editorName,
+                editorAvatar = cashierUser.ProfilePictureUrl,
+                editorEmail = cashierUser.Email,
+                editedAt = editDate
+            }
+        });
     }
 }
 
